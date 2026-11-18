@@ -1,4 +1,21 @@
 2026-11-18
+- Bump version to **CK-Core CDE 3.0.0** and update Help / Version / About
+  attribution across SDL help volumes and desktop dialogs (`cde/configure.ac`,
+  `cde/include/Dt/Dt.h.in`, `cde/doc/common/help/HELPEnt.sgm.in`,
+  `cde/doc/en_US.UTF-8/help/Help4Help/Help4Help.sgm`,
+  `cde/programs/dtcm/dtcm/about.c`, `cde/programs/dtlogin/vgmain.c`,
+  `cde/programs/dtlogin/dtchooser.c`, `scripts/build-ubuntu-debs.py`,
+  `docs/improvements/toolkit.md`):
+  - Advance `CDE_VERSION_MAJOR.MINOR.MICRO` to `3.0.0` (`DtVERSION_NUMBER`
+    `30000`, `DtVERSION_STRING` `"CK-Core CDE Version 3.0.0"`, Debian package
+    version `3.0.0-1`).
+  - Update `&CDEcopyright;` (`_copyright` Help -> Version / About topic across
+    all CDE applications), `Help4Help`, `dtcm`'s About dialog, and `dtlogin`'s
+    Copyright dialog to display **CK-Core Common Desktop Environment 3.0.0**,
+    `© Copyright 2025-2026 Dr. Christian Klukas`,
+    `https://github.com/cklukas/ck-core-cde`, and
+    `https://cklukas.github.io/ck-core-cde/` with clean line breaks alongside
+    the upstream Open Group, CDE Project, and GNU LGPL notices.
 - Persist `Style Manager - Window` settings across dialog reopens and implement
   the interactive CDE **Icon Box** (`Dtwm*useIconBox`) on Wayland
   (`cde/programs/dtstyle/Dtwm.c`, `cde/programs/dtwm/wayland/dtwm_wayland.h`,

@@ -4,8 +4,8 @@
 Produces:
   - ck-core-motif9_2.4.0-1_<arch>.deb
   - ck-core-fs-lib_0.3.0-1_<arch>.deb
-  - ck-core-cde_2.5.3-1_<arch>.deb
-  - ck-core-dtlogin_2.5.3-1_<arch>.deb
+  - ck-core-cde_3.0.0-1_<arch>.deb
+  - ck-core-dtlogin_3.0.0-1_<arch>.deb
   - ck-core-apps_1.0.0-1_<arch>.deb
 Plus APT repository metadata (Packages, Packages.gz, Release) and an optional
 end-to-end `apt-get install` + coexistence with system `libxm4` + runtime `/usr/dt/lib/libXm.so.9` verification.
@@ -343,7 +343,7 @@ def guest_build_and_verify(args: argparse.Namespace) -> int:
         r_cde,
         {
             "Package": "ck-core-cde",
-            "Version": "2.5.3-1",
+            "Version": "3.0.0-1",
             "Section": "x11",
             "Priority": "optional",
             "Architecture": arch,
@@ -362,7 +362,7 @@ def guest_build_and_verify(args: argparse.Namespace) -> int:
         sp = r_cde / "DEBIAN" / script_name
         sp.write_text("#!/bin/sh\nset -e\nldconfig\nexit 0\n", encoding="utf-8")
         os.chmod(sp, 0o755)
-    deb_cde = out_dir / f"ck-core-cde_2.5.3-1_{arch}.deb"
+    deb_cde = out_dir / f"ck-core-cde_3.0.0-1_{arch}.deb"
     build_deb(r_cde, deb_cde)
     built_debs["ck-core-cde"] = deb_cde
 
@@ -375,7 +375,7 @@ def guest_build_and_verify(args: argparse.Namespace) -> int:
     dtl_needed = rewrite_rpath_and_collect_needed(r_dtlogin)
     dtl_shlibs = resolve_system_deb_deps(dtl_needed, internal_sonames, multiarch)
     dtl_deps = [
-        "ck-core-cde (= 2.5.3-1)",
+        "ck-core-cde (= 3.0.0-1)",
         "debconf (>= 0.5) | debconf-2.0",
         *dtl_shlibs,
     ]
@@ -383,7 +383,7 @@ def guest_build_and_verify(args: argparse.Namespace) -> int:
         r_dtlogin,
         {
             "Package": "ck-core-dtlogin",
-            "Version": "2.5.3-1",
+            "Version": "3.0.0-1",
             "Section": "x11",
             "Priority": "optional",
             "Architecture": arch,
@@ -399,7 +399,7 @@ def guest_build_and_verify(args: argparse.Namespace) -> int:
         dst_s = r_dtlogin / "DEBIAN" / sfx
         shutil.copy2(deb_meta / f"ck-core-dtlogin.{sfx}", dst_s)
         os.chmod(dst_s, 0o755)
-    deb_dtlogin = out_dir / f"ck-core-dtlogin_2.5.3-1_{arch}.deb"
+    deb_dtlogin = out_dir / f"ck-core-dtlogin_3.0.0-1_{arch}.deb"
     build_deb(r_dtlogin, deb_dtlogin)
     built_debs["ck-core-dtlogin"] = deb_dtlogin
 
@@ -417,7 +417,7 @@ def guest_build_and_verify(args: argparse.Namespace) -> int:
     apps_shlibs = resolve_system_deb_deps(apps_needed, internal_sonames, multiarch)
     apps_deps = [
         "ck-core-motif9 (= 2.4.0-1)",
-        "ck-core-cde (= 2.5.3-1)",
+        "ck-core-cde (= 3.0.0-1)",
         *apps_shlibs,
     ]
     write_control(
@@ -583,7 +583,7 @@ def guest_build_and_verify(args: argparse.Namespace) -> int:
             os.chmod(xdg_d, 0o700)
             sample_doc = v_root / "wayland-notes.txt"
             sample_doc.write_text(
-                "CK Core CDE 2.5.3 + Motif ABI 9\n"
+                "CK Core CDE 3.0.0 + Motif ABI 9\n"
                 "Installed from signed Ubuntu 26.04 LTS APT repository\n"
                 "Coexisting with system libxm4 under /usr/dt\n",
                 encoding="utf-8",

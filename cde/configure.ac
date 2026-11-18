@@ -1,19 +1,19 @@
 dnl When changing the version below, also change the CDE_VERSION_* macros
 dnl to match further below
 AC_INIT([Common Desktop Environment],
-        [2.5.3],
-        [https://sourceforge.net/projects/cdesktopenv],
+        [3.0.0],
+        [https://github.com/cklukas/ck-core-cde/issues],
         [cde],
-        [https://sourceforge.net/projects/cdesktopenv])
+        [https://github.com/cklukas/ck-core-cde])
 AC_CONFIG_HEADERS([include/cde_config.h])
 AC_CONFIG_MACRO_DIRS([m4])
 AM_INIT_AUTOMAKE([foreign subdir-objects no-define])
 
 dnl global CDE versioning
 
-CDE_VERSION_MAJOR=2
-CDE_VERSION_MINOR=5
-CDE_VERSION_MICRO=3
+CDE_VERSION_MAJOR=3
+CDE_VERSION_MINOR=0
+CDE_VERSION_MICRO=0
 dnl this is blank for a release, or contains an alpha character to indicate a
 dnl dev release.
 CDE_VERSION_DEV=
