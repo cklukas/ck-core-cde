@@ -76,9 +76,9 @@ Wayland and XWayland clients:
   eight workspaces, per-window occupancy bitmasks, and the *Occupy All
   Workspaces* / *Unoccupy Other Workspaces* action in the CDE Window Menu;
 - Per-workspace CDE `.pm` (XPM) and `.bm` (XBM) backdrop rendering
-  (`InlayPlain`, `SkyDark`, `Pebbles`, `Paver`, `BrickWall`, and `/usr/dt/backdrops`
-  assets) recolored dynamically to each workspace's CDE color set in tiled,
-  centered, or scaled mode;
+  (`KnitLight`, `WaterDrops`, `SkyDark`, `Paver`, and `/usr/dt/backdrops`
+  assets, honoring `Dtwm*ws0..ws3*backdrop*image`) recolored dynamically to
+  each workspace's CDE color set in tiled, centered, or scaled mode;
 - Full XWayland `libDtSvc` Workspace Manager property bridge publishing
   `_MOTIF_WM_INFO`, `_DT_WORKSPACE_LIST`, `_DT_WORKSPACE_CURRENT`,
   `_DT_WORKSPACE_INFO_<ws>`, and per-window `_DT_WORKSPACE_PRESENCE`, honoring
@@ -105,25 +105,33 @@ Wayland and XWayland clients:
 `cde_icons.c` brings CK Core CDE's desktop icon and Front Panel embedding
 contracts to Wayland without requiring application code changes:
 
-- **Open-window and minimized desktop icons (`Dtwm*showOpenWindowIcons`) and
-  interactive CDE Icon Box (`Dtwm*useIconBox`):** Publishes `_DT_WM_SETTINGS_V1`
-  (`DT_WM_SETTINGS_V1_SHOW_OPEN_WINDOW_ICONS` and `DT_WM_SETTINGS_V1_USE_ICON_BOX`)
-  on both the workspace-manager window and the XWayland root window, renders
-  active-focus Crimson and inactive Slate 3D bevel icon tiles (honoring
-  `Dtwm*iconPlacementMargin` when placed on the workspace), and switches live to
-  a movable, resizable, mouse-wheel-scrollable CDE **`Icons`** (**Icon Box**)
-  window when **Use Icon Box** is selected in `Style Manager - Window` (which
-  reloads live `RESOURCE_MANAGER` values on reopen so all toggles persist across
-  both dialog reopens and process restarts);
+- **Open-window and minimized desktop icons (`Dtwm*showOpenWindowIcons`),
+  `Top Left` placement (`Dtwm*iconPlacement`), 3D open-window indicator bars,
+  and interactive CDE Icon Box (`Dtwm*useIconBox`):** Publishes
+  `_DT_WM_SETTINGS_V1` (`DT_WM_SETTINGS_V1_SHOW_OPEN_WINDOW_ICONS` and
+  `DT_WM_SETTINGS_V1_USE_ICON_BOX`) on both the workspace-manager window and the
+  XWayland root window, places desktop icons along `Top Left` by default (with
+  full `Dtwm*iconPlacement` and `Dtwm*iconPlacementMargin` support plus
+  bottom-left `FrontPanel` `Fpfpmin` workspace icon placement), renders sunken
+  `selectColor` bevels for open windows and raised bevels for minimized windows
+  with `_NET_WM_ICON_NAME` / `WM_ICON_NAME` labels and a separate `10 px` 3D
+  open-window focus indicator bar `7 px` to the right of each open icon
+  (matching X11 `dtwm` `WmIDecor.c`), toggles minimize when clicking an
+  already-focused open window's icon, and switches live to a movable, resizable,
+  mouse-wheel-scrollable CDE **`Icons`** (**Icon Box**) window when **Use Icon
+  Box** is selected in `Style Manager - Window`;
 - **Normal (`48×48`) and increased (`96×96`) `WM_ICON_SIZE`:** Publishes
   `WM_ICON_SIZE` on the XWayland root window and supports live switching via
   `--large-icons` or `_DT_WM_REQUEST` (`f.set_large_icons 0|1`,
   `f.set_open_window_icons 0|1`);
-- **Live dynamic icons across XWayland and Wayland:** Streams XWayland
-  `WM_HINTS` `IconPixmapHint` and 1-bit `IconMaskHint` shape masks (`ck-clock`,
-  `ck-load`, `ck-eyes`, `ck-coins`, `ck-plasma-1`, `ck-browser`) via XCB image
-  capture, and implements the native Wayland `xdg-toplevel-icon-v1` server
-  global (`xdg_toplevel_icon_manager_v1`) for `wl_shm` client icons;
+- **Full CDE client icon resolution and live dynamic icons across XWayland and
+  Wayland:** Resolves `Dtwm.defs` / xrdb `Dtwm*<Class>*iconImage` mappings
+  (`Fpstyle`, `Fpterm`, `Fphelp`, `Fppenpd`, `Dtcalc`, `DtMail`, `Dtpaint`,
+  `Fpfpmin`, etc.), CDE `.dt` `ACTION` `ICON` entries via `WM_COMMAND` and
+  `_NET_WM_PID`, symbolic `.pm`/`.bm` icons, `_NET_WM_ICON`, live XWayland
+  `WM_HINTS` `IconPixmapHint` + 1-bit `IconMaskHint` shape masks (`ck-clock`,
+  `ck-load`, `ck-eyes`, `ck-coins`, `ck-plasma-1`, `ck-browser`), and the native
+  Wayland `xdg-toplevel-icon-v1` server global (`xdg_toplevel_icon_manager_v1`);
 - **Global cursor tracking for `ck-eyes`:** Publishes per-window `WM_STATE`
   (`NormalState` / `IconicState`) and `_NET_WM_ICON_GEOMETRY`, and synchronizes
   the XWayland root pointer whenever the cursor moves across native Wayland

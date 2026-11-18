@@ -134,6 +134,17 @@ typedef enum {
     DTWM_VIEW_XWAYLAND = 1,
 } DtwmViewKind;
 
+typedef enum {
+    DTWM_ICON_PLACE_TOP_LEFT = 0,
+    DTWM_ICON_PLACE_LEFT_TOP,
+    DTWM_ICON_PLACE_BOTTOM_LEFT,
+    DTWM_ICON_PLACE_LEFT_BOTTOM,
+    DTWM_ICON_PLACE_TOP_RIGHT,
+    DTWM_ICON_PLACE_RIGHT_TOP,
+    DTWM_ICON_PLACE_BOTTOM_RIGHT,
+    DTWM_ICON_PLACE_RIGHT_BOTTOM,
+} DtwmIconPlacement;
+
 typedef struct DtwmServer DtwmServer;
 typedef struct DtwmView DtwmView;
 typedef struct DtwmForeignToplevel DtwmForeignToplevel;
@@ -183,6 +194,10 @@ struct DtwmView {
     /* Desktop icon state (open-window icon + minimized icon + live pixmap) */
     struct wlr_scene_buffer *desktop_icon_buf;
     cairo_surface_t *icon_surface;
+    bool icon_from_named_image;
+    bool has_icon_pos_hint;
+    int icon_hint_x, icon_hint_y;
+    char icon_title[256];
     int icon_x, icon_y, icon_w, icon_h;
     int icon_box_w, icon_box_h;
     bool icon_clipped_out;
@@ -347,6 +362,7 @@ struct DtwmServer {
     bool show_front_panel;
     bool show_open_window_icons;
     bool use_icon_box;
+    DtwmIconPlacement icon_placement;
     int icon_placement_margin;
     bool large_icons;
     bool move_opaque;
@@ -400,6 +416,10 @@ struct DtwmServer {
     xcb_atom_t atom_wm_settings_v1;
     xcb_atom_t atom_wm_state;
     xcb_atom_t atom_net_wm_icon_geom;
+    xcb_atom_t atom_net_wm_icon;
+    xcb_atom_t atom_net_wm_icon_name;
+    xcb_atom_t atom_net_wm_pid;
+    xcb_atom_t atom_wm_command;
     xcb_atom_t atom_active_win_box;
     xcb_atom_t atom_randr_dpi_opt_in;
     xcb_atom_t atom_dpi;
@@ -597,8 +617,12 @@ void dtwm_icons_update_view(DtwmView *view);
 DtwmView *dtwm_icons_view_at(DtwmServer *server, double lx, double ly);
 void dtwm_icons_set_open_window_icons(DtwmServer *server, bool enabled);
 void dtwm_icons_set_use_icon_box(DtwmServer *server, bool enabled);
+void dtwm_icons_set_placement(DtwmServer *server, const char *spec);
 void dtwm_icons_set_placement_margin(DtwmServer *server, int margin);
 void dtwm_icons_set_large_icons(DtwmServer *server, bool large);
+void dtwm_icons_refresh_focus_indicators(DtwmServer *server);
+void dtwm_icons_invalidate_theme_icons(DtwmServer *server);
+void dtwm_icons_record_icon_image_rule(const char *client_key, const char *icon_name);
 bool dtwm_icon_box_is_topmost_at(DtwmServer *server, double lx, double ly);
 DtwmFramePart dtwm_icon_box_part_at(DtwmServer *server, double lx, double ly);
 bool dtwm_icon_box_handle_button(DtwmServer *server, uint32_t btn, bool pressed, uint32_t t_ms);

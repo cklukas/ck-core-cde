@@ -133,40 +133,43 @@ def main() -> int:
             shot1 = work / "frame-two-windows.png"
             subprocess.run(["grim", str(shot1)], env=c_env, check=True)
             with Image.open(shot1) as im:
-                crimson_px = count_near_color(im, (178, 77, 122), tol=18)   # #B24D7A active CDE Crimson
-                slate_px = count_near_color(im, (174, 178, 195), tol=18)    # #AEB2C3 inactive CDE Slate
-                teal_px = count_near_color(im, (60, 99, 118), tol=18)       # #3C6376 CDE desktop backdrop
-                if crimson_px < 1500:
-                    raise SystemExit(f"expected active CDE Crimson bevel frame pixels, got {crimson_px}")
-                if slate_px < 1500:
-                    raise SystemExit(f"expected inactive CDE Slate bevel frame pixels on unfocused window, got {slate_px}")
-                if teal_px < 50000:
-                    raise SystemExit(f"expected CDE Teal desktop background pixels, got {teal_px}")
+                active_px = count_near_color(im, (237, 168, 112), tol=20)   # #EDA870 Default.dp active frame
+                inactive_px = count_near_color(im, (153, 153, 153), tol=20) # #999999 Default.dp inactive frame
+                backdrop_px = count_near_color(im, (137, 152, 170), tol=28) # #8998AA Default.dp KnitLight backdrop
+                if active_px < 1500:
+                    raise SystemExit(f"expected active CDE Default.dp (#EDA870) bevel frame pixels, got {active_px}")
+                if inactive_px < 1500:
+                    raise SystemExit(f"expected inactive CDE Default.dp (#999999) bevel frame pixels, got {inactive_px}")
+                if backdrop_px < 50000:
+                    raise SystemExit(f"expected CDE Default.dp KnitLight desktop backdrop pixels, got {backdrop_px}")
 
-            # 2. Click empty desktop (10, 10) -> clears active focus (zero Crimson frame pixels!)
+            # 2. Click empty desktop (500, 10) -> clears active focus (only docked Front Panel border remains!)
             subprocess.run(["wlrctl", "pointer", "move", "-10000", "-10000"], env=c_env, check=True)
-            subprocess.run(["wlrctl", "pointer", "move", "10", "10"], env=c_env, check=True)
+            subprocess.run(["wlrctl", "pointer", "move", "500", "10"], env=c_env, check=True)
             subprocess.run(["wlrctl", "pointer", "click", "left"], env=c_env, check=True)
             time.sleep(0.3)
 
             shot_unfocused = work / "frame-desktop-unfocused.png"
             subprocess.run(["grim", str(shot_unfocused)], env=c_env, check=True)
             with Image.open(shot_unfocused) as im:
-                crimson_after = count_near_color(im, (178, 77, 122), tol=18)
-                if crimson_after != 0:
-                    raise SystemExit(f"clicking empty desktop did not clear active Crimson frame (got {crimson_after} px)")
+                # Crop window region (clearing bottom Front Panel): active 15000+ px frame & 240 px indicator must clear!
+                win_crop = im.crop((75, 0, im.size[0], im.size[1] - 100))
+                active_after = count_near_color(win_crop, (237, 168, 112), tol=20)
+                if active_after >= 120:
+                    raise SystemExit(f"clicking empty desktop did not clear active frame & indicator (got {active_after} px)")
 
-            # 3. Click first window (80, 56) -> focuses Wayland window & opens Window Menu on [ - ] click (60, 56)
-            subprocess.run(["wlrctl", "pointer", "move", "50", "48"], env=c_env, check=True)
+            # 3. Click first window menu button (114, 48, since left_margin=104 clears Top-Left desktop icons)
+            subprocess.run(["wlrctl", "pointer", "move", "114", "48"], env=c_env, check=True)
             subprocess.run(["wlrctl", "pointer", "click", "left"], env=c_env, check=True)
             time.sleep(0.3)
 
             shot_menu = work / "frame-window-menu.png"
             subprocess.run(["grim", str(shot_menu)], env=c_env, check=True)
             with Image.open(shot_menu) as im:
-                crimson_refocused = count_near_color(im, (178, 77, 122), tol=18)
-                if crimson_refocused < 1500:
-                    raise SystemExit(f"re-clicking window did not restore active Crimson frame ({crimson_refocused} px)")
+                win_crop = im.crop((75, 0, im.size[0], im.size[1] - 100))
+                active_refocused = count_near_color(win_crop, (237, 168, 112), tol=20)
+                if active_refocused < 1500:
+                    raise SystemExit(f"re-clicking window did not restore active frame ({active_refocused} px)")
 
             if args.save_dir:
                 sdir = Path(args.save_dir)
@@ -176,7 +179,7 @@ def main() -> int:
 
             print(
                 f"PASS: dtwm-wayland dual-protocol SSD bevels verified "
-                f"(crimson={crimson_px}px, slate={slate_px}px, unfocused={crimson_after}px)"
+                f"(active={active_px}px, inactive={inactive_px}px, unfocused={active_after}px)"
             )
             return 0
         finally:

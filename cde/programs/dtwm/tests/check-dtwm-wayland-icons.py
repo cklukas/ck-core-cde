@@ -393,25 +393,37 @@ def main() -> int:
             procs.append(p_pin)
             time.sleep(0.8)
 
-            # Move cursor over native Wayland foot window (100, 110) and verify XWayland root pointer sync!
+            # Move cursor over native Wayland foot window (140, 110) and verify XWayland root pointer sync!
             subprocess.run(["wlrctl", "pointer", "move", "-10000", "-10000"], env=c_env, check=True)
-            subprocess.run(["wlrctl", "pointer", "move", "100", "110"], env=c_env, check=True)
+            subprocess.run(["wlrctl", "pointer", "move", "140", "110"], env=c_env, check=True)
             time.sleep(0.15)
             ptr_out = subprocess.run([str(x11_bin), "pointer"], env=c_env, check=True, capture_output=True, text=True).stdout.strip()
-            if ptr_out != "POINTER=100,110":
-                raise SystemExit(f"expected XWayland root pointer synced to 100,110 over Wayland surface, got {ptr_out}")
+            if ptr_out != "POINTER=140,110":
+                raise SystemExit(f"expected XWayland root pointer synced to 140,110 over Wayland surface, got {ptr_out}")
 
-            # Verify xdg-toplevel-icon-v1 emerald (#10D860) desktop icon on right margin of Output 1
+            # Verify Top-Left desktop icon placement + open-window indicator bar + bottom-left FrontPanel ("One") icon
             shot_proto = work / "wp04-proto-icons.png"
             subprocess.run(["grim", str(shot_proto)], env=c_env, check=True)
             with Image.open(shot_proto) as im_p:
                 out1_w = im_p.size[0] // 2
                 out_h = im_p.size[1]
                 emerald_px = count_near_rgb_in_crop(
-                    im_p, (out1_w - 120, 0, out1_w, 320), (0x10, 0xD8, 0x60), tol=18
+                    im_p, (0, 0, 100, 320), (0x10, 0xD8, 0x60), tol=18
                 )
                 if emerald_px < 800:
-                    raise SystemExit(f"expected emerald xdg-toplevel-icon-v1 desktop icon pixels, got {emerald_px}")
+                    raise SystemExit(f"expected emerald xdg-toplevel-icon-v1 desktop icon on Top-Left margin, got {emerald_px}")
+                # Verify active open-window indicator bar (#EDA870, 10x30px -> ~240 interior px) in indicator column (x=76..92)
+                ind_active_px = count_near_rgb_in_crop(
+                    im_p, (75, 0, 95, 320), (237, 168, 112), tol=22
+                )
+                if ind_active_px < 150:
+                    raise SystemExit(f"expected active open-window indicator bar beside left desktop icon, got {ind_active_px} px")
+                # Verify right margin has zero misplaced emerald desktop icon pixels
+                right_emerald_px = count_near_rgb_in_crop(
+                    im_p, (out1_w - 120, 0, out1_w, 320), (0x10, 0xD8, 0x60), tol=18
+                )
+                if right_emerald_px != 0:
+                    raise SystemExit(f"unexpected desktop icon on right margin ({right_emerald_px} px)")
 
             # 3. If ck-core-apps binaries are present, exercise full live dynamic icons + Front Panel swallowing!
             apps_summary = "skipped (apps-dir not present)"
@@ -450,21 +462,21 @@ def main() -> int:
                     if "libXm.so.9" not in maps:
                         raise SystemExit(f"PID {app_proc.pid} did not map libXm.so.9!")
 
-                # Frame A: pointer over native Wayland foot window (100, 110)
+                # Frame A: pointer over native Wayland foot window (140, 110)
                 subprocess.run(["wlrctl", "pointer", "move", "-10000", "-10000"], env=c_env, check=True)
-                subprocess.run(["wlrctl", "pointer", "move", "100", "110"], env=c_env, check=True)
+                subprocess.run(["wlrctl", "pointer", "move", "140", "110"], env=c_env, check=True)
                 time.sleep(0.35)
                 shot_a = work / "wp04-dynamic-icons-a.png"
                 subprocess.run(["grim", str(shot_a)], env=c_env, check=True)
 
-                # Move pointer across desktop to (980, 680) and wait 1.2s so ck-eyes tracks pointer & ck-plasma-1 / ck-load advance frames!
+                # Move pointer across desktop to (880, 570) and wait 1.2s so ck-eyes tracks pointer & ck-plasma-1 / ck-load advance frames!
                 subprocess.run(["wlrctl", "pointer", "move", "880", "570"], env=c_env, check=True)
                 time.sleep(1.2)
                 shot_b = work / "wp04-dynamic-icons-b.png"
                 subprocess.run(["grim", str(shot_b)], env=c_env, check=True)
 
                 with Image.open(shot_a) as ima, Image.open(shot_b) as imb:
-                    icon_strip_box = (out1_w - 220, 0, out1_w, out_h - 80)
+                    icon_strip_box = (0, 0, 220, out_h - 80)
                     ha = crop_sha256(ima, icon_strip_box)
                     hb = crop_sha256(imb, icon_strip_box)
                     if ha == hb:

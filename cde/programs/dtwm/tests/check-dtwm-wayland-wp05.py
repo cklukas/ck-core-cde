@@ -891,13 +891,13 @@ def main() -> int:
                     # Wayland client is 240x180 + 6px left/right border + 30px top + 6px bottom = 252x216
                     if abs(ww - 252) > 8 or abs(wh - 216) > 8:
                         raise SystemExit(f"expected ck-grab --window size ~252x216, got {ww}x{wh}")
-                    crimson_px = count_near_color(iw, (178, 77, 122), tol=18)
+                    active_px = count_near_color(iw, (237, 168, 112), tol=20)
                     blue_px = count_near_color(iw, (0x18, 0x68, 0xA8), tol=12)
-                    if crimson_px < 1000 or blue_px < 20000:
-                        raise SystemExit(f"ck-grab --window missing CDE Crimson frame ({crimson_px}) or Wayland client pixels ({blue_px})")
+                    if active_px < 1000 or blue_px < 20000:
+                        raise SystemExit(f"ck-grab --window missing CDE active frame ({active_px}) or Wayland client pixels ({blue_px})")
                     if fw < 2500 or fh < 700:
                         raise SystemExit(f"expected dual-output ck-grab full-screen capture >=2560x720, got {fw}x{fh}")
-                    grab_summary = f"ck-grab window={ww}x{wh} (crimson={crimson_px}px), full={fw}x{fh}"
+                    grab_summary = f"ck-grab window={ww}x{wh} (active_frame={active_px}px), full={fw}x{fh}"
                 saved_files.extend([win_png, full_png])
                 p_w_scale.terminate(); p_w_scale.wait(timeout=3)
 

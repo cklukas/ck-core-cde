@@ -240,7 +240,7 @@ static void clear_active_focus(DtwmServer *server) {
             wlr_xwayland_surface_activate(prev->xwayland_surface, false);
         }
         dtwm_view_update_frame(prev);
-        dtwm_icons_update_view(prev);
+        dtwm_icons_refresh_focus_indicators(server);
         dtwm_foreign_toplevel_sync(prev);
     }
     wlr_seat_keyboard_notify_clear_focus(server->seat);
@@ -349,7 +349,7 @@ static void focus_view_ex(
         raise_transient_children_above(server, view);
     }
     dtwm_view_update_frame(view);
-    dtwm_icons_update_view(view);
+    dtwm_icons_refresh_focus_indicators(server);
     dtwm_foreign_toplevel_sync(view);
     dtwm_publish_active_window_box(server);
 
@@ -1913,7 +1913,12 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
         DtwmView *icon_v = dtwm_icons_view_at(server, server->cursor->x, server->cursor->y);
         if (icon_v) {
             if (btn == BTN_LEFT) {
-                focus_view(server, icon_v, nullptr);
+                if (!icon_v->minimized && server->show_open_window_icons &&
+                    server->focused_view == icon_v) {
+                    view_set_minimized(icon_v, true);
+                } else {
+                    focus_view(server, icon_v, nullptr);
+                }
             } else if (btn == BTN_RIGHT) {
                 open_window_menu(server, icon_v, (int)server->cursor->x, (int)server->cursor->y);
             }
@@ -2934,8 +2939,12 @@ static void place_initial_view(DtwmView *view) {
     }
     struct wlr_box obox;
     dtwm_get_usable_output_box(server, server->cursor->x, server->cursor->y, &obox);
-    view->x = obox.x + 48 + (idx % 6) * 36;
-    view->y = obox.y + 40 + (idx % 6) * 32;
+    bool left_icons = !server->use_icon_box &&
+                      (server->icon_placement == DTWM_ICON_PLACE_TOP_LEFT ||
+                       server->icon_placement == DTWM_ICON_PLACE_BOTTOM_LEFT);
+    int left_margin = left_icons ? 104 : 48;
+    view->x = obox.x + left_margin + (idx % 6) * 36;
+    view->y = obox.y + 36 + (idx % 6) * 32;
     if (view->frame_tree) {
         wlr_scene_node_set_position(&view->frame_tree->node, view->x, view->y);
     }

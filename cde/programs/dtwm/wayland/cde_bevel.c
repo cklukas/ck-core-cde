@@ -242,27 +242,22 @@ void dtwm_palette_init_profile(DtwmPalette *pal, DtwmAppearanceProfile profile) 
 
     case DTWM_PROFILE_CLASSIC:
     default:
-        /* Classic CDE Default Crimson active window frame + Slate inactive frame */
+        /* Matches cde/programs/palettes/Default.dp + Motif XmDEFAULT_FOREGROUND_THRESHOLD (70%) */
         pal->active = (DtwmColorSet){
-            .bg = {0.698, 0.302, 0.478, 1.0},            /* #B24D7A */
+            .bg = {0.929, 0.659, 0.439, 1.0},            /* #EDA870 */
             .fg = {1.000, 1.000, 1.000, 1.0},            /* #FFFFFF */
-            .top_shadow = {0.886, 0.608, 0.745, 1.0},    /* #E29BBE */
-            .bottom_shadow = {0.357, 0.137, 0.235, 1.0}, /* #5B233C */
+            .top_shadow = {0.976, 0.843, 0.725, 1.0},
+            .bottom_shadow = {0.502, 0.357, 0.239, 1.0},
         };
         pal->inactive = (DtwmColorSet){
-            .bg = {0.682, 0.698, 0.765, 1.0},            /* #AEB2C3 */
-            .fg = {0.090, 0.100, 0.130, 1.0},            /* #171A21 */
-            .top_shadow = {0.878, 0.890, 0.933, 1.0},    /* #E0E3EE */
-            .bottom_shadow = {0.345, 0.357, 0.408, 1.0}, /* #585B68 */
+            .bg = {0.600, 0.600, 0.600, 1.0},            /* #999999 */
+            .fg = {1.000, 1.000, 1.000, 1.0},            /* #FFFFFF */
+            .top_shadow = {0.820, 0.820, 0.820, 1.0},
+            .bottom_shadow = {0.312, 0.312, 0.312, 1.0},
         };
-        pal->menu = (DtwmColorSet){
-            .bg = {0.682, 0.698, 0.765, 1.0},
-            .fg = {0.070, 0.080, 0.110, 1.0},
-            .top_shadow = {0.878, 0.890, 0.933, 1.0},
-            .bottom_shadow = {0.345, 0.357, 0.408, 1.0},
-        };
-        /* Classic CDE Teal/Slate backdrop */
-        pal->desktop_bg = (DtwmRgba){0.235, 0.388, 0.463, 1.0}; /* #3C6376 */
+        pal->menu = pal->inactive;
+        /* Workspace 0 ("One"): Default.dp ColorSet 2 (#8998AA) */
+        pal->desktop_bg = (DtwmRgba){0.538, 0.596, 0.667, 1.0};
         return;
     }
 }
@@ -309,16 +304,22 @@ const char *dtwm_view_title(const DtwmView *view) {
     return (title && title[0]) ? title : "Untitled";
 }
 
-static void draw_pango_label(
-    cairo_t *cr, const char *text, double x, double y, double w, double h, DtwmRgba fg, bool centered, bool bold
+static void draw_pango_label_with_font(
+    cairo_t *cr,
+    const char *font_spec,
+    const char *text,
+    double x,
+    double y,
+    double w,
+    double h,
+    DtwmRgba fg,
+    bool centered
 ) {
     if (w <= 4.0 || h <= 4.0) {
         return;
     }
     PangoLayout *layout = pango_cairo_create_layout(cr);
-    PangoFontDescription *desc = pango_font_description_from_string(
-        bold ? "Sans Bold 9.5" : "Sans 9.5"
-    );
+    PangoFontDescription *desc = pango_font_description_from_string(font_spec);
     pango_layout_set_font_description(layout, desc);
     pango_layout_set_text(layout, text ? text : "", -1);
     pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
@@ -338,6 +339,14 @@ static void draw_pango_label(
 
     pango_font_description_free(desc);
     g_object_unref(layout);
+}
+
+static void draw_pango_label(
+    cairo_t *cr, const char *text, double x, double y, double w, double h, DtwmRgba fg, bool centered, bool bold
+) {
+    draw_pango_label_with_font(
+        cr, bold ? "Serif Bold 10" : "Serif 10", text, x, y, w, h, fg, centered
+    );
 }
 
 void dtwm_draw_label(
@@ -470,10 +479,12 @@ void dtwm_view_update_frame(DtwmView *view) {
             draw_bevel(cr, sx, sy, sq, sq, 1.0, cs->top_shadow, cs->bottom_shadow);
         }
 
-        /* Titlebar slab + centered window title */
+        /* Titlebar slab + centered window title (normal-weight Serif in Classic CDE matching X11 dtwm) */
         if (title_w > 4.0) {
             draw_bevel(cr, title_x, ty, title_w, th, 1.0, cs->top_shadow, cs->bottom_shadow);
-            draw_pango_label(cr, dtwm_view_title(view), title_x, ty, title_w, th, cs->fg, true, true);
+            const char *tfont =
+                (view->server->palette.profile == DTWM_PROFILE_CLASSIC) ? "Serif 10" : "Sans Bold 9.5";
+            draw_pango_label_with_font(cr, tfont, dtwm_view_title(view), title_x, ty, title_w, th, cs->fg, true);
         }
     }
 

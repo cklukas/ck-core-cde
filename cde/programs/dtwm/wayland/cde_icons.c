@@ -10,23 +10,33 @@
 #include "dtwm_wayland.h"
 #include "xdg-toplevel-icon-v1-protocol.h"
 
+#include <ctype.h>
+#include <dirent.h>
 #include <drm_fourcc.h>
+#include <fcntl.h>
+#include <limits.h>
 #include <linux/input-event-codes.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <unistd.h>
 #include <wayland-server-protocol.h>
 #include <wlr/types/wlr_buffer.h>
 #include <xcb/xcb.h>
 
 /* X11 WM_HINTS bitflags & WM_STATE values */
-#define DTWM_X11_STATE_HINT       (1u << 1)
-#define DTWM_X11_ICON_PIXMAP_HINT (1u << 2)
-#define DTWM_X11_ICON_MASK_HINT   (1u << 5)
-#define DTWM_X11_NORMAL_STATE     1u
-#define DTWM_X11_ICONIC_STATE     3u
+#define DTWM_X11_STATE_HINT         (1u << 1)
+#define DTWM_X11_ICON_PIXMAP_HINT   (1u << 2)
+#define DTWM_X11_ICON_POSITION_HINT (1u << 3)
+#define DTWM_X11_ICON_MASK_HINT     (1u << 5)
+#define DTWM_X11_NORMAL_STATE       1u
+#define DTWM_X11_ICONIC_STATE       3u
+
+/* Open-window indicator bar metrics matching WmGlobal.h & WmIDecor.c */
+#define DTWM_OPEN_ICON_BAR_WIDTH 10
+#define DTWM_OPEN_ICON_BAR_GAP   7
 
 /* _DT_WM_SETTINGS_V1 constants (matching <Dt/WmSettings.h>) */
 #define DTWM_SETTINGS_V1_VERSION                1u
@@ -270,7 +280,790 @@ static void bind_wl_icon_manager(struct wl_client *client, void *data, uint32_t 
     xdg_toplevel_icon_manager_v1_send_done(res);
 }
 
-/* --- XWayland WM_ICON_SIZE, _DT_WM_SETTINGS_V1, WM_STATE & WM_HINTS.icon_pixmap --- */
+static void read_xcb_wm_class_sync(
+    DtwmServer *server, struct wlr_xwayland_surface *xs, char *inst, size_t inst_sz, char *cls, size_t cls_sz
+);
+
+/* --- CDE Named Icon, Dtwm.defs, .dt Action Database & _NET_WM_ICON Resolver --- */
+typedef struct {
+    char key[64];
+    char icon[64];
+} DtwmIconRule;
+
+static DtwmIconRule g_custom_icon_rules[64];
+static int g_custom_icon_rule_count = 0;
+
+static DtwmIconRule g_action_icon_rules[256];
+static int g_action_icon_rule_count = 0;
+static bool g_action_icons_loaded = false;
+
+void dtwm_icons_record_icon_image_rule(const char *client_key, const char *icon_name) {
+    if (!client_key || !client_key[0] || !icon_name || !icon_name[0]) return;
+    for (int i = 0; i < g_custom_icon_rule_count; ++i) {
+        if (strcasecmp(g_custom_icon_rules[i].key, client_key) == 0) {
+            snprintf(g_custom_icon_rules[i].icon, sizeof(g_custom_icon_rules[i].icon), "%s", icon_name);
+            return;
+        }
+    }
+    if (g_custom_icon_rule_count < (int)(sizeof(g_custom_icon_rules) / sizeof(g_custom_icon_rules[0]))) {
+        snprintf(
+            g_custom_icon_rules[g_custom_icon_rule_count].key,
+            sizeof(g_custom_icon_rules[0].key),
+            "%s",
+            client_key
+        );
+        snprintf(
+            g_custom_icon_rules[g_custom_icon_rule_count].icon,
+            sizeof(g_custom_icon_rules[0].icon),
+            "%s",
+            icon_name
+        );
+        g_custom_icon_rule_count++;
+    }
+}
+
+static const char *lookup_dtwm_defs_icon_image(const char *inst, const char *cls) {
+    /* User / xrdb Dtwm*<Key>*iconImage overrides take top priority */
+    for (int i = 0; i < g_custom_icon_rule_count; ++i) {
+        if ((inst && inst[0] && strcasecmp(inst, g_custom_icon_rules[i].key) == 0) ||
+            (cls && cls[0] && strcasecmp(cls, g_custom_icon_rules[i].key) == 0)) {
+            return g_custom_icon_rules[i].icon;
+        }
+    }
+    /* Canonical CDE Dtwm.defs.src client iconImage mappings */
+    static const struct {
+        const char *key;
+        const char *icon;
+    } defs[] = {
+        {"FrontPanel", "Fpfpmin"},
+        {"Dtmail", "DtMail"},
+        {"Dtterm", "Fpterm"},
+        {"Dtstyle", "Fpstyle"},
+        {"Dthelpview", "Fphelp"},
+        {"Dticon", "Dtpaint"},
+        {"Dtksh", "Dtdtksh.m"},
+        {"Dtcalc", "Dtcalc"},
+        {"CkCalc", "Dtcalc"},
+        {"ck-calc", "Dtcalc"},
+        {"Dtaction", "Dtactn"},
+        {"Dtpad", "Fppenpd"},
+        {"Dtbuilder", "DtBldr"},
+        {"Dtqinfo", "Fpprnt"},
+        {"Printer", "Fpprnt"},
+        {"Dtinfo", "Dtinfo"},
+        {"Dtcm", "FpCM"},
+        {"Dtcreate", "Dtcreate"},
+    };
+    for (size_t i = 0; i < sizeof(defs) / sizeof(defs[0]); ++i) {
+        if ((inst && inst[0] && strcasecmp(inst, defs[i].key) == 0) ||
+            (cls && cls[0] && strcasecmp(cls, defs[i].key) == 0)) {
+            return defs[i].icon;
+        }
+    }
+    return nullptr;
+}
+
+static void record_action_cmd_icon(const char *cmd_raw, const char *icon_raw) {
+    if (!cmd_raw || !cmd_raw[0] || !icon_raw || !icon_raw[0]) return;
+    while (*cmd_raw && (isspace((unsigned char)*cmd_raw) || *cmd_raw == '"' || *cmd_raw == '\'')) {
+        cmd_raw++;
+    }
+    char tok[128] = {0};
+    size_t ti = 0;
+    while (cmd_raw[ti] && !isspace((unsigned char)cmd_raw[ti]) && cmd_raw[ti] != '"' &&
+           cmd_raw[ti] != '\'' && cmd_raw[ti] != ';' && ti + 1 < sizeof(tok)) {
+        tok[ti] = cmd_raw[ti];
+        ti++;
+    }
+    tok[ti] = '\0';
+    const char *base = strrchr(tok, '/');
+    base = base ? (base + 1) : tok;
+    if (!base[0] || strcmp(base, "sh") == 0 || strcmp(base, "bash") == 0 ||
+        strcmp(base, "env") == 0 || strcmp(base, "dtaction") == 0) {
+        return;
+    }
+
+    while (*icon_raw && isspace((unsigned char)*icon_raw)) icon_raw++;
+    char iname[64] = {0};
+    size_t ii = 0;
+    while (icon_raw[ii] && !isspace((unsigned char)icon_raw[ii]) && ii + 1 < sizeof(iname)) {
+        iname[ii] = icon_raw[ii];
+        ii++;
+    }
+    iname[ii] = '\0';
+    if (!iname[0]) return;
+
+    for (int i = 0; i < g_action_icon_rule_count; ++i) {
+        if (strcasecmp(g_action_icon_rules[i].key, base) == 0) {
+            return;
+        }
+    }
+    if (g_action_icon_rule_count < (int)(sizeof(g_action_icon_rules) / sizeof(g_action_icon_rules[0]))) {
+        snprintf(
+            g_action_icon_rules[g_action_icon_rule_count].key,
+            sizeof(g_action_icon_rules[0].key),
+            "%s",
+            base
+        );
+        snprintf(
+            g_action_icon_rules[g_action_icon_rule_count].icon,
+            sizeof(g_action_icon_rules[0].icon),
+            "%s",
+            iname
+        );
+        g_action_icon_rule_count++;
+    }
+}
+
+static void parse_dt_action_file(const char *path) {
+    FILE *fp = fopen(path, "r");
+    if (!fp) return;
+    bool in_action = false;
+    int brace_depth = 0;
+    char cur_icon[64] = {0};
+    char cur_exec[256] = {0};
+    char line[1024];
+    while (fgets(line, sizeof(line), fp)) {
+        char *p = line;
+        while (*p && isspace((unsigned char)*p)) p++;
+        if (*p == '#' || *p == '!' || *p == '\0') continue;
+        if (!in_action) {
+            if (strncmp(p, "ACTION", 6) == 0 && isspace((unsigned char)p[6])) {
+                in_action = true;
+                brace_depth = (strchr(p, '{') != nullptr) ? 1 : 0;
+                cur_icon[0] = '\0';
+                cur_exec[0] = '\0';
+            }
+            continue;
+        }
+        for (const char *c = p; *c; ++c) {
+            if (*c == '{') brace_depth++;
+            else if (*c == '}') brace_depth--;
+        }
+        if (strncmp(p, "ICON", 4) == 0 && isspace((unsigned char)p[4])) {
+            const char *v = p + 4;
+            while (*v && isspace((unsigned char)*v)) v++;
+            snprintf(cur_icon, sizeof(cur_icon), "%s", v);
+        } else if (strncmp(p, "EXEC_STRING", 11) == 0 && isspace((unsigned char)p[11])) {
+            const char *v = p + 11;
+            while (*v && isspace((unsigned char)*v)) v++;
+            snprintf(cur_exec, sizeof(cur_exec), "%s", v);
+        }
+        if (brace_depth <= 0 && strchr(p, '}') != nullptr) {
+            if (cur_exec[0] && cur_icon[0]) {
+                record_action_cmd_icon(cur_exec, cur_icon);
+            }
+            in_action = false;
+            brace_depth = 0;
+        }
+    }
+    fclose(fp);
+}
+
+static void ensure_dt_action_icons_loaded(void) {
+    if (g_action_icons_loaded) return;
+    g_action_icons_loaded = true;
+
+    const char *home = getenv("HOME");
+    char user_dir[512] = {0};
+    if (home && home[0]) {
+        snprintf(user_dir, sizeof(user_dir), "%s/.dt/types", home);
+    }
+    const char *dirs[4] = {
+        user_dir[0] ? user_dir : nullptr,
+        "/etc/dt/appconfig/types/C",
+#ifdef CDE_INSTALLATION_TOP
+        CDE_INSTALLATION_TOP "/appconfig/types/C",
+#else
+        "/usr/dt/appconfig/types/C",
+#endif
+        "/usr/dt/appconfig/types/C",
+    };
+    for (size_t d = 0; d < 4; ++d) {
+        if (!dirs[d] || !dirs[d][0]) continue;
+        DIR *dp = opendir(dirs[d]);
+        if (!dp) continue;
+        struct dirent *de;
+        while ((de = readdir(dp)) != nullptr) {
+            size_t nl = strlen(de->d_name);
+            if (nl > 3 && strcmp(de->d_name + nl - 3, ".dt") == 0) {
+                char fpath[1024];
+                snprintf(fpath, sizeof(fpath), "%s/%s", dirs[d], de->d_name);
+                parse_dt_action_file(fpath);
+            }
+        }
+        closedir(dp);
+    }
+}
+
+static const char *lookup_action_icon_for_token(const char *tok) {
+    if (!tok || !tok[0]) return nullptr;
+    ensure_dt_action_icons_loaded();
+    const char *base = strrchr(tok, '/');
+    base = base ? (base + 1) : tok;
+    for (int i = 0; i < g_action_icon_rule_count; ++i) {
+        if (strcasecmp(g_action_icon_rules[i].key, base) == 0) {
+            return g_action_icon_rules[i].icon;
+        }
+    }
+    return nullptr;
+}
+
+static uint32_t icon_rgba_to_argb32(DtwmRgba c) {
+    uint32_t a = (uint32_t)fmin(255.0, fmax(0.0, round(c.a * 255.0)));
+    uint32_t r = (uint32_t)fmin(255.0, fmax(0.0, round(c.r * 255.0)));
+    uint32_t g = (uint32_t)fmin(255.0, fmax(0.0, round(c.g * 255.0)));
+    uint32_t b = (uint32_t)fmin(255.0, fmax(0.0, round(c.b * 255.0)));
+    return (a << 24) | (r << 16) | (g << 8) | b;
+}
+
+static bool parse_icon_hex_color(const char *s, DtwmRgba *out) {
+    if (!s || s[0] != '#') return false;
+    size_t len = strlen(s + 1);
+    unsigned int r = 0, g = 0, b = 0;
+    if (len == 6 && sscanf(s + 1, "%02x%02x%02x", &r, &g, &b) == 3) {
+        *out = (DtwmRgba){r / 255.0, g / 255.0, b / 255.0, 1.0};
+        return true;
+    }
+    if (len == 12 && sscanf(s + 1, "%04x%04x%04x", &r, &g, &b) == 3) {
+        *out = (DtwmRgba){r / 65535.0, g / 65535.0, b / 65535.0, 1.0};
+        return true;
+    }
+    if (len == 3 && sscanf(s + 1, "%01x%01x%01x", &r, &g, &b) == 3) {
+        *out = (DtwmRgba){r / 15.0, g / 15.0, b / 15.0, 1.0};
+        return true;
+    }
+    return false;
+}
+
+static uint32_t resolve_cde_icon_xpm_color(const char *spec, const DtwmColorSet *cs) {
+    char buf[256];
+    snprintf(buf, sizeof(buf), "%s", spec);
+
+    char *save = nullptr;
+    char *tok = strtok_r(buf, " \t", &save);
+    const char *sym_val = nullptr;
+    const char *col_val = nullptr;
+    while (tok) {
+        if (strcmp(tok, "s") == 0) {
+            sym_val = strtok_r(nullptr, " \t", &save);
+        } else if (strcmp(tok, "c") == 0) {
+            col_val = strtok_r(nullptr, " \t", &save);
+        } else if (strcmp(tok, "m") == 0 || strcmp(tok, "g") == 0 || strcmp(tok, "g4") == 0) {
+            (void)strtok_r(nullptr, " \t", &save);
+        }
+        tok = strtok_r(nullptr, " \t", &save);
+    }
+
+    if ((sym_val && strcasecmp(sym_val, "none") == 0) ||
+        (col_val && strcasecmp(col_val, "none") == 0)) {
+        return 0x00000000u;
+    }
+
+    if (sym_val) {
+        if (strcasecmp(sym_val, "background") == 0) return icon_rgba_to_argb32(cs->bg);
+        if (strcasecmp(sym_val, "foreground") == 0) return icon_rgba_to_argb32(cs->fg);
+        if (strcasecmp(sym_val, "topShadowColor") == 0) return icon_rgba_to_argb32(cs->top_shadow);
+        if (strcasecmp(sym_val, "bottomShadowColor") == 0) return icon_rgba_to_argb32(cs->bottom_shadow);
+        if (strcasecmp(sym_val, "selectColor") == 0) {
+            return icon_rgba_to_argb32((DtwmRgba){cs->bg.r * 0.85, cs->bg.g * 0.85, cs->bg.b * 0.85, 1.0});
+        }
+        if (strcasecmp(sym_val, "iconColor1") == 0) return 0xFF000000u;
+        if (strcasecmp(sym_val, "iconColor2") == 0) return 0xFFFFFFFFu;
+        if (strcasecmp(sym_val, "iconColor3") == 0) return 0xFFFF0000u;
+        if (strcasecmp(sym_val, "iconColor4") == 0) return 0xFF00FF00u;
+        if (strcasecmp(sym_val, "iconColor5") == 0) return 0xFF0000FFu;
+        if (strcasecmp(sym_val, "iconColor6") == 0) return 0xFFFFFF00u;
+        if (strcasecmp(sym_val, "iconColor7") == 0) return 0xFF00FFFFu;
+        if (strcasecmp(sym_val, "iconColor8") == 0) return 0xFFFF00FFu;
+        if (strcasecmp(sym_val, "iconGray1") == 0) return 0xFFDEDEDEu;
+        if (strcasecmp(sym_val, "iconGray2") == 0) return 0xFFBDBDBDu;
+        if (strcasecmp(sym_val, "iconGray3") == 0) return 0xFFADADADu;
+        if (strcasecmp(sym_val, "iconGray4") == 0) return 0xFF949494u;
+        if (strcasecmp(sym_val, "iconGray5") == 0) return 0xFF737373u;
+        if (strcasecmp(sym_val, "iconGray6") == 0) return 0xFF636363u;
+        if (strcasecmp(sym_val, "iconGray7") == 0) return 0xFF424242u;
+        if (strcasecmp(sym_val, "iconGray8") == 0) return 0xFF212121u;
+    }
+
+    if (col_val) {
+        DtwmRgba parsed;
+        if (parse_icon_hex_color(col_val, &parsed)) {
+            return icon_rgba_to_argb32(parsed);
+        }
+        if (strcasecmp(col_val, "black") == 0) return 0xFF000000u;
+        if (strcasecmp(col_val, "white") == 0) return 0xFFFFFFFFu;
+        if (strcasecmp(col_val, "red") == 0) return 0xFFFF0000u;
+        if (strcasecmp(col_val, "green") == 0) return 0xFF00FF00u;
+        if (strcasecmp(col_val, "blue") == 0) return 0xFF0000FFu;
+        if (strcasecmp(col_val, "yellow") == 0) return 0xFFFFFF00u;
+        if (strcasecmp(col_val, "cyan") == 0) return 0xFF00FFFFu;
+        if (strcasecmp(col_val, "magenta") == 0) return 0xFFFF00FFu;
+        if (strcasecmp(col_val, "gray") == 0 || strcasecmp(col_val, "grey") == 0) return 0xFF808080u;
+    }
+    return icon_rgba_to_argb32(cs->fg);
+}
+
+static cairo_surface_t *load_cde_xpm_icon_file(const char *path, const DtwmColorSet *cs) {
+    FILE *fp = fopen(path, "r");
+    if (!fp) return nullptr;
+
+    int width = 0, height = 0, ncolors = 0, cpp = 0;
+    bool got_header = false;
+    typedef struct {
+        char key[8];
+        uint32_t argb;
+    } XpmEntry;
+    XpmEntry *cmap = nullptr;
+    int cmap_read = 0;
+
+    cairo_surface_t *surf = nullptr;
+    uint32_t *pixels = nullptr;
+    int stride_u32 = 0;
+    int row = 0;
+
+    char line[4096];
+    bool in_comment = false;
+    while (fgets(line, sizeof(line), fp)) {
+        char *p = line;
+        if (in_comment) {
+            char *endc = strstr(p, "*/");
+            if (!endc) continue;
+            in_comment = false;
+            p = endc + 2;
+        }
+        while (*p && *p != '"') {
+            if (p[0] == '/' && p[1] == '*') {
+                char *endc = strstr(p + 2, "*/");
+                if (!endc) {
+                    in_comment = true;
+                    break;
+                }
+                p = endc + 2;
+                continue;
+            }
+            p++;
+        }
+        if (in_comment || *p != '"') continue;
+
+        char *start = p + 1;
+        char *end = strrchr(start, '"');
+        if (!end) continue;
+        *end = '\0';
+
+        if (!got_header) {
+            if (sscanf(start, "%d %d %d %d", &width, &height, &ncolors, &cpp) == 4 &&
+                width > 0 && width <= 512 && height > 0 && height <= 512 &&
+                ncolors > 0 && ncolors <= 1024 && cpp >= 1 && cpp <= 4) {
+                got_header = true;
+                cmap = calloc((size_t)ncolors, sizeof(*cmap));
+                surf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
+                if (!cmap || cairo_surface_status(surf) != CAIRO_STATUS_SUCCESS) {
+                    free(cmap);
+                    if (surf) cairo_surface_destroy(surf);
+                    fclose(fp);
+                    return nullptr;
+                }
+                pixels = (uint32_t *)cairo_image_surface_get_data(surf);
+                stride_u32 = cairo_image_surface_get_stride(surf) / 4;
+            }
+            continue;
+        }
+
+        if (cmap_read < ncolors) {
+            if ((int)strlen(start) >= cpp) {
+                memcpy(cmap[cmap_read].key, start, (size_t)cpp);
+                cmap[cmap_read].key[cpp] = '\0';
+                cmap[cmap_read].argb = resolve_cde_icon_xpm_color(start + cpp, cs);
+                cmap_read++;
+            }
+            continue;
+        }
+
+        if (row < height) {
+            size_t slen = strlen(start);
+            for (int x = 0; x < width; ++x) {
+                uint32_t pix = 0x00000000u;
+                if ((size_t)((x + 1) * cpp) <= slen) {
+                    const char *k = start + x * cpp;
+                    for (int ci = 0; ci < cmap_read; ++ci) {
+                        if (memcmp(cmap[ci].key, k, (size_t)cpp) == 0) {
+                            pix = cmap[ci].argb;
+                            break;
+                        }
+                    }
+                }
+                pixels[row * stride_u32 + x] = pix;
+            }
+            row++;
+            if (row >= height) break;
+        }
+    }
+
+    fclose(fp);
+    free(cmap);
+    if (!surf || row == 0) {
+        if (surf) cairo_surface_destroy(surf);
+        return nullptr;
+    }
+    cairo_surface_mark_dirty(surf);
+    return surf;
+}
+
+static bool load_xbm_bits_file(const char *path, int *out_w, int *out_h, uint8_t **out_bits) {
+    FILE *fp = fopen(path, "r");
+    if (!fp) return false;
+    int width = 0, height = 0;
+    bool in_bits = false;
+    uint8_t *bits = nullptr;
+    size_t total_bytes = 0, byte_idx = 0;
+    char line[1024];
+
+    while (fgets(line, sizeof(line), fp)) {
+        if (!in_bits) {
+            int val = 0;
+            if (strstr(line, "_width") && sscanf(line, "#define %*s %d", &val) == 1) {
+                width = val;
+            } else if (strstr(line, "_height") && sscanf(line, "#define %*s %d", &val) == 1) {
+                height = val;
+            } else if (strchr(line, '{') && width > 0 && width <= 512 && height > 0 && height <= 512) {
+                int row_bytes = (width + 7) / 8;
+                total_bytes = (size_t)row_bytes * (size_t)height;
+                bits = calloc(total_bytes, 1);
+                if (!bits) {
+                    fclose(fp);
+                    return false;
+                }
+                in_bits = true;
+            }
+        }
+        if (in_bits) {
+            const char *p = strchr(line, '{') ? (strchr(line, '{') + 1) : line;
+            while (*p && byte_idx < total_bytes) {
+                while (*p && *p != '0' && !isdigit((unsigned char)*p) && *p != '-') p++;
+                if (!*p) break;
+                char *endp = nullptr;
+                long v = strtol(p, &endp, 0);
+                if (endp == p) {
+                    p++;
+                    continue;
+                }
+                bits[byte_idx++] = (uint8_t)(v & 0xFF);
+                p = endp;
+            }
+            if (byte_idx >= total_bytes) break;
+        }
+    }
+    fclose(fp);
+    if (!bits || byte_idx == 0) {
+        free(bits);
+        return false;
+    }
+    *out_w = width;
+    *out_h = height;
+    *out_bits = bits;
+    return true;
+}
+
+static cairo_surface_t *load_cde_xbm_icon_file(
+    const char *bm_path, const char *mask_path, const DtwmColorSet *cs
+) {
+    int w = 0, h = 0, mw = 0, mh = 0;
+    uint8_t *bits = nullptr, *mbits = nullptr;
+    if (!load_xbm_bits_file(bm_path, &w, &h, &bits)) return nullptr;
+    if (mask_path && mask_path[0]) {
+        (void)load_xbm_bits_file(mask_path, &mw, &mh, &mbits);
+    }
+
+    cairo_surface_t *surf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w, h);
+    if (cairo_surface_status(surf) != CAIRO_STATUS_SUCCESS) {
+        free(bits);
+        free(mbits);
+        cairo_surface_destroy(surf);
+        return nullptr;
+    }
+    uint32_t *dst = (uint32_t *)cairo_image_surface_get_data(surf);
+    int stride_u32 = cairo_image_surface_get_stride(surf) / 4;
+    int rbytes = (w + 7) / 8;
+    int mrbytes = (mw + 7) / 8;
+    uint32_t fg_argb = icon_rgba_to_argb32(cs->fg);
+    uint32_t bg_argb = icon_rgba_to_argb32(cs->bg);
+
+    for (int y = 0; y < h; ++y) {
+        for (int x = 0; x < w; ++x) {
+            bool on = ((bits[y * rbytes + (x / 8)] >> (x % 8)) & 1u) != 0;
+            bool vis = true;
+            if (mbits && x < mw && y < mh) {
+                vis = ((mbits[y * mrbytes + (x / 8)] >> (x % 8)) & 1u) != 0;
+            }
+            dst[y * stride_u32 + x] = vis ? (on ? fg_argb : bg_argb) : 0x00000000u;
+        }
+    }
+    free(bits);
+    free(mbits);
+    cairo_surface_mark_dirty(surf);
+    return surf;
+}
+
+static cairo_surface_t *load_named_icon_surface(DtwmServer *server, const char *icon_name) {
+    if (!server || !icon_name || !icon_name[0]) return nullptr;
+    const DtwmColorSet *cs = &server->palette.inactive;
+
+    /* Direct path */
+    if (strchr(icon_name, '/')) {
+        size_t pl = strlen(icon_name);
+        if (pl > 4 && strcasecmp(icon_name + pl - 4, ".png") == 0) {
+            cairo_surface_t *ps = cairo_image_surface_create_from_png(icon_name);
+            if (ps && cairo_surface_status(ps) == CAIRO_STATUS_SUCCESS) return ps;
+            if (ps) cairo_surface_destroy(ps);
+        }
+        cairo_surface_t *xs = load_cde_xpm_icon_file(icon_name, cs);
+        if (xs) return xs;
+        return load_cde_xbm_icon_file(icon_name, nullptr, cs);
+    }
+
+    /* Strip trailing .pm / .bm if included in resource value */
+    char stem[128];
+    snprintf(stem, sizeof(stem), "%s", icon_name);
+    size_t sl = strlen(stem);
+    if (sl > 3 && (strcasecmp(stem + sl - 3, ".pm") == 0 || strcasecmp(stem + sl - 3, ".bm") == 0)) {
+        stem[sl - 3] = '\0';
+    }
+
+    const char *home = getenv("HOME");
+    char user_icons[512] = {0};
+    if (home && home[0]) {
+        snprintf(user_icons, sizeof(user_icons), "%s/.dt/icons", home);
+    }
+    const char *cde_dirs[5] = {
+        user_icons[0] ? user_icons : nullptr,
+        "/etc/dt/appconfig/icons/C",
+#ifdef CDE_INSTALLATION_TOP
+        CDE_INSTALLATION_TOP "/appconfig/icons/C",
+#else
+        "/usr/dt/appconfig/icons/C",
+#endif
+        "/usr/dt/appconfig/icons/C",
+        "cde/programs/icons",
+    };
+
+    static const char *const pm_exts[] = {".l.pm", ".pm", ".m.pm", ".s.pm", ".t.pm"};
+    for (size_t d = 0; d < 5; ++d) {
+        if (!cde_dirs[d] || !cde_dirs[d][0]) continue;
+        for (size_t e = 0; e < sizeof(pm_exts) / sizeof(pm_exts[0]); ++e) {
+            char cand[1024];
+            snprintf(cand, sizeof(cand), "%s/%s%s", cde_dirs[d], stem, pm_exts[e]);
+            if (access(cand, R_OK) == 0) {
+                cairo_surface_t *s = load_cde_xpm_icon_file(cand, cs);
+                if (s) return s;
+            }
+        }
+        static const struct {
+            const char *bm;
+            const char *mask;
+        } bm_exts[] = {
+            {".l.bm", ".l_m.bm"},
+            {".bm", "_m.bm"},
+            {".m.bm", ".m_m.bm"},
+        };
+        for (size_t e = 0; e < sizeof(bm_exts) / sizeof(bm_exts[0]); ++e) {
+            char cand[1024], mcand[1024];
+            snprintf(cand, sizeof(cand), "%s/%s%s", cde_dirs[d], stem, bm_exts[e].bm);
+            snprintf(mcand, sizeof(mcand), "%s/%s%s", cde_dirs[d], stem, bm_exts[e].mask);
+            if (access(cand, R_OK) == 0) {
+                cairo_surface_t *s = load_cde_xbm_icon_file(
+                    cand, access(mcand, R_OK) == 0 ? mcand : nullptr, cs
+                );
+                if (s) return s;
+            }
+        }
+    }
+
+    /* Freedesktop hicolor / pixmaps fallback for modern X11 & native Wayland apps */
+    const char *png_dirs[] = {
+        "/usr/share/icons/hicolor/48x48/apps",
+        "/usr/share/icons/hicolor/64x64/apps",
+        "/usr/share/icons/hicolor/128x128/apps",
+        "/usr/share/icons/hicolor/32x32/apps",
+        "/usr/share/pixmaps",
+    };
+    for (size_t d = 0; d < sizeof(png_dirs) / sizeof(png_dirs[0]); ++d) {
+        char cand[1024];
+        snprintf(cand, sizeof(cand), "%s/%s.png", png_dirs[d], stem);
+        if (access(cand, R_OK) == 0) {
+            cairo_surface_t *ps = cairo_image_surface_create_from_png(cand);
+            if (ps && cairo_surface_status(ps) == CAIRO_STATUS_SUCCESS) return ps;
+            if (ps) cairo_surface_destroy(ps);
+        }
+        snprintf(cand, sizeof(cand), "%s/%s.xpm", png_dirs[d], stem);
+        if (access(cand, R_OK) == 0) {
+            cairo_surface_t *xs = load_cde_xpm_icon_file(cand, cs);
+            if (xs) return xs;
+        }
+    }
+    return nullptr;
+}
+
+static cairo_surface_t *fetch_x11_net_wm_icon(DtwmServer *server, xcb_window_t win) {
+    if (!server->xcb_conn || server->atom_net_wm_icon == XCB_ATOM_NONE) return nullptr;
+    xcb_get_property_cookie_t ck = xcb_get_property(
+        server->xcb_conn, 0, win, server->atom_net_wm_icon, XCB_ATOM_CARDINAL, 0, 65536
+    );
+    xcb_get_property_reply_t *rep = xcb_get_property_reply(server->xcb_conn, ck, nullptr);
+    if (!rep) return nullptr;
+
+    cairo_surface_t *best_surf = nullptr;
+    if (rep->format == 32) {
+        int nwords = xcb_get_property_value_length(rep) / 4;
+        const uint32_t *data = (const uint32_t *)xcb_get_property_value(rep);
+        int target = server->large_icons ? 96 : 48;
+        int best_off = -1, best_w = 0, best_h = 0, best_diff = 100000;
+        int idx = 0;
+        while (idx + 2 <= nwords) {
+            uint32_t iw = data[idx];
+            uint32_t ih = data[idx + 1];
+            if (iw == 0 || ih == 0 || iw > 512 || ih > 512) break;
+            int pixels = (int)(iw * ih);
+            if (idx + 2 + pixels > nwords) break;
+            int diff = abs((int)iw - target);
+            if (diff < best_diff) {
+                best_diff = diff;
+                best_off = idx + 2;
+                best_w = (int)iw;
+                best_h = (int)ih;
+            }
+            idx += 2 + pixels;
+        }
+        if (best_off >= 0 && best_w > 0 && best_h > 0) {
+            best_surf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, best_w, best_h);
+            if (cairo_surface_status(best_surf) == CAIRO_STATUS_SUCCESS) {
+                uint32_t *dst = (uint32_t *)cairo_image_surface_get_data(best_surf);
+                int stride_u32 = cairo_image_surface_get_stride(best_surf) / 4;
+                const uint32_t *src = data + best_off;
+                for (int y = 0; y < best_h; ++y) {
+                    for (int x = 0; x < best_w; ++x) {
+                        uint32_t px = src[y * best_w + x];
+                        uint32_t a = (px >> 24) & 0xFFu;
+                        uint32_t r = (((px >> 16) & 0xFFu) * a + 127u) / 255u;
+                        uint32_t g = (((px >> 8) & 0xFFu) * a + 127u) / 255u;
+                        uint32_t b = ((px & 0xFFu) * a + 127u) / 255u;
+                        dst[y * stride_u32 + x] = (a << 24) | (r << 16) | (g << 8) | b;
+                    }
+                }
+                cairo_surface_mark_dirty(best_surf);
+            } else {
+                cairo_surface_destroy(best_surf);
+                best_surf = nullptr;
+            }
+        }
+    }
+    free(rep);
+    return best_surf;
+}
+
+static void refresh_xwayland_icon_title(DtwmView *view) {
+    if (!view || view->kind != DTWM_VIEW_XWAYLAND || !view->xwayland_surface) return;
+    DtwmServer *server = view->server;
+    if (!server->xcb_conn) return;
+    xcb_window_t win = view->xwayland_surface->window_id;
+
+    view->icon_title[0] = '\0';
+
+    /* 1. Prefer UTF-8 _NET_WM_ICON_NAME */
+    if (server->atom_net_wm_icon_name != XCB_ATOM_NONE) {
+        xcb_get_property_cookie_t ck = xcb_get_property(
+            server->xcb_conn, 0, win, server->atom_net_wm_icon_name, XCB_GET_PROPERTY_TYPE_ANY, 0, 128
+        );
+        xcb_get_property_reply_t *rep = xcb_get_property_reply(server->xcb_conn, ck, nullptr);
+        if (rep) {
+            int len = xcb_get_property_value_length(rep);
+            if (rep->format == 8 && len > 0) {
+                const char *val = (const char *)xcb_get_property_value(rep);
+                size_t n = strnlen(val, (size_t)len);
+                if (n > 0) {
+                    snprintf(view->icon_title, sizeof(view->icon_title), "%.*s", (int)n, val);
+                }
+            }
+            free(rep);
+        }
+    }
+
+    /* 2. Fall back to ICCCM WM_ICON_NAME */
+    if (!view->icon_title[0]) {
+        xcb_get_property_cookie_t ck = xcb_get_property(
+            server->xcb_conn, 0, win, XCB_ATOM_WM_ICON_NAME, XCB_GET_PROPERTY_TYPE_ANY, 0, 128
+        );
+        xcb_get_property_reply_t *rep = xcb_get_property_reply(server->xcb_conn, ck, nullptr);
+        if (rep) {
+            int len = xcb_get_property_value_length(rep);
+            if (rep->format == 8 && len > 0) {
+                const char *val = (const char *)xcb_get_property_value(rep);
+                size_t n = strnlen(val, (size_t)len);
+                if (n > 0) {
+                    snprintf(view->icon_title, sizeof(view->icon_title), "%.*s", (int)n, val);
+                }
+            }
+            free(rep);
+        }
+    }
+}
+
+static const char *lookup_xwayland_proc_action_icon(DtwmServer *server, xcb_window_t win) {
+    if (!server->xcb_conn) return nullptr;
+
+    /* 1. Try WM_COMMAND */
+    if (server->atom_wm_command != XCB_ATOM_NONE) {
+        xcb_get_property_cookie_t ck = xcb_get_property(
+            server->xcb_conn, 0, win, server->atom_wm_command, XCB_GET_PROPERTY_TYPE_ANY, 0, 128
+        );
+        xcb_get_property_reply_t *rep = xcb_get_property_reply(server->xcb_conn, ck, nullptr);
+        if (rep) {
+            int len = xcb_get_property_value_length(rep);
+            if (rep->format == 8 && len > 0) {
+                const char *val = (const char *)xcb_get_property_value(rep);
+                size_t n = strnlen(val, (size_t)len);
+                char cmd[256];
+                snprintf(cmd, sizeof(cmd), "%.*s", (int)n, val);
+                const char *ic = lookup_action_icon_for_token(cmd);
+                if (ic) {
+                    free(rep);
+                    return ic;
+                }
+            }
+            free(rep);
+        }
+    }
+
+    /* 2. Try _NET_WM_PID -> /proc/<pid>/cmdline */
+    if (server->atom_net_wm_pid != XCB_ATOM_NONE) {
+        xcb_get_property_cookie_t ck = xcb_get_property(
+            server->xcb_conn, 0, win, server->atom_net_wm_pid, XCB_ATOM_CARDINAL, 0, 1
+        );
+        xcb_get_property_reply_t *rep = xcb_get_property_reply(server->xcb_conn, ck, nullptr);
+        if (rep) {
+            uint32_t pid = 0;
+            if (rep->format == 32 && xcb_get_property_value_length(rep) >= 4) {
+                pid = *(const uint32_t *)xcb_get_property_value(rep);
+            }
+            free(rep);
+            if (pid > 1) {
+                char ppath[64], cmdline[512];
+                snprintf(ppath, sizeof(ppath), "/proc/%u/cmdline", pid);
+                int fd = open(ppath, O_RDONLY);
+                if (fd >= 0) {
+                    ssize_t nr = read(fd, cmdline, sizeof(cmdline) - 1);
+                    close(fd);
+                    if (nr > 0) {
+                        cmdline[nr] = '\0';
+                        const char *ic = lookup_action_icon_for_token(cmdline);
+                        if (ic) return ic;
+                    }
+                }
+            }
+        }
+    }
+    return nullptr;
+}
 static xcb_atom_t intern_atom_icons(xcb_connection_t *conn, const char *name) {
     if (!conn || !name || !name[0]) return XCB_ATOM_NONE;
     xcb_intern_atom_cookie_t ck = xcb_intern_atom(conn, 0, (uint16_t)strlen(name), name);
@@ -438,11 +1231,13 @@ static cairo_surface_t *fetch_x11_icon_pixmap(
         int stride_bytes = row_bits / 8;
         const uint8_t *bits = xcb_get_image_data(irep);
         int data_len = xcb_get_image_data_length(irep);
+        uint32_t fg_1bit = icon_rgba_to_argb32(server->palette.inactive.fg);
+        uint32_t bg_1bit = icon_rgba_to_argb32(server->palette.inactive.bg);
         if (stride_bytes * h <= data_len) {
             for (int y = 0; y < h; ++y) {
                 for (int x = 0; x < w; ++x) {
                     bool set = extract_1bit_xy_bit(bits, stride_bytes, bitmap_msb, x, y);
-                    dst[y * dst_stride_u32 + x] = set ? 0xFF181C24u : 0xFFE6E9F0u;
+                    dst[y * dst_stride_u32 + x] = set ? fg_1bit : bg_1bit;
                 }
             }
         }
@@ -533,10 +1328,41 @@ static cairo_surface_t *fetch_x11_icon_pixmap(
     return surf;
 }
 
+static void resolve_xdg_view_named_icon_fallback(DtwmView *view) {
+    if (!view || view->kind != DTWM_VIEW_XDG || !view->xdg_toplevel || view->icon_surface) return;
+    const char *app_id = view->xdg_toplevel->app_id;
+    if (!app_id || !app_id[0]) return;
+
+    const char *dot = strrchr(app_id, '.');
+    const char *tail = dot ? (dot + 1) : app_id;
+
+    const char *ic = lookup_dtwm_defs_icon_image(app_id, tail);
+    if (!ic) ic = lookup_action_icon_for_token(app_id);
+    if (!ic) ic = lookup_action_icon_for_token(tail);
+
+    cairo_surface_t *s = ic ? load_named_icon_surface(view->server, ic) : nullptr;
+    if (!s) s = load_named_icon_surface(view->server, app_id);
+    if (!s && tail != app_id) s = load_named_icon_surface(view->server, tail);
+    if (s) {
+        view->icon_surface = s;
+        view->icon_from_named_image = true;
+    }
+}
+
 static void refresh_xwayland_wm_hints(DtwmView *view, bool check_initial_iconic) {
     if (!view || view->kind != DTWM_VIEW_XWAYLAND || !view->xwayland_surface) return;
     DtwmServer *server = view->server;
     if (!server->xcb_conn) return;
+
+    char inst[128] = {0}, cls[128] = {0};
+    read_xcb_wm_class_sync(server, view->xwayland_surface, inst, sizeof(inst), cls, sizeof(cls));
+    const char *defs_icon = lookup_dtwm_defs_icon_image(
+        view->is_panel ? "FrontPanel" : inst,
+        view->is_panel ? "FrontPanel" : cls
+    );
+
+    xcb_pixmap_t icon_pix = XCB_NONE;
+    xcb_pixmap_t icon_mask = XCB_NONE;
 
     xcb_get_property_cookie_t ck = xcb_get_property(
         server->xcb_conn,
@@ -548,41 +1374,87 @@ static void refresh_xwayland_wm_hints(DtwmView *view, bool check_initial_iconic)
         9
     );
     xcb_get_property_reply_t *rep = xcb_get_property_reply(server->xcb_conn, ck, nullptr);
-    if (!rep) return;
+    if (rep) {
+        int len = xcb_get_property_value_length(rep);
+        if (rep->format == 32 && len >= 16) {
+            const uint32_t *vals = (const uint32_t *)xcb_get_property_value(rep);
+            int nwords = len / 4;
+            uint32_t flags = vals[0];
+            uint32_t initial_state = (nwords > 2) ? vals[2] : 1u;
+            icon_pix = ((flags & DTWM_X11_ICON_PIXMAP_HINT) && nwords > 3) ? vals[3] : XCB_NONE;
+            icon_mask = ((flags & DTWM_X11_ICON_MASK_HINT) && nwords > 7) ? vals[7] : XCB_NONE;
 
-    int len = xcb_get_property_value_length(rep);
-    if (rep->format == 32 && len >= 16) {
-        const uint32_t *vals = (const uint32_t *)xcb_get_property_value(rep);
-        int nwords = len / 4;
-        uint32_t flags = vals[0];
-        uint32_t initial_state = (nwords > 2) ? vals[2] : 1u;
-        xcb_pixmap_t icon_pix = ((flags & DTWM_X11_ICON_PIXMAP_HINT) && nwords > 3) ? vals[3] : XCB_NONE;
-        xcb_pixmap_t icon_mask = ((flags & DTWM_X11_ICON_MASK_HINT) && nwords > 7) ? vals[7] : XCB_NONE;
+            if ((flags & DTWM_X11_ICON_POSITION_HINT) && nwords > 6) {
+                view->has_icon_pos_hint = true;
+                view->icon_hint_x = (int32_t)vals[5];
+                view->icon_hint_y = (int32_t)vals[6];
+            }
 
-        if (check_initial_iconic && (flags & DTWM_X11_STATE_HINT) &&
-            initial_state == DTWM_X11_ICONIC_STATE && !view->is_swallowed && !view->is_desktop_pin) {
-            view->minimized = true;
-            wlr_xwayland_surface_set_minimized(view->xwayland_surface, true);
-        }
-
-        if (icon_pix != XCB_NONE) {
-            cairo_surface_t *new_surf = fetch_x11_icon_pixmap(server, icon_pix, icon_mask);
-            if (new_surf) {
-                if (view->icon_surface) {
-                    cairo_surface_destroy(view->icon_surface);
-                }
-                view->icon_surface = new_surf;
+            if (check_initial_iconic && (flags & DTWM_X11_STATE_HINT) &&
+                initial_state == DTWM_X11_ICONIC_STATE && !view->is_swallowed && !view->is_desktop_pin) {
+                view->minimized = true;
+                wlr_xwayland_surface_set_minimized(view->xwayland_surface, true);
             }
         }
+        free(rep);
     }
-    free(rep);
+
+    /* Precedence matching X11 dtwm WmWinInfo.c (useClientIcon defaults to False):
+     * 1. Explicit Dtwm.defs / xrdb Dtwm*<Class>*iconImage (e.g. FrontPanel->Fpfpmin, Dtterm->Fpterm)
+     * 2. Client WM_HINTS.icon_pixmap (+ icon_mask) or _NET_WM_ICON (e.g. dtfile dynamic folder icon)
+     * 3. CDE .dt ACTION ICON / class / pixmap lookup (e.g. ck-calc->Dtcalc, Fphome, etc.)
+     */
+    cairo_surface_t *new_surf = nullptr;
+    bool from_named = false;
+    if (defs_icon) {
+        new_surf = load_named_icon_surface(server, defs_icon);
+        if (new_surf) from_named = true;
+    }
+    if (!new_surf && icon_pix != XCB_NONE) {
+        new_surf = fetch_x11_icon_pixmap(server, icon_pix, icon_mask);
+    }
+    if (!new_surf) {
+        new_surf = fetch_x11_net_wm_icon(server, view->xwayland_surface->window_id);
+    }
+    if (!new_surf) {
+        const char *act_ic = lookup_xwayland_proc_action_icon(server, view->xwayland_surface->window_id);
+        if (!act_ic && inst[0]) act_ic = lookup_action_icon_for_token(inst);
+        if (!act_ic && cls[0]) act_ic = lookup_action_icon_for_token(cls);
+        if (act_ic) {
+            new_surf = load_named_icon_surface(server, act_ic);
+            if (new_surf) from_named = true;
+        }
+    }
+    if (!new_surf && cls[0] && strcasecmp(cls, "Dtfile") == 0) {
+        new_surf = load_named_icon_surface(server, "Fphome");
+        if (new_surf) from_named = true;
+    }
+    if (!new_surf && inst[0]) {
+        new_surf = load_named_icon_surface(server, inst);
+        if (new_surf) from_named = true;
+    }
+    if (!new_surf && cls[0]) {
+        new_surf = load_named_icon_surface(server, cls);
+        if (new_surf) from_named = true;
+    }
+
+    if (new_surf) {
+        if (view->icon_surface) {
+            cairo_surface_destroy(view->icon_surface);
+        }
+        view->icon_surface = new_surf;
+        view->icon_from_named_image = from_named;
+    }
 }
 
 /* --- Desktop Icon Classification, Layout & Rendering --- */
 static bool should_show_desktop_icon(const DtwmView *view) {
     if (!view || !view->mapped) return false;
+    if (view->server->greeter_mode) return false;
     if (view->is_desktop_pin || view->is_swallowed || view->is_subpanel || view->is_lock_dialog) return false;
-    if (view->is_panel && !view->minimized) return false;
+    if (view->is_panel) {
+        return view->minimized || (view->server->show_open_window_icons && !view->server->use_icon_box);
+    }
     if (view->kind == DTWM_VIEW_XWAYLAND && view->xwayland_surface &&
         view->xwayland_surface->override_redirect) {
         return false;
@@ -603,20 +1475,96 @@ static bool should_show_desktop_icon(const DtwmView *view) {
     return view->minimized || view->server->use_icon_box || view->server->show_open_window_icons;
 }
 
-static bool icon_surface_has_transparency(cairo_surface_t *surf) {
-    if (!surf) return false;
-    int w = cairo_image_surface_get_width(surf);
-    int h = cairo_image_surface_get_height(surf);
-    int stride_u32 = cairo_image_surface_get_stride(surf) / 4;
-    const uint32_t *px = (const uint32_t *)cairo_image_surface_get_data(surf);
-    for (int y = 0; y < h; y += 2) {
-        for (int x = 0; x < w; x += 2) {
-            if ((px[y * stride_u32 + x] >> 24) < 250u) {
-                return true;
-            }
+static bool view_or_transient_has_focus(const DtwmView *view) {
+    if (!view || !view->server || !view->server->focused_view) return false;
+    const DtwmView *fv = view->server->focused_view;
+    if (fv == view) return true;
+    if (view->kind == DTWM_VIEW_XWAYLAND && fv->kind == DTWM_VIEW_XWAYLAND &&
+        view->xwayland_surface && fv->xwayland_surface) {
+        const struct wlr_xwayland_surface *cur = fv->xwayland_surface->parent;
+        for (int depth = 0; cur && depth < 8; ++depth, cur = cur->parent) {
+            if (cur == view->xwayland_surface) return true;
+        }
+    } else if (view->kind == DTWM_VIEW_XDG && fv->kind == DTWM_VIEW_XDG &&
+               view->xdg_toplevel && fv->xdg_toplevel) {
+        const struct wlr_xdg_toplevel *cur = fv->xdg_toplevel->parent;
+        for (int depth = 0; cur && depth < 8; ++depth, cur = cur->parent) {
+            if (cur == view->xdg_toplevel) return true;
         }
     }
     return false;
+}
+
+static void draw_asym_bevel(
+    cairo_t *cr,
+    double x,
+    double y,
+    double w,
+    double h,
+    double top_t,
+    double right_t,
+    double bot_t,
+    double left_t,
+    DtwmRgba tl_col,
+    DtwmRgba br_col
+) {
+    if (w <= 0.0 || h <= 0.0) return;
+    cairo_set_source_rgba(cr, tl_col.r, tl_col.g, tl_col.b, tl_col.a);
+    cairo_new_path(cr);
+    cairo_move_to(cr, x, y);
+    cairo_line_to(cr, x + w, y);
+    cairo_line_to(cr, x + w - right_t, y + top_t);
+    cairo_line_to(cr, x + left_t, y + top_t);
+    cairo_line_to(cr, x + left_t, y + h - bot_t);
+    cairo_line_to(cr, x, y + h);
+    cairo_close_path(cr);
+    cairo_fill(cr);
+
+    cairo_set_source_rgba(cr, br_col.r, br_col.g, br_col.b, br_col.a);
+    cairo_new_path(cr);
+    cairo_move_to(cr, x + w, y);
+    cairo_line_to(cr, x + w, y + h);
+    cairo_line_to(cr, x, y + h);
+    cairo_line_to(cr, x + left_t, y + h - bot_t);
+    cairo_line_to(cr, x + w - right_t, y + h - bot_t);
+    cairo_line_to(cr, x + w - right_t, y + top_t);
+    cairo_close_path(cr);
+    cairo_fill(cr);
+}
+
+static void draw_cde_icon_title_box(
+    cairo_t *cr,
+    const DtwmServer *server,
+    const char *text,
+    double x,
+    double y,
+    double w,
+    double h,
+    DtwmRgba fg
+) {
+    if (!text || !text[0] || w <= 2.0 || h <= 2.0) return;
+    const char *fspec = (server->palette.profile == DTWM_PROFILE_CLASSIC) ? "Serif 9" : "Sans 9";
+    PangoLayout *layout = pango_cairo_create_layout(cr);
+    PangoFontDescription *desc = pango_font_description_from_string(fspec);
+    pango_layout_set_font_description(layout, desc);
+    pango_layout_set_text(layout, text, -1);
+
+    int tw = 0, th = 0;
+    pango_layout_get_pixel_size(layout, &tw, &th);
+    /* Matches WmIDecor.c DrawIconTitle: center if text fits, else left-align & clip cleanly */
+    double tx = (tw >= (int)w) ? x : (x + floor((w - tw) * 0.5));
+    double ty = y + floor((h - th) * 0.5);
+
+    cairo_save(cr);
+    cairo_rectangle(cr, x, y, w, h);
+    cairo_clip(cr);
+    cairo_set_source_rgba(cr, fg.r, fg.g, fg.b, fg.a);
+    cairo_move_to(cr, tx, ty);
+    pango_cairo_show_layout(cr, layout);
+    cairo_restore(cr);
+
+    pango_font_description_free(desc);
+    g_object_unref(layout);
 }
 
 static void draw_default_cde_app_emblem(
@@ -668,78 +1616,135 @@ void dtwm_icons_update_view(DtwmView *view) {
         view->desktop_icon_buf = wlr_scene_buffer_create(server->desktop_icon_tree, nullptr);
     }
 
+    /* Exact X11 dtwm WmIDecor.c GetIconDimensions (WmRECESSED) metrics:
+     * frame_w = img_dim + 2*pad(2) + 2*ext_shadow(2) + 4*int_shadow(1) = img_dim + 12 (60 for 48px)
+     * img_frame_h = img_dim + 11 (59 for 48px), label_frame_h = 21 -> frame_h = 80
+     * Open-window indicator bar sits 7px (OPEN_ICON_BAR_GAP) to the right, 10px wide x 3/8*frame_h tall.
+     */
     int img_dim = server->large_icons ? 96 : 48;
-    int frame_pad = 4;
-    int img_box = img_dim + frame_pad * 2;
-    int label_w = server->large_icons ? 112 : 76;
-    if (label_w < img_box) label_w = img_box;
-    int label_h = 20;
-    int total_w = label_w;
-    int total_h = img_box + 2 + label_h;
+    int frame_w = img_dim + 12;
+    int img_frame_h = img_dim + 11;
+    int label_frame_h = server->large_icons ? 24 : 21;
+    int frame_h = img_frame_h + label_frame_h;
+
+    bool in_icon_box = server->use_icon_box && !view->is_panel;
+    bool show_bar = !view->minimized && server->show_open_window_icons && !in_icon_box;
+    int bar_gap = DTWM_OPEN_ICON_BAR_GAP;
+    int bar_w = DTWM_OPEN_ICON_BAR_WIDTH;
+    int bar_h = (frame_h * 3) / 8;
+    int bar_x = frame_w + bar_gap;
+    int bar_y = (frame_h - bar_h) / 2;
+
+    int total_w = show_bar ? (frame_w + bar_gap + bar_w) : frame_w;
+    int total_h = frame_h;
 
     view->icon_box_w = total_w;
     view->icon_box_h = total_h;
-    int img_x = (total_w - img_box) / 2;
-    view->icon_w = img_dim;
-    view->icon_h = img_dim;
+    view->icon_w = frame_w;
+    view->icon_h = frame_h;
 
     cairo_t *cr = nullptr;
     cairo_surface_t *surf = nullptr;
     struct wlr_buffer *buf = dtwm_cairo_buffer_begin(total_w, total_h, &cr, &surf);
     if (!buf) return;
 
-    /* Clear full tile to transparent so narrow icon box sits cleanly above wider label plate */
+    /* Clear full buffer so the 7px gap between icon frame and open-window indicator bar is transparent */
     cairo_save(cr);
     cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
     cairo_paint(cr);
     cairo_restore(cr);
 
-    /* Active-focus marker uses CDE active Crimson bevels; inactive uses CDE Slate */
-    const DtwmColorSet *cs = view->active ? &server->palette.active : &server->palette.inactive;
-    bool shaped = icon_surface_has_transparency(view->icon_surface);
+    /* WmIDecor.c:927: only focused minimized icons use active bevels; open-window icons use inactive
+     * appearance with sunken (pressed) bevels + darker select_color fill, while the separate 10px
+     * indicator bar to the right reflects active vs inactive window focus! */
+    const DtwmColorSet *ics =
+        (view->minimized && view->active) ? &server->palette.active : &server->palette.inactive;
 
-    if (!shaped || view->active) {
-        cairo_set_source_rgba(cr, cs->bg.r, cs->bg.g, cs->bg.b, shaped ? 0.35 : 1.0);
-        cairo_rectangle(cr, img_x, 0, img_box, img_box);
+    if (view->minimized) {
+        cairo_set_source_rgba(cr, ics->bg.r, ics->bg.g, ics->bg.b, 1.0);
+        cairo_rectangle(cr, 0, 0, frame_w, frame_h);
         cairo_fill(cr);
-        if (view->minimized && !view->active) {
-            dtwm_draw_bevel(cr, img_x, 0, img_box, img_box, 2.0, cs->bottom_shadow, cs->top_shadow);
-        } else {
-            dtwm_draw_bevel(cr, img_x, 0, img_box, img_box, 2.0, cs->top_shadow, cs->bottom_shadow);
-        }
+
+        draw_asym_bevel(cr, 0, 0, frame_w, img_frame_h, 2, 2, 1, 2, ics->top_shadow, ics->bottom_shadow);
+        draw_asym_bevel(cr, 4, 4, img_dim + 4, img_dim + 4, 1, 1, 1, 1, ics->bottom_shadow, ics->top_shadow);
+        draw_asym_bevel(cr, 5, 5, img_dim + 2, img_dim + 2, 1, 1, 1, 1, ics->top_shadow, ics->bottom_shadow);
+        draw_asym_bevel(cr, 0, img_frame_h, frame_w, label_frame_h, 1, 2, 2, 2, ics->top_shadow, ics->bottom_shadow);
+    } else {
+        DtwmRgba open_fill = {ics->bg.r * 0.85, ics->bg.g * 0.85, ics->bg.b * 0.85, 1.0};
+        cairo_set_source_rgba(cr, open_fill.r, open_fill.g, open_fill.b, 1.0);
+        cairo_rectangle(cr, 0, 0, frame_w, frame_h);
+        cairo_fill(cr);
+
+        draw_asym_bevel(cr, 0, 0, frame_w, img_frame_h, 2, 2, 1, 2, ics->bottom_shadow, ics->top_shadow);
+        draw_asym_bevel(cr, 4, 4, img_dim + 4, img_dim + 4, 1, 1, 1, 1, ics->top_shadow, ics->bottom_shadow);
+        draw_asym_bevel(cr, 5, 5, img_dim + 2, img_dim + 2, 1, 1, 1, 1, ics->bottom_shadow, ics->top_shadow);
+        draw_asym_bevel(cr, 0, img_frame_h, frame_w, label_frame_h, 1, 2, 2, 2, ics->bottom_shadow, ics->top_shadow);
     }
 
-    /* Icon image (client dynamic pixmap or fallback CDE emblem) */
+    /* Composite icon image centered inside (6, 6, img_dim, img_dim) */
     if (view->icon_surface) {
         int sw = cairo_image_surface_get_width(view->icon_surface);
         int sh = cairo_image_surface_get_height(view->icon_surface);
         if (sw > 0 && sh > 0) {
+            double scale = 1.0;
+            if (sw > img_dim || sh > img_dim) {
+                scale = fmin((double)img_dim / sw, (double)img_dim / sh);
+            } else if (server->large_icons && sw * 2 <= img_dim && sh * 2 <= img_dim) {
+                scale = 2.0;
+            }
+            double dw = sw * scale;
+            double dh = sh * scale;
+            double dx = 6.0 + floor((img_dim - dw) * 0.5);
+            double dy = 6.0 + floor((img_dim - dh) * 0.5);
             cairo_save(cr);
-            cairo_translate(cr, img_x + frame_pad, frame_pad);
-            cairo_scale(cr, (double)img_dim / sw, (double)img_dim / sh);
+            cairo_rectangle(cr, 6.0, 6.0, img_dim, img_dim);
+            cairo_clip(cr);
+            cairo_translate(cr, dx, dy);
+            cairo_scale(cr, scale, scale);
             cairo_set_source_surface(cr, view->icon_surface, 0, 0);
-            cairo_pattern_set_filter(cairo_get_source(cr), CAIRO_FILTER_GOOD);
+            cairo_pattern_set_filter(
+                cairo_get_source(cr),
+                (scale == 2.0 || scale == 1.0) ? CAIRO_FILTER_NEAREST : CAIRO_FILTER_GOOD
+            );
             cairo_paint(cr);
             cairo_restore(cr);
         }
     } else {
-        draw_default_cde_app_emblem(cr, img_x + frame_pad, frame_pad, img_dim, view, cs);
+        draw_default_cde_app_emblem(cr, 6.0, 6.0, img_dim, view, ics);
     }
 
-    /* Bottom 3D CDE icon label plate */
-    double ly = img_box + 2;
-    cairo_set_source_rgba(cr, cs->bg.r, cs->bg.g, cs->bg.b, 1.0);
-    cairo_rectangle(cr, 0, ly, label_w, label_h);
-    cairo_fill(cr);
-    dtwm_draw_bevel(cr, 0, ly, label_w, label_h, 1.5, cs->top_shadow, cs->bottom_shadow);
-
+    /* Icon label from WM_ICON_NAME / _NET_WM_ICON_NAME (or active workspace name for FrontPanel) */
     const char *label = nullptr;
-    if (view->kind == DTWM_VIEW_XWAYLAND && view->xwayland_surface) {
-        label = dtwm_view_title(view);
+    if (view->is_panel) {
+        label = (server->current_workspace < server->num_workspaces &&
+                 server->workspaces[server->current_workspace].title[0])
+                    ? server->workspaces[server->current_workspace].title
+                    : (view->icon_title[0] ? view->icon_title : "One");
+    } else if (view->icon_title[0]) {
+        label = view->icon_title;
     } else {
         label = dtwm_view_title(view);
     }
-    dtwm_draw_label(cr, label, 2, ly, label_w - 4, label_h, cs->fg, true, view->active);
+    draw_cde_icon_title_box(
+        cr,
+        server,
+        label,
+        4.0,
+        img_frame_h + 2.0,
+        frame_w - 8.0,
+        label_frame_h - 4.0,
+        server->palette.inactive.fg
+    );
+
+    /* Separate 3D open-window indicator bar beside the icon frame (UpdateOpenIconIndicator) */
+    if (show_bar) {
+        bool ind_active = view_or_transient_has_focus(view);
+        const DtwmColorSet *bcs = ind_active ? &server->palette.active : &server->palette.inactive;
+        cairo_set_source_rgba(cr, bcs->bg.r, bcs->bg.g, bcs->bg.b, 1.0);
+        cairo_rectangle(cr, bar_x, bar_y, bar_w, bar_h);
+        cairo_fill(cr);
+        dtwm_draw_bevel(cr, bar_x, bar_y, bar_w, bar_h, 1.0, bcs->top_shadow, bcs->bottom_shadow);
+    }
 
     dtwm_cairo_buffer_finish(cr, surf);
     wlr_scene_buffer_set_buffer(view->desktop_icon_buf, buf);
@@ -968,15 +1973,17 @@ void dtwm_icons_relayout(DtwmServer *server) {
         if (well_w < 80) well_w = 80;
         if (well_h < 48) well_h = 48;
 
-        int col_w = (server->large_icons ? 112 : 76) + 10;
-        int row_h = (img_dim + 8 + 22) + 8;
+        int frame_w = img_dim + 12;
+        int frame_h = (img_dim + 11) + (server->large_icons ? 24 : 21);
+        int col_w = frame_w + 12;
+        int row_h = frame_h + 10;
         int cols = (well_w - 12) / col_w;
         if (cols < 1) cols = 1;
 
         int count = 0;
         DtwmView *v;
         wl_list_for_each_reverse(v, &server->views, link) {
-            if (should_show_desktop_icon(v)) {
+            if (should_show_desktop_icon(v) && !v->is_panel) {
                 count++;
             }
         }
@@ -992,7 +1999,7 @@ void dtwm_icons_relayout(DtwmServer *server) {
 
         int slot = 0;
         wl_list_for_each_reverse(v, &server->views, link) {
-            if (!should_show_desktop_icon(v)) {
+            if (!should_show_desktop_icon(v) || v->is_panel) {
                 dtwm_icons_update_view(v);
                 continue;
             }
@@ -1007,10 +2014,8 @@ void dtwm_icons_relayout(DtwmServer *server) {
             int lx = well_x + 8 + col * col_w;
             int ly = well_y + 6 + row * row_h - server->icon_box_scroll_y;
 
-            int img_box = img_dim + 8;
-            int img_off_x = (v->icon_box_w - img_box) / 2 + 4;
-            v->icon_x = server->icon_box_x + lx + img_off_x;
-            v->icon_y = server->icon_box_y + ly + 4;
+            v->icon_x = server->icon_box_x + lx;
+            v->icon_y = server->icon_box_y + ly;
 
             bool in_bounds = (ly >= well_y + 2) &&
                              (ly + v->icon_box_h <= well_y + well_h + 2 || row == 0);
@@ -1032,18 +2037,62 @@ void dtwm_icons_relayout(DtwmServer *server) {
         server->icon_box_resizing = false;
     }
 
+    struct wlr_box fbox = ubox;
+    wlr_output_layout_get_box(server->output_layout, nullptr, &fbox);
+    if (fbox.width <= 0 || fbox.height <= 0) {
+        fbox = ubox;
+    }
+
+    int frame_w = img_dim + 12;
+    int frame_h = (img_dim + 11) + (server->large_icons ? 24 : 21);
+    int indicator_extra =
+        server->show_open_window_icons ? (DTWM_OPEN_ICON_BAR_GAP + DTWM_OPEN_ICON_BAR_WIDTH) : 0;
+
     int gap = (server->icon_placement_margin >= 0 && server->icon_placement_margin <= 128)
                   ? server->icon_placement_margin
-                  : 12;
-    int col_w = (server->large_icons ? 112 : 76) + gap;
-    int row_h = (img_dim + 8 + 22) + gap;
-    int edge_pad = gap > 8 ? gap : 14;
-    int max_rows = (ubox.height - edge_pad * 2) / row_h;
-    if (max_rows < 1) max_rows = 1;
+                  : 8;
+    int edge_pad_x = gap > 8 ? gap : 12;
+    int edge_pad_y = gap > 8 ? gap : 6;
+    int col_w = frame_w + indicator_extra + (gap > 6 ? gap : 10);
+    int row_h = frame_h + (gap > 4 ? gap : 6);
 
-    /* Layout in stable creation order (reverse of MRU server->views) along top-right column */
-    int slot = 0;
+    /* Use full monitor height for left/right edge columns when Front Panel doesn't reach corners */
+    bool side_clears_panel =
+        !server->show_front_panel || (fbox.width >= DTWM_PANEL_WIDTH + 2 * (col_w + edge_pad_x + 8));
+    struct wlr_box gbox = side_clears_panel ? fbox : ubox;
+
+    int max_rows = (gbox.height - edge_pad_y * 2) / row_h;
+    if (max_rows < 1) max_rows = 1;
+    int max_cols = (gbox.width - edge_pad_x * 2) / col_w;
+    if (max_cols < 1) max_cols = 1;
+
+    /* Check whether FrontPanel occupies the bottom-left corner slot (matching X11 UI.c XmNiconY) */
+    bool panel_in_bottom_left = false;
     DtwmView *v;
+    wl_list_for_each_reverse(v, &server->views, link) {
+        if (v->is_panel && should_show_desktop_icon(v)) {
+            panel_in_bottom_left = true;
+            break;
+        }
+    }
+
+    DtwmIconPlacement place = server->icon_placement;
+    bool horiz_primary =
+        (place == DTWM_ICON_PLACE_LEFT_TOP || place == DTWM_ICON_PLACE_LEFT_BOTTOM ||
+         place == DTWM_ICON_PLACE_RIGHT_TOP || place == DTWM_ICON_PLACE_RIGHT_BOTTOM);
+    bool right_side =
+        (place == DTWM_ICON_PLACE_TOP_RIGHT || place == DTWM_ICON_PLACE_RIGHT_TOP ||
+         place == DTWM_ICON_PLACE_BOTTOM_RIGHT || place == DTWM_ICON_PLACE_RIGHT_BOTTOM);
+    bool bottom_side =
+        (place == DTWM_ICON_PLACE_BOTTOM_LEFT || place == DTWM_ICON_PLACE_LEFT_BOTTOM ||
+         place == DTWM_ICON_PLACE_BOTTOM_RIGHT || place == DTWM_ICON_PLACE_RIGHT_BOTTOM);
+
+    int col0_rows = max_rows;
+    if (panel_in_bottom_left && !horiz_primary && !right_side && !bottom_side && col0_rows > 1) {
+        col0_rows--; /* Reserve bottom-left slot for FrontPanel ("One") */
+    }
+
+    int slot = 0;
     wl_list_for_each_reverse(v, &server->views, link) {
         if (!should_show_desktop_icon(v)) {
             dtwm_icons_update_view(v);
@@ -1054,40 +2103,82 @@ void dtwm_icons_relayout(DtwmServer *server) {
             v->desktop_icon_buf->node.parent != server->desktop_icon_tree) {
             wlr_scene_node_reparent(&v->desktop_icon_buf->node, server->desktop_icon_tree);
         }
-        int col = slot / max_rows;
-        int row = slot % max_rows;
-        int tile_x = ubox.x + ubox.width - col_w * (col + 1) + (gap / 3) - (edge_pad - 14);
-        int tile_y = ubox.y + edge_pad + row * row_h;
 
-        int img_box = img_dim + 8;
-        int img_off_x = (v->icon_box_w - img_box) / 2 + 4;
-        v->icon_x = tile_x + img_off_x;
-        v->icon_y = tile_y + 4;
+        int tile_x = 0, tile_y = 0;
+        if (v->is_panel || (v->has_icon_pos_hint && v->icon_hint_y > fbox.height * 3 / 4 && v->icon_hint_x <= 64)) {
+            /* FrontPanel (UI.c XmNiconY = display_height): bottom-left corner beside Front Panel */
+            tile_x = gbox.x + edge_pad_x;
+            tile_y = gbox.y + gbox.height - frame_h - 4;
+            if (tile_y < gbox.y + edge_pad_y) tile_y = gbox.y + edge_pad_y;
+        } else {
+            int col = 0, row = 0;
+            if (horiz_primary) {
+                col = slot % max_cols;
+                row = slot / max_cols;
+            } else if (!right_side && !bottom_side && slot < col0_rows) {
+                col = 0;
+                row = slot;
+            } else if (!right_side && !bottom_side) {
+                int rem = slot - col0_rows;
+                col = 1 + (rem / max_rows);
+                row = rem % max_rows;
+            } else {
+                col = slot / max_rows;
+                row = slot % max_rows;
+            }
+
+            if (right_side) {
+                tile_x = gbox.x + gbox.width - edge_pad_x - (col + 1) * col_w +
+                         (col_w - (frame_w + indicator_extra));
+            } else {
+                tile_x = gbox.x + edge_pad_x + col * col_w;
+            }
+            if (bottom_side) {
+                tile_y = gbox.y + gbox.height - edge_pad_y - frame_h - row * row_h;
+            } else {
+                tile_y = gbox.y + edge_pad_y + row * row_h;
+            }
+            slot++;
+        }
+
+        v->icon_x = tile_x;
+        v->icon_y = tile_y;
         v->icon_clipped_out = false;
         if (v->desktop_icon_buf) {
             wlr_scene_node_set_position(&v->desktop_icon_buf->node, tile_x, tile_y);
             wlr_scene_node_set_enabled(&v->desktop_icon_buf->node, true);
         }
         publish_client_icon_geometry(v);
-        slot++;
     }
 }
 
 DtwmView *dtwm_icons_view_at(DtwmServer *server, double lx, double ly) {
     if (!server) return nullptr;
-    int base_x = (server->use_icon_box && !server->greeter_mode) ? server->icon_box_x : 0;
-    int base_y = (server->use_icon_box && !server->greeter_mode) ? server->icon_box_y : 0;
     DtwmView *v;
     wl_list_for_each(v, &server->views, link) {
         if (!should_show_desktop_icon(v) || !v->desktop_icon_buf ||
             !v->desktop_icon_buf->node.enabled) {
             continue;
         }
+        bool in_box = (server->use_icon_box && !server->greeter_mode && !v->is_panel);
+        int base_x = in_box ? server->icon_box_x : 0;
+        int base_y = in_box ? server->icon_box_y : 0;
         int tx = base_x + v->desktop_icon_buf->node.x;
         int ty = base_y + v->desktop_icon_buf->node.y;
-        if (lx >= tx && lx < tx + v->icon_box_w &&
-            ly >= ty && ly < ty + v->icon_box_h) {
+        /* Hit-test main icon frame */
+        if (lx >= tx && lx < tx + v->icon_w &&
+            ly >= ty && ly < ty + v->icon_h) {
             return v;
+        }
+        /* Hit-test separate open-window indicator bar beside icon frame (if visible) */
+        if (v->icon_box_w > v->icon_w) {
+            int bar_x = tx + v->icon_w + DTWM_OPEN_ICON_BAR_GAP;
+            int bar_h = (v->icon_h * 3) / 8;
+            int bar_y = ty + (v->icon_h - bar_h) / 2;
+            if (lx >= bar_x && lx < bar_x + DTWM_OPEN_ICON_BAR_WIDTH &&
+                ly >= bar_y && ly < bar_y + bar_h) {
+                return v;
+            }
         }
     }
     return nullptr;
@@ -1301,12 +2392,15 @@ void dtwm_icons_on_view_map(DtwmView *view) {
             if (pend->toplevel == view->xdg_toplevel) {
                 if (view->icon_surface) cairo_surface_destroy(view->icon_surface);
                 view->icon_surface = pend->surface;
+                view->icon_from_named_image = false;
                 wl_list_remove(&pend->link);
                 free(pend);
                 break;
             }
         }
+        resolve_xdg_view_named_icon_fallback(view);
     } else if (view->kind == DTWM_VIEW_XWAYLAND) {
+        refresh_xwayland_icon_title(view);
         refresh_xwayland_wm_hints(view, true);
         dtwm_icons_set_wm_state(view);
     }
@@ -1340,14 +2434,88 @@ void dtwm_icons_on_view_unmap_or_destroy(DtwmView *view, bool destroying) {
 }
 
 void dtwm_icons_on_xcb_property(DtwmServer *server, xcb_window_t win, xcb_atom_t atom) {
-    if (!server || atom != XCB_ATOM_WM_HINTS) return;
+    if (!server) return;
+    bool is_hints = (atom == XCB_ATOM_WM_HINTS || atom == server->atom_net_wm_icon ||
+                     atom == XCB_ATOM_WM_CLASS || atom == server->atom_wm_command);
+    bool is_icon_name = (atom == XCB_ATOM_WM_ICON_NAME || atom == server->atom_net_wm_icon_name ||
+                         atom == XCB_ATOM_WM_NAME);
+    if (!is_hints && !is_icon_name) return;
+
     DtwmView *v;
     wl_list_for_each(v, &server->views, link) {
         if (v->kind == DTWM_VIEW_XWAYLAND && v->xwayland_surface &&
             v->xwayland_surface->window_id == win) {
-            refresh_xwayland_wm_hints(v, false);
+            if (is_icon_name) {
+                refresh_xwayland_icon_title(v);
+            }
+            if (is_hints) {
+                refresh_xwayland_wm_hints(v, false);
+            }
             dtwm_icons_update_view(v);
             break;
+        }
+    }
+}
+
+void dtwm_icons_set_placement(DtwmServer *server, const char *spec) {
+    if (!server || !spec) return;
+    while (*spec && isspace((unsigned char)*spec)) spec++;
+    char tok1[32] = {0}, tok2[32] = {0};
+    size_t i = 0;
+    while (*spec && !isspace((unsigned char)*spec) && i + 1 < sizeof(tok1)) {
+        tok1[i++] = *spec++;
+    }
+    while (*spec && isspace((unsigned char)*spec)) spec++;
+    i = 0;
+    while (*spec && !isspace((unsigned char)*spec) && i + 1 < sizeof(tok2)) {
+        tok2[i++] = *spec++;
+    }
+    if (strcasecmp(tok2, "tight") == 0) tok2[0] = '\0';
+    if (!tok1[0]) return;
+
+    DtwmIconPlacement next = server->icon_placement;
+    if (strcasecmp(tok1, "top") == 0) {
+        next = (strcasecmp(tok2, "right") == 0) ? DTWM_ICON_PLACE_TOP_RIGHT : DTWM_ICON_PLACE_TOP_LEFT;
+    } else if (strcasecmp(tok1, "bottom") == 0) {
+        next = (strcasecmp(tok2, "right") == 0) ? DTWM_ICON_PLACE_BOTTOM_RIGHT : DTWM_ICON_PLACE_BOTTOM_LEFT;
+    } else if (strcasecmp(tok1, "left") == 0) {
+        next = (strcasecmp(tok2, "top") == 0) ? DTWM_ICON_PLACE_LEFT_TOP : DTWM_ICON_PLACE_LEFT_BOTTOM;
+    } else if (strcasecmp(tok1, "right") == 0) {
+        next = (strcasecmp(tok2, "top") == 0) ? DTWM_ICON_PLACE_RIGHT_TOP : DTWM_ICON_PLACE_RIGHT_BOTTOM;
+    }
+    if (next != server->icon_placement) {
+        server->icon_placement = next;
+        dtwm_icons_relayout(server);
+    }
+}
+
+void dtwm_icons_refresh_focus_indicators(DtwmServer *server) {
+    if (!server) return;
+    DtwmView *v;
+    wl_list_for_each(v, &server->views, link) {
+        if (v->mapped && should_show_desktop_icon(v)) {
+            dtwm_icons_update_view(v);
+        }
+    }
+}
+
+void dtwm_icons_invalidate_theme_icons(DtwmServer *server) {
+    if (!server) return;
+    DtwmView *v;
+    wl_list_for_each(v, &server->views, link) {
+        if (!v->mapped) continue;
+        if (v->kind == DTWM_VIEW_XWAYLAND) {
+            if (v->icon_from_named_image && v->icon_surface) {
+                cairo_surface_destroy(v->icon_surface);
+                v->icon_surface = nullptr;
+            }
+            refresh_xwayland_wm_hints(v, false);
+        } else if (v->kind == DTWM_VIEW_XDG && v->icon_from_named_image) {
+            if (v->icon_surface) {
+                cairo_surface_destroy(v->icon_surface);
+                v->icon_surface = nullptr;
+            }
+            resolve_xdg_view_named_icon_fallback(v);
         }
     }
 }
@@ -1642,12 +2810,17 @@ void dtwm_icons_on_xwayland_ready(DtwmServer *server) {
     server->atom_wm_settings_v1 = intern_atom_icons(server->xcb_conn, "_DT_WM_SETTINGS_V1");
     server->atom_wm_state = intern_atom_icons(server->xcb_conn, "WM_STATE");
     server->atom_net_wm_icon_geom = intern_atom_icons(server->xcb_conn, "_NET_WM_ICON_GEOMETRY");
+    server->atom_net_wm_icon = intern_atom_icons(server->xcb_conn, "_NET_WM_ICON");
+    server->atom_net_wm_icon_name = intern_atom_icons(server->xcb_conn, "_NET_WM_ICON_NAME");
+    server->atom_net_wm_pid = intern_atom_icons(server->xcb_conn, "_NET_WM_PID");
+    server->atom_wm_command = intern_atom_icons(server->xcb_conn, "WM_COMMAND");
     publish_icon_sizes_and_settings(server);
 }
 
 void dtwm_icons_init(DtwmServer *server) {
     wl_list_init(&g_pending_xdg_icons);
     server->show_open_window_icons = true;
+    server->icon_placement = DTWM_ICON_PLACE_TOP_LEFT;
     server->icon_placement_margin = -1;
     server->toplevel_icon_global = wl_global_create(
         server->wl_display,

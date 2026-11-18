@@ -1,4 +1,33 @@
 2026-11-18
+- Align `CDE (Wayland)` desktop icon placement, open-window indicator bars,
+  client icon resolution, `Default.dp` foreground contrast, and default
+  workspace backdrops with `CDE (X11 / XLibre)` (`cde/programs/dtwm/wayland/dtwm_wayland.h`,
+  `cde/programs/dtwm/wayland/cde_icons.c`,
+  `cde/programs/dtwm/wayland/cde_bevel.c`,
+  `cde/programs/dtwm/wayland/cde_workspace.c`,
+  `cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `cde/programs/dtwm/tests/check-dtwm-wayland.py`,
+  `cde/programs/dtwm/tests/check-dtwm-wayland-icons.py`,
+  `cde/programs/dtwm/tests/check-dtwm-wayland-wp05.py`,
+  `docs/improvements/wayland.md`):
+  - Default desktop icon placement to `Top Left` (`Dtwm.defs` parity) with full
+    `Dtwm*iconPlacement` support (`Top Left`, `Left Top`, `Bottom Left`,
+    `Left Bottom`, `Top Right`, `Right Top`, `Bottom Right`, `Right Bottom`) and
+    `WM_HINTS` `IconPositionHint` bottom-left placement for the `FrontPanel`
+    desktop icon (`Fpfpmin` with live active workspace title `One`/`Two`/...).
+  - Match X11 `dtwm` `WmIDecor.c` icon frame geometry (`60x80` standard /
+    `108x131` large with flush joined label plate), sunken `selectColor` bevels
+    for open windows versus raised bevels for minimized windows, click-on-active
+    icon minimize toggle, `_NET_WM_ICON_NAME` / `WM_ICON_NAME` labels, and the
+    separate `10 px` 3D open-window indicator bar `7 px` to the right of open
+    icons reflecting active (`#EDA870`) and inactive (`#999999`) focus.
+  - Resolve `Dtwm*<Class>*iconImage` rules (`Fpstyle`, `Fpterm`, `Fphelp`,
+    `Fppenpd`, `Dtcalc`, `DtMail`, `Dtpaint`, `Fpfpmin`, etc.), `.dt` `ACTION`
+    `ICON` definitions via `WM_COMMAND` / `_NET_WM_PID`, `_NET_WM_ICON`, and
+    symbolic CDE `.pm`/`.bm` icons alongside live `WM_HINTS` pixmaps.
+  - Match Motif `Brightness()` (`XmDEFAULT_FOREGROUND_THRESHOLD = 70%`) and
+    `Default.dp` / `Dtwm.tmsg` defaults (`KnitLight`, `WaterDrops`, `SkyDark`,
+    `Paver` backdrops and normal-weight Serif classic titlebar typography).
 - Deliver **WP-17 — `dtfile` Browser Ergonomics: Multi-Tab Browsing (`Ctrl+T`),
   Cancellable In-Window Search (`Ctrl+F`), Cross-Toolkit File Clipboard
   (`Ctrl+C/X/V`), Bounded Session Undo (`Ctrl+Z`) & *Synchronize Folders*

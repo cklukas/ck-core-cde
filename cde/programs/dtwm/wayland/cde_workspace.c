@@ -82,33 +82,33 @@ static DtwmColorSet make_ws_colorset(DtwmAppearanceProfile profile, uint32_t idx
         };
     }
     static const DtwmColorSet sets[4] = {
-        /* Workspace 0 ("One"): Classic CDE Teal/Slate + SkyDark */
+        /* Workspace 0 ("One"): Default.dp ColorSet 2 (#89559808aa00) + KnitLight */
         {
-            .bg = {0.235, 0.388, 0.463, 1.0},
-            .fg = {0.925, 0.945, 0.961, 1.0},
-            .top_shadow = {0.463, 0.620, 0.698, 1.0},
-            .bottom_shadow = {0.118, 0.212, 0.263, 1.0},
+            .bg = {0.538, 0.596, 0.667, 1.0},
+            .fg = {1.000, 1.000, 1.000, 1.0},
+            .top_shadow = {0.793, 0.819, 0.850, 1.0},
+            .bottom_shadow = {0.281, 0.311, 0.348, 1.0},
         },
-        /* Workspace 1 ("Two"): Classic CDE Aubergine/Plum + Pebbles */
+        /* Workspace 1 ("Two"): Default.dp ColorSet 7 (#938eab73bf00) + WaterDrops */
         {
-            .bg = {0.396, 0.310, 0.431, 1.0},
-            .fg = {0.945, 0.925, 0.961, 1.0},
-            .top_shadow = {0.627, 0.545, 0.663, 1.0},
-            .bottom_shadow = {0.204, 0.149, 0.231, 1.0},
+            .bg = {0.576, 0.671, 0.749, 1.0},
+            .fg = {1.000, 1.000, 1.000, 1.0},
+            .top_shadow = {0.818, 0.859, 0.892, 1.0},
+            .bottom_shadow = {0.315, 0.367, 0.410, 1.0},
         },
-        /* Workspace 2 ("Three"): Classic CDE Pine/Sage + Corduroy */
+        /* Workspace 2 ("Three"): Default.dp ColorSet 5 (#49009200a700) + SkyDark */
         {
-            .bg = {0.267, 0.408, 0.357, 1.0},
-            .fg = {0.925, 0.961, 0.941, 1.0},
-            .top_shadow = {0.502, 0.643, 0.592, 1.0},
-            .bottom_shadow = {0.129, 0.220, 0.184, 1.0},
+            .bg = {0.286, 0.573, 0.655, 1.0},
+            .fg = {1.000, 1.000, 1.000, 1.0},
+            .top_shadow = {0.669, 0.802, 0.840, 1.0},
+            .bottom_shadow = {0.138, 0.277, 0.316, 1.0},
         },
-        /* Workspace 3 ("Four"): Classic CDE Warm Sand/Bronze + Paver */
+        /* Workspace 3 ("Four"): Default.dp ColorSet 6 (#b70087008d00) + Paver */
         {
-            .bg = {0.478, 0.396, 0.322, 1.0},
-            .fg = {0.969, 0.949, 0.922, 1.0},
-            .top_shadow = {0.698, 0.620, 0.545, 1.0},
-            .bottom_shadow = {0.255, 0.200, 0.153, 1.0},
+            .bg = {0.718, 0.529, 0.553, 1.0},
+            .fg = {1.000, 1.000, 1.000, 1.0},
+            .top_shadow = {0.874, 0.790, 0.800, 1.0},
+            .bottom_shadow = {0.376, 0.277, 0.290, 1.0},
         },
     };
     return sets[idx % 4];
@@ -1357,15 +1357,34 @@ static bool parse_dp_hex_color(const char *line, DtwmRgba *out_rgb) {
 }
 
 static DtwmColorSet build_colorset_from_bg(DtwmRgba bg) {
-    double lum = 0.299 * bg.r + 0.587 * bg.g + 0.114 * bg.b;
-    DtwmRgba fg = (lum > 0.52) ? (DtwmRgba){0.0, 0.0, 0.0, 1.0} : (DtwmRgba){1.0, 1.0, 1.0, 1.0};
-    DtwmRgba ts = {
-        fmin(1.0, bg.r + (1.0 - bg.r) * 0.45),
-        fmin(1.0, bg.g + (1.0 - bg.g) * 0.45),
-        fmin(1.0, bg.b + (1.0 - bg.b) * 0.45),
-        1.0,
-    };
-    DtwmRgba bs = {bg.r * 0.48, bg.g * 0.48, bg.b * 0.48, 1.0};
+    /* Exact Motif Color.c / ColorP.h Brightness() & XmDEFAULT_FOREGROUND_THRESHOLD (70%) */
+    double intensity = (bg.r + bg.g + bg.b) / 3.0;
+    double luminosity = 0.30 * bg.r + 0.59 * bg.g + 0.11 * bg.b;
+    double brightness = 0.75 * intensity + 0.25 * luminosity;
+    DtwmRgba fg =
+        (brightness > 0.70) ? (DtwmRgba){0.0, 0.0, 0.0, 1.0} : (DtwmRgba){1.0, 1.0, 1.0, 1.0};
+
+    DtwmRgba ts, bs;
+    if (brightness > 0.85) {
+        /* XmCOLOR_LITE model */
+        ts = (DtwmRgba){bg.r * 0.80, bg.g * 0.80, bg.b * 0.80, 1.0};
+        bs = (DtwmRgba){bg.r * 0.60, bg.g * 0.60, bg.b * 0.60, 1.0};
+    } else if (brightness < 0.15) {
+        /* XmCOLOR_DARK model */
+        ts = (DtwmRgba){bg.r + (1.0 - bg.r) * 0.50, bg.g + (1.0 - bg.g) * 0.50, bg.b + (1.0 - bg.b) * 0.50, 1.0};
+        bs = (DtwmRgba){bg.r + (1.0 - bg.r) * 0.30, bg.g + (1.0 - bg.g) * 0.30, bg.b + (1.0 - bg.b) * 0.30, 1.0};
+    } else {
+        /* XmCOLOR_STD model (interpolates LO..HI shadow factors across brightness) */
+        double ts_f = 0.60 - brightness * (0.60 - 0.50);
+        double bs_f = 0.60 - brightness * (0.60 - 0.40);
+        ts = (DtwmRgba){
+            fmin(1.0, bg.r + (1.0 - bg.r) * ts_f),
+            fmin(1.0, bg.g + (1.0 - bg.g) * ts_f),
+            fmin(1.0, bg.b + (1.0 - bg.b) * ts_f),
+            1.0,
+        };
+        bs = (DtwmRgba){bg.r * (1.0 - bs_f), bg.g * (1.0 - bs_f), bg.b * (1.0 - bs_f), 1.0};
+    }
     return (DtwmColorSet){.bg = bg, .fg = fg, .top_shadow = ts, .bottom_shadow = bs};
 }
 
@@ -1428,7 +1447,7 @@ static bool dtwm_server_apply_palette_file(DtwmServer *server, const char *raw_n
     server->palette.profile = DTWM_PROFILE_CLASSIC;
     server->palette.active = sets[0];
     server->palette.inactive = sets[1];
-    server->palette.menu = sets[4];
+    server->palette.menu = sets[1];
 
     static const int ws_cs_map[4] = {2, 7, 5, 6};
     for (uint32_t i = 0; i < server->num_workspaces; ++i) {
@@ -1442,6 +1461,7 @@ static bool dtwm_server_apply_palette_file(DtwmServer *server, const char *raw_n
             dtwm_view_update_frame(v);
         }
     }
+    dtwm_icons_invalidate_theme_icons(server);
     dtwm_update_all_backdrops(server);
     dtwm_update_front_panel(server);
     dtwm_icons_relayout(server);
@@ -1496,6 +1516,7 @@ void dtwm_server_apply_appearance_profile(DtwmServer *server, DtwmAppearanceProf
             dtwm_view_update_frame(v);
         }
     }
+    dtwm_icons_invalidate_theme_icons(server);
     dtwm_update_all_backdrops(server);
     dtwm_update_front_panel(server);
     dtwm_icons_relayout(server);
@@ -1634,6 +1655,8 @@ static void sync_xcb_resource_manager_profile(DtwmServer *server) {
                     server->show_task_switcher = parse_xrdb_bool(val, server->show_task_switcher);
                 } else if (xrdb_key_matches(line, klen, "useIconBox")) {
                     dtwm_icons_set_use_icon_box(server, parse_xrdb_bool(val, server->use_icon_box));
+                } else if (xrdb_key_matches(line, klen, "iconPlacement")) {
+                    dtwm_icons_set_placement(server, val);
                 } else if (xrdb_key_matches(line, klen, "iconPlacementMargin")) {
                     dtwm_icons_set_placement_margin(server, atoi(val));
                 } else if (xrdb_key_matches(line, klen, "doubleIconSize")) {
@@ -1642,6 +1665,77 @@ static void sync_xcb_resource_manager_profile(DtwmServer *server) {
                     dtwm_icons_set_open_window_icons(
                         server, parse_xrdb_bool(val, server->show_open_window_icons)
                     );
+                } else if (xrdb_key_matches(line, klen, "iconImage")) {
+                    /* Parse Dtwm*<ClientClassOrName>*iconImage: <IconName> */
+                    size_t endk = klen;
+                    while (endk > 0 && isspace((unsigned char)line[endk - 1])) endk--;
+                    if (endk > 9) {
+                        endk -= 9; /* strip "iconImage" */
+                        while (endk > 0 && (line[endk - 1] == '*' || line[endk - 1] == '.')) endk--;
+                        size_t startk = endk;
+                        while (startk > 0 && line[startk - 1] != '*' && line[startk - 1] != '.' &&
+                               !isspace((unsigned char)line[startk - 1])) {
+                            startk--;
+                        }
+                        if (endk > startk && (endk - startk) < 120) {
+                            char ckey[128], iname[128];
+                            memcpy(ckey, line + startk, endk - startk);
+                            ckey[endk - startk] = '\0';
+                            size_t vi = 0;
+                            while (val[vi] && !isspace((unsigned char)val[vi]) && vi + 1 < sizeof(iname)) {
+                                iname[vi] = val[vi];
+                                vi++;
+                            }
+                            iname[vi] = '\0';
+                            if (strcasecmp(ckey, "Dtwm") != 0 && iname[0]) {
+                                dtwm_icons_record_icon_image_rule(ckey, iname);
+                            }
+                        }
+                    }
+                } else if (xrdb_key_matches(line, klen, "ws0*backdrop*image") ||
+                           xrdb_key_matches(line, klen, "ws0.backdrop.image")) {
+                    char bname[256] = {0};
+                    size_t bi = 0;
+                    while (val[bi] && !isspace((unsigned char)val[bi]) && bi + 1 < sizeof(bname)) {
+                        bname[bi] = val[bi];
+                        bi++;
+                    }
+                    if (bname[0] && server->num_workspaces > 0) {
+                        dtwm_set_workspace_backdrop(server, 0, bname, server->workspaces[0].image_type);
+                    }
+                } else if (xrdb_key_matches(line, klen, "ws1*backdrop*image") ||
+                           xrdb_key_matches(line, klen, "ws1.backdrop.image")) {
+                    char bname[256] = {0};
+                    size_t bi = 0;
+                    while (val[bi] && !isspace((unsigned char)val[bi]) && bi + 1 < sizeof(bname)) {
+                        bname[bi] = val[bi];
+                        bi++;
+                    }
+                    if (bname[0] && server->num_workspaces > 1) {
+                        dtwm_set_workspace_backdrop(server, 1, bname, server->workspaces[1].image_type);
+                    }
+                } else if (xrdb_key_matches(line, klen, "ws2*backdrop*image") ||
+                           xrdb_key_matches(line, klen, "ws2.backdrop.image")) {
+                    char bname[256] = {0};
+                    size_t bi = 0;
+                    while (val[bi] && !isspace((unsigned char)val[bi]) && bi + 1 < sizeof(bname)) {
+                        bname[bi] = val[bi];
+                        bi++;
+                    }
+                    if (bname[0] && server->num_workspaces > 2) {
+                        dtwm_set_workspace_backdrop(server, 2, bname, server->workspaces[2].image_type);
+                    }
+                } else if (xrdb_key_matches(line, klen, "ws3*backdrop*image") ||
+                           xrdb_key_matches(line, klen, "ws3.backdrop.image")) {
+                    char bname[256] = {0};
+                    size_t bi = 0;
+                    while (val[bi] && !isspace((unsigned char)val[bi]) && bi + 1 < sizeof(bname)) {
+                        bname[bi] = val[bi];
+                        bi++;
+                    }
+                    if (bname[0] && server->num_workspaces > 3) {
+                        dtwm_set_workspace_backdrop(server, 3, bname, server->workspaces[3].image_type);
+                    }
                 } else if (xrdb_key_matches(line, klen, "multiClickTime")) {
                     int ms = atoi(val);
                     if (ms >= 100 && ms <= 2000) {
@@ -2107,7 +2201,7 @@ static void bind_ext_ws_manager(struct wl_client *client, void *data, uint32_t v
 /* --- Initialization & Cleanup --- */
 void dtwm_workspaces_init(DtwmServer *server) {
     static const char *const default_titles[4] = {"One", "Two", "Three", "Four"};
-    static const char *const default_backdrops[4] = {"InlayPlain", "SkyDark", "Pebbles", "Paver"};
+    static const char *const default_backdrops[4] = {"KnitLight", "WaterDrops", "SkyDark", "Paver"};
 
     wl_list_init(&server->ext_ws_managers);
     server->num_workspaces = 4;
