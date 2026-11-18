@@ -1,4 +1,18 @@
 2026-11-18
+- Center Front Panel `TYPE client` controls without redundant outer borders and
+  keep embedded client slots responsive across restarts
+  (`cde/programs/dtwm/UI.c`, `cde/programs/dtwm/wayland/WmFpWayland.c`,
+  `cde/programs/dtwm/tests/check-dtwm-wayland-wp09.py`,
+  `docs/improvements/wayland.md`):
+  - Suppress the duplicate `XmSHADOW_ETCHED_OUT` frame on `CONTROL_CLIENT`
+    (`XmNshadowThickness = 0`, `XmNhighlightThickness = 0`, honoring
+    `XmNmarginWidth = margin_width`) and center embedded `TYPE client` windows
+    (such as the `74×54` `ck-status-gauge`) horizontally and vertically inside
+    their Front Panel control cell.
+  - Enforce centered `(x, y, width, height)` on child `ConfigureNotify` events
+    so self-configuring Motif shells cannot jump back to `(0, 0)`, and clear
+    `ecd->pCD` on `DestroyNotify` so restarted `TYPE client` applets re-embed
+    immediately.
 - Refine Front Panel default clock, workspace rename geometry, notification bell
   icon, docked/torn-off subpanels, and open-Trash indicator across Wayland and
   X11 (`cde/programs/dtwm/Callback.c`, `cde/programs/dtwm/UI.c`,

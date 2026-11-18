@@ -235,9 +235,12 @@ panel instrumentation:
   `dtwm-panel` `SIGTERM`/`SIGINT` shutdown).
 - **Live 4-Quadrant Status Gauge (`ck-status --gauge`):** Can be pinned into
   `CONTROL Blank2` (`POSITION_HINTS 8`, `~/.dt/types/ckstatus_gauge.fp`) as a
-  live `54×48` `TYPE client` (`ck-status-gauge`) panel instrument showing Wi-Fi
-  signal bars, Bluetooth + notification/`StatusNotifier` lamp, and a 5-segment
-  battery/AC fuel gauge, with live `f.restart` reload support in `dtwm-wayland`.
+  borderless, centered `74×54` `TYPE client` (`ck-status-gauge`) panel
+  instrument showing Wi-Fi signal bars, Bluetooth + notification/`StatusNotifier`
+  lamp, and either an AA-proportioned battery + AC plug + percentage (on
+  laptops) or a 3D CDE AC mains plug + live CPU usage percentage (on desktop
+  workstations without a battery), with live `f.restart` reload and client
+  re-embedding support in `dtwm-panel` / `dtwm-wayland`.
 
 ## Graphical multi-monitor arrangement & WebRTC desktop portals (`WP-10`)
 

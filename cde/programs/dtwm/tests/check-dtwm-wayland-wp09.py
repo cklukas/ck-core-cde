@@ -223,7 +223,7 @@ def main() -> int:
         # Pin live 4-quadrant gauge into Front Panel (~/.dt/types/ckstatus_gauge.fp)
         (home / ".dt" / "types" / "ckstatus_gauge.fp").write_text(
             "CONTROL Blank2\n{\n  TYPE client\n  CONTAINER_NAME Top\n  CONTAINER_TYPE BOX\n"
-            "  POSITION_HINTS 8\n  CLIENT_NAME ck-status-gauge\n  CLIENT_GEOMETRY 54x48\n  LABEL System Status\n}\n",
+            "  POSITION_HINTS 8\n  CLIENT_NAME ck-status-gauge\n  CLIENT_GEOMETRY 74x54\n  LABEL System Status\n}\n",
             encoding="utf-8",
         )
 

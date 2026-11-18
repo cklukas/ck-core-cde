@@ -575,17 +575,27 @@ static bool try_embed_x11_window(Display *dpy, Window win) {
 
             if (ecd->wControl != nullptr) {
                 ecd->winParent = XtWindow(XtParent(ecd->wControl));
-                ecd->x = XtX(ecd->wControl) + 3;
-                ecd->y = XtY(ecd->wControl) + 3;
-                if (XtWidth(ecd->wControl) > 6) ecd->width = XtWidth(ecd->wControl) - 6;
-                if (XtHeight(ecd->wControl) > 6) ecd->height = XtHeight(ecd->wControl) - 6;
+                int cw = (int)XtWidth(ecd->wControl);
+                int ch_h = (int)XtHeight(ecd->wControl);
+                int tw = (ecd->width > 8) ? (int)ecd->width : (cw > 6 ? cw - 6 : 48);
+                int th = (ecd->height > 8) ? (int)ecd->height : (ch_h > 4 ? ch_h - 4 : 48);
+                if (cw > 8 && tw > cw) tw = cw;
+                if (ch_h > 8 && th > ch_h) th = ch_h;
+                ecd->width = (unsigned int)tw;
+                ecd->height = (unsigned int)th;
+                ecd->x = (int)XtX(ecd->wControl) + (cw - tw) / 2;
+                ecd->y = (int)XtY(ecd->wControl) + (ch_h - th) / 2;
             }
             unsigned int w = ecd->width > 8 ? (unsigned int)ecd->width : 48u;
             unsigned int h = ecd->height > 8 ? (unsigned int)ecd->height : 48u;
+            XWindowAttributes pattr;
+            if (XGetWindowAttributes(dpy, ecd->winParent, &pattr)) {
+                XSelectInput(dpy, ecd->winParent, pattr.your_event_mask | SubstructureNotifyMask);
+            }
             XUnmapWindow(dpy, win);
             XSetWindowBorderWidth(dpy, win, 0);
-            XResizeWindow(dpy, win, w, h);
             XReparentWindow(dpy, win, ecd->winParent, ecd->x, ecd->y);
+            XMoveResizeWindow(dpy, win, ecd->x, ecd->y, w, h);
             XMapWindow(dpy, win);
             XFlush(dpy);
             matched = true;
@@ -596,6 +606,48 @@ static bool try_embed_x11_window(Display *dpy, Window win) {
     if (ch.res_name) XFree(ch.res_name);
     if (ch.res_class) XFree(ch.res_class);
     return matched;
+}
+
+static void clear_destroyed_embedded_client(Window destroyed_win) {
+    if (destroyed_win == None || panel.embedded_client_count <= 0) return;
+    WmFpEmbeddedClientList list = (WmFpEmbeddedClientList)panel.embedded_client_list;
+    for (int i = 0; i < panel.embedded_client_count; ++i) {
+        WmFpEmbeddedClientData *ecd = &list[i];
+        if (ecd->pCD && ecd->pCD->client == destroyed_win) {
+            XtFree((char *)ecd->pCD);
+            ecd->pCD = nullptr;
+            return;
+        }
+    }
+}
+
+static void enforce_embedded_client_geometry(Display *dpy, const XConfigureEvent *cev) {
+    if (!dpy || !cev || panel.embedded_client_count <= 0) return;
+    WmFpEmbeddedClientList list = (WmFpEmbeddedClientList)panel.embedded_client_list;
+    for (int i = 0; i < panel.embedded_client_count; ++i) {
+        WmFpEmbeddedClientData *ecd = &list[i];
+        if (!ecd->pCD || ecd->pCD->client != cev->window || ecd->winParent == None) {
+            continue;
+        }
+        if (ecd->wControl != nullptr) {
+            int cw = (int)XtWidth(ecd->wControl);
+            int ch_h = (int)XtHeight(ecd->wControl);
+            int tw = (ecd->width > 8) ? (int)ecd->width : 48;
+            int th = (ecd->height > 8) ? (int)ecd->height : 48;
+            if (cw > 8 && tw > cw) tw = cw;
+            if (ch_h > 8 && th > ch_h) th = ch_h;
+            ecd->x = (int)XtX(ecd->wControl) + (cw - tw) / 2;
+            ecd->y = (int)XtY(ecd->wControl) + (ch_h - th) / 2;
+        }
+        unsigned int w = ecd->width > 8 ? (unsigned int)ecd->width : 48u;
+        unsigned int h = ecd->height > 8 ? (unsigned int)ecd->height : 48u;
+        if (cev->x != ecd->x || cev->y != ecd->y ||
+            cev->width != (int)w || cev->height != (int)h) {
+            XMoveResizeWindow(dpy, cev->window, ecd->x, ecd->y, w, h);
+            XFlush(dpy);
+        }
+        return;
+    }
 }
 
 static void scan_existing_embedded_clients(Display *dpy) {
@@ -1317,10 +1369,15 @@ int main(int argc, char **argv) {
             WmFpUpdateTrashOpenIcon(dpy);
         }
         handle_subpanel_x11_event(dpy, &ev);
+        if (ev.type == ConfigureNotify) {
+            enforce_embedded_client_geometry(dpy, &ev.xconfigure);
+        } else if (ev.type == DestroyNotify) {
+            clear_destroyed_embedded_client(ev.xdestroywindow.window);
+        }
         if (ev.type == PropertyNotify && ev.xproperty.window == g_mwmWin &&
             ev.xproperty.state == PropertyNewValue) {
             sync_panel_workspaces_from_x11(dpy, ev.xproperty.atom);
-        } else if (ev.type == MapNotify && ev.xmap.event == g_fpScreen.rootWindow) {
+        } else if (ev.type == MapNotify && ev.xmap.window != g_fpScreen.rootWindow) {
             register_all_subpanel_contexts();
             try_embed_x11_window(dpy, ev.xmap.window);
             WmFpUpdateTrashOpenIcon(dpy);

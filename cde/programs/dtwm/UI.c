@@ -1833,9 +1833,10 @@ ControlSetBehavior (ControlData * control_data,
          GeometryData * geometry_data;
 
          XtSetArg (al[*ac], XmNcontrolType, XmCONTROL_CLIENT);      (*ac)++;
-         XtSetArg (al[*ac], XmNshadowThickness, shadow_thickness);  (*ac)++;
+         XtSetArg (al[*ac], XmNshadowThickness, 0);                 (*ac)++;
+         XtSetArg (al[*ac], XmNmarginWidth, margin_width);          (*ac)++;
          XtSetArg (al[*ac], XmNsensitive, sensitive);               (*ac)++;
-         XtSetArg (al[*ac], XmNhighlightThickness,highlight_thickness); (*ac)++;
+         XtSetArg (al[*ac], XmNhighlightThickness, 0);              (*ac)++;
 
 
          geometry_data = (GeometryData *) control_data->
@@ -1845,12 +1846,12 @@ ControlSetBehavior (ControlData * control_data,
 	 {
             if (geometry_data->flags & WidthValue && geometry_data->width > 0)
 	    {
-               XtSetArg (al[*ac], XmNwidth, geometry_data->width + 6);  (*ac)++;
+               XtSetArg (al[*ac], XmNwidth, geometry_data->width + 12);  (*ac)++;
             }
 
             if (geometry_data->flags & HeightValue && geometry_data->height > 0)
 	    {
-               XtSetArg (al[*ac], XmNheight, geometry_data->height + 6);(*ac)++;
+               XtSetArg (al[*ac], XmNheight, geometry_data->height + 4);(*ac)++;
             }
          }
       }
