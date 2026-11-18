@@ -42,6 +42,16 @@ if command -v gnome-keyring-daemon >/dev/null 2>&1; then
     eval "$(gnome-keyring-daemon --start --components=secrets,ssh 2>/dev/null)" || true
     export SSH_AUTH_SOCK
 fi
+# Ensure PipeWire + WirePlumber + PipeWire-Pulse are active when not socket-activated by systemd --user
+if [ -n "${XDG_RUNTIME_DIR:-}" ] && [ ! -S "$XDG_RUNTIME_DIR/pulse/native" ]; then
+    if command -v systemctl >/dev/null 2>&1 && systemctl --user start pipewire.service wireplumber.service pipewire-pulse.socket >/dev/null 2>&1; then
+        :
+    elif command -v pipewire >/dev/null 2>&1; then
+        [ -S "$XDG_RUNTIME_DIR/pipewire-0" ] || pipewire >/dev/null 2>&1 &
+        command -v wireplumber >/dev/null 2>&1 && wireplumber >/dev/null 2>&1 &
+        command -v pipewire-pulse >/dev/null 2>&1 && pipewire-pulse >/dev/null 2>&1 &
+    fi
+fi
 export XBMLANGPATH="${XBMLANGPATH:-${HOME:+$HOME/.dt/icons/%B%M.bm:$HOME/.dt/icons/%B:}/usr/dt/appconfig/icons/%L/%B%M.bm:/usr/dt/appconfig/icons/%L/%B:/usr/dt/appconfig/icons/C/%B%M.bm:/usr/dt/appconfig/icons/C/%B}"
 
 # Synchronize CDE IMS selection (~/.dt/ims/*) or installed Wayland IME (fcitx5 / ibus)

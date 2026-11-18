@@ -180,7 +180,7 @@ flowchart TD
   - **Interactive Region Crop & Direct Clipboard Capture in `ck-grab`:** Extend `ck-grab` with **Region (Drag Rectangle)** selection (`zwlr_layer_shell_v1` crosshair overlay + `zwlr_screencopy_manager_v1` on Wayland; `XGrabPointer` rubber-band crosshair + `XGetImage` on X11) and a **Copy to Clipboard** mode publishing `image/png` directly to `wl_data_device` / X11 `CLIPBOARD` without requiring a file save.
 - **Parallel Wayland + X11 Acceptance Gate**: Parallel Wayland and X11 session tests verify `pkexec` elevation through `ck-polkit-agent`, unlocked `org.freedesktop.secrets` after `dtlogin` Wayland and X11 logins, and `ck-grab --region --clipboard` `image/png` round-trip paste in both environments.
 
-### [ ] WP-15 — PipeWire / PulseAudio Audio & Mic Routing, Native Wi-Fi Onboarding & Bluetooth Pairing Wizard
+### [x] WP-15 — PipeWire / PulseAudio Audio & Mic Routing, Native Wi-Fi Onboarding & Bluetooth Pairing Wizard
 - **Closes**: `GAP-SYS-01`, `GAP-SYS-03`
 - **Repos**: `ck-core-apps` (`src/ck-mixer/`, `src/ck-status/`), `ck-core-cde` (`cde/debian/control`)
 - **Dual Wayland + X11 Scope** *(100% shared Motif + D-Bus/PipeWire clients across Wayland and X11)*:

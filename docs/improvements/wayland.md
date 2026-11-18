@@ -395,6 +395,35 @@ clipboard screenshots:
   `XGrabPointer` rubber-band overlay on X11) and publishing cropped `image/png`
   directly to `zwlr_data_control_manager_v1` / `CLIPBOARD`.
 
+## PipeWire audio/mic routing, native Motif Wi-Fi/VPN onboarding, and BlueZ pairing agent (`WP-15`)
+
+`ck-mixer` and `ck-status` share native PipeWire / PulseAudio (`libpulse`),
+`NetworkManager`, `BlueZ`, and `MPRIS` desktop controls across both
+`CDE (Wayland)` and `CDE (X11 / XLibre)`:
+
+- **PipeWire / PulseAudio audio & microphone routing (`ck-mixer`):** Adds
+  **Outputs** (default sink switching, volume, mute, port switching),
+  **Input / Mic** (default microphone selection, gain, mute, and a 25-segment
+  live LED peak level meter driven by `PA_STREAM_PEAK_DETECT`),
+  **Applications** (per-stream playback & capture volume, mute, and live sink /
+  source routing), and **Card Profiles** (Bluetooth `a2dp-sink` vs.
+  `headset-head-unit` HSP/HFP, HDMI, Pro Audio, Off) alongside **ALSA Hardware**,
+  running cleanly even when zero hardware ALSA cards are present.
+- **Native Motif Wi-Fi & VPN onboarding + `SecretAgent` (`ck-status`):** Adds
+  inline Motif dialogs for WPA2/WPA3-PSK, WPA-Enterprise `802.1X` (`PEAP`/`TTLS`,
+  `MSCHAPv2`/`PAP`, identity, CA certificate / system CA, password), Open, and
+  **Hidden Wi-Fi** networks (`AddAndActivateConnection`), saved **VPN /
+  WireGuard** profile Connect/Disconnect, and asynchronous
+  `org.freedesktop.NetworkManager.SecretAgent` (`/org/freedesktop/NetworkManager/SecretAgent`)
+  password prompts.
+- **Built-in BlueZ pairing agent (`org.bluez.Agent1`) & MPRIS transport
+  (`ck-status`):** Registers `/org/ckcore/bluez/agent` (`KeyboardDisplay`) for
+  non-blocking 6-digit passkey numeric comparison (`RequestConfirmation`),
+  PIN/passkey entry, and service authorization modals alongside **Scan Devices**,
+  **Pair**, **Trust / Untrust**, and **Forget** (`RemoveDevice`), plus MPRIS
+  (`org.mpris.MediaPlayer2.Player`) track display and **Prev** / **Play-Pause** /
+  **Next** controls.
+
 ## `dtfile` removable media (`UDisks2`), network shares (`GVFS`), archives, thumbnails, live XDG Trash, and `FileManager1` (`WP-16`)
 
 `dtfile` delivers shared desktop storage, archive, thumbnail, trash, and D-Bus
@@ -479,6 +508,11 @@ atomically once both the Wayland socket and rootless `Xwayland` are ready.
   `PR_SET_DUMPABLE=0` password retry/elevation/cancellation, `gnome-keyring-daemon`
   + `secret-tool` auto-unlock round-trip, and `ck-grab --region --clipboard` +
   `--paste-png` pixel-accurate crop/clipboard transfer),
+  `check-dtwm-wayland-wp15.py` (`WP-15` parallel dual Wayland + X11 `Xvfb`
+  verification of `ck-mixer` PipeWire sink/source/stream/profile routing +
+  zero-ALSA fallback + live mic peak meter, and `ck-status` WPA2-PSK /
+  WPA-Enterprise `802.1X` onboarding, VPN `SecretAgent`, BlueZ `Agent1` pairing,
+  and MPRIS transport),
   `check-dtwm-wayland-wp16.py` (`WP-16` parallel dual Wayland + X11 `Xvfb`
   verification of `dtfile` `libXm.so.9` `UDisks2` LUKS unlock/hotplug/eject,
   `GVFS` *Connect to Server* + MTP phone `inotify` discovery, 5-format archive

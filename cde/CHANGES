@@ -1,3 +1,23 @@
+2026-11-19
+- Deliver **WP-15 — PipeWire / PulseAudio Audio & Mic Routing, Native Wi-Fi
+  Onboarding & Bluetooth Pairing Wizard** across both `CDE (Wayland)` and
+  `CDE (X11 / XLibre)` (`cde/debian/control`, `cde/debian/Xsession.wayland`,
+  `cde/programs/dtwm/Makefile.am`,
+  `cde/programs/dtwm/tests/check-dtwm-wayland-wp15.py`,
+  `wayland_work_plan.md`, `docs/improvements/wayland.md`):
+  - Recommend `pipewire-pulse`, `wireplumber`, `libspa-0.2-bluetooth`,
+    `pulseaudio-utils`, `network-manager`, and `bluez` in `cde/debian/control`
+    and ensure `Xsession.wayland` activates `pipewire`, `wireplumber`, and
+    `pipewire-pulse` when not already socket-activated by `systemd --user`.
+  - Add parallel Wayland (`dtwm-wayland`) + X11 (`Xvfb` + `dtwm`) integration
+    suite `check-dtwm-wayland-wp15.py` verifying CK Core Motif ABI 9
+    (`libXm.so.9`) linkage, `ck-mixer` PipeWire sink/source/default routing,
+    zero-ALSA-card fallback (`CK_MIXER_NO_ALSA=1`), live microphone peak
+    detection, per-application stream routing, card profile switching, and
+    `ck-status` native Motif WPA2-PSK + WPA-Enterprise (`802.1X` PEAP/MSCHAPv2)
+    Wi-Fi onboarding, VPN activation with `SecretAgent.GetSecrets`, BlueZ
+    `Agent1` (`RequestConfirmation`) pairing/trust/forget, and MPRIS transport.
+
 2026-11-18
 - Align `CDE (Wayland)` desktop icon placement, open-window indicator bars,
   client icon resolution, `Default.dp` foreground contrast, and default
