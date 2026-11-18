@@ -250,6 +250,7 @@ static void focus_view_ex(
         clear_active_focus(server);
         return;
     }
+    dtwm_icon_box_deactivate(server);
     if (!surface) {
         surface = view_wlr_surface(view);
     }
@@ -646,6 +647,11 @@ static void open_window_menu(DtwmServer *server, DtwmView *view, int x, int y) {
     server->menu_open_y = server->cursor ? server->cursor->y : y;
     server->menu_drag_moved = false;
     update_window_menu_buffer(server);
+}
+
+void dtwm_open_window_menu_for_view(DtwmServer *server, DtwmView *view, int x, int y) {
+    if (!server || !view) return;
+    open_window_menu(server, view, x, y);
 }
 
 static void open_root_menu(DtwmServer *server, int x, int y, uint32_t t_ms) {
@@ -1493,6 +1499,9 @@ static void process_cursor_motion(DtwmServer *server, uint32_t time_msec) {
         return;
     }
 
+    if (dtwm_icon_box_handle_motion(server)) {
+        return;
+    }
     if (server->cursor_mode == DTWM_CURSOR_MOVE) {
         process_cursor_move(server);
         return;
@@ -1587,7 +1596,16 @@ static void process_cursor_motion(DtwmServer *server, uint32_t time_msec) {
     }
 
     if (!surface) {
-        wlr_cursor_set_xcursor(server->cursor, server->cursor_mgr, view ? cursor_name_for_part(part) : "default");
+        DtwmFramePart ib_part = dtwm_icon_box_is_topmost_at(server, server->cursor->x, server->cursor->y)
+                                    ? dtwm_icon_box_part_at(server, server->cursor->x, server->cursor->y)
+                                    : DTWM_PART_NONE;
+        const char *cname = "default";
+        if (view) {
+            cname = cursor_name_for_part(part);
+        } else if (ib_part != DTWM_PART_NONE) {
+            cname = cursor_name_for_part(ib_part);
+        }
+        wlr_cursor_set_xcursor(server->cursor, server->cursor_mgr, cname);
         wlr_seat_pointer_notify_clear_focus(server->seat);
     } else {
         wlr_seat_pointer_notify_enter(server->seat, surface, sx, sy);
@@ -1644,6 +1662,9 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
 
     if (ev->state == WL_POINTER_BUTTON_STATE_RELEASED) {
         server->subpanel_drag_candidate = nullptr;
+        if (dtwm_icon_box_handle_button(server, btn, false, t_ms)) {
+            return;
+        }
         if (server->menu_visible) {
             /* Support classic Motif/CDE press-drag-release on popup menus while keeping
              * a stationary right-click posted for click-to-select interaction. */
@@ -1761,6 +1782,12 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
     if (!view && !surface) {
         dismiss_open_client_popups(server, t_ms);
         close_docked_subpanels(server);
+        if (dtwm_icon_box_is_topmost_at(server, server->cursor->x, server->cursor->y)) {
+            clear_active_focus(server);
+            (void)dtwm_icon_box_handle_button(server, btn, true, t_ms);
+            return;
+        }
+        dtwm_icon_box_deactivate(server);
         DtwmView *icon_v = dtwm_icons_view_at(server, server->cursor->x, server->cursor->y);
         if (icon_v) {
             if (btn == BTN_LEFT) {
@@ -1868,6 +1895,10 @@ static void handle_cursor_axis(struct wl_listener *listener, void *data) {
     struct wlr_pointer_axis_event *ev = data;
     uint32_t t_ms = ev->time_msec ? ev->time_msec : dtwm_now_msec();
     dtwm_lock_notify_activity(server);
+    if (ev->orientation == WL_POINTER_AXIS_VERTICAL_SCROLL &&
+        dtwm_icon_box_handle_axis(server, ev->delta, ev->delta_discrete)) {
+        return;
+    }
     wlr_seat_pointer_notify_axis(
         server->seat, t_ms, ev->orientation, ev->delta,
         ev->delta_discrete, ev->source, ev->relative_direction

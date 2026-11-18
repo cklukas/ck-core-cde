@@ -105,12 +105,16 @@ Wayland and XWayland clients:
 `cde_icons.c` brings CK Core CDE's desktop icon and Front Panel embedding
 contracts to Wayland without requiring application code changes:
 
-- **Open-window and minimized desktop icons (`Dtwm*showOpenWindowIcons`):**
-  Publishes `_DT_WM_SETTINGS_V1` (`DT_WM_SETTINGS_V1_SHOW_OPEN_WINDOW_ICONS`) on
-  both the workspace-manager window and the XWayland root window, renders
-  active-focus Crimson and inactive Slate 3D bevel icon tiles in
-  `desktop_icon_tree`, and restores or focuses windows when their desktop icon
-  is clicked (`--no-open-window-icons` disables open-window icons);
+- **Open-window and minimized desktop icons (`Dtwm*showOpenWindowIcons`) and
+  interactive CDE Icon Box (`Dtwm*useIconBox`):** Publishes `_DT_WM_SETTINGS_V1`
+  (`DT_WM_SETTINGS_V1_SHOW_OPEN_WINDOW_ICONS` and `DT_WM_SETTINGS_V1_USE_ICON_BOX`)
+  on both the workspace-manager window and the XWayland root window, renders
+  active-focus Crimson and inactive Slate 3D bevel icon tiles (honoring
+  `Dtwm*iconPlacementMargin` when placed on the workspace), and switches live to
+  a movable, resizable, mouse-wheel-scrollable CDE **`Icons`** (**Icon Box**)
+  window when **Use Icon Box** is selected in `Style Manager - Window` (which
+  reloads live `RESOURCE_MANAGER` values on reopen so all toggles persist across
+  both dialog reopens and process restarts);
 - **Normal (`48×48`) and increased (`96×96`) `WM_ICON_SIZE`:** Publishes
   `WM_ICON_SIZE` on the XWayland root window and supports live switching via
   `--large-icons` or `_DT_WM_REQUEST` (`f.set_large_icons 0|1`,

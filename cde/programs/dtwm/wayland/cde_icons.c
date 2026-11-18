@@ -11,6 +11,7 @@
 #include "xdg-toplevel-icon-v1-protocol.h"
 
 #include <drm_fourcc.h>
+#include <linux/input-event-codes.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,6 +31,7 @@
 /* _DT_WM_SETTINGS_V1 constants (matching <Dt/WmSettings.h>) */
 #define DTWM_SETTINGS_V1_VERSION                1u
 #define DTWM_SETTINGS_V1_SHOW_OPEN_WINDOW_ICONS (1u << 0)
+#define DTWM_SETTINGS_V1_USE_ICON_BOX           (1u << 1)
 
 /* --- Native Wayland xdg-toplevel-icon-v1 State --- */
 typedef struct {
@@ -297,10 +299,14 @@ static void publish_icon_sizes_and_settings(DtwmServer *server) {
     );
 
     if (server->atom_wm_settings_v1 != XCB_ATOM_NONE) {
-        uint32_t settings[2] = {
-            DTWM_SETTINGS_V1_VERSION,
-            server->show_open_window_icons ? DTWM_SETTINGS_V1_SHOW_OPEN_WINDOW_ICONS : 0u,
-        };
+        uint32_t flags = 0u;
+        if (server->show_open_window_icons) {
+            flags |= DTWM_SETTINGS_V1_SHOW_OPEN_WINDOW_ICONS;
+        }
+        if (server->use_icon_box) {
+            flags |= DTWM_SETTINGS_V1_USE_ICON_BOX;
+        }
+        uint32_t settings[2] = {DTWM_SETTINGS_V1_VERSION, flags};
         xcb_change_property(
             server->xcb_conn,
             XCB_PROP_MODE_REPLACE,
@@ -584,7 +590,17 @@ static bool should_show_desktop_icon(const DtwmView *view) {
     if ((view->workspace_mask & (1u << view->server->current_workspace)) == 0) {
         return false;
     }
-    return view->minimized || view->server->show_open_window_icons;
+    if (!view->minimized) {
+        if (view->kind == DTWM_VIEW_XWAYLAND && view->xwayland_surface &&
+            view->xwayland_surface->parent != nullptr) {
+            return false;
+        }
+        if (view->kind == DTWM_VIEW_XDG && view->xdg_toplevel &&
+            view->xdg_toplevel->parent != nullptr) {
+            return false;
+        }
+    }
+    return view->minimized || view->server->use_icon_box || view->server->show_open_window_icons;
 }
 
 static bool icon_surface_has_transparency(cairo_surface_t *surf) {
@@ -727,19 +743,302 @@ void dtwm_icons_update_view(DtwmView *view) {
 
     dtwm_cairo_buffer_finish(cr, surf);
     wlr_scene_buffer_set_buffer(view->desktop_icon_buf, buf);
-    wlr_scene_node_set_enabled(&view->desktop_icon_buf->node, true);
+    wlr_scene_node_set_enabled(&view->desktop_icon_buf->node, !view->icon_clipped_out);
+    wlr_buffer_drop(buf);
+}
+
+static void ensure_icon_box_scene_nodes(DtwmServer *server) {
+    if (!server || !server->workspace_tree) return;
+    if (!server->icon_box_tree) {
+        server->icon_box_tree = wlr_scene_tree_create(server->workspace_tree);
+        wlr_scene_node_set_enabled(&server->icon_box_tree->node, false);
+    }
+    if (!server->icon_box_bg_buf && server->icon_box_tree) {
+        server->icon_box_bg_buf = wlr_scene_buffer_create(server->icon_box_tree, nullptr);
+    }
+}
+
+static void draw_ib_groove_v(cairo_t *cr, double x, double y0, double y1, DtwmRgba bs, DtwmRgba ts) {
+    cairo_set_source_rgba(cr, bs.r, bs.g, bs.b, bs.a);
+    cairo_rectangle(cr, x, y0, 1.0, y1 - y0);
+    cairo_fill(cr);
+    cairo_set_source_rgba(cr, ts.r, ts.g, ts.b, ts.a);
+    cairo_rectangle(cr, x + 1.0, y0, 1.0, y1 - y0);
+    cairo_fill(cr);
+}
+
+static void draw_ib_groove_h(cairo_t *cr, double x0, double x1, double y, DtwmRgba bs, DtwmRgba ts) {
+    cairo_set_source_rgba(cr, bs.r, bs.g, bs.b, bs.a);
+    cairo_rectangle(cr, x0, y, x1 - x0, 1.0);
+    cairo_fill(cr);
+    cairo_set_source_rgba(cr, ts.r, ts.g, ts.b, ts.a);
+    cairo_rectangle(cr, x0, y + 1.0, x1 - x0, 1.0);
+    cairo_fill(cr);
+}
+
+static void render_icon_box_frame(DtwmServer *server, int total_content_h, int well_h) {
+    if (!server || !server->icon_box_bg_buf) return;
+    int outer_w = server->icon_box_w;
+    int outer_h = server->icon_box_h;
+    if (outer_w < 180) outer_w = 180;
+    if (outer_h < 120) outer_h = 120;
+
+    cairo_t *cr = nullptr;
+    cairo_surface_t *surf = nullptr;
+    struct wlr_buffer *buf = dtwm_cairo_buffer_begin(outer_w, outer_h, &cr, &surf);
+    if (!buf) return;
+
+    const DtwmColorSet *fcs =
+        server->icon_box_active ? &server->palette.active : &server->palette.inactive;
+    const DtwmColorSet *ics = &server->palette.menu;
+
+    /* 1. Outer 3D CDE window frame + resize corner grooves */
+    cairo_set_source_rgba(cr, fcs->bg.r, fcs->bg.g, fcs->bg.b, 1.0);
+    cairo_rectangle(cr, 0, 0, outer_w, outer_h);
+    cairo_fill(cr);
+    dtwm_draw_bevel(cr, 0, 0, outer_w, outer_h, 2.0, fcs->top_shadow, fcs->bottom_shadow);
+    dtwm_draw_bevel(
+        cr,
+        DTWM_BORDER_WIDTH - 1,
+        DTWM_BORDER_WIDTH - 1,
+        outer_w - 2 * (DTWM_BORDER_WIDTH - 1),
+        outer_h - 2 * (DTWM_BORDER_WIDTH - 1),
+        1.0,
+        fcs->bottom_shadow,
+        fcs->top_shadow
+    );
+
+    int c = DTWM_CORNER_HANDLE_LEN;
+    if (outer_w > 2 * c + 16) {
+        draw_ib_groove_v(cr, c, 1, DTWM_BORDER_WIDTH - 1, fcs->bottom_shadow, fcs->top_shadow);
+        draw_ib_groove_v(cr, outer_w - c - 2, 1, DTWM_BORDER_WIDTH - 1, fcs->bottom_shadow, fcs->top_shadow);
+        draw_ib_groove_v(cr, c, outer_h - DTWM_BORDER_WIDTH + 1, outer_h - 1, fcs->bottom_shadow, fcs->top_shadow);
+        draw_ib_groove_v(cr, outer_w - c - 2, outer_h - DTWM_BORDER_WIDTH + 1, outer_h - 1, fcs->bottom_shadow, fcs->top_shadow);
+    }
+    if (outer_h > 2 * c + 16) {
+        draw_ib_groove_h(cr, 1, DTWM_BORDER_WIDTH - 1, c, fcs->bottom_shadow, fcs->top_shadow);
+        draw_ib_groove_h(cr, outer_w - DTWM_BORDER_WIDTH + 1, outer_w - 1, c, fcs->bottom_shadow, fcs->top_shadow);
+        draw_ib_groove_h(cr, 1, DTWM_BORDER_WIDTH - 1, outer_h - c - 2, fcs->bottom_shadow, fcs->top_shadow);
+        draw_ib_groove_h(cr, outer_w - DTWM_BORDER_WIDTH + 1, outer_w - 1, outer_h - c - 2, fcs->bottom_shadow, fcs->top_shadow);
+    }
+
+    /* 2. Titlebar ("Icons") with MWM menu bar button and Maximize button */
+    double tx = DTWM_BORDER_WIDTH;
+    double ty = DTWM_BORDER_WIDTH;
+    double tw = outer_w - 2 * DTWM_BORDER_WIDTH;
+    double th = DTWM_TITLE_HEIGHT;
+    double bw = DTWM_TITLE_HEIGHT;
+
+    /* Left menu button */
+    dtwm_draw_bevel(cr, tx, ty, bw, th, 1.0, fcs->top_shadow, fcs->bottom_shadow);
+    dtwm_draw_bevel(cr, tx + 4, ty + th * 0.5 - 2, bw - 8, 4, 1.0, fcs->top_shadow, fcs->bottom_shadow);
+
+    /* Right maximize button */
+    double mx = tx + tw - bw;
+    dtwm_draw_bevel(cr, mx, ty, bw, th, 1.0, fcs->top_shadow, fcs->bottom_shadow);
+    if (server->icon_box_maximized) {
+        dtwm_draw_bevel(cr, mx + 4, ty + 4, bw - 8, th - 8, 1.0, fcs->bottom_shadow, fcs->top_shadow);
+    } else {
+        dtwm_draw_bevel(cr, mx + 4, ty + 4, bw - 8, th - 8, 1.0, fcs->top_shadow, fcs->bottom_shadow);
+    }
+
+    /* Center title plate */
+    double title_x = tx + bw;
+    double title_w = tw - 2 * bw;
+    dtwm_draw_bevel(cr, title_x, ty, title_w, th, 1.0, fcs->top_shadow, fcs->bottom_shadow);
+    dtwm_draw_label(cr, "Icons", title_x, ty, title_w, th, fcs->fg, true, true);
+
+    /* 3. Client interior + sunken scrolled well + vertical CDE scrollbar */
+    double cx = DTWM_BORDER_WIDTH;
+    double cy = DTWM_BORDER_WIDTH + DTWM_TITLE_HEIGHT;
+    double cw = outer_w - 2 * DTWM_BORDER_WIDTH;
+    double ch = outer_h - 2 * DTWM_BORDER_WIDTH - DTWM_TITLE_HEIGHT;
+
+    cairo_set_source_rgba(cr, ics->bg.r, ics->bg.g, ics->bg.b, 1.0);
+    cairo_rectangle(cr, cx, cy, cw, ch);
+    cairo_fill(cr);
+
+    double sb_w = 16.0;
+    double well_x = cx + 5.0;
+    double well_y = cy + 5.0;
+    double well_w = cw - 10.0 - sb_w - 4.0;
+    double well_box_h = ch - 10.0;
+    if (well_w < 64.0) well_w = 64.0;
+    if (well_box_h < 40.0) well_box_h = 40.0;
+
+    cairo_set_source_rgba(cr, ics->bg.r * 0.86, ics->bg.g * 0.86, ics->bg.b * 0.86, 1.0);
+    cairo_rectangle(cr, well_x, well_y, well_w, well_box_h);
+    cairo_fill(cr);
+    dtwm_draw_bevel(cr, well_x, well_y, well_w, well_box_h, 2.0, ics->bottom_shadow, ics->top_shadow);
+
+    /* Vertical CDE scrollbar */
+    double sb_x = well_x + well_w + 4.0;
+    double sb_y = well_y;
+    double sb_h = well_box_h;
+    cairo_set_source_rgba(cr, ics->bg.r * 0.82, ics->bg.g * 0.82, ics->bg.b * 0.82, 1.0);
+    cairo_rectangle(cr, sb_x, sb_y, sb_w, sb_h);
+    cairo_fill(cr);
+    dtwm_draw_bevel(cr, sb_x, sb_y, sb_w, sb_h, 1.5, ics->bottom_shadow, ics->top_shadow);
+
+    double arr_h = fmin(15.0, sb_h * 0.25);
+    /* Up arrow */
+    cairo_move_to(cr, sb_x + sb_w * 0.5, sb_y + 3.0);
+    cairo_line_to(cr, sb_x + sb_w - 3.0, sb_y + arr_h);
+    cairo_line_to(cr, sb_x + 3.0, sb_y + arr_h);
+    cairo_close_path(cr);
+    cairo_set_source_rgba(cr, ics->bg.r, ics->bg.g, ics->bg.b, 1.0);
+    cairo_fill(cr);
+
+    /* Down arrow */
+    cairo_move_to(cr, sb_x + sb_w * 0.5, sb_y + sb_h - 3.0);
+    cairo_line_to(cr, sb_x + sb_w - 3.0, sb_y + sb_h - arr_h);
+    cairo_line_to(cr, sb_x + 3.0, sb_y + sb_h - arr_h);
+    cairo_close_path(cr);
+    cairo_set_source_rgba(cr, ics->bg.r, ics->bg.g, ics->bg.b, 1.0);
+    cairo_fill(cr);
+
+    /* Proportional 3D thumb */
+    double track_y = sb_y + arr_h + 2.0;
+    double track_h = sb_h - 2.0 * (arr_h + 2.0);
+    if (track_h > 12.0) {
+        double ratio = (total_content_h > well_h && total_content_h > 0)
+                           ? fmax(0.18, fmin(1.0, (double)well_h / (double)total_content_h))
+                           : 1.0;
+        double thumb_h = fmax(14.0, track_h * ratio);
+        double frac = (server->icon_box_max_scroll_y > 0)
+                          ? ((double)server->icon_box_scroll_y / (double)server->icon_box_max_scroll_y)
+                          : 0.0;
+        if (frac < 0.0) frac = 0.0;
+        if (frac > 1.0) frac = 1.0;
+        double thumb_y = track_y + (track_h - thumb_h) * frac;
+        cairo_set_source_rgba(cr, ics->bg.r, ics->bg.g, ics->bg.b, 1.0);
+        cairo_rectangle(cr, sb_x + 2.0, thumb_y, sb_w - 4.0, thumb_h);
+        cairo_fill(cr);
+        dtwm_draw_bevel(cr, sb_x + 2.0, thumb_y, sb_w - 4.0, thumb_h, 1.5, ics->top_shadow, ics->bottom_shadow);
+    }
+
+    dtwm_cairo_buffer_finish(cr, surf);
+    wlr_scene_buffer_set_buffer(server->icon_box_bg_buf, buf);
+    wlr_scene_node_set_enabled(&server->icon_box_bg_buf->node, true);
     wlr_buffer_drop(buf);
 }
 
 void dtwm_icons_relayout(DtwmServer *server) {
     if (!server) return;
+    ensure_icon_box_scene_nodes(server);
+
     struct wlr_box ubox;
     dtwm_get_usable_output_box(server, 1, 1, &ubox);
 
     int img_dim = server->large_icons ? 96 : 48;
-    int col_w = (server->large_icons ? 112 : 76) + 12;
-    int row_h = (img_dim + 8 + 22) + 12;
-    int max_rows = (ubox.height - 24) / row_h;
+
+    if (server->use_icon_box && !server->greeter_mode) {
+        int min_h = server->large_icons ? 214 : 158;
+        if (!server->icon_box_pos_initialized) {
+            server->icon_box_w = 524;
+            server->icon_box_h = min_h;
+            server->icon_box_x = ubox.x + 20;
+            server->icon_box_y = ubox.y + ubox.height - server->icon_box_h - 14;
+            if (server->icon_box_y < ubox.y + 8) server->icon_box_y = ubox.y + 8;
+            server->icon_box_pos_initialized = true;
+        } else if (!server->icon_box_maximized && server->icon_box_h < min_h && !server->icon_box_resizing) {
+            int dy = min_h - server->icon_box_h;
+            server->icon_box_h = min_h;
+            if (server->icon_box_y + server->icon_box_h > ubox.y + ubox.height - 4) {
+                server->icon_box_y -= dy;
+                if (server->icon_box_y < ubox.y) server->icon_box_y = ubox.y;
+            }
+        }
+        if (server->icon_box_w < 220) server->icon_box_w = 220;
+        if (server->icon_box_h < 124) server->icon_box_h = 124;
+
+        if (server->icon_box_tree) {
+            wlr_scene_node_set_position(
+                &server->icon_box_tree->node, server->icon_box_x, server->icon_box_y
+            );
+            wlr_scene_node_set_enabled(&server->icon_box_tree->node, true);
+        }
+
+        int cw = server->icon_box_w - 2 * DTWM_BORDER_WIDTH;
+        int ch = server->icon_box_h - 2 * DTWM_BORDER_WIDTH - DTWM_TITLE_HEIGHT;
+        int well_x = DTWM_BORDER_WIDTH + 5;
+        int well_y = DTWM_BORDER_WIDTH + DTWM_TITLE_HEIGHT + 5;
+        int well_w = cw - 10 - 20;
+        int well_h = ch - 10;
+        if (well_w < 80) well_w = 80;
+        if (well_h < 48) well_h = 48;
+
+        int col_w = (server->large_icons ? 112 : 76) + 10;
+        int row_h = (img_dim + 8 + 22) + 8;
+        int cols = (well_w - 12) / col_w;
+        if (cols < 1) cols = 1;
+
+        int count = 0;
+        DtwmView *v;
+        wl_list_for_each_reverse(v, &server->views, link) {
+            if (should_show_desktop_icon(v)) {
+                count++;
+            }
+        }
+        int total_rows = (count + cols - 1) / cols;
+        if (total_rows < 1) total_rows = 1;
+        int content_h = 10 + total_rows * row_h;
+        int max_scroll = content_h > well_h ? (content_h - well_h) : 0;
+        server->icon_box_max_scroll_y = max_scroll;
+        if (server->icon_box_scroll_y > max_scroll) server->icon_box_scroll_y = max_scroll;
+        if (server->icon_box_scroll_y < 0) server->icon_box_scroll_y = 0;
+
+        render_icon_box_frame(server, content_h, well_h);
+
+        int slot = 0;
+        wl_list_for_each_reverse(v, &server->views, link) {
+            if (!should_show_desktop_icon(v)) {
+                dtwm_icons_update_view(v);
+                continue;
+            }
+            dtwm_icons_update_view(v);
+            if (v->desktop_icon_buf && server->icon_box_tree &&
+                v->desktop_icon_buf->node.parent != server->icon_box_tree) {
+                wlr_scene_node_reparent(&v->desktop_icon_buf->node, server->icon_box_tree);
+            }
+
+            int row = slot / cols;
+            int col = slot % cols;
+            int lx = well_x + 8 + col * col_w;
+            int ly = well_y + 6 + row * row_h - server->icon_box_scroll_y;
+
+            int img_box = img_dim + 8;
+            int img_off_x = (v->icon_box_w - img_box) / 2 + 4;
+            v->icon_x = server->icon_box_x + lx + img_off_x;
+            v->icon_y = server->icon_box_y + ly + 4;
+
+            bool in_bounds = (ly >= well_y + 2) &&
+                             (ly + v->icon_box_h <= well_y + well_h + 2 || row == 0);
+            v->icon_clipped_out = !in_bounds;
+            if (v->desktop_icon_buf) {
+                wlr_scene_node_set_position(&v->desktop_icon_buf->node, lx, ly);
+                wlr_scene_node_set_enabled(&v->desktop_icon_buf->node, in_bounds);
+            }
+            publish_client_icon_geometry(v);
+            slot++;
+        }
+        return;
+    }
+
+    if (server->icon_box_tree) {
+        wlr_scene_node_set_enabled(&server->icon_box_tree->node, false);
+        server->icon_box_active = false;
+        server->icon_box_dragging = false;
+        server->icon_box_resizing = false;
+    }
+
+    int gap = (server->icon_placement_margin >= 0 && server->icon_placement_margin <= 128)
+                  ? server->icon_placement_margin
+                  : 12;
+    int col_w = (server->large_icons ? 112 : 76) + gap;
+    int row_h = (img_dim + 8 + 22) + gap;
+    int edge_pad = gap > 8 ? gap : 14;
+    int max_rows = (ubox.height - edge_pad * 2) / row_h;
     if (max_rows < 1) max_rows = 1;
 
     /* Layout in stable creation order (reverse of MRU server->views) along top-right column */
@@ -751,17 +1050,23 @@ void dtwm_icons_relayout(DtwmServer *server) {
             continue;
         }
         dtwm_icons_update_view(v);
+        if (v->desktop_icon_buf && server->desktop_icon_tree &&
+            v->desktop_icon_buf->node.parent != server->desktop_icon_tree) {
+            wlr_scene_node_reparent(&v->desktop_icon_buf->node, server->desktop_icon_tree);
+        }
         int col = slot / max_rows;
         int row = slot % max_rows;
-        int tile_x = ubox.x + ubox.width - col_w * (col + 1) + 4;
-        int tile_y = ubox.y + 14 + row * row_h;
+        int tile_x = ubox.x + ubox.width - col_w * (col + 1) + (gap / 3) - (edge_pad - 14);
+        int tile_y = ubox.y + edge_pad + row * row_h;
 
         int img_box = img_dim + 8;
         int img_off_x = (v->icon_box_w - img_box) / 2 + 4;
         v->icon_x = tile_x + img_off_x;
         v->icon_y = tile_y + 4;
+        v->icon_clipped_out = false;
         if (v->desktop_icon_buf) {
             wlr_scene_node_set_position(&v->desktop_icon_buf->node, tile_x, tile_y);
+            wlr_scene_node_set_enabled(&v->desktop_icon_buf->node, true);
         }
         publish_client_icon_geometry(v);
         slot++;
@@ -770,11 +1075,16 @@ void dtwm_icons_relayout(DtwmServer *server) {
 
 DtwmView *dtwm_icons_view_at(DtwmServer *server, double lx, double ly) {
     if (!server) return nullptr;
+    int base_x = (server->use_icon_box && !server->greeter_mode) ? server->icon_box_x : 0;
+    int base_y = (server->use_icon_box && !server->greeter_mode) ? server->icon_box_y : 0;
     DtwmView *v;
     wl_list_for_each(v, &server->views, link) {
-        if (!should_show_desktop_icon(v) || !v->desktop_icon_buf) continue;
-        int tx = v->desktop_icon_buf->node.x;
-        int ty = v->desktop_icon_buf->node.y;
+        if (!should_show_desktop_icon(v) || !v->desktop_icon_buf ||
+            !v->desktop_icon_buf->node.enabled) {
+            continue;
+        }
+        int tx = base_x + v->desktop_icon_buf->node.x;
+        int ty = base_y + v->desktop_icon_buf->node.y;
         if (lx >= tx && lx < tx + v->icon_box_w &&
             ly >= ty && ly < ty + v->icon_box_h) {
             return v;
@@ -1049,11 +1359,268 @@ void dtwm_icons_set_open_window_icons(DtwmServer *server, bool enabled) {
     dtwm_icons_relayout(server);
 }
 
+void dtwm_icons_set_use_icon_box(DtwmServer *server, bool enabled) {
+    if (!server || server->use_icon_box == enabled) return;
+    server->use_icon_box = enabled;
+    server->icon_box_scroll_y = 0;
+    publish_icon_sizes_and_settings(server);
+    dtwm_icons_relayout(server);
+    if (enabled && server->icon_box_tree) {
+        wlr_scene_node_raise_to_top(&server->icon_box_tree->node);
+    }
+}
+
+void dtwm_icons_set_placement_margin(DtwmServer *server, int margin) {
+    if (!server) return;
+    if (margin < -1) margin = -1;
+    if (margin > 128) margin = 128;
+    if (server->icon_placement_margin == margin) return;
+    server->icon_placement_margin = margin;
+    dtwm_icons_relayout(server);
+}
+
 void dtwm_icons_set_large_icons(DtwmServer *server, bool large) {
     if (!server || server->large_icons == large) return;
     server->large_icons = large;
     publish_icon_sizes_and_settings(server);
     dtwm_icons_relayout(server);
+}
+
+bool dtwm_icon_box_is_topmost_at(DtwmServer *server, double lx, double ly) {
+    if (!server || !server->use_icon_box || server->greeter_mode || !server->icon_box_tree ||
+        !server->icon_box_tree->node.enabled) {
+        return false;
+    }
+    double nx = 0, ny = 0;
+    struct wlr_scene_node *node = wlr_scene_node_at(&server->scene->tree.node, lx, ly, &nx, &ny);
+    return node && node->parent == server->icon_box_tree;
+}
+
+DtwmFramePart dtwm_icon_box_part_at(DtwmServer *server, double lx, double ly) {
+    if (!server || !server->use_icon_box || !server->icon_box_tree ||
+        !server->icon_box_tree->node.enabled) {
+        return DTWM_PART_NONE;
+    }
+    int x = (int)lx - server->icon_box_x;
+    int y = (int)ly - server->icon_box_y;
+    int w = server->icon_box_w;
+    int h = server->icon_box_h;
+    if (x < 0 || y < 0 || x >= w || y >= h) {
+        return DTWM_PART_NONE;
+    }
+    int b = DTWM_BORDER_WIDTH;
+    int c = DTWM_CORNER_HANDLE_LEN;
+    bool top_e = (y < b);
+    bool bot_e = (y >= h - b);
+    bool left_e = (x < b);
+    bool right_e = (x >= w - b);
+    if (top_e || bot_e || left_e || right_e) {
+        if ((top_e && x < c) || (left_e && y < c)) return DTWM_PART_RESIZE_NW;
+        if ((top_e && x >= w - c) || (right_e && y < c)) return DTWM_PART_RESIZE_NE;
+        if ((bot_e && x < c) || (left_e && y >= h - c)) return DTWM_PART_RESIZE_SW;
+        if ((bot_e && x >= w - c) || (right_e && y >= h - c)) return DTWM_PART_RESIZE_SE;
+        if (top_e) return DTWM_PART_RESIZE_N;
+        if (bot_e) return DTWM_PART_RESIZE_S;
+        if (left_e) return DTWM_PART_RESIZE_W;
+        return DTWM_PART_RESIZE_E;
+    }
+    if (y >= b && y < b + DTWM_TITLE_HEIGHT) {
+        int bw = DTWM_TITLE_HEIGHT;
+        if (x < b + bw) return DTWM_PART_BTN_MENU;
+        if (x >= w - b - bw) return DTWM_PART_BTN_MAXIMIZE;
+        return DTWM_PART_TITLE;
+    }
+    return DTWM_PART_CLIENT;
+}
+
+void dtwm_icon_box_deactivate(DtwmServer *server) {
+    if (!server || !server->icon_box_active) return;
+    server->icon_box_active = false;
+    if (server->use_icon_box && server->icon_box_tree && server->icon_box_tree->node.enabled) {
+        dtwm_icons_relayout(server);
+    }
+}
+
+static void toggle_icon_box_maximize(DtwmServer *server) {
+    struct wlr_box ubox;
+    dtwm_get_usable_output_box(server, server->icon_box_x + 32, server->icon_box_y + 32, &ubox);
+    if (!server->icon_box_maximized) {
+        server->icon_box_saved_x = server->icon_box_x;
+        server->icon_box_saved_y = server->icon_box_y;
+        server->icon_box_saved_w = server->icon_box_w;
+        server->icon_box_saved_h = server->icon_box_h;
+        server->icon_box_maximized = true;
+        server->icon_box_x = ubox.x;
+        server->icon_box_y = ubox.y;
+        server->icon_box_w = ubox.width;
+        server->icon_box_h = ubox.height;
+    } else {
+        server->icon_box_maximized = false;
+        server->icon_box_x = server->icon_box_saved_x;
+        server->icon_box_y = server->icon_box_saved_y;
+        server->icon_box_w = server->icon_box_saved_w > 220 ? server->icon_box_saved_w : 524;
+        server->icon_box_h = server->icon_box_saved_h > 124 ? server->icon_box_saved_h : 158;
+    }
+    dtwm_icons_relayout(server);
+}
+
+bool dtwm_icon_box_handle_button(DtwmServer *server, uint32_t btn, bool pressed, uint32_t t_ms) {
+    if (!server) return false;
+    if (!pressed) {
+        if (server->icon_box_dragging || server->icon_box_resizing) {
+            server->icon_box_dragging = false;
+            server->icon_box_resizing = false;
+            dtwm_icons_relayout(server);
+            return true;
+        }
+        return false;
+    }
+    if (!dtwm_icon_box_is_topmost_at(server, server->cursor->x, server->cursor->y)) {
+        return false;
+    }
+
+    wlr_scene_node_raise_to_top(&server->icon_box_tree->node);
+    if (!server->icon_box_active) {
+        server->icon_box_active = true;
+        dtwm_icons_relayout(server);
+    }
+
+    DtwmFramePart part = dtwm_icon_box_part_at(server, server->cursor->x, server->cursor->y);
+    if (part == DTWM_PART_CLIENT) {
+        DtwmView *iv = dtwm_icons_view_at(server, server->cursor->x, server->cursor->y);
+        if (iv) {
+            if (btn == BTN_LEFT) {
+                server->icon_box_active = false;
+                if (iv->minimized) {
+                    dtwm_view_set_minimized(iv, false);
+                }
+                dtwm_restore_view_focus(server, iv);
+            } else if (btn == BTN_RIGHT) {
+                dtwm_open_window_menu_for_view(
+                    server, iv, (int)server->cursor->x, (int)server->cursor->y
+                );
+            }
+            return true;
+        }
+        /* Check scrollbar up/down arrow clicks on right edge of Icon Box */
+        double rel_x = server->cursor->x - server->icon_box_x;
+        double rel_y = server->cursor->y - server->icon_box_y;
+        double sb_x0 = server->icon_box_w - DTWM_BORDER_WIDTH - 21.0;
+        if (btn == BTN_LEFT && rel_x >= sb_x0) {
+            double mid_y = DTWM_BORDER_WIDTH + DTWM_TITLE_HEIGHT +
+                           (server->icon_box_h - 2 * DTWM_BORDER_WIDTH - DTWM_TITLE_HEIGHT) * 0.5;
+            dtwm_icon_box_handle_axis(server, (rel_y < mid_y) ? -15.0 : 15.0, (rel_y < mid_y) ? -1 : 1);
+        }
+        return true;
+    }
+
+    if (btn == BTN_LEFT) {
+        if (part == DTWM_PART_BTN_MAXIMIZE) {
+            toggle_icon_box_maximize(server);
+            return true;
+        }
+        if (part == DTWM_PART_BTN_MENU) {
+            wlr_scene_node_lower_to_bottom(&server->icon_box_tree->node);
+            server->icon_box_active = false;
+            dtwm_icons_relayout(server);
+            return true;
+        }
+        if (part == DTWM_PART_TITLE) {
+            uint32_t dc = server->double_click_ms > 0 ? server->double_click_ms : 500u;
+            if (server->icon_box_last_title_ms > 0 && (t_ms - server->icon_box_last_title_ms) <= dc) {
+                server->icon_box_last_title_ms = 0;
+                toggle_icon_box_maximize(server);
+                return true;
+            }
+            server->icon_box_last_title_ms = t_ms;
+            if (server->icon_box_maximized) {
+                toggle_icon_box_maximize(server);
+            }
+            server->icon_box_dragging = true;
+            server->icon_box_grab_x = server->cursor->x;
+            server->icon_box_grab_y = server->cursor->y;
+            server->icon_box_orig_box = (struct wlr_box){
+                server->icon_box_x, server->icon_box_y, server->icon_box_w, server->icon_box_h
+            };
+            return true;
+        }
+        uint32_t edges = dtwm_part_to_wlr_edges(part);
+        if (edges != WLR_EDGE_NONE) {
+            server->icon_box_resizing = true;
+            server->icon_box_resize_edges = edges;
+            server->icon_box_grab_x = server->cursor->x;
+            server->icon_box_grab_y = server->cursor->y;
+            server->icon_box_orig_box = (struct wlr_box){
+                server->icon_box_x, server->icon_box_y, server->icon_box_w, server->icon_box_h
+            };
+            return true;
+        }
+    }
+    return true;
+}
+
+bool dtwm_icon_box_handle_motion(DtwmServer *server) {
+    if (!server) return false;
+    if (server->icon_box_dragging) {
+        int nx = server->icon_box_orig_box.x + (int)(server->cursor->x - server->icon_box_grab_x);
+        int ny = server->icon_box_orig_box.y + (int)(server->cursor->y - server->icon_box_grab_y);
+        if (nx != server->icon_box_x || ny != server->icon_box_y) {
+            server->icon_box_x = nx;
+            server->icon_box_y = ny;
+            if (server->icon_box_tree) {
+                wlr_scene_node_set_position(&server->icon_box_tree->node, nx, ny);
+            }
+        }
+        return true;
+    }
+    if (server->icon_box_resizing) {
+        int dx = (int)(server->cursor->x - server->icon_box_grab_x);
+        int dy = (int)(server->cursor->y - server->icon_box_grab_y);
+        int nx = server->icon_box_orig_box.x;
+        int ny = server->icon_box_orig_box.y;
+        int nw = server->icon_box_orig_box.width;
+        int nh = server->icon_box_orig_box.height;
+        if (server->icon_box_resize_edges & WLR_EDGE_LEFT) {
+            nx += dx; nw -= dx;
+            if (nw < 220) { nx = server->icon_box_orig_box.x + server->icon_box_orig_box.width - 220; nw = 220; }
+        } else if (server->icon_box_resize_edges & WLR_EDGE_RIGHT) {
+            nw += dx; if (nw < 220) nw = 220;
+        }
+        if (server->icon_box_resize_edges & WLR_EDGE_TOP) {
+            ny += dy; nh -= dy;
+            if (nh < 124) { ny = server->icon_box_orig_box.y + server->icon_box_orig_box.height - 124; nh = 124; }
+        } else if (server->icon_box_resize_edges & WLR_EDGE_BOTTOM) {
+            nh += dy; if (nh < 124) nh = 124;
+        }
+        if (nx != server->icon_box_x || ny != server->icon_box_y ||
+            nw != server->icon_box_w || nh != server->icon_box_h) {
+            server->icon_box_x = nx;
+            server->icon_box_y = ny;
+            server->icon_box_w = nw;
+            server->icon_box_h = nh;
+            dtwm_icons_relayout(server);
+        }
+        return true;
+    }
+    return false;
+}
+
+bool dtwm_icon_box_handle_axis(DtwmServer *server, double delta, int32_t discrete) {
+    if (!server || !dtwm_icon_box_is_topmost_at(server, server->cursor->x, server->cursor->y)) {
+        return false;
+    }
+    if (server->icon_box_max_scroll_y <= 0) {
+        return true;
+    }
+    int step = discrete != 0 ? (discrete * 36) : (int)(delta * 2.4);
+    int next = server->icon_box_scroll_y + step;
+    if (next < 0) next = 0;
+    if (next > server->icon_box_max_scroll_y) next = server->icon_box_max_scroll_y;
+    if (next != server->icon_box_scroll_y) {
+        server->icon_box_scroll_y = next;
+        dtwm_icons_relayout(server);
+    }
+    return true;
 }
 
 void dtwm_icons_sync_xwayland_pointer(
@@ -1081,6 +1648,7 @@ void dtwm_icons_on_xwayland_ready(DtwmServer *server) {
 void dtwm_icons_init(DtwmServer *server) {
     wl_list_init(&g_pending_xdg_icons);
     server->show_open_window_icons = true;
+    server->icon_placement_margin = -1;
     server->toplevel_icon_global = wl_global_create(
         server->wl_display,
         &xdg_toplevel_icon_manager_v1_interface,

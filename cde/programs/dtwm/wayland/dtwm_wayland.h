@@ -183,6 +183,7 @@ struct DtwmView {
     cairo_surface_t *icon_surface;
     int icon_x, icon_y, icon_w, icon_h;
     int icon_box_w, icon_box_h;
+    bool icon_clipped_out;
 
     /* Decoration flags (honoring xdg-decoration + _MOTIF_WM_HINTS) */
     bool decorated;
@@ -334,6 +335,8 @@ struct DtwmServer {
     bool greeter_mode;
     bool show_front_panel;
     bool show_open_window_icons;
+    bool use_icon_box;
+    int icon_placement_margin;
     bool large_icons;
     bool move_opaque;
     bool focus_follows_mouse;
@@ -341,6 +344,23 @@ struct DtwmServer {
     bool allow_primary_on_top;
     bool animate_minimize;
     bool show_task_switcher;
+
+    /* Interactive CDE Icon Box window state (when use_icon_box is enabled) */
+    bool icon_box_active;
+    bool icon_box_maximized;
+    bool icon_box_pos_initialized;
+    int icon_box_x, icon_box_y, icon_box_w, icon_box_h;
+    int icon_box_saved_x, icon_box_saved_y, icon_box_saved_w, icon_box_saved_h;
+    int icon_box_scroll_y;
+    int icon_box_max_scroll_y;
+    bool icon_box_dragging;
+    bool icon_box_resizing;
+    uint32_t icon_box_resize_edges;
+    double icon_box_grab_x, icon_box_grab_y;
+    struct wlr_box icon_box_orig_box;
+    uint32_t icon_box_last_title_ms;
+    struct wlr_scene_tree *icon_box_tree;
+    struct wlr_scene_buffer *icon_box_bg_buf;
     bool panel_user_moved;
     pid_t panel_pid;
     DtwmView *panel_view;
@@ -533,7 +553,15 @@ void dtwm_icons_relayout(DtwmServer *server);
 void dtwm_icons_update_view(DtwmView *view);
 DtwmView *dtwm_icons_view_at(DtwmServer *server, double lx, double ly);
 void dtwm_icons_set_open_window_icons(DtwmServer *server, bool enabled);
+void dtwm_icons_set_use_icon_box(DtwmServer *server, bool enabled);
+void dtwm_icons_set_placement_margin(DtwmServer *server, int margin);
 void dtwm_icons_set_large_icons(DtwmServer *server, bool large);
+bool dtwm_icon_box_is_topmost_at(DtwmServer *server, double lx, double ly);
+DtwmFramePart dtwm_icon_box_part_at(DtwmServer *server, double lx, double ly);
+bool dtwm_icon_box_handle_button(DtwmServer *server, uint32_t btn, bool pressed, uint32_t t_ms);
+bool dtwm_icon_box_handle_motion(DtwmServer *server);
+bool dtwm_icon_box_handle_axis(DtwmServer *server, double delta, int32_t discrete);
+void dtwm_icon_box_deactivate(DtwmServer *server);
 void dtwm_icons_sync_xwayland_pointer(DtwmServer *server, double lx, double ly, struct wlr_surface *focused_surf);
 void dtwm_icons_reposition_swallowed(DtwmServer *server);
 void dtwm_recheck_cursor_focus(DtwmServer *server);
@@ -559,6 +587,7 @@ void dtwm_hw_apply_keyboard_defaults(DtwmServer *server, struct wlr_keyboard *wl
 bool dtwm_hw_handle_wm_request(DtwmServer *server, const char *cmd);
 void dtwm_hw_publish_state(DtwmServer *server);
 void dtwm_restore_view_focus(DtwmServer *server, DtwmView *view);
+void dtwm_open_window_menu_for_view(DtwmServer *server, DtwmView *view, int x, int y);
 void dtwm_view_set_maximized(DtwmView *view, bool maximized);
 void dtwm_view_set_minimized(DtwmView *view, bool minimized);
 void dtwm_view_close(DtwmView *view);

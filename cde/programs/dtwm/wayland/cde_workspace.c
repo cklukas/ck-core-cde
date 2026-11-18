@@ -1094,6 +1094,13 @@ static void handle_dt_wm_request_item(DtwmServer *server, const char *cmd) {
         }
         return;
     }
+    if (strncmp(cmd, "f.set_use_icon_box", 18) == 0) {
+        int val = 0;
+        if (sscanf(cmd + 18, "%d", &val) == 1) {
+            dtwm_icons_set_use_icon_box(server, val != 0);
+        }
+        return;
+    }
     if (strncmp(cmd, "f.set_large_icons", 17) == 0) {
         int val = 0;
         if (sscanf(cmd + 17, "%d", &val) == 1) {
@@ -1591,6 +1598,10 @@ static void sync_xcb_resource_manager_profile(DtwmServer *server) {
                     server->animate_minimize = parse_xrdb_bool(val, server->animate_minimize);
                 } else if (xrdb_key_matches(line, klen, "showTaskSwitcher")) {
                     server->show_task_switcher = parse_xrdb_bool(val, server->show_task_switcher);
+                } else if (xrdb_key_matches(line, klen, "useIconBox")) {
+                    dtwm_icons_set_use_icon_box(server, parse_xrdb_bool(val, server->use_icon_box));
+                } else if (xrdb_key_matches(line, klen, "iconPlacementMargin")) {
+                    dtwm_icons_set_placement_margin(server, atoi(val));
                 } else if (xrdb_key_matches(line, klen, "doubleIconSize")) {
                     dtwm_icons_set_large_icons(server, parse_xrdb_bool(val, server->large_icons));
                 } else if (xrdb_key_matches(line, klen, "showOpenWindowIcons")) {

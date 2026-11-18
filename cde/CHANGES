@@ -1,4 +1,21 @@
 2026-11-18
+- Persist `Style Manager - Window` settings across dialog reopens and implement
+  the interactive CDE **Icon Box** (`Dtwm*useIconBox`) on Wayland
+  (`cde/programs/dtstyle/Dtwm.c`, `cde/programs/dtwm/wayland/dtwm_wayland.h`,
+  `cde/programs/dtwm/wayland/cde_workspace.c`,
+  `cde/programs/dtwm/wayland/cde_icons.c`,
+  `cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `docs/improvements/wayland.md`):
+  - Read live `XA_RESOURCE_MANAGER` root-window resources (matching both `Dtwm`
+    and `dtwm` prefixes) in `Dtwm.c:getDtwmValues` and merge committed updates
+    into `XtDatabase(style.display)` so reopening `Style Manager - Window`
+    preserves every toggle and margin value instead of reverting to startup
+    defaults.
+  - Implement a movable, resizable, mouse-wheel-scrollable 3D-beveled CDE
+    **`Icons`** (**Icon Box**) window in `dtwm-wayland` (`Dtwm*useIconBox` /
+    `f.set_use_icon_box`) alongside `Dtwm*iconPlacementMargin` spacing for
+    workspace-placed icons, suppressing duplicate icons for unminimized
+    transient sub-dialogs.
 - Support double-click Window Menu close, menu-bar press-drag-release and
   titlebar popup dismissal, commit-paced window resize coalescing, and `DtHelp`
   mouse-wheel scrolling (`cde/programs/dtwm/wayland/dtwm_wayland.h`,
