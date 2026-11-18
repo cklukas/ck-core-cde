@@ -29,6 +29,7 @@
 #include "Main.h"
 #include "Help.h"
 #include "ModAttr.h"
+#include "ChangeDir.h"
 #include "Archive.h"
 #include "Devices.h"
 #include "XdgTrashSync.h"
@@ -713,7 +714,22 @@ static DBusHandlerResult fm1_message_handler(
     }
 
     if (dbus_message_is_method_call(msg, "org.ck_core.Dtfile", "OpenConnectServerDialog")) {
-        ShowConnectServerDialog(nullptr, nullptr, nullptr);
+        const char *scheme = nullptr;
+        DBusMessageIter it;
+        if (dbus_message_iter_init(msg, &it) && dbus_message_iter_get_arg_type(&it) == DBUS_TYPE_STRING)
+            dbus_message_iter_get_basic(&it, &scheme);
+        ShowConnectServerDialog(nullptr, (XtPointer)(scheme ? scheme : "smb"), nullptr);
+        DBusMessage *reply = dbus_message_new_method_return(msg);
+        if (reply) { dbus_connection_send(conn, reply, nullptr); dbus_message_unref(reply); }
+        return DBUS_HANDLER_RESULT_HANDLED;
+    }
+
+    if (dbus_message_is_method_call(msg, "org.ck_core.Dtfile", "OpenGoToDialog")) {
+        const char *tab = nullptr;
+        DBusMessageIter it;
+        if (dbus_message_iter_init(msg, &it) && dbus_message_iter_get_arg_type(&it) == DBUS_TYPE_STRING)
+            dbus_message_iter_get_basic(&it, &tab);
+        DtfileOpenGoToDialogTab(nullptr, (tab && strcmp(tab, "mounts") == 0) ? 1 : 0);
         DBusMessage *reply = dbus_message_new_method_return(msg);
         if (reply) { dbus_connection_send(conn, reply, nullptr); dbus_message_unref(reply); }
         return DBUS_HANDLER_RESULT_HANDLED;

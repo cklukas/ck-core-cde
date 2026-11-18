@@ -67,8 +67,12 @@
 
 #include <Xm/XmP.h>
 #include <Xm/Xm.h>
+#include <Xm/Form.h>
+#include <Xm/LabelG.h>
 #include <Xm/MessageB.h>
+#include <Xm/PushB.h>
 #include <Xm/SelectioB.h>
+#include <Xm/TabStack.h>
 #include <Xm/TextF.h>
 #include <Xm/VendorSEP.h>
 #include <Xm/List.h>
@@ -98,6 +102,8 @@
 #include "Desktop.h"
 #include "Main.h"
 #include "ChangeDir.h"
+#include "Devices.h"
+#include "Mounts.h"
 #include "Help.h"
 #include "SharedMsgs.h"
 
@@ -209,6 +215,231 @@ DialogClass * changeDirClass = (DialogClass *) &changeDirClassRec;
  ************************************************************************/
 
 static void
+PublishGoToDialogState(ChangeDirRec *rec)
+{
+   if (!rec || !rec->change_dir)
+      return;
+   Display *dpy = XtDisplay(rec->change_dir);
+   if (!dpy)
+      return;
+   Widget sel_page = rec->tab_stack ? XmTabStackGetSelectedTab(rec->tab_stack) : nullptr;
+   const char *tab_name = (sel_page && sel_page == rec->mounts_page) ? "mounts" : "history";
+   char buf[128];
+   snprintf(buf, sizeof(buf), "tab=%s\tmounts=%d", tab_name, rec->mount_entry_count);
+   Atom prop = XInternAtom(dpy, "_DT_GOTO_DIALOG_STATE", False);
+   Atom utf8 = XInternAtom(dpy, "UTF8_STRING", False);
+   XChangeProperty(dpy, DefaultRootWindow(dpy), prop, utf8, 8, PropModeReplace,
+                   (const unsigned char *)buf, (int)strlen(buf));
+   XFlush(dpy);
+}
+
+static void
+GoToTriggerOk(ChangeDirRec *rec)
+{
+   if (!rec || !rec->change_dir)
+      return;
+   Widget ok_btn = XmSelectionBoxGetChild(rec->change_dir, XmDIALOG_OK_BUTTON);
+   if (ok_btn)
+   {
+      XmAnyCallbackStruct any = { XmCR_ACTIVATE, nullptr };
+      XtCallCallbacks(ok_btn, XmNactivateCallback, (XtPointer)&any);
+   }
+}
+
+static void
+GoToHistorySelectCB(Widget w, XtPointer client_data, XtPointer call_data)
+{
+   ChangeDirRec *rec = (ChangeDirRec *)client_data;
+   XmListCallbackStruct *cbs = (XmListCallbackStruct *)call_data;
+   (void)w;
+   if (!rec || !cbs || !cbs->item)
+      return;
+   char *txt = (char *)_XmStringUngenerate(cbs->item, XmFONTLIST_DEFAULT_TAG,
+                                           XmCHARSET_TEXT, XmCHARSET_TEXT);
+   if (txt)
+   {
+      Widget tf = XmSelectionBoxGetChild(rec->change_dir, XmDIALOG_TEXT);
+      if (tf)
+      {
+         XmTextFieldSetString(tf, txt);
+         XmTextFieldSetInsertionPosition(tf, (XmTextPosition)strlen(txt));
+      }
+      XtFree(txt);
+   }
+}
+
+static void
+GoToHistoryDefaultCB(Widget w, XtPointer client_data, XtPointer call_data)
+{
+   GoToHistorySelectCB(w, client_data, call_data);
+   GoToTriggerOk((ChangeDirRec *)client_data);
+}
+
+static void
+GoToUpdateMountDetails(ChangeDirRec *rec, int idx, Boolean update_text_field)
+{
+   if (!rec)
+      return;
+   if (idx < 0 || idx >= rec->mount_entry_count)
+   {
+      XmString xm = XmStringCreateLocalized("No mount selected.");
+      XtVaSetValues(rec->mounts_info_label, XmNlabelString, xm, nullptr);
+      XmStringFree(xm);
+      if (rec->mounts_unmount_btn)
+         XtSetSensitive(rec->mounts_unmount_btn, False);
+      return;
+   }
+
+   const DtfileMountNavEntry *e = &rec->mount_entries[idx];
+   char sz_buf[64] = "N/A";
+   char fr_buf[64] = "N/A";
+   if (e->total_bytes > 0)
+      DtfileFormatMountBytes(e->total_bytes, sz_buf, sizeof(sz_buf));
+   if (e->is_mounted && e->total_bytes > 0)
+      DtfileFormatMountBytes(e->free_bytes, fr_buf, sizeof(fr_buf));
+   else if (!e->is_mounted)
+      snprintf(fr_buf, sizeof(fr_buf), "%s", e->is_luks_locked ? "Locked (LUKS)" : "Unmounted");
+
+   char info_line[512];
+   snprintf(info_line, sizeof(info_line), "Type: %s  |  Source: %s  |  Free: %s / %s",
+            e->fs_type ? e->fs_type : "-",
+            e->device ? e->device : "-",
+            fr_buf, sz_buf);
+   XmString xm = XmStringCreateLocalized(info_line);
+   XtVaSetValues(rec->mounts_info_label, XmNlabelString, xm, nullptr);
+   XmStringFree(xm);
+
+   if (rec->mounts_unmount_btn)
+      XtSetSensitive(rec->mounts_unmount_btn, (e->can_unmount || e->can_eject) ? True : False);
+
+   if (update_text_field)
+   {
+      const char *dest = e->is_mounted ? e->mount_point : e->shelf_token;
+      Widget tf = XmSelectionBoxGetChild(rec->change_dir, XmDIALOG_TEXT);
+      if (tf && dest)
+      {
+         XmTextFieldSetString(tf, (char *)dest);
+         XmTextFieldSetInsertionPosition(tf, (XmTextPosition)strlen(dest));
+      }
+   }
+}
+
+static void
+GoToRefreshMountsTab(ChangeDirRec *rec, Boolean update_text_on_select)
+{
+   if (!rec || !rec->mounts_tab_list)
+      return;
+
+   if (rec->mount_entries)
+   {
+      DtfileFreeNavigableMounts(rec->mount_entries, rec->mount_entry_count);
+      rec->mount_entries = nullptr;
+      rec->mount_entry_count = 0;
+   }
+
+   rec->mount_entry_count = DtfileCollectNavigableMounts(&rec->mount_entries);
+   XmListDeleteAllItems(rec->mounts_tab_list);
+
+   if (rec->mount_entry_count > 0)
+   {
+      XmString *items = (XmString *)XtCalloc((Cardinal)rec->mount_entry_count, sizeof(XmString));
+      for (int i = 0; i < rec->mount_entry_count; ++i)
+         items[i] = XmStringCreateLocalized(rec->mount_entries[i].list_label);
+      XmListAddItems(rec->mounts_tab_list, items, rec->mount_entry_count, 1);
+      for (int i = 0; i < rec->mount_entry_count; ++i)
+         XmStringFree(items[i]);
+      XtFree((char *)items);
+
+      XmListSelectPos(rec->mounts_tab_list, 1, False);
+      GoToUpdateMountDetails(rec, 0, update_text_on_select);
+   }
+   else
+   {
+      GoToUpdateMountDetails(rec, -1, False);
+   }
+
+   PublishGoToDialogState(rec);
+}
+
+static void
+GoToMountsSelectCB(Widget w, XtPointer client_data, XtPointer call_data)
+{
+   ChangeDirRec *rec = (ChangeDirRec *)client_data;
+   XmListCallbackStruct *cbs = (XmListCallbackStruct *)call_data;
+   (void)w;
+   if (!rec || !cbs)
+      return;
+   GoToUpdateMountDetails(rec, cbs->item_position - 1, True);
+}
+
+static void
+GoToMountsDefaultCB(Widget w, XtPointer client_data, XtPointer call_data)
+{
+   GoToMountsSelectCB(w, client_data, call_data);
+   GoToTriggerOk((ChangeDirRec *)client_data);
+}
+
+static void
+GoToMountsRefreshBtnCB(Widget w, XtPointer client_data, XtPointer call_data)
+{
+   (void)w;
+   (void)call_data;
+   GoToRefreshMountsTab((ChangeDirRec *)client_data, True);
+}
+
+static void
+GoToMountsConnectBtnCB(Widget w, XtPointer client_data, XtPointer call_data)
+{
+   ChangeDirRec *rec = (ChangeDirRec *)client_data;
+   (void)w;
+   (void)call_data;
+   ShowConnectServerForFileMgr(rec ? (FileMgrRec *)rec->active_file_mgr_rec : nullptr, "smb");
+}
+
+static void
+GoToMountsUnmountBtnCB(Widget w, XtPointer client_data, XtPointer call_data)
+{
+   ChangeDirRec *rec = (ChangeDirRec *)client_data;
+   int *pos = nullptr;
+   int cnt = 0;
+   (void)w;
+   (void)call_data;
+   if (!rec || !rec->mounts_tab_list)
+      return;
+   if (!XmListGetSelectedPos(rec->mounts_tab_list, &pos, &cnt) || cnt <= 0)
+      return;
+   int idx = pos[0] - 1;
+   XtFree((char *)pos);
+   if (idx < 0 || idx >= rec->mount_entry_count)
+      return;
+
+   FileMgrData *fmd = nullptr;
+   if (rec->active_file_mgr_rec)
+   {
+      DialogData *dd = _DtGetInstanceData(rec->active_file_mgr_rec);
+      if (dd) fmd = (FileMgrData *)dd->data;
+   }
+   DtfileDevicesUnmountOrEject(rec->shell, fmd, rec->mount_entries[idx].shelf_token,
+                               rec->mount_entries[idx].can_eject);
+   GoToRefreshMountsTab(rec, False);
+}
+
+static void
+GoToTabSelectedCB(Widget w, XtPointer client_data, XtPointer call_data)
+{
+   ChangeDirRec *rec = (ChangeDirRec *)client_data;
+   (void)w;
+   (void)call_data;
+   if (!rec)
+      return;
+   Widget sel = XmTabStackGetSelectedTab(rec->tab_stack);
+   if (sel && sel == rec->mounts_page)
+      GoToRefreshMountsTab(rec, True);
+   else
+      PublishGoToDialogState(rec);
+}
+
+static void
 Create(
         Display *display,
         Widget parent,
@@ -218,15 +449,16 @@ Create(
    ChangeDirRec * change_dir_rec;
    XmString prompt;
    Widget w;
-   Arg args[8];
+   Arg args[10];
    int n;
    XtTranslations trans_table;
    Widget change_dir;
 
+   (void)display;
 
    /*  Allocate the change directory dialog instance record.  */
 
-   change_dir_rec = (ChangeDirRec *) XtMalloc (sizeof (ChangeDirRec));
+   change_dir_rec = (ChangeDirRec *) XtCalloc (1, sizeof (ChangeDirRec));
 
    prompt = XmStringCreateLocalized (((char *)GETMESSAGE(2,14, "Destination Folder:")));
 
@@ -237,12 +469,165 @@ Create(
    XtSetArg (args[n], XmNcancelLabelString, cancelXmString);	n++;
    XtSetArg (args[n], XmNhelpLabelString, helpXmString);	n++;
    XtSetArg (args[n], XmNautoUnmanage, False);			n++;
+   XtSetArg (args[n], XmNchildPlacement, XmPLACE_TOP);		n++;
    XtSetArg (args[n], XmNtextTranslations, trans_table);	n++;
    change_dir = change_dir_rec->change_dir =
       XmCreateSelectionDialog (parent, "change_directory", args, n);
    change_dir_rec->shell = XtParent(change_dir);
+   XtVaSetValues(change_dir_rec->shell, XmNallowShellResize, True, nullptr);
 
    XmStringFree (prompt);
+
+   /* Hide built-in flat list visually while preserving XmDIALOG_LIST as the
+    * session-saved history store; replace UI with a 2-tab XmTabStack! */
+   w = XmSelectionBoxGetChild(change_dir, XmDIALOG_LIST_LABEL);
+   if (w) XtUnmanageChild(w);
+   w = XmSelectionBoxGetChild(change_dir, XmDIALOG_LIST);
+   if (w && XtParent(w)) XtUnmanageChild(XtParent(w));
+
+   change_dir_rec->tab_stack = XmCreateTabStack(change_dir, "goToTabStack", nullptr, 0);
+   XtVaSetValues(change_dir_rec->tab_stack,
+                 XmNwidth, 470,
+                 XmNheight, 260,
+                 nullptr);
+   XtAddCallback(change_dir_rec->tab_stack, XmNtabSelectedCallback,
+                 GoToTabSelectedCB, (XtPointer)change_dir_rec);
+   XtManageChild(change_dir_rec->tab_stack);
+
+   /* ---- Tab 1: Folder History ---- */
+   XmString hist_tab_xm = XmStringCreateLocalized("Folder History");
+   change_dir_rec->history_page = XmCreateForm(change_dir_rec->tab_stack, "goToHistoryPage", nullptr, 0);
+   XtVaSetValues(change_dir_rec->history_page,
+                 XmNtabLabelString, hist_tab_xm,
+                 XmNmarginWidth, 8,
+                 XmNmarginHeight, 8,
+                 nullptr);
+   XmStringFree(hist_tab_xm);
+
+   XmString sys_xm = XmStringCreateLocalized(GETMESSAGE(2, 16, "System Name: "));
+   change_dir_rec->history_host_label = XtVaCreateManagedWidget(
+      "historyHostLabel", xmLabelGadgetClass, change_dir_rec->history_page,
+      XmNlabelString, sys_xm,
+      XmNalignment, XmALIGNMENT_BEGINNING,
+      XmNtopAttachment, XmATTACH_FORM,
+      XmNleftAttachment, XmATTACH_FORM,
+      XmNrightAttachment, XmATTACH_FORM,
+      nullptr);
+   XmStringFree(sys_xm);
+
+   n = 0;
+   XtSetArg(args[n], XmNvisibleItemCount, 8); n++;
+   XtSetArg(args[n], XmNselectionPolicy, XmBROWSE_SELECT); n++;
+   XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET); n++;
+   XtSetArg(args[n], XmNtopWidget, change_dir_rec->history_host_label); n++;
+   XtSetArg(args[n], XmNtopOffset, 4); n++;
+   XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
+   XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
+   XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM); n++;
+   change_dir_rec->history_tab_list = XmCreateScrolledList(
+      change_dir_rec->history_page, "goToHistoryList", args, n);
+   XtManageChild(change_dir_rec->history_tab_list);
+   XtAddCallback(change_dir_rec->history_tab_list, XmNbrowseSelectionCallback,
+                 GoToHistorySelectCB, (XtPointer)change_dir_rec);
+   XtAddCallback(change_dir_rec->history_tab_list, XmNsingleSelectionCallback,
+                 GoToHistorySelectCB, (XtPointer)change_dir_rec);
+   XtAddCallback(change_dir_rec->history_tab_list, XmNdefaultActionCallback,
+                 GoToHistoryDefaultCB, (XtPointer)change_dir_rec);
+   XtManageChild(change_dir_rec->history_page);
+
+   /* ---- Tab 2: Connected Mounts & Shares ---- */
+   XmString mnt_tab_xm = XmStringCreateLocalized("Connected Mounts & Shares");
+   change_dir_rec->mounts_page = XmCreateForm(change_dir_rec->tab_stack, "goToMountsPage", nullptr, 0);
+   XtVaSetValues(change_dir_rec->mounts_page,
+                 XmNtabLabelString, mnt_tab_xm,
+                 XmNmarginWidth, 8,
+                 XmNmarginHeight, 8,
+                 nullptr);
+   XmStringFree(mnt_tab_xm);
+
+   XmString mnt_hdr_xm = XmStringCreateLocalized("Select a connected share, removable drive, or mount:");
+   Widget mnt_hdr = XtVaCreateManagedWidget(
+      "mountsTabHeader", xmLabelGadgetClass, change_dir_rec->mounts_page,
+      XmNlabelString, mnt_hdr_xm,
+      XmNalignment, XmALIGNMENT_BEGINNING,
+      XmNtopAttachment, XmATTACH_FORM,
+      XmNleftAttachment, XmATTACH_FORM,
+      XmNrightAttachment, XmATTACH_FORM,
+      nullptr);
+   XmStringFree(mnt_hdr_xm);
+
+   XmString conn_xm = XmStringCreateLocalized("Connect Server...");
+   change_dir_rec->mounts_connect_btn = XtVaCreateManagedWidget(
+      "mountsTabConnectBtn", xmPushButtonWidgetClass, change_dir_rec->mounts_page,
+      XmNlabelString, conn_xm,
+      XmNbottomAttachment, XmATTACH_FORM,
+      XmNleftAttachment, XmATTACH_FORM,
+      nullptr);
+   XmStringFree(conn_xm);
+   XtAddCallback(change_dir_rec->mounts_connect_btn, XmNactivateCallback,
+                 GoToMountsConnectBtnCB, (XtPointer)change_dir_rec);
+
+   XmString umnt_xm = XmStringCreateLocalized("Unmount / Disconnect");
+   change_dir_rec->mounts_unmount_btn = XtVaCreateManagedWidget(
+      "mountsTabUnmountBtn", xmPushButtonWidgetClass, change_dir_rec->mounts_page,
+      XmNlabelString, umnt_xm,
+      XmNsensitive, False,
+      XmNbottomAttachment, XmATTACH_FORM,
+      XmNleftAttachment, XmATTACH_WIDGET,
+      XmNleftWidget, change_dir_rec->mounts_connect_btn,
+      XmNleftOffset, 6,
+      nullptr);
+   XmStringFree(umnt_xm);
+   XtAddCallback(change_dir_rec->mounts_unmount_btn, XmNactivateCallback,
+                 GoToMountsUnmountBtnCB, (XtPointer)change_dir_rec);
+
+   XmString ref_xm = XmStringCreateLocalized("Refresh");
+   change_dir_rec->mounts_refresh_btn = XtVaCreateManagedWidget(
+      "mountsTabRefreshBtn", xmPushButtonWidgetClass, change_dir_rec->mounts_page,
+      XmNlabelString, ref_xm,
+      XmNbottomAttachment, XmATTACH_FORM,
+      XmNrightAttachment, XmATTACH_FORM,
+      nullptr);
+   XmStringFree(ref_xm);
+   XtAddCallback(change_dir_rec->mounts_refresh_btn, XmNactivateCallback,
+                 GoToMountsRefreshBtnCB, (XtPointer)change_dir_rec);
+
+   XmString inf_xm = XmStringCreateLocalized(" ");
+   change_dir_rec->mounts_info_label = XtVaCreateManagedWidget(
+      "mountsTabInfoLabel", xmLabelGadgetClass, change_dir_rec->mounts_page,
+      XmNlabelString, inf_xm,
+      XmNalignment, XmALIGNMENT_BEGINNING,
+      XmNbottomAttachment, XmATTACH_WIDGET,
+      XmNbottomWidget, change_dir_rec->mounts_connect_btn,
+      XmNbottomOffset, 5,
+      XmNleftAttachment, XmATTACH_FORM,
+      XmNrightAttachment, XmATTACH_FORM,
+      nullptr);
+   XmStringFree(inf_xm);
+
+   n = 0;
+   XtSetArg(args[n], XmNvisibleItemCount, 7); n++;
+   XtSetArg(args[n], XmNselectionPolicy, XmBROWSE_SELECT); n++;
+   XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET); n++;
+   XtSetArg(args[n], XmNtopWidget, mnt_hdr); n++;
+   XtSetArg(args[n], XmNtopOffset, 4); n++;
+   XtSetArg(args[n], XmNbottomAttachment, XmATTACH_WIDGET); n++;
+   XtSetArg(args[n], XmNbottomWidget, change_dir_rec->mounts_info_label); n++;
+   XtSetArg(args[n], XmNbottomOffset, 5); n++;
+   XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
+   XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
+   change_dir_rec->mounts_tab_list = XmCreateScrolledList(
+      change_dir_rec->mounts_page, "goToMountsList", args, n);
+   XtManageChild(change_dir_rec->mounts_tab_list);
+   XtAddCallback(change_dir_rec->mounts_tab_list, XmNbrowseSelectionCallback,
+                 GoToMountsSelectCB, (XtPointer)change_dir_rec);
+   XtAddCallback(change_dir_rec->mounts_tab_list, XmNsingleSelectionCallback,
+                 GoToMountsSelectCB, (XtPointer)change_dir_rec);
+   XtAddCallback(change_dir_rec->mounts_tab_list, XmNdefaultActionCallback,
+                 GoToMountsDefaultCB, (XtPointer)change_dir_rec);
+   XtManageChild(change_dir_rec->mounts_page);
+
+   XmTabStackSelectTab(change_dir_rec->history_page, False);
 
    /* Add the help callback to each of the important sub-components */
    XtAddCallback(change_dir, XmNhelpCallback, HelpRequestCB,
@@ -259,12 +644,6 @@ Create(
    XtAddCallback(w, XmNactivateCallback, HelpRequestCB,
                  HELP_CHANGEDIR_DIALOG_STR);
    w = XmSelectionBoxGetChild(change_dir, XmDIALOG_OK_BUTTON);
-   XtAddCallback(w, XmNhelpCallback, HelpRequestCB,
-                 HELP_CHANGEDIR_DIALOG_STR);
-   w = XmSelectionBoxGetChild(change_dir, XmDIALOG_LIST);
-   XtAddCallback(XtParent(w), XmNhelpCallback, HelpRequestCB,
-                 HELP_CHANGEDIR_DIALOG_STR);
-   w = XmSelectionBoxGetChild(change_dir, XmDIALOG_LIST_LABEL);
    XtAddCallback(w, XmNhelpCallback, HelpRequestCB,
                  HELP_CHANGEDIR_DIALOG_STR);
    w = XmSelectionBoxGetChild(change_dir, XmDIALOG_SELECTION_LABEL);
@@ -297,9 +676,9 @@ Create(
 
    /*  Adjust the decorations for the dialog shell of the dialog  */
 
-   XtSetArg(args[0], XmNmwmFunctions, MWM_FUNC_MOVE | MWM_FUNC_CLOSE);
+   XtSetArg(args[0], XmNmwmFunctions, MWM_FUNC_MOVE | MWM_FUNC_RESIZE | MWM_FUNC_CLOSE);
    XtSetArg(args[1], XmNmwmDecorations,
-             MWM_DECOR_BORDER | MWM_DECOR_TITLE);
+             MWM_DECOR_BORDER | MWM_DECOR_RESIZEH | MWM_DECOR_TITLE);
    XtSetValues (change_dir_rec->shell, args, 2);
 
    XtSetArg(args[0], XmNcancelButton, w);
@@ -393,6 +772,13 @@ Destroy(
         XtPointer dialog )
 {
    ChangeDirRec *change_dir_rec = dialog;
+   if (change_dir_rec->mount_entries)
+   {
+      DtfileFreeNavigableMounts(change_dir_rec->mount_entries,
+                                change_dir_rec->mount_entry_count);
+      change_dir_rec->mount_entries = nullptr;
+      change_dir_rec->mount_entry_count = 0;
+   }
    XtDestroyWidget (change_dir_rec->change_dir);
    XtFree ((char *) change_dir_rec->apply_data);
    XtFree ((char *) change_dir_rec);
@@ -598,6 +984,16 @@ SetValues(
 
    XtSetValues (change_dir_rec->change_dir, args, 4);
 
+   change_dir_rec->active_file_mgr_rec = change_dir_data->file_mgr_rec;
+   if (change_dir_rec->history_tab_list)
+   {
+      XmListDeleteAllItems(change_dir_rec->history_tab_list);
+      if (change_dir_data->list_count > 0 && change_dir_data->history_list)
+         XmListAddItems(change_dir_rec->history_tab_list,
+                        change_dir_data->history_list,
+                        change_dir_data->list_count, 1);
+   }
+
    if( change_dir_data->string_path )
    {
       Widget text;
@@ -618,9 +1014,16 @@ SetValues(
    XtSetArg (args[0], XmNlabelString, host_string);
    XtSetValues (XmSelectionBoxGetChild (change_dir_rec->change_dir,
                                         XmDIALOG_LIST_LABEL), args, 1);
+   if (change_dir_rec->history_host_label)
+      XtSetValues (change_dir_rec->history_host_label, args, 1);
 
    XtFree(host_name);
    XmStringFree(host_string);
+
+   GoToRefreshMountsTab(change_dir_rec,
+      (change_dir_rec->tab_stack &&
+       XmTabStackGetSelectedTab(change_dir_rec->tab_stack) == change_dir_rec->mounts_page)
+         ? True : False);
 }
 
 
@@ -799,6 +1202,10 @@ TryToChangeDir(
      {
        if (selection_box)
        {
+         ChangeDirRec *cd_rec = (file_mgr_data && file_mgr_data->change_dir)
+                                   ? (ChangeDirRec *)_DtGetDialogInstance(file_mgr_data->change_dir)
+                                   : nullptr;
+
          /* Adjust the selection box elements to add the text item
           into the list.
          */
@@ -813,6 +1220,16 @@ TryToChangeDir(
 
          XmListSelectItem(list, path_string, False);
          XmListSetBottomPos(list, 0);
+
+         if (cd_rec && cd_rec->history_tab_list)
+         {
+           if (XmListItemExists(cd_rec->history_tab_list, path_string))
+             XmListDeselectAllItems(cd_rec->history_tab_list);
+           else
+             XmListAddItem(cd_rec->history_tab_list, path_string, 0);
+           XmListSelectItem(cd_rec->history_tab_list, path_string, False);
+           XmListSetBottomPos(cd_rec->history_tab_list, 0);
+         }
 
          XmStringFree(path_string);
        }
@@ -854,6 +1271,12 @@ TryToChangeDir(
          XtSetArg(args[0], XmNlabelString, host_string);
          XtSetValues(XmSelectionBoxGetChild(selection_box,XmDIALOG_LIST_LABEL),
                      args, 1);
+         if (file_mgr_data && file_mgr_data->change_dir)
+         {
+           ChangeDirRec *cd_rec = (ChangeDirRec *)_DtGetDialogInstance(file_mgr_data->change_dir);
+           if (cd_rec && cd_rec->history_host_label)
+             XtSetValues(cd_rec->history_host_label, args, 1);
+         }
          XtFree(message_buf);
          XmStringFree(host_string);
 
@@ -968,6 +1391,18 @@ OkCallback(
    }
 
    strValue = XtNewString(value);
+   if (!restrictMode && file_mgr_data->restricted_directory == nullptr &&
+       DtfileDevicesIsSyntheticPath(strValue))
+   {
+      _DtHideDialog(file_mgr_data->change_dir, False);
+      change_dir_data->displayed = False;
+      file_mgr_rec->menuStates |= CHANGEDIR;
+      DtfileDevicesActivatePath(file_mgr_rec, file_mgr_data, strValue);
+      XtFree(value);
+      XtFree(strValue);
+      return;
+   }
+
    if(file_mgr_data->toolbox && strValue[0] != '/')
       result = CheckRestrictedDir(file_mgr_rec, file_mgr_data, &strValue, True);
    else
@@ -1393,4 +1828,50 @@ ChangeDirectoryToParent(
                      GoToNewDir);
    }
 
+}
+
+void
+DtfileOpenGoToDialogTab(
+      FileMgrRec *file_mgr_rec,
+      int tab_index)
+{
+   DialogData *dialog_data;
+   FileMgrData *file_mgr_data;
+   ChangeDirData *change_dir_data;
+   ChangeDirRec *change_dir_rec;
+
+   if (!file_mgr_rec && view_count > 0 && view_set && view_set[0] && view_set[0]->dialog_data)
+   {
+      FileMgrData *v_fmd = (FileMgrData *)((DialogData *)view_set[0]->dialog_data)->data;
+      if (v_fmd)
+         file_mgr_rec = (FileMgrRec *)v_fmd->file_mgr_rec;
+   }
+   if (!file_mgr_rec)
+      return;
+
+   dialog_data = _DtGetInstanceData((XtPointer)file_mgr_rec);
+   if (!dialog_data)
+      return;
+   file_mgr_data = (FileMgrData *)dialog_data->data;
+   if (!file_mgr_data || !file_mgr_data->change_dir)
+      return;
+
+   change_dir_data = (ChangeDirData *)file_mgr_data->change_dir->data;
+   if (!change_dir_data->displayed)
+      ShowChangeDirDialog(nullptr, (XtPointer)file_mgr_rec, nullptr);
+
+   change_dir_rec = (ChangeDirRec *)_DtGetDialogInstance(file_mgr_data->change_dir);
+   if (!change_dir_rec || !change_dir_rec->tab_stack)
+      return;
+
+   if (tab_index == 1 && change_dir_rec->mounts_page)
+   {
+      XmTabStackSelectTab(change_dir_rec->mounts_page, True);
+      GoToRefreshMountsTab(change_dir_rec, True);
+   }
+   else if (change_dir_rec->history_page)
+   {
+      XmTabStackSelectTab(change_dir_rec->history_page, True);
+      PublishGoToDialogState(change_dir_rec);
+   }
 }

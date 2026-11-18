@@ -76,6 +76,7 @@ void DtfileDevicesUnmountOrEject(
 
 /* File -> Connect to Server... Motif dialog (smb://, sftp://, davs://, nfs://). */
 void ShowConnectServerDialog(Widget w, XtPointer client_data, XtPointer call_data);
+void ShowConnectServerForFileMgr(FileMgrRec *fmr, const char *initial_scheme);
 
 #ifdef __cplusplus
 }

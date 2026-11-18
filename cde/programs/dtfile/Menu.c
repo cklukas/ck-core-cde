@@ -113,9 +113,9 @@
 #define INDICATOR_TIME 12
 
 #if defined(ADD_SHOW_TRASH)
-static int menuItemCount = 60;
+static int menuItemCount = 61;
 #else
-static int menuItemCount = 59;
+static int menuItemCount = 60;
 #endif
 #if DTFILE_SYNC_FEATURE_ENABLED
 static Widget * synchronizeFoldersBtn = nullptr;
@@ -302,6 +302,13 @@ CreateMenu(
       mainMenu[j].helpData = HELP_FILE_MENU_STR;
       mainMenu[j].name = "connectServer";
       mainMenu[j++].activateCallback = ShowConnectServerDialog;
+
+      mainMenu[j].type = MENU_BUTTON;
+      mainMenu[j].label = XtNewString("Connected Mounts & Devices...");
+      mainMenu[j].mnemonic = XtNewString("M");
+      mainMenu[j].helpData = HELP_FILE_MENU_STR;
+      mainMenu[j].name = "fileMounts";
+      mainMenu[j++].activateCallback = ShowMountsDialog;
 
       findBtn = &(mainMenu[j].widget);
       mainMenu[j].type = MENU_BUTTON;
@@ -576,10 +583,8 @@ CreateMenu(
       mainMenu[j++].activateCallback = ShowPreferencesDialog;
 
       mainMenu[j].type = MENU_BUTTON;
-      mainMenu[j].label = GETMESSAGE(20, 202, "Mounts & Devices...");
-      mainMenu[j].label = XtNewString(mainMenu[j].label);
-      mainMenu[j].mnemonic = GETMESSAGE(20, 203, "M");
-      mainMenu[j].mnemonic = XtNewString(mainMenu[j].mnemonic);
+      mainMenu[j].label = XtNewString("Mounts & Devices...");
+      mainMenu[j].mnemonic = XtNewString("M");
       mainMenu[j].helpData = HELP_VIEW_MENU_STR;
       mainMenu[j].name = "mounts";
       mainMenu[j++].activateCallback = ShowMountsDialog;

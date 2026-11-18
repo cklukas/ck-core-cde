@@ -1,4 +1,26 @@
 2026-11-18
+- Enhance `dtfile` **Connect to Server...**, **Connected Mounts & Devices...**,
+  and tabbed **Go To...** workflows across both `CDE (Wayland)` and
+  `CDE (X11 / XLibre)` (`cde/programs/dtfile/Devices.h`,
+  `cde/programs/dtfile/Devices.c`, `cde/programs/dtfile/Mounts.h`,
+  `cde/programs/dtfile/Mounts.c`, `cde/programs/dtfile/ChangeDir.h`,
+  `cde/programs/dtfile/ChangeDir.c`, `cde/programs/dtfile/Menu.c`,
+  `cde/programs/dtfile/FileManagerService.c`,
+  `cde/programs/dtwm/tests/check-dtwm-wayland-wp16.py`,
+  `docs/improvements/file-manager.md`):
+  - Add a dedicated **Connecting to Remote Server** progress dialog (animated 3D
+    CDE progress bar, elapsed timer, and **Cancel** button terminating in-flight
+    `gio mount` attempts) and a modal **Connect to Server Error** dialog showing
+    the target URI and detailed `gio mount` failure message.
+  - Parse `~/.ssh/config` (including `Include` globs) and `/etc/ssh/ssh_config`
+    in **Connect to Server...**, displaying **Configured SSH Remotes** whenever
+    `SSH / SFTP (sftp://)` is selected so known hosts/aliases populate the host,
+    username, and `sftp://` URI with one click or connect on double-click.
+  - Add **File → Connected Mounts & Devices...** directly beneath **Connect to
+    Server...** (with double-click open/mount/unlock support) and upgrade
+    **File → Go To...** (`ChangeDir.c`) to a two-tab Motif `XmTabStack`
+    (**Folder History** and **Connected Mounts & Shares**) with inline
+    *Connect Server...*, *Unmount / Disconnect*, and *Refresh* controls.
 - Deliver **WP-16 — `dtfile` Removable Media (`UDisks2`), Network Shares (`GVFS`),
   Built-in Archives, Shared FreeDesktop Thumbnails, Live XDG Trash &
   `org.freedesktop.FileManager1`** across both `CDE (Wayland)` and

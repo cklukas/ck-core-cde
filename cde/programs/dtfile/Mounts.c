@@ -22,22 +22,7 @@
 #include "Shelf.h"
 #include "Devices.h"
 
-typedef struct
-{
-   char *shelf_token;
-   char *list_label;
-   char *mount_point;
-   char *fs_type;
-   char *device;
-   unsigned long long total_bytes;
-   unsigned long long free_bytes;
-   Boolean is_managed_dev;
-   Boolean is_mounted;
-   Boolean is_luks_locked;
-   Boolean can_mount;
-   Boolean can_unmount;
-   Boolean can_eject;
-} MountEntry;
+typedef DtfileMountNavEntry MountEntry;
 
 typedef struct
 {
@@ -128,29 +113,37 @@ IsLocalFsType(const char *fs_type)
    return True;
 }
 
-static void
-FreeEntries(MountsDialog *dlg)
+void
+DtfileFreeNavigableMounts(DtfileMountNavEntry *entries, int count)
 {
    int i;
 
+   if (!entries)
+      return;
+   for (i = 0; i < count; i++)
+   {
+      XtFree(entries[i].shelf_token);
+      XtFree(entries[i].list_label);
+      XtFree(entries[i].mount_point);
+      XtFree(entries[i].fs_type);
+      XtFree(entries[i].device);
+   }
+   XtFree((char *)entries);
+}
+
+static void
+FreeEntries(MountsDialog *dlg)
+{
    if (dlg->entries)
    {
-      for (i = 0; i < dlg->entry_count; i++)
-      {
-         XtFree(dlg->entries[i].shelf_token);
-         XtFree(dlg->entries[i].list_label);
-         XtFree(dlg->entries[i].mount_point);
-         XtFree(dlg->entries[i].fs_type);
-         XtFree(dlg->entries[i].device);
-      }
-      XtFree((char *)dlg->entries);
+      DtfileFreeNavigableMounts(dlg->entries, dlg->entry_count);
       dlg->entries = nullptr;
       dlg->entry_count = 0;
    }
 }
 
-static void
-FormatSize(unsigned long long bytes, char *buf, size_t len)
+void
+DtfileFormatMountBytes(unsigned long long bytes, char *buf, size_t len)
 {
    const char *unit = "B";
    double value = (double)bytes;
@@ -161,6 +154,12 @@ FormatSize(unsigned long long bytes, char *buf, size_t len)
    if (value >= 1024.0) { value /= 1024.0; unit = "TB"; }
 
    snprintf(buf, len, "%.2f %s", value, unit);
+}
+
+static void
+FormatSize(unsigned long long bytes, char *buf, size_t len)
+{
+   DtfileFormatMountBytes(bytes, buf, len);
 }
 
 static void
@@ -285,6 +284,8 @@ MountsOpenCB(Widget w, XtPointer client_data, XtPointer call_data)
 
    ShowNewDirectory(file_mgr_data, file_mgr_data->host,
                     dlg->entries[index].mount_point);
+   if (dlg->dialog && XtIsManaged(dlg->dialog))
+      XtUnmanageChild(dlg->dialog);
 }
 
 static void
@@ -337,10 +338,10 @@ MountsEjectBtnCB(Widget w, XtPointer client_data, XtPointer call_data)
 static void
 MountsConnectBtnCB(Widget w, XtPointer client_data, XtPointer call_data)
 {
+   MountsDialog *dlg = (MountsDialog *)client_data;
    (void)w;
-   (void)client_data;
    (void)call_data;
-   ShowConnectServerDialog(nullptr, nullptr, nullptr);
+   ShowConnectServerForFileMgr(dlg ? dlg->file_mgr_rec : nullptr, "smb");
 }
 
 static void
@@ -354,28 +355,30 @@ MountsCloseCB(Widget w, XtPointer client_data, XtPointer call_data)
 }
 
 static void
-AppendMountEntry(MountsDialog *dlg, int *count, int *capacity, MountEntry *entry)
+AppendNavEntry(DtfileMountNavEntry **arr, int *count, int *capacity, DtfileMountNavEntry *entry)
 {
    if (*count == *capacity)
    {
       *capacity = *capacity ? (*capacity * 2) : 12;
-      dlg->entries = (MountEntry *)XtRealloc((char *)dlg->entries,
-                                             sizeof(MountEntry) * (*capacity));
+      *arr = (DtfileMountNavEntry *)XtRealloc((char *)(*arr),
+                                              sizeof(DtfileMountNavEntry) * (*capacity));
    }
-   dlg->entries[(*count)++] = *entry;
+   (*arr)[(*count)++] = *entry;
 }
 
-static void
-MountsRefresh(MountsDialog *dlg)
+int
+DtfileCollectNavigableMounts(DtfileMountNavEntry **entries_out)
 {
    FILE *fp;
    struct mntent *ent;
-   XmStringTable items;
+   DtfileMountNavEntry *arr = nullptr;
    int count = 0;
    int capacity = 0;
    struct statvfs vfs;
 
-   FreeEntries(dlg);
+   if (entries_out)
+      *entries_out = nullptr;
+
    DtfileDevicesRescan();
 
    /* 1. Managed UDisks2 removable/LUKS volumes & GVFS network/MTP mounts */
@@ -386,7 +389,7 @@ MountsRefresh(MountsDialog *dlg)
       if (!DtfileDevicesGetEntry(d, &de))
          continue;
 
-      MountEntry entry;
+      DtfileMountNavEntry entry;
       memset(&entry, 0, sizeof(entry));
       entry.shelf_token = XtNewString(de.shelf_token);
       entry.mount_point = XtNewString(de.mount_point[0] ? de.mount_point : "(unmounted)");
@@ -417,7 +420,7 @@ MountsRefresh(MountsDialog *dlg)
          snprintf(line, sizeof(line), "%s  (%s)", de.display_label, de.device_node);
       entry.list_label = XtNewString(line);
 
-      AppendMountEntry(dlg, &count, &capacity, &entry);
+      AppendNavEntry(&arr, &count, &capacity, &entry);
    }
 
    /* 2. Local system mounts not already covered above */
@@ -438,7 +441,7 @@ MountsRefresh(MountsDialog *dlg)
             continue;
          for (int i = 0; i < count; ++i)
          {
-            if (strcmp(dlg->entries[i].mount_point, ent->mnt_dir) == 0)
+            if (strcmp(arr[i].mount_point, ent->mnt_dir) == 0)
             {
                dup = True;
                break;
@@ -447,7 +450,7 @@ MountsRefresh(MountsDialog *dlg)
          if (dup)
             continue;
 
-         MountEntry entry;
+         DtfileMountNavEntry entry;
          memset(&entry, 0, sizeof(entry));
          if (statvfs(ent->mnt_dir, &vfs) == 0)
          {
@@ -460,11 +463,26 @@ MountsRefresh(MountsDialog *dlg)
          entry.fs_type = XtNewString(ent->mnt_type);
          entry.device = XtNewString(ent->mnt_fsname);
          entry.is_mounted = True;
-         AppendMountEntry(dlg, &count, &capacity, &entry);
+         AppendNavEntry(&arr, &count, &capacity, &entry);
       }
       endmntent(fp);
    }
 
+   if (entries_out)
+      *entries_out = arr;
+   else
+      DtfileFreeNavigableMounts(arr, count);
+   return count;
+}
+
+static void
+MountsRefresh(MountsDialog *dlg)
+{
+   XmStringTable items;
+   int count = 0;
+
+   FreeEntries(dlg);
+   count = DtfileCollectNavigableMounts(&dlg->entries);
    dlg->entry_count = count;
 
    items = (XmStringTable)XtCalloc(count ? count : 1, sizeof(XmString));
@@ -529,6 +547,7 @@ CreateMountsDialog(Widget parent, FileMgrRec *file_mgr_rec)
    dlg->list = list;
    XtAddCallback(list, XmNsingleSelectionCallback, MountsListCB, dlg);
    XtAddCallback(list, XmNbrowseSelectionCallback, MountsListCB, dlg);
+   XtAddCallback(list, XmNdefaultActionCallback, MountsOpenCB, dlg);
 
    sep = XmCreateSeparatorGadget(form, "sep", nullptr, 0);
    XtVaSetValues(sep,

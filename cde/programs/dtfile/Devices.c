@@ -9,6 +9,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <glob.h>
 #include <limits.h>
 #include <signal.h>
 #include <stdbool.h>
@@ -21,14 +22,19 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <X11/Intrinsic.h>
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
+#include <Xm/XmP.h>
 #include <Xm/DialogS.h>
+#include <Xm/DrawP.h>
+#include <Xm/DrawingA.h>
 #include <Xm/Form.h>
 #include <Xm/Label.h>
+#include <Xm/List.h>
 #include <Xm/MessageB.h>
 #include <Xm/Protocols.h>
 #include <Xm/PushB.h>
@@ -1234,21 +1240,420 @@ Boolean DtfileDevicesActivatePath(
     return False;
 }
 
-/* ---- Unmount / Lock / Eject (UDisks2 + GVFS `gio mount -u`) ---- */
+/* ---- Unmount / Lock / Eject (UDisks2 + GVFS `gio mount -u`) & Connect Progress / Error ---- */
+
+#define MAX_SSH_HOSTS 64
 
 typedef struct {
+    char alias[128];
+    char hostname[192];
+    char user[64];
+    char port[16];
+} SshHostEntry;
+
+struct ConnectServerCtx;
+
+typedef struct GioJobCtx {
     int read_fd;
     pid_t pid;
     XtInputId input_id;
-    Widget dlg_shell;
-    Widget status_lbl;
+    XtIntervalId anim_timer;
+    int anim_step;
+    struct timespec started_ts;
+    bool show_progress;
+    bool cancelled;
+    char target_uri[1024];
+    Widget progress_shell;
+    Widget progress_bar;
+    Widget progress_elapsed_lbl;
+    struct ConnectServerCtx *owner_ctx;
     FileMgrData *fmd;
     bool navigate_on_mount;
     char prev_mounts[32][MAX_PATH];
     int prev_mount_count;
-    char output_buf[1024];
+    char output_buf[1536];
     size_t output_len;
 } GioJobCtx;
+
+typedef struct ConnectServerCtx {
+    Widget shell;
+    Widget form;
+    Widget proto_menu;
+    Widget ssh_box;
+    Widget ssh_list;
+    Widget host_lbl;
+    Widget host_tf;
+    Widget share_tf;
+    Widget user_tf;
+    Widget pass_tf;
+    Widget uri_tf;
+    Widget status_lbl;
+    Widget ok_btn;
+    FileMgrData *fmd;
+    const char *scheme;
+    bool custom_uri_mode;
+    bool syncing_uri;
+    char secret[MAX_SECRET_LEN];
+    size_t secret_len;
+    bool modifying_mask;
+    SshHostEntry ssh_hosts[MAX_SSH_HOSTS];
+    int ssh_host_count;
+    GioJobCtx *active_job;
+} ConnectServerCtx;
+
+typedef struct {
+    Widget shell;
+    Widget ok_btn;
+    Widget parent_shell;
+} ConnectErrCtx;
+
+static void conn_err_destroy_cb(Widget w, XtPointer client_data, XtPointer call_data) {
+    (void)w;
+    (void)call_data;
+    publish_dialog_visibility("_DT_CONNECT_ERROR_VISIBLE", "0");
+    ConnectErrCtx *ectx = (ConnectErrCtx *)client_data;
+    if (ectx) {
+        if (ectx->parent_shell)
+            request_net_active_window(ectx->parent_shell);
+        XtFree((char *)ectx);
+    }
+}
+
+static void conn_err_ok_cb(Widget w, XtPointer client_data, XtPointer call_data) {
+    (void)w;
+    (void)call_data;
+    ConnectErrCtx *ectx = (ConnectErrCtx *)client_data;
+    if (ectx && ectx->shell)
+        XtDestroyWidget(ectx->shell);
+}
+
+static void conn_err_map_eh(Widget w, XtPointer client_data, XEvent *ev, Boolean *cont) {
+    (void)cont;
+    ConnectErrCtx *ectx = (ConnectErrCtx *)client_data;
+    if (ev && ev->type == MapNotify) {
+        request_net_active_window(w);
+        if (ectx && ectx->ok_btn)
+            XmProcessTraversal(ectx->ok_btn, XmTRAVERSE_CURRENT);
+        publish_dialog_visibility("_DT_CONNECT_ERROR_VISIBLE", "1");
+    }
+}
+
+static Widget resolve_toplevel_shell_for_fmd(FileMgrData *fmd) {
+    if (fmd && fmd->file_mgr_rec && ((FileMgrRec *)fmd->file_mgr_rec)->shell)
+        return ((FileMgrRec *)fmd->file_mgr_rec)->shell;
+    if (view_count > 0 && view_set && view_set[0] && view_set[0]->dialog_data) {
+        FileMgrData *v_fmd = (FileMgrData *)((DialogData *)view_set[0]->dialog_data)->data;
+        if (v_fmd && v_fmd->file_mgr_rec && ((FileMgrRec *)v_fmd->file_mgr_rec)->shell)
+            return ((FileMgrRec *)v_fmd->file_mgr_rec)->shell;
+    }
+    return g_dev_toplevel ? g_dev_toplevel : toplevel;
+}
+
+static void post_connect_error_dialog(FileMgrData *fmd, Widget focus_return_shell,
+                                      const char *uri, const char *raw_detail) {
+    Widget ref = resolve_toplevel_shell_for_fmd(fmd);
+    if (!ref)
+        return;
+
+    char cleaned[1024];
+    dev_copy(cleaned, sizeof(cleaned),
+             (raw_detail && raw_detail[0]) ? raw_detail : "Unable to establish remote mount.");
+    size_t clen = strlen(cleaned);
+    while (clen > 0 && (cleaned[clen - 1] == '\n' || cleaned[clen - 1] == '\r' || cleaned[clen - 1] == ' '))
+        cleaned[--clen] = '\0';
+
+    const char *extra_tip = "";
+    if (strstr(cleaned, "doesn't implement mount") != nullptr ||
+        strstr(cleaned, "Operation not supported") != nullptr) {
+        extra_tip = "\n\nTip: Ensure 'gvfs-backends' and 'gvfs-fuse' are installed for SMB/SFTP/WebDAV shares.";
+    }
+
+    char body[1600];
+    if (uri && uri[0]) {
+        snprintf(body, sizeof(body),
+                 "Could not connect to remote server:\n  %s\n\nError details:\n  %s%s",
+                 uri, cleaned, extra_tip);
+    } else {
+        snprintf(body, sizeof(body), "%s%s", cleaned, extra_tip);
+    }
+
+    ConnectErrCtx *ectx = (ConnectErrCtx *)XtCalloc(1, sizeof(ConnectErrCtx));
+    ectx->parent_shell = focus_return_shell;
+
+    Arg args[10];
+    Cardinal n = 0;
+    XtSetArg(args[n], XmNtitle, "Connect to Server Error"); n++;
+    XtSetArg(args[n], XmNdeleteResponse, XmDESTROY); n++;
+    XtSetArg(args[n], XmNallowShellResize, True); n++;
+    ectx->shell = XmCreateDialogShell(ref, "connectServerErrorShell", args, n);
+    XtAddCallback(ectx->shell, XmNdestroyCallback, conn_err_destroy_cb, (XtPointer)ectx);
+
+    n = 0;
+    XtSetArg(args[n], XmNmarginWidth, 16); n++;
+    XtSetArg(args[n], XmNmarginHeight, 14); n++;
+    XtSetArg(args[n], XmNautoUnmanage, False); n++;
+    Widget form = XmCreateForm(ectx->shell, "connectServerErrorForm", args, n);
+
+    XmString msg_xm = XmStringCreateLocalized(body);
+    Widget msg_lbl = XtVaCreateManagedWidget(
+        "connectServerErrorMsg", xmLabelWidgetClass, form,
+        XmNlabelString, msg_xm,
+        XmNalignment, XmALIGNMENT_BEGINNING,
+        XmNtopAttachment, XmATTACH_FORM,
+        XmNleftAttachment, XmATTACH_FORM,
+        XmNrightAttachment, XmATTACH_FORM,
+        nullptr);
+    XmStringFree(msg_xm);
+
+    Widget sep = XtVaCreateManagedWidget(
+        "connectServerErrorSep", xmSeparatorWidgetClass, form,
+        XmNtopAttachment, XmATTACH_WIDGET, XmNtopWidget, msg_lbl, XmNtopOffset, 12,
+        XmNleftAttachment, XmATTACH_FORM, XmNrightAttachment, XmATTACH_FORM,
+        nullptr);
+
+    XmString ok_xm = XmStringCreateLocalized("OK");
+    ectx->ok_btn = XtVaCreateManagedWidget(
+        "connectServerErrorOkBtn", xmPushButtonWidgetClass, form,
+        XmNlabelString, ok_xm,
+        XmNwidth, 96,
+        XmNtopAttachment, XmATTACH_WIDGET, XmNtopWidget, sep, XmNtopOffset, 10,
+        XmNbottomAttachment, XmATTACH_FORM,
+        XmNleftAttachment, XmATTACH_POSITION, XmNleftPosition, 35,
+        XmNrightAttachment, XmATTACH_POSITION, XmNrightPosition, 65,
+        nullptr);
+    XmStringFree(ok_xm);
+    XtAddCallback(ectx->ok_btn, XmNactivateCallback, conn_err_ok_cb, (XtPointer)ectx);
+
+    XtVaSetValues(form, XmNdefaultButton, ectx->ok_btn, XmNcancelButton, ectx->ok_btn, nullptr);
+    XtAddEventHandler(ectx->shell, StructureNotifyMask, False, conn_err_map_eh, (XtPointer)ectx);
+    XtManageChild(form);
+    XmProcessTraversal(ectx->ok_btn, XmTRAVERSE_CURRENT);
+}
+
+static void draw_connect_progress_bar(GioJobCtx *job) {
+    if (!job || !job->progress_bar || !XtIsRealized(job->progress_bar))
+        return;
+
+    Display *dpy = XtDisplay(job->progress_bar);
+    Window win = XtWindow(job->progress_bar);
+    Dimension w = 0, h = 0;
+    Pixel fg = 0, bg = 0, top_sh = 0, bot_sh = 0, sel_col = 0;
+    XtVaGetValues(job->progress_bar,
+                  XmNwidth, &w,
+                  XmNheight, &h,
+                  XmNforeground, &fg,
+                  XmNbackground, &bg,
+                  XmNtopShadowColor, &top_sh,
+                  XmNbottomShadowColor, &bot_sh,
+                  nullptr);
+    XmGetColors(XtScreen(job->progress_bar),
+                DefaultColormapOfScreen(XtScreen(job->progress_bar)),
+                bg, nullptr, &top_sh, &bot_sh, &sel_col);
+
+    if (w < 16 || h < 8)
+        return;
+
+    XGCValues gcv;
+    memset(&gcv, 0, sizeof(gcv));
+    gcv.foreground = sel_col;
+    GC trough_gc = XtGetGC(job->progress_bar, GCForeground, &gcv);
+    gcv.foreground = top_sh;
+    GC top_gc = XtGetGC(job->progress_bar, GCForeground, &gcv);
+    gcv.foreground = bot_sh;
+    GC bot_gc = XtGetGC(job->progress_bar, GCForeground, &gcv);
+    gcv.foreground = fg;
+    GC fill_gc = XtGetGC(job->progress_bar, GCForeground, &gcv);
+
+    /* Recessed CDE trough */
+    XFillRectangle(dpy, win, trough_gc, 2, 2, (unsigned)(w - 4), (unsigned)(h - 4));
+    XmeDrawShadows(dpy, win, top_gc, bot_gc, 0, 0, w, h, 2, XmSHADOW_IN);
+
+    /* Animated 3D raised CDE progress segments */
+    const int num_slots = 10;
+    int inner_w = (int)w - 8;
+    int slot_w = inner_w / num_slots;
+    if (slot_w < 8) slot_w = 8;
+    int active_idx = job->anim_step % num_slots;
+
+    for (int s = 0; s < 4; ++s) {
+        int idx = (active_idx + s) % num_slots;
+        int bx = 4 + idx * slot_w;
+        int bw = slot_w - 3;
+        int bh = (int)h - 8;
+        if (bx + bw > (int)w - 4)
+            bw = (int)w - 4 - bx;
+        if (bw > 4 && bh > 4) {
+            XFillRectangle(dpy, win, fill_gc, bx + 1, 4 + 1, (unsigned)(bw - 2), (unsigned)(bh - 2));
+            XmeDrawShadows(dpy, win, top_gc, bot_gc,
+                           (Position)bx, 4, (Dimension)bw, (Dimension)bh, 1, XmSHADOW_OUT);
+        }
+    }
+
+    XtReleaseGC(job->progress_bar, trough_gc);
+    XtReleaseGC(job->progress_bar, top_gc);
+    XtReleaseGC(job->progress_bar, bot_gc);
+    XtReleaseGC(job->progress_bar, fill_gc);
+}
+
+static void connect_progress_expose_cb(Widget w, XtPointer client_data, XtPointer call_data) {
+    (void)w;
+    (void)call_data;
+    draw_connect_progress_bar((GioJobCtx *)client_data);
+}
+
+static void connect_progress_tick_cb(XtPointer client_data, XtIntervalId *id) {
+    (void)id;
+    GioJobCtx *job = (GioJobCtx *)client_data;
+    if (!job || !job->progress_shell)
+        return;
+    job->anim_timer = 0;
+    job->anim_step++;
+    draw_connect_progress_bar(job);
+
+    if (job->progress_elapsed_lbl) {
+        struct timespec now_ts;
+        clock_gettime(CLOCK_MONOTONIC, &now_ts);
+        double elapsed = (double)(now_ts.tv_sec - job->started_ts.tv_sec) +
+                         (double)(now_ts.tv_nsec - job->started_ts.tv_nsec) / 1e9;
+        if (elapsed < 0.0) elapsed = 0.0;
+        char st_txt[160];
+        snprintf(st_txt, sizeof(st_txt), "Negotiating GVFS connection... (%.1fs)", elapsed);
+        XmString xm = XmStringCreateLocalized(st_txt);
+        XtVaSetValues(job->progress_elapsed_lbl, XmNlabelString, xm, nullptr);
+        XmStringFree(xm);
+    }
+
+    if (g_dev_toplevel) {
+        job->anim_timer = XtAppAddTimeOut(
+            XtWidgetToApplicationContext(g_dev_toplevel),
+            120, connect_progress_tick_cb, (XtPointer)job);
+    }
+}
+
+static void connect_progress_destroy_cb(Widget w, XtPointer client_data, XtPointer call_data) {
+    (void)w;
+    (void)call_data;
+    publish_dialog_visibility("_DT_CONNECT_PROGRESS_VISIBLE", "0");
+    GioJobCtx *job = (GioJobCtx *)client_data;
+    if (job) {
+        if (job->anim_timer != 0) {
+            XtRemoveTimeOut(job->anim_timer);
+            job->anim_timer = 0;
+        }
+        job->progress_shell = nullptr;
+        job->progress_bar = nullptr;
+        job->progress_elapsed_lbl = nullptr;
+    }
+}
+
+static void connect_progress_map_eh(Widget w, XtPointer client_data, XEvent *ev, Boolean *cont) {
+    (void)client_data;
+    (void)cont;
+    if (ev && ev->type == MapNotify) {
+        request_net_active_window(w);
+        publish_dialog_visibility("_DT_CONNECT_PROGRESS_VISIBLE", "1");
+    }
+}
+
+static void connect_progress_cancel_cb(Widget w, XtPointer client_data, XtPointer call_data) {
+    (void)w;
+    (void)call_data;
+    GioJobCtx *job = (GioJobCtx *)client_data;
+    if (!job || job->cancelled)
+        return;
+    job->cancelled = true;
+    if (job->pid > 0) {
+        kill(-job->pid, SIGTERM);
+        kill(job->pid, SIGTERM);
+    }
+    if (job->progress_shell)
+        XtDestroyWidget(job->progress_shell);
+}
+
+static void create_connect_progress_dialog(GioJobCtx *job) {
+    Widget ref = resolve_toplevel_shell_for_fmd(job ? job->fmd : nullptr);
+    if (!ref || !job)
+        return;
+
+    Arg args[10];
+    Cardinal n = 0;
+    XtSetArg(args[n], XmNtitle, "Connecting to Remote Server"); n++;
+    XtSetArg(args[n], XmNdeleteResponse, XmDO_NOTHING); n++;
+    XtSetArg(args[n], XmNallowShellResize, True); n++;
+    job->progress_shell = XmCreateDialogShell(ref, "connectProgressShell", args, n);
+    XtAddCallback(job->progress_shell, XmNdestroyCallback, connect_progress_destroy_cb, (XtPointer)job);
+
+    Atom wm_del = XmInternAtom(XtDisplay(job->progress_shell), "WM_DELETE_WINDOW", False);
+    XmAddWMProtocolCallback(job->progress_shell, wm_del, connect_progress_cancel_cb, (XtPointer)job);
+
+    n = 0;
+    XtSetArg(args[n], XmNmarginWidth, 16); n++;
+    XtSetArg(args[n], XmNmarginHeight, 14); n++;
+    XtSetArg(args[n], XmNautoUnmanage, False); n++;
+    Widget form = XmCreateForm(job->progress_shell, "connectProgressForm", args, n);
+
+    char hdr_buf[1120];
+    snprintf(hdr_buf, sizeof(hdr_buf), "Connecting to:\n%s", job->target_uri);
+    XmString hdr_xm = XmStringCreateLocalized(hdr_buf);
+    Widget hdr_lbl = XtVaCreateManagedWidget(
+        "connectProgressHeader", xmLabelWidgetClass, form,
+        XmNlabelString, hdr_xm,
+        XmNalignment, XmALIGNMENT_BEGINNING,
+        XmNtopAttachment, XmATTACH_FORM,
+        XmNleftAttachment, XmATTACH_FORM,
+        XmNrightAttachment, XmATTACH_FORM,
+        nullptr);
+    XmStringFree(hdr_xm);
+
+    job->progress_bar = XtVaCreateManagedWidget(
+        "connectProgressBar", xmDrawingAreaWidgetClass, form,
+        XmNwidth, 340,
+        XmNheight, 24,
+        XmNtopAttachment, XmATTACH_WIDGET, XmNtopWidget, hdr_lbl, XmNtopOffset, 10,
+        XmNleftAttachment, XmATTACH_FORM,
+        XmNrightAttachment, XmATTACH_FORM,
+        nullptr);
+    XtAddCallback(job->progress_bar, XmNexposeCallback, connect_progress_expose_cb, (XtPointer)job);
+
+    XmString el_xm = XmStringCreateLocalized("Negotiating GVFS connection... (0.0s)");
+    job->progress_elapsed_lbl = XtVaCreateManagedWidget(
+        "connectProgressElapsed", xmLabelWidgetClass, form,
+        XmNlabelString, el_xm,
+        XmNalignment, XmALIGNMENT_BEGINNING,
+        XmNtopAttachment, XmATTACH_WIDGET, XmNtopWidget, job->progress_bar, XmNtopOffset, 8,
+        XmNleftAttachment, XmATTACH_FORM,
+        XmNrightAttachment, XmATTACH_FORM,
+        nullptr);
+    XmStringFree(el_xm);
+
+    Widget sep = XtVaCreateManagedWidget(
+        "connectProgressSep", xmSeparatorWidgetClass, form,
+        XmNtopAttachment, XmATTACH_WIDGET, XmNtopWidget, job->progress_elapsed_lbl, XmNtopOffset, 8,
+        XmNleftAttachment, XmATTACH_FORM, XmNrightAttachment, XmATTACH_FORM,
+        nullptr);
+
+    XmString cancel_xm = XmStringCreateLocalized("Cancel");
+    Widget cancel_btn = XtVaCreateManagedWidget(
+        "connectProgressCancelBtn", xmPushButtonWidgetClass, form,
+        XmNlabelString, cancel_xm,
+        XmNwidth, 96,
+        XmNtopAttachment, XmATTACH_WIDGET, XmNtopWidget, sep, XmNtopOffset, 10,
+        XmNbottomAttachment, XmATTACH_FORM,
+        XmNrightAttachment, XmATTACH_FORM,
+        nullptr);
+    XmStringFree(cancel_xm);
+    XtAddCallback(cancel_btn, XmNactivateCallback, connect_progress_cancel_cb, (XtPointer)job);
+
+    XtVaSetValues(form, XmNcancelButton, cancel_btn, nullptr);
+    XtAddEventHandler(job->progress_shell, StructureNotifyMask, False, connect_progress_map_eh, (XtPointer)job);
+    XtManageChild(form);
+
+    if (g_dev_toplevel) {
+        job->anim_timer = XtAppAddTimeOut(
+            XtWidgetToApplicationContext(g_dev_toplevel),
+            120, connect_progress_tick_cb, (XtPointer)job);
+    }
+}
 
 static void collect_current_gvfs_dirs(char out[32][MAX_PATH], int *count_out) {
     *count_out = 0;
@@ -1284,32 +1689,75 @@ static void gio_job_input_cb(XtPointer client_data, int *source, XtInputId *id) 
     if (nr < 0 && (errno == EINTR || errno == EAGAIN))
         return;
 
-    /* EOF */
+    /* EOF — extract explicit exit code marker `\n__DTFILE_GIO_RC=<N>\n` written by the
+     * wrapper child (since Main.c's global SIGCHLD reaper owns direct child waitpid). */
     XtRemoveInput(job->input_id);
     close(job->read_fd);
+    job->pid = -1;
 
-    int status = 0;
-    waitpid(job->pid, &status, 0);
-    bool ok = (WIFEXITED(status) && WEXITSTATUS(status) == 0);
+    int exit_rc = 1;
+    char *rc_tag = strstr(job->output_buf, "__DTFILE_GIO_RC=");
+    if (rc_tag) {
+        exit_rc = atoi(rc_tag + 16);
+        if (rc_tag > job->output_buf && rc_tag[-1] == '\n')
+            rc_tag[-1] = '\0';
+        else
+            *rc_tag = '\0';
+        job->output_len = strlen(job->output_buf);
+    }
+    bool ok = (!job->cancelled && exit_rc == 0);
+
+    if (job->progress_shell) {
+        XtRemoveCallback(job->progress_shell, XmNdestroyCallback, connect_progress_destroy_cb, (XtPointer)job);
+        if (job->anim_timer != 0) {
+            XtRemoveTimeOut(job->anim_timer);
+            job->anim_timer = 0;
+        }
+        publish_dialog_visibility("_DT_CONNECT_PROGRESS_VISIBLE", "0");
+        XtDestroyWidget(job->progress_shell);
+        job->progress_shell = nullptr;
+    }
+
+    ConnectServerCtx *owner = job->owner_ctx;
+    if (owner) {
+        owner->active_job = nullptr;
+        if (owner->ok_btn)
+            XtSetSensitive(owner->ok_btn, True);
+    }
 
     DtfileDevicesRescan();
 
-    if (!ok) {
-        if (job->status_lbl) {
-            XmString xm = XmStringCreateLocalized(
-                job->output_buf[0] ? job->output_buf : "Connection failed.");
-            XtVaSetValues(job->status_lbl, XmNlabelString, xm, nullptr);
+    if (job->cancelled) {
+        if (owner && owner->status_lbl) {
+            XmString xm = XmStringCreateLocalized("Connection attempt cancelled.");
+            XtVaSetValues(owner->status_lbl, XmNlabelString, xm, nullptr);
             XmStringFree(xm);
-        } else {
-            dev_post_error(nullptr, "Network Share Error",
-                           job->output_buf[0] ? job->output_buf : "Mount/unmount command failed.");
         }
         XtFree((char *)job);
         return;
     }
 
-    if (job->dlg_shell)
-        XtDestroyWidget(job->dlg_shell);
+    if (!ok) {
+        char fallback_err[128];
+        if (!job->output_buf[0]) {
+            snprintf(fallback_err, sizeof(fallback_err),
+                     "gio mount exited with status %d.", exit_rc);
+        }
+        const char *detail = job->output_buf[0] ? job->output_buf : fallback_err;
+        if (owner && owner->status_lbl) {
+            XmString xm = XmStringCreateLocalized("Connection failed — see error details.");
+            XtVaSetValues(owner->status_lbl, XmNlabelString, xm, nullptr);
+            XmStringFree(xm);
+        }
+        post_connect_error_dialog(job->fmd, owner ? owner->shell : nullptr, job->target_uri, detail);
+        XtFree((char *)job);
+        return;
+    }
+
+    if (owner && owner->shell) {
+        owner->active_job = nullptr;
+        XtDestroyWidget(owner->shell);
+    }
 
     if (job->navigate_on_mount && job->fmd) {
         char cur_mounts[32][MAX_PATH];
@@ -1344,10 +1792,11 @@ static void gio_job_input_cb(XtPointer client_data, int *source, XtInputId *id) 
 static void spawn_gio_mount_cmd(
     const char *const argv[],
     const char *optional_secret,
-    Widget dlg_shell,
-    Widget status_lbl,
+    ConnectServerCtx *owner_ctx,
+    const char *target_uri,
     FileMgrData *fmd,
-    bool navigate_on_mount)
+    bool navigate_on_mount,
+    bool show_progress)
 {
     if (!g_dev_toplevel)
         return;
@@ -1363,10 +1812,12 @@ static void spawn_gio_mount_cmd(
     }
 
     GioJobCtx *job = (GioJobCtx *)XtCalloc(1, sizeof(GioJobCtx));
-    job->dlg_shell = dlg_shell;
-    job->status_lbl = status_lbl;
+    job->owner_ctx = owner_ctx;
     job->fmd = fmd;
     job->navigate_on_mount = navigate_on_mount;
+    job->show_progress = show_progress;
+    clock_gettime(CLOCK_MONOTONIC, &job->started_ts);
+    dev_copy(job->target_uri, sizeof(job->target_uri), target_uri ? target_uri : "");
     if (navigate_on_mount)
         collect_current_gvfs_dirs(job->prev_mounts, &job->prev_mount_count);
 
@@ -1378,18 +1829,42 @@ static void spawn_gio_mount_cmd(
         return;
     }
     if (pid == 0) {
+        setpgid(0, 0);
+        signal(SIGCHLD, SIG_DFL);
         close(out_pipe[0]);
         close(in_pipe[1]);
-        dup2(in_pipe[0], STDIN_FILENO);
-        dup2(out_pipe[1], STDOUT_FILENO);
-        dup2(out_pipe[1], STDERR_FILENO);
+
+        pid_t gpid = fork();
+        if (gpid == 0) {
+            dup2(in_pipe[0], STDIN_FILENO);
+            dup2(out_pipe[1], STDOUT_FILENO);
+            dup2(out_pipe[1], STDERR_FILENO);
+            close(in_pipe[0]);
+            close(out_pipe[1]);
+            execvp(argv[0], (char *const *)argv);
+            const char *emsg = "Failed executing gio mount helper.\n";
+            ssize_t wr = write(STDERR_FILENO, emsg, strlen(emsg));
+            (void)wr;
+            _exit(127);
+        }
         close(in_pipe[0]);
+        int exit_rc = 127;
+        if (gpid > 0) {
+            int gst = 0;
+            while (waitpid(gpid, &gst, 0) < 0 && errno == EINTR) {}
+            if (WIFEXITED(gst))
+                exit_rc = WEXITSTATUS(gst);
+            else if (WIFSIGNALED(gst))
+                exit_rc = 128 + WTERMSIG(gst);
+        }
+        char rc_line[64];
+        int rlen = snprintf(rc_line, sizeof(rc_line), "\n__DTFILE_GIO_RC=%d\n", exit_rc);
+        if (rlen > 0) {
+            ssize_t wr = write(out_pipe[1], rc_line, (size_t)rlen);
+            (void)wr;
+        }
         close(out_pipe[1]);
-        execvp(argv[0], (char *const *)argv);
-        const char *emsg = "Failed executing gio mount helper.\n";
-        ssize_t wr = write(STDERR_FILENO, emsg, strlen(emsg));
-        (void)wr;
-        _exit(127);
+        _exit(exit_rc);
     }
 
     close(out_pipe[1]);
@@ -1405,6 +1880,14 @@ static void spawn_gio_mount_cmd(
     fcntl(out_pipe[0], F_SETFL, O_NONBLOCK);
     job->read_fd = out_pipe[0];
     job->pid = pid;
+    if (owner_ctx) {
+        owner_ctx->active_job = job;
+        if (owner_ctx->ok_btn)
+            XtSetSensitive(owner_ctx->ok_btn, False);
+    }
+    if (show_progress)
+        create_connect_progress_dialog(job);
+
     job->input_id = XtAppAddInput(
         XtWidgetToApplicationContext(g_dev_toplevel),
         out_pipe[0], (XtPointer)XtInputReadMask,
@@ -1461,7 +1944,7 @@ void DtfileDevicesUnmountOrEject(
         if (!gio_bin || !gio_bin[0])
             gio_bin = "gio";
         const char *argv[] = { gio_bin, "mount", "-u", path, nullptr };
-        spawn_gio_mount_cmd(argv, nullptr, nullptr, nullptr, file_mgr_data, false);
+        spawn_gio_mount_cmd(argv, nullptr, nullptr, path, file_mgr_data, false, false);
         return;
     }
 
@@ -1497,24 +1980,165 @@ void DtfileDevicesUnmountOrEject(
     }
 }
 
-/* ---- File -> Connect to Server... Motif Dialog ---- */
+/* ---- SSH Config (`~/.ssh/config` + `Include`) Remotes Parser ---- */
 
-typedef struct {
-    Widget shell;
-    Widget host_tf;
-    Widget share_tf;
-    Widget user_tf;
-    Widget pass_tf;
-    Widget uri_tf;
-    Widget status_lbl;
-    FileMgrData *fmd;
-    const char *scheme;
-    bool custom_uri_mode;
-    bool syncing_uri;
-    char secret[MAX_SECRET_LEN];
-    size_t secret_len;
-    bool modifying_mask;
-} ConnectServerCtx;
+static bool is_concrete_ssh_alias(const char *tok) {
+    if (!tok || !tok[0] || tok[0] == '!')
+        return false;
+    for (const char *p = tok; *p; ++p) {
+        if (*p == '*' || *p == '?' || isspace((unsigned char)*p))
+            return false;
+    }
+    return true;
+}
+
+static char *next_ssh_token(char **cursor) {
+    char *s = *cursor;
+    if (!s) return nullptr;
+    while (*s && (isspace((unsigned char)*s) || *s == '='))
+        s++;
+    if (!*s || *s == '#') {
+        *cursor = s;
+        return nullptr;
+    }
+    char *start = s;
+    if (*s == '"') {
+        start = ++s;
+        while (*s && *s != '"') s++;
+        if (*s == '"') *s++ = '\0';
+    } else {
+        while (*s && !isspace((unsigned char)*s) && *s != '=' && *s != '#')
+            s++;
+        if (*s) {
+            char ch = *s;
+            *s++ = '\0';
+            if (ch == '#') {
+                *cursor = s + strlen(s);
+                return start;
+            }
+        }
+    }
+    *cursor = s;
+    return start;
+}
+
+static void parse_ssh_config_file(
+    const char *cfg_path,
+    int depth,
+    SshHostEntry out_hosts[MAX_SSH_HOSTS],
+    int *count_io)
+{
+    if (!cfg_path || !cfg_path[0] || depth > 4 || *count_io >= MAX_SSH_HOSTS)
+        return;
+
+    FILE *fp = fopen(cfg_path, "r");
+    if (!fp)
+        return;
+
+    int active_indices[16];
+    int active_count = 0;
+
+    char line[1024];
+    while (fgets(line, sizeof(line), fp) != nullptr) {
+        char *nl = strpbrk(line, "\r\n");
+        if (nl) *nl = '\0';
+
+        char *cur = line;
+        char *kw = next_ssh_token(&cur);
+        if (!kw || !kw[0])
+            continue;
+
+        if (strcasecmp(kw, "Include") == 0) {
+            const char *home = getenv("HOME");
+            if (!home || !home[0]) home = ShelfGetHomePath();
+            char *pat = nullptr;
+            while ((pat = next_ssh_token(&cur)) != nullptr) {
+                char expanded[PATH_MAX];
+                if (pat[0] == '~' && (pat[1] == '/' || pat[1] == '\0')) {
+                    snprintf(expanded, sizeof(expanded), "%s%s", home ? home : "", pat + 1);
+                } else if (pat[0] == '/') {
+                    snprintf(expanded, sizeof(expanded), "%s", pat);
+                } else {
+                    snprintf(expanded, sizeof(expanded), "%s/.ssh/%s", home ? home : "", pat);
+                }
+                glob_t gl;
+                memset(&gl, 0, sizeof(gl));
+                if (glob(expanded, 0, nullptr, &gl) == 0) {
+                    for (size_t gi = 0; gi < gl.gl_pathc && *count_io < MAX_SSH_HOSTS; ++gi)
+                        parse_ssh_config_file(gl.gl_pathv[gi], depth + 1, out_hosts, count_io);
+                }
+                globfree(&gl);
+            }
+            continue;
+        }
+
+        if (strcasecmp(kw, "Match") == 0) {
+            active_count = 0;
+            continue;
+        }
+
+        if (strcasecmp(kw, "Host") == 0) {
+            active_count = 0;
+            char *alias_tok = nullptr;
+            while ((alias_tok = next_ssh_token(&cur)) != nullptr) {
+                if (!is_concrete_ssh_alias(alias_tok))
+                    continue;
+                int existing = -1;
+                for (int i = 0; i < *count_io; ++i) {
+                    if (strcasecmp(out_hosts[i].alias, alias_tok) == 0) {
+                        existing = i;
+                        break;
+                    }
+                }
+                if (existing < 0 && *count_io < MAX_SSH_HOSTS) {
+                    existing = (*count_io)++;
+                    memset(&out_hosts[existing], 0, sizeof(SshHostEntry));
+                    dev_copy(out_hosts[existing].alias, sizeof(out_hosts[existing].alias), alias_tok);
+                }
+                if (existing >= 0 && active_count < 16)
+                    active_indices[active_count++] = existing;
+            }
+            continue;
+        }
+
+        if (active_count > 0) {
+            char *val = next_ssh_token(&cur);
+            if (!val || !val[0])
+                continue;
+            for (int a = 0; a < active_count; ++a) {
+                SshHostEntry *he = &out_hosts[active_indices[a]];
+                if (strcasecmp(kw, "HostName") == 0 && !he->hostname[0])
+                    dev_copy(he->hostname, sizeof(he->hostname), val);
+                else if (strcasecmp(kw, "User") == 0 && !he->user[0])
+                    dev_copy(he->user, sizeof(he->user), val);
+                else if (strcasecmp(kw, "Port") == 0 && !he->port[0])
+                    dev_copy(he->port, sizeof(he->port), val);
+            }
+        }
+    }
+    fclose(fp);
+}
+
+static int load_user_ssh_hosts(SshHostEntry out_hosts[MAX_SSH_HOSTS]) {
+    int count = 0;
+    const char *override_cfg = getenv("DTFILE_SSH_CONFIG");
+    if (override_cfg && override_cfg[0]) {
+        parse_ssh_config_file(override_cfg, 0, out_hosts, &count);
+        return count;
+    }
+
+    const char *home = getenv("HOME");
+    if (!home || !home[0]) home = ShelfGetHomePath();
+    if (home && home[0]) {
+        char user_cfg[PATH_MAX];
+        snprintf(user_cfg, sizeof(user_cfg), "%s/.ssh/config", home);
+        parse_ssh_config_file(user_cfg, 0, out_hosts, &count);
+    }
+    parse_ssh_config_file("/etc/ssh/ssh_config", 0, out_hosts, &count);
+    return count;
+}
+
+/* ---- File -> Connect to Server... Motif Dialog ---- */
 
 static void conn_srv_destroy_cb(Widget w, XtPointer client_data, XtPointer call_data) {
     (void)w;
@@ -1522,6 +2146,8 @@ static void conn_srv_destroy_cb(Widget w, XtPointer client_data, XtPointer call_
     publish_dialog_visibility("_DT_CONNECT_DIALOG_VISIBLE", "0");
     ConnectServerCtx *ctx = (ConnectServerCtx *)client_data;
     if (ctx) {
+        if (ctx->active_job)
+            ctx->active_job->owner_ctx = nullptr;
         secure_zero(ctx->secret, sizeof(ctx->secret));
         XtFree((char *)ctx);
     }
@@ -1577,6 +2203,27 @@ static void conn_srv_field_changed_cb(Widget w, XtPointer client_data, XtPointer
     conn_srv_rebuild_uri((ConnectServerCtx *)client_data);
 }
 
+static void conn_srv_update_ssh_visibility(ConnectServerCtx *ctx) {
+    if (!ctx || !ctx->ssh_box || !ctx->host_lbl || !ctx->proto_menu)
+        return;
+    bool show_ssh = (!ctx->custom_uri_mode && ctx->scheme && strcmp(ctx->scheme, "sftp") == 0);
+    if (show_ssh) {
+        XtManageChild(ctx->ssh_box);
+        XtVaSetValues(ctx->host_lbl,
+                      XmNtopAttachment, XmATTACH_WIDGET,
+                      XmNtopWidget, ctx->ssh_box,
+                      XmNtopOffset, 8,
+                      nullptr);
+    } else {
+        XtVaSetValues(ctx->host_lbl,
+                      XmNtopAttachment, XmATTACH_WIDGET,
+                      XmNtopWidget, ctx->proto_menu,
+                      XmNtopOffset, 8,
+                      nullptr);
+        XtUnmanageChild(ctx->ssh_box);
+    }
+}
+
 static void conn_srv_proto_cb(Widget w, XtPointer client_data, XtPointer call_data) {
     (void)call_data;
     ConnectServerCtx *ctx = (ConnectServerCtx *)client_data;
@@ -1589,8 +2236,56 @@ static void conn_srv_proto_cb(Widget w, XtPointer client_data, XtPointer call_da
     } else {
         ctx->custom_uri_mode = false;
         ctx->scheme = proto;
+        /* When switching to SSH/SFTP, clear the default SMB 'shared' folder if untouched
+         * and pre-select the first configured SSH remote if one exists! */
+        if (strcmp(proto, "sftp") == 0) {
+            char *cur_sh = XmTextFieldGetString(ctx->share_tf);
+            if (cur_sh && strcmp(cur_sh, "shared") == 0)
+                XmTextFieldSetString(ctx->share_tf, "");
+            XtFree(cur_sh);
+            if (ctx->ssh_host_count > 0 && ctx->ssh_list) {
+                XmListSelectPos(ctx->ssh_list, 1, True);
+            }
+        }
         conn_srv_rebuild_uri(ctx);
     }
+    conn_srv_update_ssh_visibility(ctx);
+}
+
+static void conn_srv_apply_ssh_index(ConnectServerCtx *ctx, int idx) {
+    if (!ctx || idx < 0 || idx >= ctx->ssh_host_count)
+        return;
+    const SshHostEntry *he = &ctx->ssh_hosts[idx];
+    ctx->syncing_uri = true;
+    /* Keep the exact alias in Host so OpenSSH / GVFS honors HostName, Port, IdentityFile & ProxyJump */
+    XmTextFieldSetString(ctx->host_tf, (char *)he->alias);
+    XmTextFieldSetString(ctx->user_tf, (char *)(he->user[0] ? he->user : ""));
+    char *cur_sh = XmTextFieldGetString(ctx->share_tf);
+    if (cur_sh && strcmp(cur_sh, "shared") == 0)
+        XmTextFieldSetString(ctx->share_tf, "");
+    XtFree(cur_sh);
+    ctx->syncing_uri = false;
+    conn_srv_rebuild_uri(ctx);
+}
+
+static void conn_srv_connect_cb(Widget w, XtPointer client_data, XtPointer call_data);
+
+static void conn_srv_ssh_select_cb(Widget w, XtPointer client_data, XtPointer call_data) {
+    (void)w;
+    ConnectServerCtx *ctx = (ConnectServerCtx *)client_data;
+    XmListCallbackStruct *cbs = (XmListCallbackStruct *)call_data;
+    if (!ctx || !cbs || ctx->ssh_host_count <= 0)
+        return;
+    conn_srv_apply_ssh_index(ctx, cbs->item_position - 1);
+}
+
+static void conn_srv_ssh_default_cb(Widget w, XtPointer client_data, XtPointer call_data) {
+    ConnectServerCtx *ctx = (ConnectServerCtx *)client_data;
+    XmListCallbackStruct *cbs = (XmListCallbackStruct *)call_data;
+    if (!ctx || !cbs || ctx->ssh_host_count <= 0)
+        return;
+    conn_srv_apply_ssh_index(ctx, cbs->item_position - 1);
+    conn_srv_connect_cb(w, client_data, nullptr);
 }
 
 static void conn_srv_mask_cb(Widget w, XtPointer client_data, XtPointer call_data) {
@@ -1637,14 +2332,13 @@ static void conn_srv_connect_cb(Widget w, XtPointer client_data, XtPointer call_
     (void)w;
     (void)call_data;
     ConnectServerCtx *ctx = (ConnectServerCtx *)client_data;
-    if (!ctx) return;
+    if (!ctx || ctx->active_job) return;
 
     char *uri = XmTextFieldGetString(ctx->uri_tf);
     if (!is_supported_remote_uri(uri)) {
-        XmString xm = XmStringCreateLocalized(
-            "Enter a valid smb://, sftp://, davs://, nfs://, or mtp:// URI.");
-        XtVaSetValues(ctx->status_lbl, XmNlabelString, xm, nullptr);
-        XmStringFree(xm);
+        post_connect_error_dialog(
+            ctx->fmd, ctx->shell, uri,
+            "Enter a valid smb://, sftp://, davs://, nfs://, ftp://, or mtp:// server URI.");
         XtFree(uri);
         return;
     }
@@ -1667,7 +2361,7 @@ static void conn_srv_connect_cb(Widget w, XtPointer client_data, XtPointer call_
 
     const char *argv[] = { gio_bin, "mount", uri, nullptr };
     spawn_gio_mount_cmd(argv, secret_copy[0] ? secret_copy : nullptr,
-                        ctx->shell, ctx->status_lbl, ctx->fmd, true);
+                        ctx, uri, ctx->fmd, true, true);
     secure_zero(secret_copy, sizeof(secret_copy));
     XtFree(uri);
 }
@@ -1676,23 +2370,20 @@ static void conn_srv_cancel_cb(Widget w, XtPointer client_data, XtPointer call_d
     (void)w;
     (void)call_data;
     ConnectServerCtx *ctx = (ConnectServerCtx *)client_data;
-    if (ctx && ctx->shell)
+    if (!ctx) return;
+    if (ctx->active_job) {
+        connect_progress_cancel_cb(nullptr, (XtPointer)ctx->active_job, nullptr);
+    }
+    if (ctx->shell)
         XtDestroyWidget(ctx->shell);
 }
 
-void ShowConnectServerDialog(Widget w, XtPointer client_data, XtPointer call_data) {
-    (void)client_data;
-    (void)call_data;
-
-    FileMgrRec *fmr = nullptr;
+void ShowConnectServerForFileMgr(FileMgrRec *fmr, const char *initial_scheme) {
     FileMgrData *fmd = nullptr;
-    if (w) {
-        Widget mbar = XmGetPostedFromWidget(XtParent(w));
-        if (mbar) {
-            Arg a[1];
-            XtSetArg(a[0], XmNuserData, &fmr);
-            XtGetValues(mbar, a, 1);
-        }
+    if (!fmr && view_count > 0 && view_set && view_set[0] && view_set[0]->dialog_data) {
+        FileMgrData *v_fmd = (FileMgrData *)((DialogData *)view_set[0]->dialog_data)->data;
+        if (v_fmd)
+            fmr = (FileMgrRec *)v_fmd->file_mgr_rec;
     }
     if (fmr) {
         DialogData *dd = _DtGetInstanceData((XtPointer)fmr);
@@ -1705,14 +2396,47 @@ void ShowConnectServerDialog(Widget w, XtPointer client_data, XtPointer call_dat
         const char *gio_bin = getenv("DTFILE_GIO_BIN");
         if (!gio_bin || !gio_bin[0]) gio_bin = "gio";
         const char *argv[] = { gio_bin, "mount", auto_uri, nullptr };
-        spawn_gio_mount_cmd(argv, nullptr, nullptr, nullptr, fmd, true);
+        spawn_gio_mount_cmd(argv, nullptr, nullptr, auto_uri, fmd, true, true);
         return;
     }
 
     Widget parent = (fmr && fmr->shell) ? fmr->shell : (g_dev_toplevel ? g_dev_toplevel : toplevel);
     ConnectServerCtx *ctx = (ConnectServerCtx *)XtCalloc(1, sizeof(ConnectServerCtx));
     ctx->fmd = fmd;
-    ctx->scheme = "smb";
+    const char *prefill_uri = nullptr;
+    if (initial_scheme && strstr(initial_scheme, "://") != nullptr) {
+        ctx->scheme = "custom";
+        ctx->custom_uri_mode = true;
+        prefill_uri = initial_scheme;
+    } else if (initial_scheme && strcasecmp(initial_scheme, "sftp") == 0) {
+        ctx->scheme = "sftp";
+    } else if (initial_scheme && strcasecmp(initial_scheme, "davs") == 0) {
+        ctx->scheme = "davs";
+    } else if (initial_scheme && strcasecmp(initial_scheme, "nfs") == 0) {
+        ctx->scheme = "nfs";
+    } else {
+        ctx->scheme = "smb";
+    }
+    ctx->ssh_host_count = load_user_ssh_hosts(ctx->ssh_hosts);
+
+    /* Publish discovered SSH config hosts on root for deterministic test verification */
+    {
+        char ssh_prop[2048];
+        size_t pos = 0;
+        ssh_prop[0] = '\0';
+        for (int i = 0; i < ctx->ssh_host_count; ++i) {
+            int nw = snprintf(ssh_prop + pos, sizeof(ssh_prop) - pos, "%s%s|%s|%s|%s",
+                              (i > 0) ? ";" : "",
+                              ctx->ssh_hosts[i].alias,
+                              ctx->ssh_hosts[i].hostname,
+                              ctx->ssh_hosts[i].user,
+                              ctx->ssh_hosts[i].port);
+            if (nw < 0 || (size_t)nw >= sizeof(ssh_prop) - pos)
+                break;
+            pos += (size_t)nw;
+        }
+        publish_dialog_visibility("_DT_SSH_CONFIG_HOSTS", ssh_prop);
+    }
 
     Arg args[10];
     Cardinal n = 0;
@@ -1727,6 +2451,7 @@ void ShowConnectServerDialog(Widget w, XtPointer client_data, XtPointer call_dat
     XtSetArg(args[n], XmNmarginHeight, 12); n++;
     XtSetArg(args[n], XmNautoUnmanage, False); n++;
     Widget form = XmCreateForm(ctx->shell, "connectServerForm", args, n);
+    ctx->form = form;
 
     Widget pulldown = XmCreatePulldownMenu(form, "protoPulldown", nullptr, 0);
     static const struct { const char *label; const char *scheme; } protos[] = {
@@ -1736,7 +2461,7 @@ void ShowConnectServerDialog(Widget w, XtPointer client_data, XtPointer call_dat
         { "NFS Share (nfs://)",           "nfs" },
         { "Custom Server URI",            "custom" },
     };
-    Widget first_item = nullptr;
+    Widget selected_item = nullptr;
     for (size_t i = 0; i < sizeof(protos) / sizeof(protos[0]); ++i) {
         XmString pxm = XmStringCreateLocalized((char *)protos[i].label);
         Widget item = XtVaCreateManagedWidget(
@@ -1746,35 +2471,100 @@ void ShowConnectServerDialog(Widget w, XtPointer client_data, XtPointer call_dat
             nullptr);
         XmStringFree(pxm);
         XtAddCallback(item, XmNactivateCallback, conn_srv_proto_cb, (XtPointer)ctx);
-        if (i == 0) first_item = item;
+        if (i == 0 || strcmp(protos[i].scheme, ctx->scheme) == 0)
+            selected_item = item;
     }
 
     XmString pr_lbl = XmStringCreateLocalized("Protocol:");
     n = 0;
     XtSetArg(args[n], XmNlabelString, pr_lbl); n++;
     XtSetArg(args[n], XmNsubMenuId, pulldown); n++;
-    XtSetArg(args[n], XmNmenuHistory, first_item); n++;
+    XtSetArg(args[n], XmNmenuHistory, selected_item); n++;
     XtSetArg(args[n], XmNtopAttachment, XmATTACH_FORM); n++;
     XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
-    Widget proto_menu = XmCreateOptionMenu(form, "protocolOptionMenu", args, n);
+    ctx->proto_menu = XmCreateOptionMenu(form, "protocolOptionMenu", args, n);
     XmStringFree(pr_lbl);
-    XtManageChild(proto_menu);
+    XtManageChild(ctx->proto_menu);
+
+    /* Configured SSH Remotes (~/.ssh/config) box — shown automatically when SSH/SFTP is active */
+    ctx->ssh_box = XmCreateForm(form, "sshHostsBox", nullptr, 0);
+    XtVaSetValues(ctx->ssh_box,
+                  XmNtopAttachment, XmATTACH_WIDGET,
+                  XmNtopWidget, ctx->proto_menu,
+                  XmNtopOffset, 8,
+                  XmNleftAttachment, XmATTACH_FORM,
+                  XmNrightAttachment, XmATTACH_FORM,
+                  nullptr);
+
+    XmString ssh_lbl_xm = XmStringCreateLocalized("Configured SSH Remotes (~/.ssh/config):");
+    Widget ssh_lbl = XtVaCreateManagedWidget(
+        "sshHostsLabel", xmLabelWidgetClass, ctx->ssh_box,
+        XmNlabelString, ssh_lbl_xm,
+        XmNalignment, XmALIGNMENT_BEGINNING,
+        XmNtopAttachment, XmATTACH_FORM,
+        XmNleftAttachment, XmATTACH_FORM,
+        nullptr);
+    XmStringFree(ssh_lbl_xm);
+
+    n = 0;
+    XtSetArg(args[n], XmNvisibleItemCount, 4); n++;
+    XtSetArg(args[n], XmNselectionPolicy, XmBROWSE_SELECT); n++;
+    XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET); n++;
+    XtSetArg(args[n], XmNtopWidget, ssh_lbl); n++;
+    XtSetArg(args[n], XmNtopOffset, 3); n++;
+    XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM); n++;
+    ctx->ssh_list = XmCreateScrolledList(ctx->ssh_box, "sshHostsList", args, n);
+    XtManageChild(ctx->ssh_list);
+
+    if (ctx->ssh_host_count > 0) {
+        XmString *ssh_items = (XmString *)XtCalloc((Cardinal)ctx->ssh_host_count, sizeof(XmString));
+        for (int i = 0; i < ctx->ssh_host_count; ++i) {
+            const SshHostEntry *he = &ctx->ssh_hosts[i];
+            char row[384];
+            const char *disp_host = he->hostname[0] ? he->hostname : he->alias;
+            if (he->user[0] && he->port[0] && strcmp(he->port, "22") != 0)
+                snprintf(row, sizeof(row), "%s  (%s@%s:%s)", he->alias, he->user, disp_host, he->port);
+            else if (he->user[0])
+                snprintf(row, sizeof(row), "%s  (%s@%s)", he->alias, he->user, disp_host);
+            else if (he->port[0] && strcmp(he->port, "22") != 0)
+                snprintf(row, sizeof(row), "%s  (%s:%s)", he->alias, disp_host, he->port);
+            else if (he->hostname[0] && strcmp(he->hostname, he->alias) != 0)
+                snprintf(row, sizeof(row), "%s  (%s)", he->alias, he->hostname);
+            else
+                snprintf(row, sizeof(row), "%s", he->alias);
+            ssh_items[i] = XmStringCreateLocalized(row);
+        }
+        XmListAddItems(ctx->ssh_list, ssh_items, ctx->ssh_host_count, 1);
+        for (int i = 0; i < ctx->ssh_host_count; ++i)
+            XmStringFree(ssh_items[i]);
+        XtFree((char *)ssh_items);
+        XtAddCallback(ctx->ssh_list, XmNbrowseSelectionCallback, conn_srv_ssh_select_cb, (XtPointer)ctx);
+        XtAddCallback(ctx->ssh_list, XmNsingleSelectionCallback, conn_srv_ssh_select_cb, (XtPointer)ctx);
+        XtAddCallback(ctx->ssh_list, XmNdefaultActionCallback, conn_srv_ssh_default_cb, (XtPointer)ctx);
+    } else {
+        XmString empty_xm = XmStringCreateLocalized("(No Host aliases found in ~/.ssh/config)");
+        XmListAddItem(ctx->ssh_list, empty_xm, 1);
+        XmStringFree(empty_xm);
+        XtSetSensitive(ctx->ssh_list, False);
+    }
 
     XmString h_xm = XmStringCreateLocalized("Server / Host:");
-    Widget h_lbl = XtVaCreateManagedWidget(
+    ctx->host_lbl = XtVaCreateManagedWidget(
         "hostLabel", xmLabelWidgetClass, form,
         XmNlabelString, h_xm,
         XmNalignment, XmALIGNMENT_BEGINNING,
-        XmNtopAttachment, XmATTACH_WIDGET, XmNtopWidget, proto_menu, XmNtopOffset, 8,
+        XmNtopAttachment, XmATTACH_WIDGET, XmNtopWidget, ctx->proto_menu, XmNtopOffset, 8,
         XmNleftAttachment, XmATTACH_FORM,
         nullptr);
     XmStringFree(h_xm);
 
     ctx->host_tf = XtVaCreateManagedWidget(
         "serverHostText", xmTextFieldWidgetClass, form,
-        XmNcolumns, 34,
+        XmNcolumns, 38,
         XmNvalue, "files.local",
-        XmNtopAttachment, XmATTACH_WIDGET, XmNtopWidget, h_lbl, XmNtopOffset, 3,
+        XmNtopAttachment, XmATTACH_WIDGET, XmNtopWidget, ctx->host_lbl, XmNtopOffset, 3,
         XmNleftAttachment, XmATTACH_FORM, XmNrightAttachment, XmATTACH_FORM,
         nullptr);
     XtAddCallback(ctx->host_tf, XmNvalueChangedCallback, conn_srv_field_changed_cb, (XtPointer)ctx);
@@ -1791,8 +2581,8 @@ void ShowConnectServerDialog(Widget w, XtPointer client_data, XtPointer call_dat
 
     ctx->share_tf = XtVaCreateManagedWidget(
         "serverShareText", xmTextFieldWidgetClass, form,
-        XmNcolumns, 34,
-        XmNvalue, "shared",
+        XmNcolumns, 38,
+        XmNvalue, (strcmp(ctx->scheme, "sftp") == 0) ? "" : "shared",
         XmNtopAttachment, XmATTACH_WIDGET, XmNtopWidget, sh_lbl, XmNtopOffset, 3,
         XmNleftAttachment, XmATTACH_FORM, XmNrightAttachment, XmATTACH_FORM,
         nullptr);
@@ -1878,6 +2668,7 @@ void ShowConnectServerDialog(Widget w, XtPointer client_data, XtPointer call_dat
         XmNleftAttachment, XmATTACH_FORM,
         nullptr);
     XmStringFree(ok_xm);
+    ctx->ok_btn = ok_btn;
     XtAddCallback(ok_btn, XmNactivateCallback, conn_srv_connect_cb, (XtPointer)ctx);
 
     XmString cancel_xm = XmStringCreateLocalized("Cancel");
@@ -1892,11 +2683,37 @@ void ShowConnectServerDialog(Widget w, XtPointer client_data, XtPointer call_dat
     XmStringFree(cancel_xm);
     XtAddCallback(cancel_btn, XmNactivateCallback, conn_srv_cancel_cb, (XtPointer)ctx);
 
-    conn_srv_rebuild_uri(ctx);
+    if (prefill_uri) {
+        ctx->syncing_uri = true;
+        XmTextFieldSetString(ctx->uri_tf, (char *)prefill_uri);
+        ctx->syncing_uri = false;
+    } else if (strcmp(ctx->scheme, "sftp") == 0 && ctx->ssh_host_count > 0) {
+        XmListSelectPos(ctx->ssh_list, 1, True);
+    } else {
+        conn_srv_rebuild_uri(ctx);
+    }
+
+    conn_srv_update_ssh_visibility(ctx);
     XtVaSetValues(form, XmNdefaultButton, ok_btn, XmNcancelButton, cancel_btn, nullptr);
     XtAddEventHandler(ctx->shell, StructureNotifyMask, False, conn_srv_map_eh, (XtPointer)ctx);
     XtManageChild(form);
     XmProcessTraversal(ctx->uri_tf, XmTRAVERSE_CURRENT);
+}
+
+void ShowConnectServerDialog(Widget w, XtPointer client_data, XtPointer call_data) {
+    const char *scheme = (const char *)client_data;
+    (void)call_data;
+
+    FileMgrRec *fmr = nullptr;
+    if (w) {
+        Widget mbar = XmGetPostedFromWidget(XtParent(w));
+        if (mbar) {
+            Arg a[1];
+            XtSetArg(a[0], XmNuserData, &fmr);
+            XtGetValues(mbar, a, 1);
+        }
+    }
+    ShowConnectServerForFileMgr(fmr, (scheme && scheme[0]) ? scheme : "smb");
 }
 
 /* ---- UDisks2 Signal Filter + GVFS inotify Event Loop Integration ---- */

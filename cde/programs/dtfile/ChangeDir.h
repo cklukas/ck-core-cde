@@ -41,6 +41,7 @@
 #ifndef _ChangeDir_h
 #define _ChangeDir_h
 
+#include "Mounts.h"
 
 extern DialogClass * changeDirClass;
 
@@ -74,7 +75,22 @@ typedef struct
    Widget shell;
    Widget change_dir;
    ChangeDirApply * apply_data;
+   Widget tab_stack;
+   Widget history_page;
+   Widget history_host_label;
+   Widget history_tab_list;
+   Widget mounts_page;
+   Widget mounts_tab_list;
+   Widget mounts_info_label;
+   Widget mounts_connect_btn;
+   Widget mounts_unmount_btn;
+   Widget mounts_refresh_btn;
+   DtfileMountNavEntry *mount_entries;
+   int mount_entry_count;
+   XtPointer active_file_mgr_rec;
 } ChangeDirRec;
+
+extern void DtfileOpenGoToDialogTab(FileMgrRec *file_mgr_rec, int tab_index);
 
 
 #endif /* _ChangeDir_h */

@@ -159,18 +159,32 @@ XLibre)`:
   `org.freedesktop.UDisks2` (`ObjectManager` + live `InterfacesAdded`,
   `InterfacesRemoved`, and `PropertiesChanged` signals), dynamically surfacing
   hotplugged USB/SD/MMC drives and encrypted `crypto_LUKS` volumes in `dtfile`'s
-  Shelf and **View → Mounts & Devices...**. Activating a locked LUKS volume
-  opens a Motif passphrase dialog (`Encrypted.Unlock` followed by
-  `Filesystem.Mount`, zeroing passphrase buffers immediately after marshalling),
-  and right-clicking or using *Mounts & Devices...* supports **Unmount** and
-  safe **Eject / Power Off Drive** (`Filesystem.Unmount`, `Encrypted.Lock`,
-  `Drive.Eject`, and `Drive.PowerOff`).
-- **Network shares & MTP/PTP mobile devices (`GVFS`):** **File → Connect to
-  Server...** mounts `smb://`, `sftp://`, `davs://`, and `nfs://` shares via
-  `gio mount` (`fork`/`execvp`, never `/bin/sh`) and watches
-  `/run/user/$UID/gvfs` via `inotify` so remote shares and hotplugged MTP/PTP
-  phones appear automatically in the Shelf and *Mounts & Devices...* with
-  one-click **Disconnect / Unmount** (`gio mount -u`).
+  Shelf, **File → Connected Mounts & Devices...**, **File → Go To...**
+  (*Connected Mounts & Shares* tab), and **View → Mounts & Devices...**.
+  Activating a locked LUKS volume opens a Motif passphrase dialog
+  (`Encrypted.Unlock` followed by `Filesystem.Mount`, zeroing passphrase buffers
+  immediately after marshalling), and right-clicking or using *Connected Mounts &
+  Devices...* supports **Unmount** and safe **Eject / Power Off Drive**
+  (`Filesystem.Unmount`, `Encrypted.Lock`, `Drive.Eject`, and `Drive.PowerOff`).
+- **Network shares, SSH config remotes & MTP/PTP mobile devices (`GVFS`):**
+  **File → Connect to Server...** mounts `smb://`, `sftp://`, `davs://`, and
+  `nfs://` shares via `gio mount` (`fork`/`execvp`, never `/bin/sh`). Selecting
+  **SSH / SFTP (`sftp://`)** parses `~/.ssh/config` (including `Include`
+  directives and `/etc/ssh/ssh_config`, skipping wildcard patterns) and presents
+  a **Configured SSH Remotes (`~/.ssh/config`)** list so known aliases populate
+  the host, username, and `sftp://` URI (preserving OpenSSH `HostName`, `Port`,
+  `IdentityFile`, and `ProxyJump` settings). During connection attempts, a
+  dedicated **Connecting to Remote Server** progress dialog displays a 3D CDE
+  progress bar, elapsed timer, and **Cancel** button (`SIGTERM`), and failed
+  connections post a modal **Connect to Server Error** dialog with the attempted
+  URI and `gio mount` diagnostics. `/run/user/$UID/gvfs` is watched via
+  `inotify` so remote shares and hotplugged MTP/PTP phones appear automatically
+  with one-click **Disconnect / Unmount** (`gio mount -u`).
+- **Tabbed *Go To...* navigation (`ChangeDir.c`, `XmTabStack`):** **File → Go
+  To...** provides a two-tab Motif `XmTabStack` (**Folder History** and
+  **Connected Mounts & Shares**), allowing users to browse visited folders or
+  immediately inspect, mount/unlock, disconnect, or open any connected GVFS
+  share, MTP phone, removable/LUKS volume, or local filesystem.
 - **Built-in archive actions & Zip-Slip defense (`Archive.c`):** **Selected**
   and right-click object popup menus provide **Extract Here**, **Extract To...**,
   and **Compress...** supporting `.zip`, `.tar.gz`/`.tgz`, `.tar.xz`/`.txz`,

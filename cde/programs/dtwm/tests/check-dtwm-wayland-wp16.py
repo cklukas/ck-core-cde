@@ -579,21 +579,29 @@ int main(int argc, char **argv) {
     close(kfd);
 
     const char *txt = argv[2];
-    for (size_t i = 0; txt[i]; ++i) {
-        uint32_t kc = evdev_for_ascii(txt[i]);
-        if (!kc) continue;
-        wl_proxy_marshal(vkb, 1, now_ms(), kc, 1u);
+    if (strcmp(txt, "<ESC>") == 0) {
+        wl_proxy_marshal(vkb, 1, now_ms(), (uint32_t)KEY_ESC, 1u);
         wl_display_roundtrip(dpy);
-        usleep(18000);
-        wl_proxy_marshal(vkb, 1, now_ms(), kc, 0u);
+        usleep(25000);
+        wl_proxy_marshal(vkb, 1, now_ms(), (uint32_t)KEY_ESC, 0u);
         wl_display_roundtrip(dpy);
-        usleep(18000);
+    } else {
+        for (size_t i = 0; txt[i]; ++i) {
+            uint32_t kc = evdev_for_ascii(txt[i]);
+            if (!kc) continue;
+            wl_proxy_marshal(vkb, 1, now_ms(), kc, 1u);
+            wl_display_roundtrip(dpy);
+            usleep(18000);
+            wl_proxy_marshal(vkb, 1, now_ms(), kc, 0u);
+            wl_display_roundtrip(dpy);
+            usleep(18000);
+        }
+        wl_proxy_marshal(vkb, 1, now_ms(), (uint32_t)KEY_ENTER, 1u);
+        wl_display_roundtrip(dpy);
+        usleep(25000);
+        wl_proxy_marshal(vkb, 1, now_ms(), (uint32_t)KEY_ENTER, 0u);
+        wl_display_roundtrip(dpy);
     }
-    wl_proxy_marshal(vkb, 1, now_ms(), (uint32_t)KEY_ENTER, 1u);
-    wl_display_roundtrip(dpy);
-    usleep(25000);
-    wl_proxy_marshal(vkb, 1, now_ms(), (uint32_t)KEY_ENTER, 0u);
-    wl_display_roundtrip(dpy);
 
     wl_proxy_marshal(vkb, 3);
     wl_proxy_destroy(vkb);
@@ -664,6 +672,10 @@ int main(int argc, char **argv) {
         print_str_prop(dpy, root, "_DT_FILEMGR_SELECTION");
         print_str_prop(dpy, root, "_DT_LUKS_DIALOG_VISIBLE");
         print_str_prop(dpy, root, "_DT_CONNECT_DIALOG_VISIBLE");
+        print_str_prop(dpy, root, "_DT_CONNECT_PROGRESS_VISIBLE");
+        print_str_prop(dpy, root, "_DT_CONNECT_ERROR_VISIBLE");
+        print_str_prop(dpy, root, "_DT_SSH_CONFIG_HOSTS");
+        print_str_prop(dpy, root, "_DT_GOTO_DIALOG_STATE");
         print_win_prop(dpy, root, "_NET_ACTIVE_WINDOW");
         XCloseDisplay(dpy);
         return 0;
@@ -675,6 +687,18 @@ int main(int argc, char **argv) {
         if (!xtst) { XCloseDisplay(dpy); return 2; }
         XTestFakeKeyEventFn fk = (XTestFakeKeyEventFn)dlsym(xtst, "XTestFakeKeyEvent");
         const char *txt = argv[2];
+        if (strcmp(txt, "<ESC>") == 0) {
+            KeyCode esc_kc = XKeysymToKeycode(dpy, XK_Escape);
+            if (esc_kc) {
+                fk(dpy, esc_kc, True, CurrentTime);
+                XSync(dpy, False);
+                usleep(20000);
+                fk(dpy, esc_kc, False, CurrentTime);
+                XSync(dpy, False);
+            }
+            XCloseDisplay(dpy);
+            return 0;
+        }
         for (size_t i = 0; txt[i]; ++i) {
             char ks_name[2] = { txt[i], '\0' };
             KeySym ks = XStringToKeysym(ks_name);
@@ -799,7 +823,7 @@ def build_helpers(tmp_root: Path, cc: str) -> tuple[Path, Path, Path]:
 
 def make_mock_gio_script(script_path: Path, gvfs_root: Path, gio_log: Path) -> None:
     body = f"""#!/usr/bin/env python3
-import os, shutil, sys
+import os, shutil, sys, time
 from pathlib import Path
 
 gvfs_root = Path({str(gvfs_root)!r})
@@ -816,6 +840,10 @@ if len(args) >= 3 and args[0] == "mount" and args[1] == "-u":
 
 if len(args) >= 2 and args[0] == "mount":
     uri = args[1]
+    time.sleep(0.55)
+    if "failhost" in uri:
+        sys.stderr.write("Error mounting location: Connection timed out\\n")
+        sys.exit(1)
     if uri.startswith("smb://"):
         rest = uri[len("smb://"):].strip("/")
         parts = rest.split("/", 1)
@@ -868,6 +896,29 @@ def run_lane(
             d.mkdir(parents=True, exist_ok=True)
         xdg_rt.chmod(0o700)
 
+        # Stage ~/.ssh/config + Include ~/.ssh/config.d/*.conf to verify SSH remotes discovery
+        ssh_dir = home / ".ssh"
+        ssh_inc_dir = ssh_dir / "config.d"
+        ssh_inc_dir.mkdir(parents=True, exist_ok=True)
+        ssh_dir.chmod(0o700)
+        ssh_cfg_file = ssh_dir / "config"
+        ssh_cfg_file.write_text(
+            "Host *\n"
+            "    ServerAliveInterval 60\n\n"
+            "Host rpi4\n"
+            "    HostName 192.168.1.50\n"
+            "    User pi\n"
+            "    Port 2222\n\n"
+            "Include config.d/*.conf\n",
+            encoding="utf-8",
+        )
+        (ssh_inc_dir / "extra.conf").write_text(
+            "Host labbox\n"
+            "    HostName lab.internal\n"
+            "    User dev\n",
+            encoding="utf-8",
+        )
+
         # Enable renderImageIcons so FreeDesktop shared thumbnails render in dtfile!
         (home / ".Xdefaults").write_text(
             "Dtfile*renderImageIcons: True\n"
@@ -911,6 +962,7 @@ def run_lane(
             "DTFILE_UDISKS_BUS": "session",
             "DTFILE_GVFS_ROOT": str(gvfs_root),
             "DTFILE_GIO_BIN": str(gio_script),
+            "DTFILE_SSH_CONFIG": str(ssh_cfg_file),
             "DTFILE_THUMBNAIL_LOG": str(thumb_log),
             "DTFILE_TRASH_MOUNT_ROOTS": str(ext_trash_mount),
             "LC_ALL": "C.UTF-8",
@@ -1148,7 +1200,7 @@ def run_lane(
             desc=f"{lane} SecureVault safe eject & LUKS re-lock",
         )
 
-        # ---- CHECK B: GVFS Connect to Server... + MTP Phone Hotplug + Disconnect ----
+        # ---- CHECK B: GVFS Connect to Server (Progress + SSH Remotes + Error) + Tabbed Go To + MTP ----
         dbus_call(
             env, "org.freedesktop.FileManager1", "/org/freedesktop/FileManager1",
             "org.ck_core.Dtfile.OpenConnectServerDialog",
@@ -1158,15 +1210,94 @@ def run_lane(
             timeout=6.0,
             desc=f"{lane} Connect to Server dialog visible",
         )
-        # Default URI is pre-filled with `smb://files.local/shared`; pressing Return activates Connect!
+        # Default URI is pre-filled with `smb://files.local/shared`; pressing Return activates Connect
+        # and displays the Connecting progress dialog (`_DT_CONNECT_PROGRESS_VISIBLE == "1"`)!
         type_keys("")
+        wait_for(
+            lambda: read_props(x11_helper_bin, env).get("_DT_CONNECT_PROGRESS_VISIBLE") == "1",
+            timeout=4.0,
+            desc=f"{lane} Connecting to Server progress dialog",
+        )
         wait_for(
             lambda: gio_log.is_file()
             and "mount smb://files.local/shared" in gio_log.read_text(encoding="utf-8")
+            and read_props(x11_helper_bin, env).get("_DT_CONNECT_PROGRESS_VISIBLE", "0") == "0"
             and "SMB: shared@files.local|gvfs/smb|mounted" in read_props(x11_helper_bin, env).get("_DT_DEVICES_STATE", ""),
             timeout=8.0,
             desc=f"{lane} GVFS SMB share mounted and surfaced",
         )
+
+        # Verify SSH / SFTP mode parses `~/.ssh/config` + `Include` (`rpi4` & `labbox`, skipping `Host *`)
+        # and pre-selects `rpi4` (`sftp://pi@rpi4/`) for instant one-Return connection!
+        dbus_call(
+            env, "org.freedesktop.FileManager1", "/org/freedesktop/FileManager1",
+            "org.ck_core.Dtfile.OpenConnectServerDialog", "string:sftp",
+        )
+        wait_for(
+            lambda: read_props(x11_helper_bin, env).get("_DT_CONNECT_DIALOG_VISIBLE") == "1"
+            and read_props(x11_helper_bin, env).get("_DT_SSH_CONFIG_HOSTS") == "rpi4|192.168.1.50|pi|2222;labbox|lab.internal|dev|",
+            timeout=6.0,
+            desc=f"{lane} SSH config remotes parsed (including Include)",
+        )
+        type_keys("")
+        wait_for(
+            lambda: "mount sftp://pi@rpi4/" in gio_log.read_text(encoding="utf-8")
+            and "SFTP: rpi4|gvfs/sftp|mounted" in read_props(x11_helper_bin, env).get("_DT_DEVICES_STATE", ""),
+            timeout=8.0,
+            desc=f"{lane} SSH remote alias mounted via GVFS SFTP",
+        )
+
+        # Verify mount failure shows Progress Dialog -> Motif Connect to Server Error Dialog!
+        dbus_call(
+            env, "org.freedesktop.FileManager1", "/org/freedesktop/FileManager1",
+            "org.ck_core.Dtfile.OpenConnectServerDialog", "string:sftp://failhost/",
+        )
+        wait_for(
+            lambda: read_props(x11_helper_bin, env).get("_DT_CONNECT_DIALOG_VISIBLE") == "1",
+            timeout=6.0,
+            desc=f"{lane} Connect dialog prefilled with failing host",
+        )
+        type_keys("")
+        wait_for(
+            lambda: read_props(x11_helper_bin, env).get("_DT_CONNECT_PROGRESS_VISIBLE") == "1"
+            or read_props(x11_helper_bin, env).get("_DT_CONNECT_ERROR_VISIBLE") == "1",
+            timeout=4.0,
+            desc=f"{lane} Progress dialog during failing connection",
+        )
+        wait_for(
+            lambda: read_props(x11_helper_bin, env).get("_DT_CONNECT_ERROR_VISIBLE") == "1"
+            and read_props(x11_helper_bin, env).get("_DT_CONNECT_PROGRESS_VISIBLE", "0") == "0",
+            timeout=6.0,
+            desc=f"{lane} Connect to Server Error dialog posted on mount failure",
+        )
+        # Dismiss error dialog (Return) and close Connect dialog (Escape)
+        type_keys("")
+        wait_for(
+            lambda: read_props(x11_helper_bin, env).get("_DT_CONNECT_ERROR_VISIBLE") == "0",
+            timeout=6.0,
+            desc=f"{lane} Connect Error dialog dismissed",
+        )
+        type_keys("<ESC>")
+        wait_for(
+            lambda: read_props(x11_helper_bin, env).get("_DT_CONNECT_DIALOG_VISIBLE") == "0",
+            timeout=6.0,
+            desc=f"{lane} Connect dialog closed after error",
+        )
+
+        # Verify Tabbed `File -> Go To...` (`Connected Mounts & Shares` tab) lists mounts & opens selected mount!
+        dbus_call(
+            env, "org.freedesktop.FileManager1", "/org/freedesktop/FileManager1",
+            "org.ck_core.Dtfile.OpenGoToDialog", "string:mounts",
+        )
+        wait_for(
+            lambda: read_props(x11_helper_bin, env).get("_DT_GOTO_DIALOG_STATE", "").startswith("tab=mounts\tmounts="),
+            timeout=6.0,
+            desc=f"{lane} Tabbed Go To dialog Connected Mounts & Shares tab",
+        )
+        goto_state = read_props(x11_helper_bin, env).get("_DT_GOTO_DIALOG_STATE", "")
+        mounts_num = int(goto_state.split("mounts=", 1)[1])
+        assert mounts_num >= 2, f"Expected >= 2 mounts in Go To Mounts tab, got {goto_state!r}"
+        type_keys("<ESC>")
 
         # Hotplug MTP phone directory under gvfs_root -> live inotify discovery
         mtp_dir = gvfs_root / "mtp:host=Google_Pixel_9"
