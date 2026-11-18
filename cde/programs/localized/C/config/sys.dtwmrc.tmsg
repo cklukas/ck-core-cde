@@ -172,8 +172,8 @@ $ *
     Alt Shift<Key>Tab		root|icon|window	f.prev_key\n\
     Alt<Key>Escape		root|icon|window	f.next_key\n\
     Alt Shift<Key>Escape	root|icon|window	f.prev_key\n\
-    Alt<Key>Down		root|icon|window	f.circle_down\n\
-    Alt<Key>Up			root|icon|window	f.circle_up\n\
+    Alt<Key>Down		root|icon		f.circle_down\n\
+    Alt<Key>Up			root|icon		f.circle_up\n\
     Alt Ctrl Shift<Key>exclam	root|icon|window	f.set_behavior\n\
     Alt<Key>F2			root|icon|window	f.exec "ck-launch --toggle"\n\
     Mod4<Key>space		root|icon|window	f.exec "ck-launch --toggle"\n\
@@ -224,8 +224,8 @@ $ *
     Alt Shift<Key>Tab		root|icon|window	f.prev_key\n\
     Alt<Key>Escape		root|icon|window	f.next_key\n\
     Alt Shift<Key>Escape	root|icon|window	f.prev_key\n\
-    Alt<Key>Down		root|icon|window	f.circle_down\n\
-    Alt<Key>Up			root|icon|window	f.circle_up\n\
+    Alt<Key>Down		root|icon		f.circle_down\n\
+    Alt<Key>Up			root|icon		f.circle_up\n\
     Alt Ctrl Shift<Key>exclam	root|icon|window	f.set_behavior\n\
     Alt<Key>F2			root|icon|window	f.exec "ck-launch --toggle"\n\
     Mod4<Key>space		root|icon|window	f.exec "ck-launch --toggle"\n\

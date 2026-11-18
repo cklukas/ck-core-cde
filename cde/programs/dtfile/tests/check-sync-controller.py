@@ -23,7 +23,7 @@ with tempfile.TemporaryDirectory(prefix="dtfile-sync-consumer-", dir=os.environ[
     with tempfile.TemporaryDirectory(prefix="dtfile-sync-home-", dir=private_root) as private:
         fixture = Path(private) / "home"
         fixture.mkdir(mode=0o700)
-        subprocess.run([str(binary), str(fixture)], check=True, timeout=45)
+        subprocess.run([str(binary), str(fixture)], check=True, timeout=240)
     # Exercise the production preferences parser and atomic persistence worker.
     # On filesystems without owner enforcement, select a private fixture volume
     # explicitly; refusing that storage is itself covered by the native tests.

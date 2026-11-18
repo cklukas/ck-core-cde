@@ -188,6 +188,8 @@
 #include "Filter.h"
 #include "Find.h"
 #include "ModAttr.h"
+#include "ClipboardUndo.h"
+#include "BrowserErgonomics.h"
 
 /* From Command.c */
 extern void MoveCopyLinkHandler(Tt_message ttMsg, int opType);
@@ -1141,6 +1143,8 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
    XtSetValues(toplevel, args, n);
    XtRealizeWidget(toplevel);
    display = XtDisplay (toplevel);
+   DtfileClipboardUndoInit(toplevel);
+   DtfileErgonomicsInitRootCmd(toplevel);
 #ifdef HAVE_EDITRES
     XtAddEventHandler(toplevel, 0, True,
                       _XEditResCheckMessages,
@@ -1883,7 +1887,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
          }
       }
 
-      if (event.type != 0)
+      if (event.type != 0 && !DtfileErgonomicsFilterKeyEvent(&event))
          XtDispatchEvent(&event);
    }
 

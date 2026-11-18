@@ -2581,12 +2581,31 @@ static void handle_keyboard_keymap(struct wl_listener *listener, void *data) {
 static void handle_keyboard_destroy(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmKeyboard *kb = wl_container_of(listener, kb, destroy);
+    DtwmServer *server = kb->server;
     wl_list_remove(&kb->keymap.link);
     wl_list_remove(&kb->modifiers.link);
     wl_list_remove(&kb->key.link);
     wl_list_remove(&kb->destroy.link);
     wl_list_remove(&kb->link);
     free(kb);
+    if (server && !wl_list_empty(&server->keyboards)) {
+        DtwmKeyboard *fallback = wl_container_of(server->keyboards.next, fallback, link);
+        if (fallback->wlr_keyboard && fallback->wlr_keyboard->keymap) {
+            wlr_seat_set_keyboard(server->seat, fallback->wlr_keyboard);
+            dtwm_ime_set_keyboard(server, fallback->wlr_keyboard);
+            if (!server->session_locked && server->focused_view) {
+                struct wlr_surface *fs = view_wlr_surface(server->focused_view);
+                if (fs) {
+                    wlr_seat_keyboard_notify_enter(
+                        server->seat, fs,
+                        fallback->wlr_keyboard->keycodes,
+                        fallback->wlr_keyboard->num_keycodes,
+                        &fallback->wlr_keyboard->modifiers
+                    );
+                }
+            }
+        }
+    }
 }
 
 static void server_add_keyboard(DtwmServer *server, struct wlr_keyboard *wlr_kbd, bool is_virtual) {

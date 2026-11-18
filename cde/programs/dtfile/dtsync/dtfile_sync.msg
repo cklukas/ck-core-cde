@@ -50,7 +50,7 @@ $set 1
 52 Complete preservation
 53 Ordinary mode/times; new caller ownership
 54 Metadata:
-55 Compare and rule review are available. Applying changes awaits native backend qualification.\nTwo-way sync, move and mirror execution require further qualification.
+55 Compare, rule review and Apply reviewed plan are available for Copy, Update, Copy missing only and Synchronize one way.\nCompare only and Mirror remain preview-only; two-way sync and move are not part of this window.
 56 Minimum bytes:
 57 Maximum bytes:
 58 Modified on/after (local YYYY-MM-DD or UTC time):
@@ -245,10 +245,10 @@ $set 1
 286 Comparison results are not yet available.
 287 No comparison has started.
 288 Compare only: inspect differences in file contents and metadata.\nNo file changes are proposed or applied. This is not two-way synchronization.
-289 Copy preview: propose adding missing source objects to the destination.\nExisting destination objects need conflict-policy review.\nNewer targets are not implicitly protected. Preview only; Apply is unavailable.\nThis is not two-way synchronization.
-290 Update preview: add missing objects and consider source-newer files.\nRounded timestamps determine order; destination-newer files are skipped.\nEqual-time differences need review. Preview only; Apply is unavailable.\nThis is not two-way synchronization.
-291 Copy missing only preview: propose adding objects absent from the destination.\nExisting destination objects are kept; inspect conflicts and unavailable assessments.\nPreview only: Apply is unavailable. This is not two-way synchronization.
-292 Synchronize one way preview: make included destination files match the source.\nMay propose replacing destination-newer files; destination-only objects remain.\nPreview only: Apply is unavailable. This is not two-way synchronization.
+289 Copy: propose adding missing source objects to the destination.\nExisting destination objects need conflict-policy review before Apply reviewed plan is enabled.\nNewer targets are not implicitly protected. This is not two-way synchronization.
+290 Update: add missing objects and consider source-newer files.\nRounded timestamps determine order; destination-newer files are skipped.\nEqual-time differences need review before Apply reviewed plan is enabled.
+291 Copy missing only: propose adding objects absent from the destination.\nExisting destination objects are kept; review conflicts and unavailable assessments before applying.\nThis is not two-way synchronization.
+292 Synchronize one way: make included destination files match the source.\nMay propose replacing destination-newer files after review; destination-only objects remain.\nReview rules to enable Apply reviewed plan. This is not two-way synchronization.
 293 Mirror preview: also propose removing destination-only objects in scope.\nWarning: the plan can contain deletions, which require separate review.\nPreview only: mirror execution and two-way synchronization are unavailable.
 294 Swap folders
 295 Clear filters

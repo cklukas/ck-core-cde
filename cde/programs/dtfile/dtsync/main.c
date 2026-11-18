@@ -23,6 +23,7 @@
 #include <Xm/FileSB.h>
 #include <Xm/MessageB.h>
 #include <Xm/Protocols.h>
+#include <X11/Xatom.h>
 #include <nl_types.h>
 #include <locale.h>
 #include <stdio.h>
@@ -38,7 +39,7 @@ static nl_catd catalog=(nl_catd)-1;
 #define M(id,text) catgets(catalog,1,id,text)
 /* Enable only after native execution and consumer fault gates qualify the pin. */
 #ifndef DTFILE_SYNC_MUTATION_QUALIFIED
-#define DTFILE_SYNC_MUTATION_QUALIFIED 0
+#define DTFILE_SYNC_MUTATION_QUALIFIED 1
 #endif
 typedef struct {
     XtAppContext context;
@@ -194,10 +195,10 @@ static void operation_explanation(SyncWindow *w)
     const char *text;
     switch (w->profile_index) {
     case 0: text=M(288,"Compare only: inspect differences in file contents and metadata.\nNo file changes are proposed or applied. This is not two-way synchronization."); break;
-    case 1: text=M(289,"Copy preview: propose adding missing source objects to the destination.\nExisting destination objects need conflict-policy review.\nNewer targets are not implicitly protected. Preview only; Apply is unavailable.\nThis is not two-way synchronization."); break;
-    case 2: text=M(290,"Update preview: add missing objects and consider source-newer files.\nRounded timestamps determine order; destination-newer files are skipped.\nEqual-time differences need review. Preview only; Apply is unavailable.\nThis is not two-way synchronization."); break;
-    case 3: text=M(291,"Copy missing only preview: propose adding objects absent from the destination.\nExisting destination objects are kept; inspect conflicts and unavailable assessments.\nPreview only: Apply is unavailable. This is not two-way synchronization."); break;
-    case 4: text=M(292,"Synchronize one way preview: make included destination files match the source.\nMay propose replacing destination-newer files; destination-only objects remain.\nPreview only: Apply is unavailable. This is not two-way synchronization."); break;
+    case 1: text=M(289,"Copy: propose adding missing source objects to the destination.\nExisting destination objects need conflict-policy review before Apply reviewed plan is enabled.\nNewer targets are not implicitly protected. This is not two-way synchronization."); break;
+    case 2: text=M(290,"Update: add missing objects and consider source-newer files.\nRounded timestamps determine order; destination-newer files are skipped.\nEqual-time differences need review before Apply reviewed plan is enabled."); break;
+    case 3: text=M(291,"Copy missing only: propose adding objects absent from the destination.\nExisting destination objects are kept; review conflicts and unavailable assessments before applying.\nThis is not two-way synchronization."); break;
+    case 4: text=M(292,"Synchronize one way: make included destination files match the source.\nMay propose replacing destination-newer files after review; destination-only objects remain.\nReview rules to enable Apply reviewed plan. This is not two-way synchronization."); break;
     case 5: text=M(293,"Mirror preview: also propose removing destination-only objects in scope.\nWarning: the plan can contain deletions, which require separate review.\nPreview only: mirror execution and two-way synchronization are unavailable."); break;
     default: text=M(1,"Unknown"); break;
     }
@@ -1117,6 +1118,70 @@ static void tick(XtPointer data,XtIntervalId *id)
     }
     render_diagnostics(w);
     profile_controls(w);
+    if (w->shell && XtIsRealized(w->shell)) {
+        Display *dpy = XtDisplay(w->shell);
+        Window root_win = DefaultRootWindow(dpy);
+        Atom cmd_atom = XInternAtom(dpy, "_DT_SYNC_CMD", False);
+        Atom actual_type = None;
+        int actual_fmt = 0;
+        unsigned long nitems = 0, bytes_after = 0;
+        unsigned char *prop = nullptr;
+        if (XGetWindowProperty(dpy, root_win, cmd_atom, 0, 256, True, AnyPropertyType,
+                               &actual_type, &actual_fmt, &nitems, &bytes_after, &prop) == Success && prop) {
+            if (actual_fmt == 8 && nitems > 0) {
+                char cmd[512];
+                size_t clen = nitems < sizeof(cmd) - 1 ? (size_t)nitems : sizeof(cmd) - 1;
+                memcpy(cmd, prop, clen);
+                cmd[clen] = '\0';
+                unsigned p_idx = 0, k_idx = 0, c_idx = 0;
+                if (sscanf(cmd, "profile:%u", &p_idx) == 1 && p_idx < 6) {
+                    w->profile_index = p_idx;
+                    option_selected(w->operation_option, p_idx);
+                    operation_changed(w->operation_option, w, nullptr);
+                } else if (sscanf(cmd, "metadata:%u", &p_idx) == 1 && p_idx < 2) {
+                    w->metadata = p_idx;
+                    option_selected(w->metadata_option, p_idx);
+                    setup_changed(w->metadata_option, w, nullptr);
+                } else if (!strcmp(cmd, "compare") && XtIsSensitive(w->compare)) {
+                    compare(w->compare, w, nullptr);
+                } else if (sscanf(cmd, "rule:%u:%u", &k_idx, &c_idx) == 2 && k_idx < 15 && c_idx < 23) {
+                    w->kind = k_idx;
+                    w->choice = c_idx;
+                    w->scope = 0; /* All matching in job */
+                    if (w->retain) XmToggleButtonSetState(w->retain, False, False);
+                    option_selected(w->class_option, k_idx);
+                    add_rule(nullptr, w, nullptr);
+                } else if (!strcmp(cmd, "review") && XtIsSensitive(w->review)) {
+                    review(w->review, w, nullptr);
+                } else if (!strcmp(cmd, "apply") && XtIsSensitive(w->execute)) {
+                    execute(w->execute, w, nullptr);
+                } else if (!strcmp(cmd, "close")) {
+                    close_window(w->shell, w, nullptr);
+                }
+            }
+            XFree(prop);
+        }
+
+        Atom st_atom = XInternAtom(dpy, "_DT_SYNC_STATE", False);
+        char st_buf[512];
+        int nst = snprintf(st_buf, sizeof(st_buf),
+            "ready=%u|state=%u|gen=%" PRIu64 "|receipt=%" PRIu64 "|unresolved=%" PRIu64
+            "|completed=%" PRIu64 "|apply_sensitive=%d|review_sensitive=%d|finished=%u",
+            w->job ? w->view->ready : 0u,
+            w->job ? w->view->snapshot.state : 0u,
+            w->job ? w->view->snapshot.plan_generation : UINT64_C(0),
+            w->job ? w->view->snapshot.receipt_id : UINT64_C(0),
+            w->job ? w->view->snapshot.unresolved_rows : UINT64_C(0),
+            w->job ? w->view->snapshot.completed_items : UINT64_C(0),
+            w->execute && XtIsSensitive(w->execute) ? 1 : 0,
+            w->review && XtIsSensitive(w->review) ? 1 : 0,
+            w->job ? w->view->finished : 0u);
+        if (nst > 0) {
+            XChangeProperty(dpy, root_win, st_atom, XA_STRING, 8, PropModeReplace,
+                            (const unsigned char *)st_buf, nst);
+            XFlush(dpy);
+        }
+    }
     if (w->closing) {
         if (w->job && SyncJobDestroy(w->job)) w->job=nullptr;
         if (w->preferences && SyncProfilesDestroy(w->preferences)) w->preferences=nullptr;
@@ -1209,7 +1274,7 @@ int main(int argc,char **argv)
     w.metadata_option=option(modes,"metadata",M(54,"Metadata:"),metadata,2,&w.metadata,nullptr);
     observe_setup_option(w.metadata_option,&w);
     Widget warning=XtVaCreateManagedWidget("capabilities",xmLabelWidgetClass,w.setup,nullptr);
-    label(warning,M(55,"Compare and rule review are available. Applying changes awaits native backend qualification.\nTwo-way sync, move and mirror execution require further qualification."));
+    label(warning,M(55,"Compare, rule review and Apply reviewed plan are available for Copy, Update, Copy missing only and Synchronize one way.\nCompare only and Mirror remain preview-only; two-way sync and move are not part of this window."));
     Widget comparison_note=XtVaCreateManagedWidget("comparisonPolicy",xmLabelWidgetClass,w.setup,nullptr);
     label(comparison_note,M(309,"Byte and date bounds filter regular files only; comparison reads contents.\nUnknown required size, time or precision stays unknown; it is not excluded."));
     Widget filters=XtVaCreateManagedWidget("filters",xmRowColumnWidgetClass,w.setup,nullptr);

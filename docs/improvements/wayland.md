@@ -408,6 +408,30 @@ file-manager services across both `CDE (Wayland)` and `CDE (X11 / XLibre)` (see
   directions via `inotify`; and serves `org.freedesktop.FileManager1`
   (`ShowFolders`, `ShowItems`, `ShowItemProperties`).
 
+## `dtfile` browser ergonomics: tabs, streaming search, clipboard, undo, and folder sync `Apply` (`WP-17`)
+
+`dtfile` and `dtfile_sync` add multi-tab navigation, cancellable streaming
+search, standard file clipboard interop, session undo, and reviewed one-way
+folder synchronization across both `CDE (Wayland)` and `CDE (X11 / XLibre)` (see
+[File Manager improvements](file-manager.md) and
+[Compare and synchronize folders](folder-comparison.md)):
+
+- **Multi-tab browsing & navigation shortcuts (`BrowserErgonomics.c`):** Adds
+  `Ctrl+T` / `Ctrl+W` / `Ctrl+Tab` / `Ctrl+Shift+Tab`, middle-click folder icon
+  and right-click **Open in New Tab**, per-tab Back/Forward (`Alt+Left` /
+  `Button8`, `Alt+Right` / `Button9`), `Alt+Up`, `F2` inline rename, and `Ctrl+H`
+  hidden-files toggle.
+- **Cancellable in-window search (`Ctrl+F` + `ck_fs_search.h`):** Streams
+  substring/glob filename and regular-file content matches (with size and
+  modified-date filters) into `dtfile` with **Stop**, **Open**, and **Reveal in
+  Folder**.
+- **Cross-toolkit file clipboard (`Ctrl+C/X/V`), 64-entry Undo (`Ctrl+Z`) &
+  `dtfile_sync` `Apply`:** Publishes and consumes `x-special/gnome-copied-files`
+  and `text/uri-list` across native Wayland (`zwlr_data_control_v1` /
+  `wl_data_device`) and X11 `CLIPBOARD` peers, reverses Rename/Move/Copy/Trash
+  via `Ctrl+Z`, and enables **Apply reviewed plan** in `dtfile_sync`
+  (`check-dtwm-wayland-wp17.py`).
+
 ## Readiness reporting, Ubuntu LTS APT packaging, and automated qualification
 
 Passing `--status-file PATH` writes `WAYLAND_DISPLAY`, `DISPLAY`, and `PID`

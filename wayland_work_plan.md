@@ -198,7 +198,7 @@ flowchart TD
   - **Built-in Archive Actions, Shared Thumbnails, Live XDG Trash & `FileManager1`:** Add *Extract Here*, *Extract To...*, and *Compress...* actions for `.zip`, `.tar.gz`, `.tar.xz`, `.tar.zst`, and `.7z`; read shared `~/.cache/thumbnails/{normal,large}` previews for PDFs/videos/SVGs; upgrade `~/.local/share/Trash` integration from one-way startup import to live bidirectional `inotify` + per-mount `.Trash-$UID` support; and register D-Bus `org.freedesktop.FileManager1` (`ShowFolders`, `ShowItems`, `ShowItemProperties`) so browser *"Show in Folder"* focuses `dtfile` and selects the target file.
 - **Parallel Wayland + X11 Acceptance Gate**: Parallel Wayland and X11 `dtfile` integration tests verify mocked `UDisks2` mount/LUKS/eject workflows, `FileManager1.ShowItems` window raise + icon highlight, archive extract/compress with adversarial filenames, and live bidirectional XDG Trash updates.
 
-### [ ] WP-17 — `dtfile` Browser Ergonomics: Tabs (`Ctrl+T`), Live Search (`Ctrl+F`), Clipboard (`Ctrl+C/X/V`), Undo (`Ctrl+Z`) & Folder Sync Apply
+### [x] WP-17 — `dtfile` Browser Ergonomics: Tabs (`Ctrl+T`), Live Search (`Ctrl+F`), Clipboard (`Ctrl+C/X/V`), Undo (`Ctrl+Z`) & Folder Sync Apply
 - **Closes**: `GAP-FILES-04`
 - **Repos**: `ck-core-cde` (`cde/programs/dtfile/`), `ck-core-fs-lib`
 - **Dual Wayland + X11 Scope** *(shared Motif + dual X11/Wayland clipboard interop)*:

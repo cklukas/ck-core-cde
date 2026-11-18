@@ -1,30 +1,36 @@
 ---
-title: Compare folders
-description: Use the optional read-only folder comparison window, matching rules and saved preferences.
+title: Compare and synchronize folders
+description: Use the optional folder comparison and reviewed one-way synchronization window, matching rules and saved preferences.
 ---
 
-# Compare folders
+# Compare and synchronize folders
 
 The optional **File → Synchronize Folders...** command opens a native comparison
-window. It inventories two folders, shows their differences and evaluates
-matching rules. **Apply reviewed plan is disabled in the current build.** The
-helper does not copy, replace, move or delete either folder's contents. Two-way
-reconciliation and mirror execution are not delivered.
+and reviewed execution window (`dtfile_sync`). It inventories two folders, shows
+their differences, evaluates matching rules, and—for **Copy**, **Update: protect
+destination-newer**, **Copy missing only**, and **Synchronize one way**—executes
+the reviewed transactional plan through `ck-core-fs-lib` (`ckfet_execute_v1`)
+when you select **Apply reviewed plan**. **Compare only** and **Mirror** remain
+read-only preview modes; two-way reconciliation and mirror execution are not
+enabled.
 
 The ordinary File Manager **Copy to...** and **Move to...** commands continue to
-perform file operations through the existing copy/move helper. Choosing **Copy**
-in this comparison window selects a proposed policy; it does not run that legacy
-copy command.
+perform file operations through the existing copy/move helper. Choosing a
+mutating profile in `dtfile_sync` requires completing comparison, resolving any
+pending conflicts via **Review rules** to obtain a fresh plan receipt, and
+explicitly clicking **Apply reviewed plan**.
 
 ![Native comparison retains row details after a rejected rule review](../images/dtfile-folder-comparison.png)
 
-A rejected rule review leaves the comparison and row details available.
-Apply remains disabled.
+A rejected rule review leaves the comparison and row details available while
+keeping **Apply reviewed plan** insensitive until every row has a valid reviewed
+decision and receipt.
 
 ## Enable the optional helper
 
 The default CDE build has no filesystem-library dependency and does not include
-this command. To build `dtfile_sync`, install **ck-core-fs-lib 0.3 or newer**, point
+this command. To build `dtfile_sync` and in-window `dtfile` streaming search,
+install **ck-core-fs-lib 0.5 or newer**, point
 pkg-config at that installation and configure CDE with `--with-ck-core-fs`:
 
 ```sh
@@ -46,7 +52,7 @@ after exec, before locale/catalog, display or worker initialization, so File
 Manager's cache and IPC descriptors do not remain open in the helper. Configure
 link-checks `closefrom` together with the required tree API. An explicit request
 fails if these capabilities or the library/version are unavailable; a version
-label alone is insufficient. Enabling the helper does not enable Apply.
+label alone is insufficient.
 
 Changing this configure option updates a private generated menu header. An
 incremental build automatically rebuilds the affected File Manager menu; a
@@ -66,11 +72,13 @@ the actual screen so the bottom action buttons remain visible.
    without moving either folder or changing the selected policy. Folder names
    retain their original native bytes when swapped, including escaped names
    selected through Browse or loaded from a saved profile.
-3. Keep **Compare only**, or choose a policy to inspect its proposed plan.
-   **Copy**, **Update: protect destination-newer**, **Copy missing only**,
-   **Synchronize one way** and **Mirror** are preview modes here. Even proposed
-   mirror removals are never executed. The explanation below the operation menu
-   describes the selected policy and its direction before you compare.
+3. Keep **Compare only**, or choose a policy to inspect or apply its reviewed
+   plan. **Copy**, **Update: protect destination-newer**, **Copy missing only**,
+   and **Synchronize one way** can be executed via **Apply reviewed plan** once
+   all conflicts are resolved and a current review receipt is issued; **Mirror**
+   remains preview-only and proposed mirror removals are never executed. The
+   explanation below the operation menu describes the selected policy and its
+   direction before you compare.
 4. Choose the metadata scope and optional byte/date bounds, then select
    **Compare folders**. **Clear filters** removes the four byte/date bounds
    while keeping the folders, operation, metadata scope and matching rules.

@@ -174,6 +174,7 @@
 #include "Thumbnails.h"
 #include "Archive.h"
 #include "Devices.h"
+#include "BrowserErgonomics.h"
 #include "DtSvcInternal.h"
 
 #include <stdarg.h>
@@ -1999,11 +2000,23 @@ Create(
    /*  set the scrollbars colors correctly.                      */
 
    n = 0;
+   XtSetArg (args[n], XmNmarginWidth, 0);                       n++;
+   XtSetArg (args[n], XmNmarginHeight, 0);                      n++;
+   XtSetArg (args[n], XmNshadowThickness, 0);                   n++;
+   file_mgr_rec->work_area_form =
+      XmCreateForm (work_frame, "work_area_form", args, n);
+   XtManageChild (file_mgr_rec->work_area_form);
+
+   n = 0;
    XtSetArg (args[n], XmNspacing, 2);                           n++;
    XtSetArg (args[n], XmNscrollingPolicy, XmAUTOMATIC);         n++;
    XtSetArg (args[n], XmNscrollBarDisplayPolicy, XmAS_NEEDED);  n++;
+   XtSetArg (args[n], XmNtopAttachment, XmATTACH_FORM);         n++;
+   XtSetArg (args[n], XmNbottomAttachment, XmATTACH_FORM);      n++;
+   XtSetArg (args[n], XmNleftAttachment, XmATTACH_FORM);        n++;
+   XtSetArg (args[n], XmNrightAttachment, XmATTACH_FORM);       n++;
    file_mgr_rec->scroll_window =
-      XmCreateScrolledWindow (work_frame, "scroll_window", args, n);
+      XmCreateScrolledWindow (file_mgr_rec->work_area_form, "scroll_window", args, n);
    XtManageChild (file_mgr_rec->scroll_window);
    if(TrashView)
       XtAddCallback(file_mgr_rec->scroll_window, XmNhelpCallback,
@@ -2058,6 +2071,8 @@ Create(
                     FMAction,
                     XtNumber(FMAction));
    XtManageChild (file_mgr_rec->file_window);
+
+   DtfileErgonomicsAttachWindow (file_mgr_rec, TrashView);
 
    XtManageChild (file_mgr_rec->header_frame);
 
@@ -3134,6 +3149,8 @@ SetValues(
                      nullptr, 0);
    }
 
+   if (!TrashView)
+      DtfileErgonomicsBindView(file_mgr_rec, file_mgr_data);
 }
 
 
@@ -3286,6 +3303,8 @@ FreeValues(
       return;
 
    file_mgr_rec = (FileMgrRec *) file_mgr_data->file_mgr_rec;
+
+   DtfileErgonomicsUnbindView (file_mgr_rec, file_mgr_data);
 
    FreeDirectoryData (file_mgr_data);
 
@@ -7045,6 +7064,8 @@ UpdateHeaders(
 
    if (file_mgr_data->show_status_line)
       UpdateStatusLine(file_mgr_rec, file_mgr_data);
+
+   DtfileErgonomicsSyncHeaderLayout(file_mgr_rec, file_mgr_data);
 }
 
 
@@ -7210,6 +7231,8 @@ ShowNewDirectory(
    if (openDirType == NEW)
       ForceMyIconOpen (file_mgr_data->host, nullptr);
    XmDropSiteEndUpdate(file_mgr_rec->file_window);
+
+   DtfileErgonomicsOnDirectoryShown(file_mgr_data);
 }
 
 
@@ -10268,6 +10291,17 @@ CreateFmPopup (Widget w)
                                  HelpRequestCB,
                                  HELP_POPUP_MENU_STR);
 
+   XmStringFree (label_string);
+
+   /* Create 'Open in New Tab' option -- object popup */
+   label_string = XmStringCreateLocalized ("Open in New Tab");
+   XtSetArg (args[0], XmNlabelString, label_string);
+   XtSetArg (args[1], XmNmnemonic, 'N');
+   fileMgrPopup.objPopup[BTN_OPEN_NEW_TAB] = popupBtns[i] =
+          XmCreatePushButtonGadget (fileMgrPopup.menu, "openNewTabPopup", args, 2);
+   XtAddCallback (popupBtns[i++], XmNhelpCallback,
+                                 HelpRequestCB,
+                                 HELP_POPUP_MENU_STR);
    XmStringFree (label_string);
 
    /* Create 'Help' option -- object popup */

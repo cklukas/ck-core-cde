@@ -215,6 +215,10 @@ typedef struct
 } FileOpCBData;
 
 
+/* Optional WP-17 Undo journal hooks bound by ClipboardUndo.c at startup */
+void (*DtfileUndoRenameNotify)(const char *old_path, const char *new_path) = nullptr;
+void (*DtfileUndoTransferNotify)(int mode, const char *src_path, const char *dst_path) = nullptr;
+
 /* callback data for file rename */
 typedef struct
 {
@@ -2004,6 +2008,30 @@ FileOpPipeCB(
                                   cb_data->updates[i].directory,
                                   cb_data->updates[i].file);
          }
+         if (DtfileUndoTransferNotify != nullptr &&
+             cb_data->directory != nullptr &&
+             cb_data->directory[0] == '/' &&
+             target_file != nullptr &&
+             (cb_data->mode == MOVE_FILE || cb_data->mode == COPY_FILE))
+         {
+            char dst_full[MAX_PATH];
+            char src_full[MAX_PATH];
+            snprintf(dst_full, sizeof(dst_full), "%s/%s",
+                     strcmp(cb_data->directory, "/") == 0 ? "" : cb_data->directory,
+                     target_file);
+            if (cb_data->updates[i].directory != nullptr &&
+                cb_data->updates[i].file != nullptr)
+            {
+               snprintf(src_full, sizeof(src_full), "%s/%s",
+                        strcmp(cb_data->updates[i].directory, "/") == 0 ? "" : cb_data->updates[i].directory,
+                        cb_data->updates[i].file);
+               DtfileUndoTransferNotify(cb_data->mode, src_full, dst_full);
+            }
+            else
+            {
+               DtfileUndoTransferNotify(cb_data->mode, nullptr, dst_full);
+            }
+         }
          cb_data->updates[i].operationStatus = True;
 	 XtFree(target_file); target_file = nullptr;
          break;
@@ -2869,6 +2897,23 @@ ChangeIconPipeCB(
          {
             SaveDesktopInfo(NORMAL_RESTORE);
             CheckDesktop();
+         }
+
+         if (DtfileUndoRenameNotify != nullptr &&
+             cb_data->directory_name != nullptr &&
+             cb_data->directory_name[0] == '/' &&
+             cb_data->old_name != nullptr &&
+             cb_data->new_name != nullptr)
+         {
+            char old_full[MAX_PATH];
+            char new_full[MAX_PATH];
+            snprintf(old_full, sizeof(old_full), "%s/%s",
+                     strcmp(cb_data->directory_name, "/") == 0 ? "" : cb_data->directory_name,
+                     cb_data->old_name);
+            snprintf(new_full, sizeof(new_full), "%s/%s",
+                     strcmp(cb_data->directory_name, "/") == 0 ? "" : cb_data->directory_name,
+                     cb_data->new_name);
+            DtfileUndoRenameNotify(old_full, new_full);
          }
 
          XtFree(full_name);

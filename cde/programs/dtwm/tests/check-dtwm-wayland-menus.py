@@ -577,7 +577,7 @@ def main() -> int:
 
             fmenu = wait_for("File pulldown menu after stuck BTN_RIGHT auto-heal", 5.0, get_file_menu)
             go_up_x = fmenu["x"] + min(60, fmenu["w"] // 2)
-            go_up_y = fmenu["y"] + int(fmenu["h"] * 0.31)
+            go_up_y = fmenu["y"] + int(fmenu["h"] * 0.36)
             vptr.cmd(f"click {go_up_x} {go_up_y} {ext_w} {ext_h} left")
 
             def navigated_to(suffix: str):
@@ -642,7 +642,7 @@ def main() -> int:
                     f"Menu clamped to stale screen bounds! dtfile={win!r}, fileMenu={fmenu!r}"
                 )
             go_up_x = fmenu["x"] + min(60, fmenu["w"] // 2)
-            go_up_y = fmenu["y"] + int(fmenu["h"] * 0.31)
+            go_up_y = fmenu["y"] + int(fmenu["h"] * 0.36)
             vptr.cmd(f"click {go_up_x} {go_up_y} {ext_w} {ext_h} left")
             win = wait_for("dtfile two-click navigation leaf1 -> sub1", 6.0, lambda: navigated_to("sub1"))
 
@@ -651,7 +651,7 @@ def main() -> int:
             file_x = win["x"] + 24
             file_y = win["y"] + 14
             go_home_x = fmenu["x"] + min(60, fmenu["w"] // 2)
-            go_home_y = (win["y"] + (fmenu["y"] - win["y"])) + int(fmenu["h"] * 0.23)
+            go_home_y = (win["y"] + (fmenu["y"] - win["y"])) + int(fmenu["h"] * 0.30)
             vptr.cmd(
                 f"drag {file_x} {file_y} {go_home_x} {go_home_y} {ext_w} {ext_h} left"
             )

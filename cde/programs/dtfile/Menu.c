@@ -107,15 +107,17 @@
 #include "OpenWith.h"
 #include "Archive.h"
 #include "Devices.h"
+#include "ClipboardUndo.h"
+#include "BrowserErgonomics.h"
 
 #include <stdarg.h>
 
 #define INDICATOR_TIME 12
 
 #if defined(ADD_SHOW_TRASH)
-static int menuItemCount = 61;
+static int menuItemCount = 69;
 #else
-static int menuItemCount = 60;
+static int menuItemCount = 68;
 #endif
 #if DTFILE_SYNC_FEATURE_ENABLED
 static Widget * synchronizeFoldersBtn = nullptr;
@@ -251,6 +253,20 @@ CreateMenu(
       mainMenu[j].name = "newFile";
       mainMenu[j++].activateCallback = ShowMakeFileDialog;
 
+      mainMenu[j].type = MENU_BUTTON;
+      mainMenu[j].label = XtNewString("New Tab");
+      mainMenu[j].mnemonic = XtNewString("T");
+      mainMenu[j].helpData = HELP_FILE_MENU_STR;
+      mainMenu[j].name = "newTab";
+      mainMenu[j++].activateCallback = DtfileNewTabMenuCB;
+
+      mainMenu[j].type = MENU_BUTTON;
+      mainMenu[j].label = XtNewString("Close Tab");
+      mainMenu[j].mnemonic = XtNewString("b");
+      mainMenu[j].helpData = HELP_FILE_MENU_STR;
+      mainMenu[j].name = "closeTab";
+      mainMenu[j++].activateCallback = DtfileCloseTabMenuCB;
+
       mainMenu[j].type = MENU_SEPARATOR;
       mainMenu[j].name = "separator";
       mainMenu[j++].helpCallback = nullptr;
@@ -320,6 +336,13 @@ CreateMenu(
       mainMenu[j].helpData = HELP_FILE_MENU_STR;
       mainMenu[j].name = "find";
       mainMenu[j++].activateCallback = ShowFindDialog;
+
+      mainMenu[j].type = MENU_BUTTON;
+      mainMenu[j].label = XtNewString("Search in Window...");
+      mainMenu[j].mnemonic = XtNewString("W");
+      mainMenu[j].helpData = HELP_FILE_MENU_STR;
+      mainMenu[j].name = "searchInWindow";
+      mainMenu[j++].activateCallback = DtfileSearchWindowMenuCB;
 
       mainMenu[j].type = MENU_SEPARATOR;
       mainMenu[j].name = "separator";
@@ -394,6 +417,40 @@ CreateMenu(
       mainMenu[j].type = SHARED_MENU_PANE;
       mainMenu[j].name = "actionMenu";
       mainMenu[j++].helpData = HELP_SELECTED_MENU_STR;
+
+      mainMenu[j].type = MENU_BUTTON;
+      mainMenu[j].label = XtNewString("Undo");
+      mainMenu[j].mnemonic = XtNewString("U");
+      mainMenu[j].helpData = HELP_SELECTED_MENU_STR;
+      mainMenu[j].name = "undoAction";
+      mainMenu[j++].activateCallback = DtfileUndoMenuCB;
+
+      mainMenu[j].type = MENU_BUTTON;
+      mainMenu[j].maskBit = MOVE;
+      mainMenu[j].label = XtNewString("Cut");
+      mainMenu[j].mnemonic = XtNewString("t");
+      mainMenu[j].helpData = HELP_SELECTED_MENU_STR;
+      mainMenu[j].name = "cutSelection";
+      mainMenu[j++].activateCallback = DtfileCutMenuCB;
+
+      mainMenu[j].type = MENU_BUTTON;
+      mainMenu[j].maskBit = DUPLICATE;
+      mainMenu[j].label = XtNewString("Copy");
+      mainMenu[j].mnemonic = XtNewString("y");
+      mainMenu[j].helpData = HELP_SELECTED_MENU_STR;
+      mainMenu[j].name = "copySelection";
+      mainMenu[j++].activateCallback = DtfileCopyMenuCB;
+
+      mainMenu[j].type = MENU_BUTTON;
+      mainMenu[j].label = XtNewString("Paste");
+      mainMenu[j].mnemonic = XtNewString("a");
+      mainMenu[j].helpData = HELP_SELECTED_MENU_STR;
+      mainMenu[j].name = "pasteClipboard";
+      mainMenu[j++].activateCallback = DtfilePasteMenuCB;
+
+      mainMenu[j].type = MENU_SEPARATOR;
+      mainMenu[j].name = "separator";
+      mainMenu[j++].helpCallback = nullptr;
 
       mainMenu[j].type = MENU_BUTTON;
       mainMenu[j].maskBit = OPEN_WITH;
@@ -1194,6 +1251,24 @@ TrashFiles(
       _DtBuildActionArgsWithSelectedFiles(file_mgr_data->selection_list,
                                           file_mgr_data->selected_file_count,
                                           &action_args, &arg_count);
+
+   if (arg_count > 0 && action_args != nullptr)
+   {
+      const char **orig_paths =
+         (const char **)XtCalloc((Cardinal)arg_count, sizeof(const char *));
+      int valid_cnt = 0;
+      for (i = 0; i < arg_count; i++)
+      {
+         if (action_args[i].argClass == DtACTION_FILE &&
+             action_args[i].u.file.name != nullptr)
+         {
+            orig_paths[valid_cnt++] = action_args[i].u.file.name;
+         }
+      }
+      if (valid_cnt > 0)
+         DtfileUndoRecordTrashBatch(orig_paths, valid_cnt);
+      XtFree((char *)orig_paths);
+   }
 
    DtActionInvoke(file_mgr_rec->shell, TRASH_ACTION,
                   action_args, arg_count, nullptr, nullptr,

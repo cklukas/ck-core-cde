@@ -352,6 +352,10 @@ typedef struct
    Widget current_directory;
    Widget current_directory_text;
    Widget status_line;
+   Widget work_area_form;
+   Widget tab_bar_form;
+   Widget search_bar_form;
+   Widget search_results_form;
    Widget scroll_window;
    Widget horizontal_scroll_bar;
    Widget vertical_scroll_bar;
@@ -378,7 +382,7 @@ typedef struct
    Widget menu;
    Widget title;
    Widget wsPopup[6];
-   Widget objPopup[11];
+   Widget objPopup[12];
    Widget trash_objPopup[2];
    Widget action_separator;
 } FileMgrPopup;
@@ -479,12 +483,12 @@ typedef struct
 
 
 
-#define FM_POPUP_CHILDREN    22
-#define FM_POPUP_CHILDREN_NA 21
+#define FM_POPUP_CHILDREN    23
+#define FM_POPUP_CHILDREN_NA 22
 
 #define WS_BTNS              6
-#define OBJ_BTNS             11
-#define OBJ_BTNS_NA          10
+#define OBJ_BTNS             12
+#define OBJ_BTNS_NA          11
 #define TRASH_OBJ_BTNS       2
 
 #define BTN_PROPERTIES       0
@@ -505,7 +509,8 @@ typedef struct
 #define BTN_PUTON            6
 #define BTN_TRASH            7
 #define BTN_ADD_TO_SHELF     8
-#define BTN_HELP             9
+#define BTN_OPEN_NEW_TAB     9
+#define BTN_HELP             10
 
 /* trash object buttons */
 #define BTN_RESTORE          0

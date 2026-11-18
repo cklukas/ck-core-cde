@@ -222,6 +222,7 @@
 #include "StorageSize.h"
 #include "OpenWith.h"
 #include "Archive.h"
+#include "BrowserErgonomics.h"
 #include "Thumbnails.h"
 #include "IconicPath.h"
 
@@ -5013,6 +5014,10 @@ FmPopup (
                          XmNactivateCallback, AddToShelfPopupCB,
                          (XtPointer) fileViewData);
 
+           XtRemoveAllCallbacks(fileMgrPopup.objPopup[BTN_OPEN_NEW_TAB],
+                                XmNactivateCallback);
+           XtSetSensitive(fileMgrPopup.objPopup[BTN_OPEN_NEW_TAB], False);
+
            if( file_mgr_data->toolbox && geteuid() != root_user &&
                    access(file_mgr_data->current_directory,W_OK|X_OK) != 0)
              XtSetSensitive(fileMgrPopup.objPopup[BTN_TRASH], False);
@@ -5148,6 +5153,23 @@ FmPopup (
             XtAddCallback(fileMgrPopup.objPopup[BTN_ADD_TO_SHELF],
                  XmNactivateCallback, AddToShelfPopupCB,
                  (XtPointer) fileViewData);
+
+            XtRemoveAllCallbacks(fileMgrPopup.objPopup[BTN_OPEN_NEW_TAB],
+                                 XmNactivateCallback);
+            if (!file_mgr_data->toolbox &&
+                (fileViewData->file_data->physical_type == DtDIRECTORY ||
+                 fileViewData->file_data->is_subdir) &&
+                strcmp(fileViewData->file_data->file_name, ".") != 0)
+            {
+               XtAddCallback(fileMgrPopup.objPopup[BTN_OPEN_NEW_TAB],
+                             XmNactivateCallback, DtfileOpenNewTabPopupCB,
+                             (XtPointer) fileViewData);
+               XtSetSensitive(fileMgrPopup.objPopup[BTN_OPEN_NEW_TAB], True);
+            }
+            else
+            {
+               XtSetSensitive(fileMgrPopup.objPopup[BTN_OPEN_NEW_TAB], False);
+            }
 
            if ( file_mgr_data->toolbox && geteuid() != root_user &&
                    access(file_mgr_data->current_directory,W_OK|X_OK) != 0 )
@@ -7928,6 +7950,7 @@ DisplayWorkProc(
       file_mgr_data->newSize = False;
       layout_data->work_id = 0;
       XmDropSiteEndUpdate(layout_data->drop_site_w);
+      DtfileErgonomicsOnIconsLaidOut(file_mgr_data);
 
       DPRINTF(("DisplayWorkProc: all done.\n"));
 

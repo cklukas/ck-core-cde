@@ -6,6 +6,7 @@
 #endif
 #include "SyncJob.h"
 #include "SyncPrivateStorage.h"
+#include <ck_fs_diagnostics.h>
 #include <pthread.h>
 #include <stdatomic.h>
 #include <stdio.h>
@@ -260,6 +261,7 @@ static void *worker(void *arg)
 {
     SyncJob *s=arg; SyncView *v=calloc(1,sizeof(*v));
     ckfe_engine *engine=nullptr; ckfe_entry *source=nullptr,*destination=nullptr;
+    ckfjr_root *journal_owner=nullptr;
     ckfet_job *job=nullptr; ckfe_error error; ckfe_error_init(&error);
     if (!v) {
         pthread_mutex_lock(&s->mutex); s->view.stopped=1; s->view.api=CKFE_API_OUT_OF_MEMORY;
@@ -289,9 +291,48 @@ static void *worker(void *arg)
             if (!v->error[0]) strcpy(v->error,"Cannot open private operation journal directory; check home ownership and permissions");
             goto done;
         }
+        ckfe_directory *home_dir=nullptr;
+        api=ckfe_directory_open_utf8(engine,s->home,0,&home_dir,&error);
+        if (api!=CKFE_API_OK || !home_dir) {
+            if (api==CKFE_API_OK) api=CKFE_API_OPERATION_UNAVAILABLE;
+            goto failed;
+        }
+        ckfjr_options_v1 prep; ckfjr_options_init_v1(&prep);
+        prep.parent=home_dir;
+        prep.disposition=CKFJR_PROVISION_CHILD;
+        prep.child.encoding=CKFJR_POSIX_BYTES;
+        prep.child.data=".dtfile-operations";
+        prep.child.byte_count=strlen(".dtfile-operations");
+        api=ckfjr_start_v1(&prep,&journal_owner);
+        ckfe_directory_destroy(home_dir);
+        if (api!=CKFE_API_OK || !journal_owner) {
+            if (api==CKFE_API_OK) api=CKFE_API_OPERATION_UNAVAILABLE;
+            goto failed;
+        }
+        ckfjr_snapshot_v1 rsnap; ckfjr_snapshot_init_v1(&rsnap);
+        for (;;) {
+            if (atomic_load(&s->stop) || atomic_load(&s->cancel)) {
+                (void)ckfjr_cancel_v1(journal_owner);
+                goto cancelled;
+            }
+            api=ckfjr_poll_v1(journal_owner,&rsnap);
+            if (api!=CKFE_API_OK) goto failed;
+            if (rsnap.state!=CKFJR_PREPARING) break;
+            (void)ckfjr_wait_v1(journal_owner,50);
+        }
+        if (rsnap.state==CKFJR_CANCELLED) goto cancelled;
+        if (rsnap.state!=CKFJR_READY) {
+            ckfe_error re={rsnap.failure_state,rsnap.failure_domain,rsnap.failure_code,
+                           rsnap.failure_operation[0]?rsnap.failure_operation:nullptr};
+            v->snapshot.state=CKFET_FAILED;
+            failure(v,CKFE_API_OPERATION_UNAVAILABLE,&re);
+            goto done;
+        }
         options.journal_root=(ckfet_native){v->journal,strlen(v->journal),CKFET_POSIX_BYTES,0};
     }
-    api=ckfet_start_v1(source,destination,&options,&job,&error);
+    api=journal_owner
+        ? ckfet_start_with_journal_root_v1(source,destination,&options,journal_owner,&job,&error)
+        : ckfet_start_v1(source,destination,&options,&job,&error);
     if (api==CKFE_API_OK && !job) api=CKFE_API_OPERATION_UNAVAILABLE;
     if (api!=CKFE_API_OK || !job) goto failed;
     v->ready=1;
@@ -384,7 +425,12 @@ static void *worker(void *arg)
             pending=0; pending_serial=0; pending_kind=NO_COMMAND; refresh=1;
         }
         if (v->snapshot.failure_domain!=CKFE_ERROR_NONE && !v->error[0]) {
-            ckfe_error observed={v->snapshot.failure_state,v->snapshot.failure_domain,v->snapshot.failure_code,nullptr};
+            ckfet_failure_details_v1 det;
+            ckfet_failure_details_init_v1(&det);
+            char *op_tag = nullptr;
+            if (ckfet_get_failure_details_v1(job, &det) == CKFE_API_OK && det.has_failure && det.operation[0])
+                op_tag = det.operation;
+            ckfe_error observed={v->snapshot.failure_state,v->snapshot.failure_domain,v->snapshot.failure_code,op_tag};
             failure(v,CKFE_API_OPERATION_UNAVAILABLE,&observed);
             error_is_cache=0;
         }
@@ -426,7 +472,24 @@ cancelled:
 failed:
     v->snapshot.state=CKFET_FAILED; failure(v,api,&error);
 done:
-    if (job) ckfet_release(job);
+    if (job) {
+        ckfet_request_cancel(job);
+        for (unsigned ji=0; ji<600; ++ji) {
+            uint32_t jdrained=0;
+            if (ckfet_worker_drained_v1(job,&jdrained)!=CKFE_API_OK || jdrained) break;
+            struct timespec jts={0,20000000}; nanosleep(&jts,nullptr);
+        }
+        ckfet_release(job);
+    }
+    if (journal_owner) {
+        (void)ckfjr_finish_v1(journal_owner);
+        for (unsigned ri=0; ri<600; ++ri) {
+            uint32_t rdrained=0;
+            if (ckfjr_worker_drained_v1(journal_owner,&rdrained)!=CKFE_API_OK || rdrained) break;
+            (void)ckfjr_wait_v1(journal_owner,25);
+        }
+        ckfjr_release(journal_owner);
+    }
     ckfe_entry_destroy(destination); ckfe_entry_destroy(source); ckfe_engine_destroy(engine); ckfe_error_free(&error);
     v->finished=1; v->stopped=1; publish(s,v); free(v); return nullptr;
 }

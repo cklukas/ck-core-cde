@@ -28,12 +28,14 @@ EXTRA_DIST = tests/check-trash-writer.py tests/check-trash-metadata.py \
              tests/check-stop-signal.py tests/check-stop-signal.c \
              tests/check-access-ids.py tests/check-access-ids.c \
              tests/check-storage-size-hardlinks.py tests/check-storage-size-hardlinks.c \
+             tests/check-clipboard-undo.py \
              tests/check-archive-safety.py org.freedesktop.FileManager1.service.cpp
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-stop-signal.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-access-ids.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-storage-size-hardlinks.py
+	CC="$(CC)" PKG_CONFIG="$(PKG_CONFIG)" python3 $(srcdir)/tests/check-clipboard-undo.py --module-source "$(abs_srcdir)"
 	CC="$(CC)" PKG_CONFIG="$(PKG_CONFIG)" python3 $(srcdir)/tests/check-archive-safety.py --module-source "$(abs_srcdir)"
 	CC="$(CC)" python3 $(srcdir)/tests/check-trash-writer.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-trash-metadata.py
@@ -106,6 +108,11 @@ dtfile_LDADD = dtcopy/sharedFuncs.o \
 	$(DTCLIENTLIBS) $(TIRPCLIB) $(XTOOLLIB) \
 	-ldbus-1 -larchive
 
+if HAVE_CK_CORE_FS
+dtfile_CPPFLAGS += $(CK_CORE_FS_CFLAGS)
+dtfile_LDADD += $(CK_CORE_FS_LIBS)
+endif
+
 if OPENBSD
 dtfile_CPPFLAGS += -DFILE_MAP_OPTIMIZE
 endif
@@ -133,6 +140,7 @@ dtfile_SOURCES = ChangeDir.c     ChangeDirP.c    Command.c       Common.c \
 		 StorageSize.c   OpenWith.c      OpenWith.h \
 		 Thumbnails.c    Thumbnails.h    Archive.c       Archive.h \
 		 FileManagerService.c FileManagerService.h \
+		 ClipboardUndo.c ClipboardUndo.h BrowserErgonomics.c BrowserErgonomics.h \
 		 XdgTrashSync.c  XdgTrashSync.h  Devices.c       Devices.h
 
 # Mind the quoting here...

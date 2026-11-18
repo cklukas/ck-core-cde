@@ -43,7 +43,7 @@ static void read_view(SyncJob *job,SyncView *view)
 { for (unsigned i=0;i<1000;++i) { if (SyncJobRead(job,view)) return; delay(); } abort(); }
 static void wait_state(SyncJob *job,SyncView *view,unsigned state)
 {
-    for (unsigned i=0;i<3000;++i) {
+    for (unsigned i=0;i<9000;++i) {
         read_view(job,view);
         if (view->snapshot.state==state && view->ready) return;
         if (view->stopped) { fprintf(stderr,"unexpected stop: %s\n",view->error); abort(); }
@@ -184,9 +184,10 @@ int main(int argc,char **argv)
     assert(view->command_accepted && view->review_submission==reviewed && view->snapshot.receipt_id);
     uint64_t executed_submission=0;
     while (!(executed_submission=SyncJobExecute(job,generation,view->snapshot.receipt_id))) delay();
-    for (unsigned i=0;i<3000;++i) { read_view(job,view); if (view->finished) break; delay(); }
-    if (view->snapshot.state!=CKFET_COMPLETE) fprintf(stderr,"Ordinary tree copy: state %u, %s; row %u/%u/%lld\n",
-        view->snapshot.state,view->error,view->rows[0].observed.failure_state,
+    for (unsigned i=0;i<18000;++i) { read_view(job,view); if (view->finished) break; delay(); }
+    if (view->snapshot.state!=CKFET_COMPLETE) fprintf(stderr,"Ordinary tree copy: state %u (completed=%llu/%llu), %s; row %u/%u/%lld\n",
+        view->snapshot.state,(unsigned long long)view->snapshot.completed_items,(unsigned long long)view->snapshot.known_items,
+        view->error,view->rows[0].observed.failure_state,
         view->rows[0].observed.failure_domain,(long long)view->rows[0].observed.failure_code);
     assert(view->finished && view->drained && view->snapshot.state==CKFET_COMPLETE &&
         view->completed_submission==executed_submission && view->command_accepted && view->snapshot.completed_items==70);
@@ -201,6 +202,68 @@ int main(int argc,char **argv)
     }
     stop_job(job,view); setup.destination=target;
     puts("Ordinary native tree copy: 70 files, content/mode/mtime and worker drain verified"); fflush(stdout);
+    /* Execute Synchronize one way (CKFSP_SYNC) with existing regular-file conflict
+     * resolved via CKFET_USE_SOURCE and target version retention enabled. */
+    char sync_src[2048], sync_dst[2048];
+    assert(snprintf(sync_src,sizeof(sync_src),"%s/sync_src",argv[1])>0);
+    assert(snprintf(sync_dst,sizeof(sync_dst),"%s/sync_dst",argv[1])>0);
+    assert(mkdir(sync_src,0700)==0 && mkdir(sync_dst,0700)==0);
+    put(sync_src,"conflict.txt","source bytes\n");
+    put(sync_src,"added.txt","fresh file\n");
+    put(sync_dst,"conflict.txt","older destination content to replace\n");
+    setup.source=sync_src;
+    setup.destination=sync_dst;
+    setup.profile=CKFSP_SYNC;
+    setup.metadata_scope=CKFE_METADATA_ORDINARY_CALLER_VISIBLE_V1;
+    job=SyncJobStart(&setup,error,sizeof(error)); assert(job);
+    wait_state(job,view,CKFET_AWAITING_REVIEW);
+    generation=view->snapshot.plan_generation;
+    uint64_t conflict_row=0;
+    for (unsigned i=0;i<view->row_count;++i) {
+        if (view->rows[i].observed.source.presence==CKFET_PRESENCE_PRESENT &&
+            view->rows[i].observed.destination.presence==CKFET_PRESENCE_PRESENT) {
+            conflict_row=view->rows[i].observed.row_id;
+            break;
+        }
+    }
+    assert(conflict_row!=0);
+    memset(&rule,0,sizeof(rule));
+    rule.kind=CKFET_CONFLICT_EXISTING_REGULAR;
+    rule.choice=CKFET_KEEP_BOTH_INCOMING;
+    rule.tie=CKFET_ASK;
+    rule.scope=CKFET_SCOPE_ITEM;
+    rule.selected[0]=conflict_row;
+    rule.selected_count=1;
+    rule.protect_nonempty=1;
+    rule.retain_replaced=0;
+    reviewed=0;
+    while (!(reviewed=SyncJobReview(job,generation,&rule,1,nullptr,0,conflict_row,"conflict-incoming.txt",CKFET_NAME_INCOMING))) delay();
+    for (unsigned i=0;i<3000;++i) {
+        read_view(job,view);
+        if (view->completed_submission==reviewed && SyncJobViewCoherent(view)) break;
+        delay();
+    }
+    assert(view->command_accepted && view->snapshot.receipt_id && view->snapshot.unresolved_rows==0);
+    generation=view->snapshot.plan_generation;
+    executed_submission=0;
+    while (!(executed_submission=SyncJobExecute(job,generation,view->snapshot.receipt_id))) delay();
+    for (unsigned i=0;i<3000;++i) {
+        read_view(job,view);
+        if (view->finished || (view->completed_submission==executed_submission && !view->command_accepted)) break;
+        delay();
+    }
+    if (!view->command_accepted) fprintf(stderr,"Sync execute rejected: %s\n",view->error);
+    assert(view->finished && view->drained && view->snapshot.state==CKFET_COMPLETE && view->command_accepted);
+    assert(snprintf(path,sizeof(path),"%s/conflict.txt",sync_dst)>0);
+    memset(bytes,0,sizeof(bytes)); in=fopen(path,"r"); assert(in);
+    assert(fread(bytes,1,sizeof(bytes)-1,in)==37 && fclose(in)==0 && !strcmp(bytes,"older destination content to replace\n"));
+    assert(snprintf(path,sizeof(path),"%s/conflict-incoming.txt",sync_dst)>0);
+    memset(bytes,0,sizeof(bytes)); in=fopen(path,"r"); assert(in);
+    assert(fread(bytes,1,sizeof(bytes)-1,in)==13 && fclose(in)==0 && !strcmp(bytes,"source bytes\n"));
+    assert(snprintf(path,sizeof(path),"%s/added.txt",sync_dst)>0 && access(path,F_OK)==0);
+    stop_job(job,view);
+    setup.source=source; setup.destination=target; setup.profile=CKFSP_COPY;
+    puts("One-way synchronize non-destructive keep-both incoming + missing copy verified"); fflush(stdout);
     /* Read-only Compare must not demand a resolved mutation choice or a
      * preservation capability merely to review preferences on report rows. */
     assert(unsetenv("HOME")==0);

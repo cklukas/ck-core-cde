@@ -216,5 +216,46 @@ XLibre)`:
   `ShowItemProperties` (opening CDE's Permissions/Properties dialog), and
   `Hostname`.
 
+## Browser ergonomics: tabs, live search, file clipboard, and session undo (`WP-17`)
+
+`dtfile` supports everyday keyboard- and pointer-driven browser ergonomics across
+both `CDE (Wayland)` and `CDE (X11 / XLibre)` while preserving classic single-tab
+appearance when only one tab is open:
+
+- **Multi-tab browsing & navigation shortcuts (`BrowserErgonomics.c`):** Press
+  `Ctrl+T` (**File → New Tab**), middle-click (`Button2` click without drag) a
+  folder icon, or choose **Open in New Tab** from a folder's right-click menu to
+  open up to 16 tabs per window. The tab strip appears automatically whenever two
+  or more tabs are open, providing `<` / `>` Back/Forward buttons, active-tab
+  highlighting, per-tab `x` close buttons, and a `+` new-tab button. Cycle tabs
+  with `Ctrl+Tab` / `Ctrl+Page_Down` and `Ctrl+Shift+Tab` / `Ctrl+Page_Up`, close
+  the active tab with `Ctrl+W` (**File → Close Tab**), step through each tab's
+  64-entry navigation history with `Alt+Left` / `Button8` and `Alt+Right` /
+  `Button9`, ascend to the parent folder with `Alt+Up`, start inline fast-rename
+  with `F2`, and toggle dot-files with `Ctrl+H`.
+- **Asynchronous in-window search (`Ctrl+F`):** Press `Ctrl+F` (**File → Search
+  in Window...**) to open the collapsible two-row search bar without leaving the
+  active window. When built with `--with-ck-core-fs`, searches run on
+  `ck-core-fs-lib`'s cancellable `ckfes_*` worker (`ck_fs_search.h`), filtering
+  by filename substring or glob (`*`, `?`, `[...]`), regular-file text content
+  (skipping NUL-containing binary files), optional subfolder recursion and case
+  matching, minimum/maximum byte sizes (`K`/`M`/`G` suffixes supported), and
+  `YYYY-MM-DD` modified-date bounds. Matches stream live into the results list
+  with **Open**, **Open in New Tab**, **Reveal in Folder** (navigating to the
+  matched entry's parent folder and scrolling/selecting the icon), **Stop**, and
+  `Escape` dismissal.
+- **Cross-toolkit file clipboard (`Ctrl+C` / `Ctrl+X` / `Ctrl+V`):** **Selected →
+  Cut / Copy / Paste** and `Ctrl+X` / `Ctrl+C` / `Ctrl+V` (outside text fields)
+  publish and consume `x-special/gnome-copied-files`, `text/uri-list` (RFC-3986
+  `file://` URIs), and `UTF8_STRING` paths on `CLIPBOARD`, interoperating between
+  `dtfile` windows and native Wayland (`wl_data_device` /
+  `zwlr_data_control_v1`) or X11 GTK/Qt peers. Pasting copied items into their
+  source directory creates non-destructive `<stem> (copy)<ext>` duplicates.
+- **Bounded per-session undo journal (`Ctrl+Z`):** **Selected → Undo** (`Ctrl+Z`)
+  maintains a 64-entry per-session undo stack reversing **Rename**, **Move**,
+  **Copy** (moving newly created copies into XDG Trash rather than unlinking
+  permanently), and **Put in Trash** (restoring items and removing companion
+  `.trashinfo` records).
+
 The [desktop gallery](../desktop.md#file-manager) shows File Manager browsing
 the staged CDE installation.
