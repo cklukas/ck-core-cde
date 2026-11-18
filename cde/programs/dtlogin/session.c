@@ -172,6 +172,10 @@ char *globalDisplayName;
 extern char *progPath;	/* dtlogin path */
 extern char *progName;	/* dtlogin name */
 
+#ifdef DTLOGIN_WAYLAND_SEAT
+#include "wayland_seat.h"
+#endif
+
 /***************************************************************************
  *
  *  Local procedure declarations
@@ -585,6 +589,15 @@ ManageSession( struct display *d )
 	XCloseDisplay(dpy);
     }
 
+#ifdef DTLOGIN_WAYLAND_SEAT
+    if (d->isWaylandSeat) {
+	if (!DtloginHandoffWaylandSeat(d, &verify, progName)) {
+	    DtloginCleanupWaylandSeat(d);
+	    SessionExit(d, RESERVER_DISPLAY);
+	}
+    }
+#endif
+
 #ifdef __KERBEROS
     /*
      *  Generate Kerberos ticket file name. Put in system and user
@@ -643,10 +656,14 @@ ManageSession( struct display *d )
     /*
      * Run system-wide initialization file
      */
-    if (RunScript (&verify, d->startup, TRUE) != 0)
+    if (!(d->isWaylandSeat && d->waylandSessionActive) &&
+	RunScript (&verify, d->startup, TRUE) != 0)
     {
 	Debug ("Startup program %s exited with non-zero status\n",
 		d->startup);
+#ifdef DTLOGIN_WAYLAND_SEAT
+	DtloginCleanupWaylandSeat(d);
+#endif
 	SessionExit (d, OBEYSESS_DISPLAY);
     }
 
@@ -715,8 +732,10 @@ ManageSession( struct display *d )
     /*
      * run system-wide reset file
      */
-    Debug ("Source reset program %s\n", d->reset);
-    source (&verify, d->reset);
+    if (!(d->isWaylandSeat && d->waylandSessionActive)) {
+	Debug ("Source reset program %s\n", d->reset);
+	source (&verify, d->reset);
+    }
 
     char* user = getEnv (verify.userEnviron, "USER");
 
@@ -755,6 +774,13 @@ ManageSession( struct display *d )
 
 #if !defined(sun) && defined(HAS_PAM_LIBRARY)
     _DtSvcPamCloseSession(progName, user, d->name);
+#endif
+
+#ifdef DTLOGIN_WAYLAND_SEAT
+    if (d->isWaylandSeat) {
+	DtloginCleanupWaylandSeat (d);
+	SessionExit (d, RESERVER_DISPLAY);
+    }
 #endif
 
     SessionExit (d, OBEYSESS_DISPLAY);
@@ -844,6 +870,9 @@ LoadXloginResources( struct display *d )
 		resources);
 
 	LoadAltDtsResources(d); 
+#ifdef DTLOGIN_WAYLAND_SEAT
+	DtloginPopulateDesktopSessions(d, &XresourceDB);
+#endif
 
         strcpy(tmpname,"/var/dt/dtlogin_XXXXXX");
 	fd = mkstemp(tmpname);
@@ -1347,7 +1376,7 @@ SessionExit( struct display *d, int status )
         if (d->terminateServer == 0 && d->resetSignal)
 	    kill (d->serverPid, d->resetSignal);
     }
-    else
+    else if (!d->isWaylandSeat)
 	ResetServer (d);
 
     Debug("Exiting Session with status:  %d\n", status);
@@ -1498,6 +1527,9 @@ StartClient( struct verify_info *verify, struct display *d, int *pidp )
 
 #if !defined(sun) && defined(HAS_PAM_LIBRARY)
 	_DtSvcPamOpenSession(progName, user, d->name);
+#endif
+#ifdef DTLOGIN_WAYLAND_SEAT
+	DtloginSyncPamSessionEnv(d, verify);
 #endif
 
 #ifdef AIXV3
@@ -2102,6 +2134,12 @@ RunGreeter( struct display *d, struct greet_info *greet,
 
 	    if(session_set)
 		env = setEnv(env, SESSION_SET, "True");
+#ifdef DTLOGIN_WAYLAND_SEAT
+	    if (d->isWaylandSeat && d->defaultWaylandSession && d->defaultWaylandSession[0]) {
+		env = setEnv(env, SESSION, d->defaultWaylandSession);
+		env = setEnv(env, SESSION_SET, "True");
+	    }
+#endif
 
             if (d->pmSearchPath)
                 env = setEnv(env, "XMICONSEARCHPATH", d->pmSearchPath);

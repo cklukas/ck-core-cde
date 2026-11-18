@@ -52,6 +52,7 @@
 
 
 extern void ToggleDefaultControl (ControlData *, SubpanelData *, ControlData *);
+extern void WmFrontPanelSessionSaveData (void);
 extern void SwitchRenameLabel (Widget, BoxData *);
 extern Boolean CheckControlTypeFile (ControlData *);
 
@@ -512,6 +513,7 @@ ToggleControlCB (Widget    w,
 
     ToggleDefaultControl (subpanel_data->parent_control_data,
                           subpanel_data, control_data);
+    WmFrontPanelSessionSaveData ();
 }
 
 

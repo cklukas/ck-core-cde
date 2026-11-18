@@ -1,0 +1,15 @@
+{
+  "work_package": "WP-04",
+  "date": "2026-11-16",
+  "branch": "x11_wayland",
+  "motif_revision": "703101cea3db5f9fe5722c43bdb016d098d13804",
+  "fs_lib_revision": "39725163e43530b9ae35e9fed55f4fedb4d759b6",
+  "apps_revision": "fe10f0ee455fdf59fe922e8940e854a166ee07f3",
+  "artifacts": {
+    "dtwm-wayland_sha256": "137e6ab684cd741c3c239889074ab9b2b8a9f7f2d80abe7cda49e7e6676a5778"
+  },
+  "checks": [
+    "make -C programs/dtwm check (all 10 suites passed)",
+    "check-dtwm-wayland-icons.py: xdg-toplevel-icon-v1 emerald=2304px, XWayland root pointer=100,110 over Wayland foot, live dynamic icon frame hash f95378f299->a32e52832e, swallowed Front Panel ck-clock + 48->96px WM_ICON_SIZE verified"
+  ]
+}

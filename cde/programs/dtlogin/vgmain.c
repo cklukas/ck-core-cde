@@ -1290,8 +1290,13 @@ MakeDialog( DialogType dtype )
 
     case copyright:
 	if ((fp = fopen(COPYRIGHT,"r")) == nullptr)
-	    xmstr = XmStringCreate("Cannot open copyright file '/etc/copyright'.",
-				XmFONTLIST_DEFAULT_TAG);
+	    xmstr = XmStringCreateLocalized(
+		"CK-Core Common Desktop Environment 3.0.0\n"
+		"(c) Copyright 2025-2026 Dr. Christian Klukas\n"
+		"GitHub: https://github.com/cklukas/ck-core-cde\n\n"
+		"(c) Copyright 1993-2012 The Open Group\n"
+		"(c) Copyright 2012-2023 CDE Project contributors\n"
+		"Released under the GNU Lesser General Public License (LGPL).");
 	else {
 	    xmstr = (XmString) nullptr;
 	

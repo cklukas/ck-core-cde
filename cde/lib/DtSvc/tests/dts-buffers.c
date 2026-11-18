@@ -233,7 +233,7 @@ static void _DtSimpleError(char *program, int severity, char *help, char *format
 
 static char *DtStrchr(const char *s, int c)
 {
-	return strchr(s, c);
+	return (char *)strchr(s, c);
 }
 
 static int _is_previous_single(const char *start, const char *p)
@@ -245,7 +245,7 @@ static int _is_previous_single(const char *start, const char *p)
 
 static char *_dt_strpbrk(const char *s, const char *set)
 {
-	return strpbrk(s, set);
+	return (char *)strpbrk(s, set);
 }
 
 /* A database of a few records, built by the scenarios. */

@@ -58,6 +58,7 @@
 #include "WmWinList.h"
 #include "WmWinConf.h"
 #include "WmWrkspace.h"
+#include "UI.h"
 #include <X11/Xatom.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -574,6 +575,8 @@ void SetClientStateWithEventMask (ClientData *pCD, int newState, Time setTime, u
         }
 	break;
     }
+
+    WmFpUpdateTrashOpenIcon (DISPLAY);
 
 } /* END OF FUNCTION SetClientStateWithEventMask */
 

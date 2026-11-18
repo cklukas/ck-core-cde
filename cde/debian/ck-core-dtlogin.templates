@@ -1,0 +1,11 @@
+Template: shared/default-x-display-manager
+Type: select
+Choices: ${choices}
+Description: Default display manager:
+ A display manager presents the graphical login screen for Wayland and X11
+ sessions. Only one display manager can manage a given seat at a time.
+
+Template: ck-core-dtlogin/daemon_name
+Type: string
+Default: /usr/dt/bin/dtlogin
+Description: for internal use

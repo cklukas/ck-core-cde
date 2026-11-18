@@ -277,6 +277,9 @@ typedef struct
 
    char *special_msg;
    XtIntervalId msg_timer_id;
+   XtIntervalId resize_timer_id;
+   Dimension last_resize_w;
+   Dimension last_resize_h;
 
    Boolean       cd_inited;
    XFontStruct * cd_font;
@@ -334,6 +337,10 @@ typedef struct
    Widget shelf_separator;
    Widget shelf_popup;
    XtPointer shelf_popup_data;
+   Dimension shelf_row_height;
+   Dimension shelf_slot_width;
+   Dimension shelf_slot_height;
+   int shelf_icon_px;
    Widget header_separator;
    Widget iconic_path_da;
    Widget current_directory_frame;

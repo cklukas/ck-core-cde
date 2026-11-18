@@ -1,3 +1,466 @@
+2026-11-18
+- Integrate the CK-Core CDE 3.0.0 Wayland & X11 desktop stack onto `master` and
+  advance `.ckgit/motif-revision` and `.ckgit/ci.yml` to published CK Core Motif
+  ABI 9 `bd8043040a5257ac02a46c6ecf6cc711e9c099a0`.
+- Bump version to **CK-Core CDE 3.0.0** and update Help / Version / About
+  attribution across SDL help volumes and desktop dialogs (`cde/configure.ac`,
+  `cde/include/Dt/Dt.h.in`, `cde/doc/common/help/HELPEnt.sgm.in`,
+  `cde/doc/en_US.UTF-8/help/Help4Help/Help4Help.sgm`,
+  `cde/programs/dtcm/dtcm/about.c`, `cde/programs/dtlogin/vgmain.c`,
+  `cde/programs/dtlogin/dtchooser.c`, `scripts/build-ubuntu-debs.py`,
+  `docs/improvements/toolkit.md`):
+  - Advance `CDE_VERSION_MAJOR.MINOR.MICRO` to `3.0.0` (`DtVERSION_NUMBER`
+    `30000`, `DtVERSION_STRING` `"CK-Core CDE Version 3.0.0"`, Debian package
+    version `3.0.0-1`).
+  - Update `&CDEcopyright;` (`_copyright` Help -> Version / About topic across
+    all CDE applications), `Help4Help`, `dtcm`'s About dialog, and `dtlogin`'s
+    Copyright dialog to display **CK-Core Common Desktop Environment 3.0.0**,
+    `© Copyright 2025-2026 Dr. Christian Klukas`,
+    `https://github.com/cklukas/ck-core-cde`, and
+    `https://cklukas.github.io/ck-core-cde/` with clean line breaks alongside
+    the upstream Open Group, CDE Project, and GNU LGPL notices.
+- Persist `Style Manager - Window` settings across dialog reopens and implement
+  the interactive CDE **Icon Box** (`Dtwm*useIconBox`) on Wayland
+  (`cde/programs/dtstyle/Dtwm.c`, `cde/programs/dtwm/wayland/dtwm_wayland.h`,
+  `cde/programs/dtwm/wayland/cde_workspace.c`,
+  `cde/programs/dtwm/wayland/cde_icons.c`,
+  `cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `docs/improvements/wayland.md`):
+  - Read live `XA_RESOURCE_MANAGER` root-window resources (matching both `Dtwm`
+    and `dtwm` prefixes) in `Dtwm.c:getDtwmValues` and merge committed updates
+    into `XtDatabase(style.display)` so reopening `Style Manager - Window`
+    preserves every toggle and margin value instead of reverting to startup
+    defaults.
+  - Implement a movable, resizable, mouse-wheel-scrollable 3D-beveled CDE
+    **`Icons`** (**Icon Box**) window in `dtwm-wayland` (`Dtwm*useIconBox` /
+    `f.set_use_icon_box`) alongside `Dtwm*iconPlacementMargin` spacing for
+    workspace-placed icons, suppressing duplicate icons for unminimized
+    transient sub-dialogs.
+- Support double-click Window Menu close, menu-bar press-drag-release and
+  titlebar popup dismissal, commit-paced window resize coalescing, and `DtHelp`
+  mouse-wheel scrolling (`cde/programs/dtwm/wayland/dtwm_wayland.h`,
+  `cde/programs/dtwm/wayland/cde_workspace.c`,
+  `cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `cde/programs/dtfile/FileMgr.h`, `cde/programs/dtfile/FileMgr.c`,
+  `cde/programs/dtfile/IconWindow.c`, `cde/lib/DtHelp/XUICreate.c`,
+  `docs/improvements/wayland.md`):
+  - Close the target window when double-clicking the top-left Window Menu button
+    (`[ - ]`) within `multiClickTime` (`double_click_ms`), matching X11 `dtwm`.
+  - Keep Wayland pointer focus on the grabbed client surface while a mouse
+    button is held without an active `wl_data_device` drag so Motif menu-bar
+    press-drag-release (`File` -> `Selected` / `View` -> menu item -> release)
+    selects items cleanly across override-redirect `XmMenuShell` popups, and
+    dismiss open native `xdg_popup` and XWayland override-redirect menus when
+    clicking or dragging a server-side window title bar, frame border, desktop
+    background, or native Wayland window.
+  - Suppress unchanged geometry configures in `dtwm-wayland`, coalesce
+    interactive opaque-resize configures against client surface commits (with a
+    32 ms fallback flush and immediate release flush), and drain/coalesce
+    `ConfigureNotify` bursts in `dtfile` (`FileWindowResizeCallback`) so window
+    resizing settles without rubber-band redraw lag.
+  - Add mouse-wheel scrolling (`Button4`/`Button5`, `Ctrl+Wheel` page scroll,
+    and `Shift+Wheel` / `Button6`/`Button7` horizontal scroll) over `DtHelp`
+    topic and TOC display areas (`_DtHelpWheelScrollEH`).
+- Center Front Panel `TYPE client` controls without redundant outer borders and
+  keep embedded client slots responsive across restarts
+  (`cde/programs/dtwm/UI.c`, `cde/programs/dtwm/wayland/WmFpWayland.c`,
+  `cde/programs/dtwm/tests/check-dtwm-wayland-wp09.py`,
+  `docs/improvements/wayland.md`):
+  - Suppress the duplicate `XmSHADOW_ETCHED_OUT` frame on `CONTROL_CLIENT`
+    (`XmNshadowThickness = 0`, `XmNhighlightThickness = 0`, honoring
+    `XmNmarginWidth = margin_width`) and center embedded `TYPE client` windows
+    (such as the `74×54` `ck-status-gauge`) horizontally and vertically inside
+    their Front Panel control cell.
+  - Enforce centered `(x, y, width, height)` on child `ConfigureNotify` events
+    so self-configuring Motif shells cannot jump back to `(0, 0)`, and clear
+    `ecd->pCD` on `DestroyNotify` so restarted `TYPE client` applets re-embed
+    immediately.
+- Refine Front Panel default clock, workspace rename geometry, notification bell
+  icon, docked/torn-off subpanels, and open-Trash indicator across Wayland and
+  X11 (`cde/programs/dtwm/Callback.c`, `cde/programs/dtwm/UI.c`,
+  `cde/programs/dtwm/UI.h`, `cde/programs/dtwm/WmEvent.c`,
+  `cde/programs/dtwm/WmWinState.c`, `cde/programs/dtwm/wayland/WmFpWayland.c`,
+  `cde/programs/dtwm/wayland/cde_bevel.c`,
+  `cde/programs/dtwm/wayland/dtwm_wayland.h`,
+  `cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `cde/programs/dtfile/Trash.c`, `cde/programs/icons/Fpnotif*.pm`,
+  `scripts/build-ubuntu-debs.py`, `docs/improvements/wayland.md`):
+  - Keep the classic CDE analog `Clock` control as the default Front Panel clock
+    instead of overriding `CONTROL Clock` with `ckclock.fp` by default.
+  - Constrain the inline workspace-rename `XmTextField` (`SwitchRenameLabel`) to
+    the exact bounds, shadow thickness, margins, and color set of the active
+    workspace toggle button without overhanging neighboring buttons, and allow
+    first-click activation before `time_stamp` is initialized.
+  - Replace the flat white `Fpnotif` / `FpnotifA` triangles on the Workspace
+    Switch with period-correct 3D-shaded metallic CDE bell pixmaps matching
+    `Fplock`.
+  - Unmanage `subpanel_data->form` in `WmFpWayland.c:F_Kill` and on X11
+    `UnmapNotify` so `SubpanelUnmapCB` reliably resets closed subpanel arrows to
+    upward (`Fpup`) while open subpanels display downward (`Fpdown`), and open
+    subpanels docked and frameless above the Front Panel until dragged/torn off
+    into a titled tool window (`_DT_SUBPANEL_TORN_OFF`).
+  - Publish `_DT_TRASH_WINDOW` from `dtfile`'s Trash Can window and switch the
+    Front Panel `Trash` control icon to the open-lid `Fptrsh5` pixmap whenever
+    the Trash Can window is open and viewable.
+- Add desktop right-click **Workspace Menu** (`DtRootMenu`) across both Wayland
+  (`dtwm-wayland`) and X11 (`dtwm`) (`cde/programs/dtwm/wayland/cde_bevel.c`,
+  `cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `cde/programs/dtwm/wayland/dtwm_wayland.h`, `cde/programs/dtwm/WmResource.c`,
+  `cde/programs/dtwm/Makefile.am`,
+  `cde/programs/localized/C/config/sys.dtwmrc.tmsg`,
+  `cde/programs/types/miscActions.dt.src`, `cde/programs/dtstyle/Main.c`,
+  `docs/improvements/wayland.md`):
+  - Provide grouped 3D-beveled **Workspace Menu** items combining classic CDE
+    workspace controls with everyday desktop actions: *Open Terminal*, *Open
+    File Manager*, *Application Manager* (`Dtappmgr`), *Change Backdrop...*
+    (`DtstyleBackdrop` / `dtstyle -backdrop`), *Display Settings...*
+    (`DtstyleDisplay` / `dtstyle -monitors`), *Style Manager...* (raising an
+    existing `dtstyle` window when already running instead of reporting a lock
+    error), *Clean Up Icons*, *Shuffle Up*, *Shuffle Down*, *Minimize/Restore
+    Front Panel*, *Refresh*, *Lock Screen* (`LockDisplay`), and *Log Out...*
+    (`ExitSession`), supporting click-to-post, press-drag-release, output-edge
+    clamping, and `Up`/`Down`/`Enter`/`Esc` navigation.
+  - Stop `cde/programs/dtwm/Makefile.am` from installing the unmerged
+    `%|nls-...|` `sys.dtwmrc` template over `programs/localized/C/config`'s
+    merged `/usr/dt/config/C/sys.dtwmrc`.
+
+2026-11-17
+- Match `dtwm-wayland` titlebar Maximize, Minimize, and Window Menu button
+  glyph proportions to classic X11 `dtwm`
+  (`cde/programs/dtwm/wayland/cde_bevel.c`): size the Maximize button inner
+  bevel square to `th - 8` (`4px` inset from the button edges, matching
+  `WmCDecor.c:BevelMaximizeButton` instead of a fixed `10x10` box) and invert
+  the inner square when maximized, center a `4x4` Minimize bevel square
+  (`BevelMinimizeButton`), and use `4px` horizontal inset on the Window Menu
+  bar (`BevelSystemButton`).
+- Fix squashed/overlapping `Style Manager - Keyboard` (and sister `dtstyle`
+  dialogs) and wire live Wayland keyboard auto-repeat toggling
+  (`cde/programs/dtwm/wayland/dtwm_wayland.h`,
+  `cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `cde/programs/dtstyle/Keyboard.c`): honor `ev->mask` (`X`, `Y`, `WIDTH`,
+  `HEIGHT`) and preserve pending pre-map `ConfigureRequest` dimensions across
+  pipelined `XConfigureWindow` resize + `putDialog` move requests in
+  `xwayland_request_configure` / `xwayland_map` instead of overwriting the
+  client's requested size with stale initial X11 geometry, apply `Keyboard.c`
+  `XmForm` attachments prior to managing `keyboardForm`, clamp
+  `key_click_percent` to `[0, 100]`, and synchronize **Auto Repeat** live with
+  `_DT_WAYLAND_INPUT_STATE` / `f.set_key_repeat` on Wayland.
+- Fix missing `DTHELPSEARCHPATH` inheritance for ToolTalk-launched Help clients
+  (`dtpad -server`, etc.) and `XFontSet` / `wchar_t` bullet rendering (`•` ->
+  `·` instead of `â¢` or `"`) in `DtHelp` (`cde/lib/DtHelp/XInterface.c`,
+  `cde/programs/dtwm/wayland/WmFpWayland.c`,
+  `cde/programs/dtsession/SmWayland.c`): initialize `DTHELPSEARCHPATH` in
+  `dtwm-panel` and `dtsession --wayland` before spawning `ttsession`, preserve
+  `DT-SYMBOL-1` when Help font overrides are active, and normalize Unicode
+  general punctuation (`U+2013`–`U+2026`, mapping `U+2022` bullet to `U+00B7`
+  middle dot `·`) in both `XFontSet` (`XwcDrawString` / `XmbDrawString` /
+  `Xutf8DrawString` and text escapement) and `XFontStruct` paths when the font
+  set lacks `ISO10646-1` subfonts.
+- Populate Application Manager (`/var/dt/appconfig/appmanager/$DTUSERSESSION`)
+  automatically on Wayland session startup (`cde/debian/Xsession.wayland`,
+  `cde/programs/dtsession/SmWayland.c`, `cde/programs/dtwm/wayland/WmFpWayland.c`):
+  ensure `DTUSERSESSION` and `DTAPPSEARCHPATH` are initialized without skipping
+  when `DTDATABASESEARCHPATH` is already set, and run `/usr/dt/bin/dtappgather`
+  during `Xsession.wayland`, `dtsession --wayland`, and `dtwm-panel` startup so
+  clicking the **Application Manager** Front Panel icon immediately displays all
+  installed CDE and desktop application groups (`Desktop_Apps`, `Desktop_Tools`,
+  `Information`, `Office`, `Internet`, `Graphics`, `Games`, `Education`,
+  `Media_Tools`, `System`, `Tex`) instead of an empty directory.
+- Fix `Action: Information Manager [Error]` (`TT_ERR_PROCID`) when clicking the
+  Front Panel book **`i`** (`InfoManager` / `DtLoadInfoLib`) control on Wayland
+  (`cde/lib/DtSvc/DtUtil2/SvcTT.c`, `cde/lib/DtSvc/DtUtil1/ActionTt.c`,
+  `cde/programs/dtwm/wayland/WmFpWayland.c`,
+  `cde/programs/dtinfo/clients/dtinfo_start/dtinfo_start.c`,
+  `cde/programs/dtsession/SmWayland.c`): initialize ToolTalk in
+  `InitiateTtRequest` before dispatching `TYPE TT_MSG` actions, synchronize
+  `_DtSvcInitToolTalk` with the root window `_SUN_TT_SESSION` / `TT_SESSION`
+  property via `tt_default_session_set` and retry once on `TT_ERR_PROCID` /
+  `TT_ERR_NOMP` so `ttsession` restarts self-heal cleanly, launch `ttsession -s`
+  with `DTINFOLIBDEFAULT=cde` and `DTINFOLIBSEARCHPATH` (`.../%I.dti`) before
+  `DtAppInitialize` in `dtwm-panel` and `dtsession --wayland`, and add default
+  `DTDATABASESEARCHPATH`, `DTINFOLIBSEARCHPATH`, and `DTINFOLIBDEFAULT=cde`
+  fallbacks in `dtinfo_start` so `DtInfo_LoadInfoLib` always opens
+  `Dtinfo: Infolib Book List` cleanly instead of exiting mid-request.
+- Fix intermittent solid black rectangles over `dtfile` Shelf icon labels when
+  opening or refreshing secondary File Manager windows
+  (`cde/programs/dtfile/FileMgr.c`, `cde/programs/dtfile/File.c`): read Shelf
+  item background, foreground, and shadow colors directly from `shelf_row`
+  instead of `file_mgr_data->layout_data` (which is zero-initialized (`0`/`0`
+  black) by `_UpdateFileIcons` before `LayoutFileIcons` runs, causing
+  `XmStringDrawImage` to paint black text over a solid black label box), and
+  populate `layout_data` colors immediately upon allocation.
+- Fix Front Panel workspace switch buttons (`One`, `Two`, `Three`, `Four`)
+  staying depressed without switching workspaces on Wayland when `ttsession` is
+  running (`cde/programs/dtwm/wayland/WmFpWayland.c`,
+  `cde/programs/dtwm/Callback.c`): register `TT_HANDLE` ToolTalk handlers in
+  `dtwm-panel` (with startup retry once `dtsession` launches `ttsession`) for
+  `DtWorkspace_SetCurrent`, `DtWorkspace_Title_Set`, `DtWorkspace_Add`,
+  `DtWorkspace_Delete`, `DtPanel_Restore`, and `GetWsmClients` bridging to
+  `dtwm-wayland` `_DT_WM_REQUEST`, broadcast `DtWorkspace_Modified` notices on
+  `_DT_WORKSPACE_*` changes, and clear all non-active toggle buttons on switch.
+- Fix `dtfile` Shelf icon labels disappearing on window resize and single-row
+  icon overlap when resizing large directories such as `/bin`
+  (`cde/programs/dtfile/FileMgr.h`, `cde/programs/dtfile/FileMgr.c`,
+  `cde/programs/dtfile/File.c`, `cde/programs/dtfile/IconWindow.c`): store
+  `shelf_row_height`, `shelf_slot_width`, `shelf_slot_height`, and
+  `shelf_icon_px` per `FileMgrRec` window instead of in process-global statics
+  that secondary views (`Application Manager`, `Trash`, or uninitialized
+  placeholders) overwrote to `47` px and caused `ShelfEnforceSizeEH` to clip
+  shelf labels on `ConfigureNotify`, disable `XmNadjustLast` / baseline margin
+  mutation on `shelf_row` and trigger a clean `XClearArea` expose on resize, and
+  fix an unsigned `Dimension` underflow on `ld->spacing` in `GetIconLayoutParms`
+  along with `file_window` resize redrawing.
+- Fix Motif menu-bar drag pulldown offset on Wayland when dragging a held mouse
+  button across adjacent `XmMenuBar` cascade buttons (`File` <-> `Panel`)
+  (`cde/programs/dtwm/wayland/dtwm_wayland.h`,
+  `cde/programs/dtwm/wayland/dtwm_wayland_main.c`): handle XWayland
+  `set_geometry` (`ConfigureNotify`) and `set_override_redirect` signals on
+  already-mapped `override_redirect` surfaces so Motif's shared `XmMenuShell`
+  (`PopupSharedMenuShell`) immediately updates its scene-tree `(x, y)` position
+  and stacking order as it moves between cascade buttons, and keep forwarding
+  client-relative pointer motion while a button grab is held outside a surface.
+- Fix `Style Manager - Mouse` double-click test reactivity, cut-off
+  **Handedness** / **Button 2** controls, clipped **Cursor Theme** / **Preview**
+  sections, and `0`-timestamp virtual-pointer multi-clicks on Wayland
+  (`cde/programs/dtstyle/Mouse.c`, `cde/programs/dtstyle/Main.c`,
+  `cde/programs/dtstyle/Protocol.c`, `cde/programs/dtstyle/Protocol.h`,
+  `cde/programs/dtwm/wayland/dtwm_wayland.h`,
+  `cde/programs/dtwm/wayland/cde_workspace.c`,
+  `cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `cde/debian/Xsession.wayland`): synthesize monotonic timestamps in
+  `dtwm-wayland` when `zwlr_virtual_pointer_v1` / `wayvnc` events arrive with
+  `time_msec == 0`, add `CDE_INSTALLATION_TOP/appconfig/icons/C` and
+  `XBMLANGPATH` fallbacks for `Dtms3B.bm` / `Dtms2B.bm`, make the entire
+  **Test Double-Click** box (both mouse graphic and label) toggle high-contrast
+  highlight on every double-click, chain `Mouse.c` form controls top-to-bottom
+  before mapping so nothing overlaps or clips, and apply Wayland pointer
+  acceleration, handedness, multi-click time, and `Xcursor.theme` /
+  `Xcursor.size` live without restarting the workspace manager.
+- Wire `Style Manager - Window` (`Dtwm*moveOpaque` **"Show Contents During
+  Move"** and related window behavior toggles) to apply live in `dtwm-wayland`
+  and fix bottom clipping in the `Style Manager - Window` dialog
+  (`cde/programs/dtwm/wayland/dtwm_wayland.h`,
+  `cde/programs/dtwm/wayland/cde_bevel.c`,
+  `cde/programs/dtwm/wayland/cde_workspace.c`,
+  `cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `cde/programs/dtstyle/Dtwm.c`): render the classic CDE 3×3 rubberband
+  wireframe outline during interactive move and resize when `moveOpaque` is
+  unchecked (committing geometry on button release), apply `keyboardFocusPolicy`
+  (`pointer`/`explicit`), `focusAutoRaise`, `secondariesOnTop`,
+  `animateMinimizeRestore`, `showTaskSwitcher`, `doubleIconSize`, and
+  `showOpenWindowIcons` live from `RESOURCE_MANAGER` without a workspace-manager
+  restart prompt, and attach `showTaskSwitcherTG` to the bottom of
+  `windowFocusForm` so all toggles and the **Window Icons** section remain
+  visible.
+- Add live CDE `.dp` color palette and theme switching in `dtstyle`,
+  `dtsession`, `dtwm-panel`, and `dtwm-wayland`
+  (`cde/programs/dtstyle/ColorMain.c`, `cde/programs/dtsession/SrvPalette.c`,
+  `cde/programs/dtwm/wayland/WmFpWayland.c`,
+  `cde/programs/dtwm/wayland/cde_workspace.c`): answer `PIXEL_SET` and
+  `Type Of Monitor` selection requests in `dtwm-panel`'s standalone Color
+  Server fallback, parse arbitrary 8-color `.dp` palettes (`f.set_palette` and
+  `RESOURCE_MANAGER` `ColorPalette:`) in `dtwm-wayland` to re-color window
+  frames and workspace backdrops immediately on selection, and update
+  `Customize Data:0`'s `PIXEL_SET_PROP` + reload `dtwm-panel` on **OK** so
+  palettes apply live on TrueColor Wayland displays without logging out.
+- Fix CDE Help UTF-8 text encoding (`Â©` -> `©`), XWayland `-dt-interface` /
+  `-dt-application` font-alias registration, and out-of-tree Help graphics
+  installation (`cde/lib/DtHelp/XInterface.c`,
+  `cde/programs/fontaliases/Makefile.am`,
+  `cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `cde/debian/Xsession.wayland`, `cde/doc/common/help/sdl-data.am`): install
+  `fonts.alias` as a regular file beside `fonts.dir` in
+  `/usr/dt/share/cde/fontaliases`, append that font directory to `Xwayland` via
+  XCB on startup, default `Xsession.wayland` from `C`/`POSIX` to `en_US.UTF-8`
+  (`C.UTF-8`), add `Xutf8DrawString` / Latin-1 fallback in `libDtHelp` when
+  `MB_CUR_MAX == 1`, and resolve `$(srcdir)` in `sdl-data.am` so Help graphics
+  install in out-of-tree builds.
+- Apply live Wayland compositor output scaling (`wlr_output_state_set_scale`)
+  immediately when changing **Scale** (`100%`–`200%`, `96`–`192 DPI`) in
+  `dtstyle` **Display & Monitors** or `wlr-randr --scale`
+  (`cde/programs/dtwm/wayland/cde_output_mgmt.c`,
+  `cde/programs/dtwm/wayland/cde_workspace.c`,
+  `cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `cde/programs/dtstyle/Display.c`,
+  `cde/programs/dtwm/tests/check-dtwm-wayland-wp10.py`), while normalizing
+  XWayland RandR output DPI by `wlr_output->scale` to prevent `4×` double
+  scaling, reloading XCursor sizes, and clamping open windows and the Front
+  Panel into the resized logical workarea.
+- Automatically promote local `dtlogin` seats (`cde/programs/dtlogin/server.c`)
+  from missing `/usr/bin/X` entries in default `Xservers` to the native Wayland
+  greeter (`dtwm-wayland --greeter`) on Wayland-only installations without
+  `xserver-xorg` instead of printing `"The X-server can not be started on
+  display :0..."`.
+- Fix an XWayland `set_hints` listener container-offset bug in `dtwm-wayland`
+  (`cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `cde/debian/Xsession.wayland`,
+  `cde/programs/dtwm/tests/check-dtwm-wayland-wp09.py`) where wiring
+  `xs->events.set_hints` directly to `xwayland_set_decorations` resolved
+  `wl_container_of(..., set_decorations)` instead of `set_hints`, corrupting
+  `view->map.notify` when an unmapped X11 client such as `ck-status --daemon` or
+  `dtfile` updated `WM_HINTS` before mapping; also harden `map`/`unmap` listener
+  initialization and `SIGTERM` shutdown teardown ordering, clear inherited
+  `WAYLAND_DISPLAY`/`DISPLAY` in `Xsession.wayland`, refresh live `WM_HINTS`
+  icon pixmaps in `xwayland_set_hints`, and add automated 4-quadrant Front Panel
+  gauge click coverage in `check-dtwm-wayland-wp09.py`.
+- Honor full 5-field `_MOTIF_WM_HINTS` (`MWM_DECOR_ALL` / `MWM_FUNC_ALL`
+  bit-subtraction semantics for `MWM_DECOR_RESIZEH`, `MWM_DECOR_MAXIMIZE`,
+  `MWM_DECOR_MINIMIZE`, and `MWM_DECOR_MENU`) and fixed-size `WM_NORMAL_HINTS`
+  (`PMinSize == PMaxSize`) in `dtwm-wayland` (`dtwm_wayland_main.c`,
+  `cde_workspace.c`, `dtwm_wayland.h`) so non-resizable Motif tools such as
+  `ck-calc` omit corner resize handles and maximize buttons just like X11 `dtwm`.
+- Add native Wayland CJK Input Method support (`zwp_text_input_v3`,
+  `zwp_input_method_v2`, `zwp_input_method_keyboard_grab_v2`, and
+  `zwp_input_popup_surface_v2` candidate popups), `dtstyle` Linux `fcitx5`/`ibus`
+  discovery, and refreshed Ubuntu 26.04.1 LTS APT repository qualification
+  (`WP-11`) on the `x11_wayland` branch.
+  - `cde/programs/dtwm/wayland/` (`cde_ime.c`, `dtwm_wayland.h`,
+    `dtwm_wayland_main.c`, `cde_workspace.c`, `cde_session_lock.c`,
+    `protocols/input-method-unstable-v2.xml`) and `cde/programs/dtwm/Makefile.am`:
+    bridge `wlr_text_input_manager_v3` and `wlr_input_method_manager_v2` with
+    workarea-clamped CJK candidate popups, IME virtual-keyboard loop protection,
+    and strict `ext-session-lock-v1` lock-screen isolation.
+  - `cde/programs/dtstyle/I18nEnv.c`, `cde/programs/dtsession/SmWayland.c`,
+    `cde/debian/Xsession.wayland`, `cde/debian/control`,
+    `scripts/build-ubuntu-debs.py`, `scripts/lima/cde-ubuntu-26.04.yaml`,
+    `cde/programs/dtwm/tests/check-dtwm-wayland-wp11.py`, and
+    `docs/improvements/wayland.md`: discover `fcitx5` and `ibus-daemon` on local
+    Linux workstations in `dtstyle`, synchronize `XMODIFIERS` / `GTK_IM_MODULE` /
+    `QT_IM_MODULE` across Wayland and XWayland (`XmIm`), and verify preedit,
+    candidate popup geometry, UTF-8 commit, and lock-screen isolation under
+    `make check`.
+- Add graphical multi-monitor arrangement (`dtstyle` `Display`), Wayland output
+  management (`zwlr_output_manager_v1`), foreign-toplevel management, and
+  WebRTC XDG Desktop Portal integration (`WP-10`) on the `x11_wayland` branch.
+  - `cde/programs/dtwm/wayland/` (`cde_output_mgmt.c`, `dtwm_wayland.h`,
+    `dtwm_wayland_main.c`, `cde_workspace.c`, `WmFpWayland.c`) and
+    `cde/programs/dtwm/Makefile.am`: implement `zwlr_output_manager_v1`
+    (`wlr-randr` / `kanshi`), `zwlr_output_power_manager_v1`,
+    `zwlr_export_dmabuf_manager_v1`, `ext_image_copy_capture_manager_v1` +
+    `ext_output_image_capture_source_manager_v1`, and
+    `zwlr_foreign_toplevel_manager_v1`; publish `_DT_WAYLAND_OUTPUTS` and
+    `f.set_output_layout`; pin explicit initial output coordinates; and answer
+    ICCCM `SelectionRequest` events promptly in `dtwm-panel`'s standalone Color
+    Server.
+  - `cde/programs/dtstyle/` (`Display.c`, `Display.h`, `Main.h`, `Main.c`,
+    `MainWin.c`, `Resource.c`, `Dtstyle.src`, `Makefile.am`): add the graphical
+    **Monitors** (`Display`) dialog with interactive monitor drag/snap,
+    side-by-side/stacked/mirror presets, mode resolution, `0°`/`90°`/`180°`/
+    `270°` rotation, and `96`–`192` DPI scaling across both Wayland and
+    X11/XLibre (`libXrandr`).
+  - `cde/debian/cde-portals.conf`, `cde/debian/Xsession.wayland`,
+    `cde/debian/control`, `cde/programs/dtsession/SmWayland.c`,
+    `scripts/build-ubuntu-debs.py`, `cde/programs/dtwm/tests/check-dtwm-wayland-wp10.py`,
+    and `docs/improvements/wayland.md`: package `cde-portals.conf` for
+    `xdg-desktop-portal-wlr` + PipeWire, sync Wayland session variables into
+    D-Bus activation, and verify multi-monitor + portal readiness under `make check`.
+- Integrate workstation and laptop hardware status, FreeDesktop notifications,
+  `StatusNotifier` tray actions, and persistent Front Panel customization
+  (`WP-09`) on the `x11_wayland` branch.
+  - `cde/programs/types/dtwm.fp.src`, `cde/programs/types/miscActions.dt.src`,
+    and `cde/programs/icons/` (`Fpnotif*.pm`, `Fpstatus*.pm`, `Fppower*.pm`,
+    `Fpnet*.pm`, `Fpbt*.pm`, `Fpdisp*.pm`, `DtDisplay.pm`, `Makefile.am`):
+    wire `CONTROL Notifications` (`MONITOR_TYPE file` on
+    `$HOME/.dt/notifications.unread`) into `Switch` `POSITION_HINTS 3`, add
+    `SUBPANEL SystemSubpanel` (*"System & Hardware"*) above `Style` with
+    `CkStatus`, `CkNotify`, `CkPower`, `CkNetwork`, `CkBluetooth`, `CkMixer`,
+    and `DtstyleDisplay` actions, and install 20 symbolic-color CDE pixmaps.
+  - `cde/programs/dtwm/UI.c`, `PopupMenu.c`, `wayland/WmFpWayland.c`,
+    `wayland/cde_workspace.c`, and `cde/debian/Xsession.wayland`: fix a latent
+    `SwitchCreate` pointer-reset double-free when a `SWITCH` control specifies
+    `FILE_NAME`, poll `MONITOR_FILE` controls at `1500 ms` so indicator lamps
+    react promptly, save `~/.dt/sessions/dtwmfp.session` immediately on
+    `Copy To Main Panel` and `dtwm-panel` `SIGTERM`/`SIGINT`, refresh live
+    `TYPE client` gadget coordinates on `MapNotify` embedding, support
+    `f.restart` Front Panel reload in `dtwm-wayland`, and auto-start
+    `ck-status --daemon` in `Xsession.wayland`.
+  - `cde/programs/dtwm/tests/check-dtwm-wayland-wp09.py`,
+    `cde/programs/dtwm/Makefile.am`, `scripts/run-lima-wayland-harness.py`,
+    `scripts/lima/cde-ubuntu-26.04.yaml`, and `docs/improvements/wayland.md`:
+    verify live toast notifications, Switch lamp signaling, `StatusNotifier`
+    tray hosting, embedded `ck-status-gauge`, and `Copy To Main Panel`
+    persistence under `make check`.
+- Qualify the complete Wayland + X11/XLibre desktop stack and signed Ubuntu
+  26.04.1 LTS APT repository (`WP-08`) on the `x11_wayland` branch, pinning CK
+  Core Motif ABI 9 `a2f4a3b8428d40853342de301169ed6a904bd868`.
+  - `scripts/build-ubuntu-debs.py`, `scripts/run-lima-wayland-harness.py`,
+    `scripts/lima/cde-ubuntu-26.04.yaml`, and `.ckgit/motif-revision`: add GPG
+    `Release.gpg` / `InRelease` / `ck-core-archive-keyring.asc` signing and
+    `[signed-by=...]` APT installation verification alongside Ubuntu's `libxm4`,
+    record `motif-revision.txt`, `motif.sha256`, and `proc-maps-provenance.json`,
+    verify both installed `CDE (Wayland)` and `CDE (X11 / XLibre)` `/usr/dt`
+    desktops without `LD_LIBRARY_PATH` via `/usr/bin/ck-grab`, normalize Lima
+    hostname loopback resolution for ToolTalk (`ttsession`), and strip Ubuntu
+    `0002` `umask` group-write bits on temporary ancestor directories.
+  - `cde/programs/dtwm/wayland/dtwm_wayland_main.c`, `docs/build.md`, and
+    `docs/improvements/wayland.md`: unify early-error Wayland listener teardown
+    and document signed APT repository installation and full-stack Wayland +
+    X11/XLibre qualification.
+- Add Wayland local-seat display management, unprivileged `_dtgreeter` PAM
+  greeter sessions, FreeDesktop `.desktop` session discovery, and Wayland/X11
+  seat handoff (`WP-07`) to `dtlogin` on the `x11_wayland` branch.
+  - `cde/programs/dtlogin/` (`wayland_seat.c`, `wayland_seat.h`, `dm.h`,
+    `dpylist.c`, `file.c`, `dm.c`, `server.c`, `session.c`, `verify.c`,
+    `Makefile.am`, `config/Xservers.src`), `cde/lib/DtSvc/DtUtil2/SvcPam.c`,
+    `cde/include/Dt/SvcPam.h`, and `cde/debian/` (`dtlogin-greeter.pam`,
+    `ck-core-dtlogin.postinst`): add `wayland` and `wayland_uid` local-seat
+    display types, unprivileged `_dtgreeter` PAM `greeter` session startup
+    hosting `dtwm-wayland --greeter` + genuine Motif `dtgreet`, dynamic
+    `/usr/share/wayland-sessions` and `/usr/share/xsessions` `.desktop` menu
+    population ordering `CDE (Wayland)` and `CDE (X11 / XLibre)` first,
+    `_DtSvcPamPutenv` / `_DtSvcPamGetenvlist` PAM session environment
+    propagation, and clean greeter-to-session seat handoff for both Wayland and
+    X11 user sessions.
+  - `cde/programs/dtwm/wayland/dtwm_wayland_main.c` and `dtwm_wayland.h`: frame
+    `dtgreet`'s full-screen `login_shell` frameless at `(0, 0)` with WM hotkeys
+    disabled and `SI:localuser:root` XWayland access in `--greeter` mode, avoid
+    activating `override_redirect` Motif popup/pulldown menus on button press,
+    propagate `wlr_keyboard` keymap events for virtual keyboards, and detach
+    listeners cleanly on shutdown.
+  - `cde/programs/dtlogin/tests/check-wayland-dtlogin.py`,
+    `cde/lib/DtSvc/tests/check-svc-pam.py`, `cde/lib/DtSvc/tests/dts-buffers.c`,
+    and `docs/improvements/wayland.md`: verify ASan/UBSan config and `.desktop`
+    discovery plus live Ubuntu VM `dtlogin` Wayland and X11 login/logout cycles
+    with zero leaked processes.
+- Add `dtsession --wayland` session bootstrap, `ext-session-lock-v1` and
+  `ext-idle-notify-v1` screen locking, and `dtstyle` Wayland hardware/input IPC
+  (`WP-06`) on the `x11_wayland` branch.
+  - `cde/programs/dtwm/wayland/cde_session_lock.c`, `dtwm_wayland_main.c`,
+    `cde_workspace.c`, `cde_icons.c`, `dtwm_wayland.h`, `Makefile.am`, and
+    `cde/configure.ac`: implement `ext_session_lock_manager_v1` (scene-graph
+    isolation preventing screencopy/shortcut leakage, immediate hotplug output
+    coverage, dead-locker failsafe, and verified `_DT_SM_WINDOW_INFO` elevation
+    for `dtsession`'s Motif PAM lock dialog), `ext_idle_notifier_v1`, and live
+    `libinput`/`wlr_keyboard` `_DT_WM_REQUEST` handlers (`f.set_pointer_accel`,
+    `f.set_left_handed`, `f.set_key_repeat`, `f.set_xkb_layout`, `f.set_bell`,
+    `f.set_saver_timeout`) with `_DT_WAYLAND_INPUT_STATE` reporting.
+  - `cde/programs/dtsession/` (`SmWayland.c`, `SmWayland.h`, `SmMain.c`,
+    `SmGlobals.c`, `SmRestore.c`, `SmCommun.c`, `SmLock.c`, `Makefile.am`) and
+    `cde/programs/dtstyle/Protocol.c`: add `--wayland` compositor/ToolTalk
+    bootstrap, `ext-session-lock-v1` + `ext-idle-notify-v1` integration with
+    `SmPam.c` PAM unlock, and `dtstyle` Wayland hardware settings forwarding.
+  - `cde/programs/dtwm/tests/check-dtwm-wayland-wp06.py` and
+    `docs/improvements/wayland.md`: verify idle auto-lock, zero screencopy/input
+    leakage, 3-monitor hotplug coverage while locked, dead-locker SIGKILL
+    failsafe, clean unlock restoration, and `dtstyle` IPC.
+- Add bidirectional Motif XDND v5 ↔ Wayland `wl_data_device` drag-and-drop,
+  `_DT_ACTIVE_WINDOW_BOX` support for `ck-grab` Wayland screencopy, and
+  per-output XLibre RandR `DPI` + `wp_fractional_scale_v1` mixed-DPI scaling
+  (`WP-05`) to `dtwm-wayland` on the `x11_wayland` branch, pinning CK Core
+  Motif ABI 9 `e3380b74552f10678b8fc1f295e558c085b2d7bd`.
+  - `cde/programs/dtwm/wayland/cde_xdnd_bridge.c`, `cde_workspace.c`,
+    `dtwm_wayland_main.c`, `dtwm_wayland.h`, `Makefile.am`, and
+    `cde/configure.ac`: render Wayland `wlr_drag` icons, bridge X11/Motif
+    `XdndSelection` drags into Wayland `wlr_drag` sessions upon entering native
+    Wayland surfaces while keeping X11-to-X11 Motif drags intact, publish
+    `_DT_ACTIVE_WINDOW_BOX` for `ck-grab`, and publish `_MOTIF_RANDR_OUTPUT_DPI`
+    plus per-output RandR `DPI` (`--output-dpi INDEX=DPI`, `f.set_output_dpi`)
+    and `wp_fractional_scale_v1`.
+  - `cde/programs/dtwm/tests/check-dtwm-wayland-wp05.py` and
+    `docs/improvements/wayland.md`: verify Wayland ↔ Motif XDND v5 in both
+    directions, `ck-grab --window --include-frame` and `--full-screen` on
+    Wayland, and `96 ↔ 192 ↔ 144` live Motif shell DPI reflow.
+
 2026-11-16
 - Update `scripts/build-docs.sh` smoke check to match the `Desktop Screenshots`
   heading in `docs/desktop.md` so the multi-theme documentation site deploys in
@@ -14,6 +477,117 @@
   `programs/dtspcd/tests/requests-test.c`, and
   `programs/dtcm/server/tests/requests-test.c` when running inside
   `CLONE_NEWUSER` sandboxes.
+- Replace the synthetic Cairo panel in `dtwm-wayland` with the genuine CDE
+  Front Panel (`dtwm-panel`) built from `dtwm`'s original Motif/`DtWidget`
+  Front Panel implementation (`WmFP.c`, `UI.c`, `DataBaseLoad.c`, `Clock.c`,
+  `Button.c`, `Callback.c`, `PanelS.c`, `PopupMenu.c`, `Session.c`, and
+  `WmParse.c`).
+  - `cde/programs/dtwm/wayland/WmFpWayland.c` and `Makefile.am`: build
+    `dtwm-panel` loading standard `.fp` databases (`dtwm.fp` and
+    `~/.dt/types/*.fp`), bootstrapping the 8-color-set CDE Color Server when
+    `dtsession` is not yet active, synchronizing `_DT_WORKSPACE_*` changes, and
+    embedding `TYPE client` controls (such as `ck-clock`) via
+    `XReparentWindow`.
+  - `cde/programs/dtwm/wayland/` (`cde_workspace.c`, `cde_bevel.c`,
+    `cde_icons.c`, `dtwm_wayland_main.c`, `dtwm_wayland.h`): remove all custom
+    Cairo panel rendering, spawn and dock `dtwm-panel` via `_DT_WM_HINTS`
+    (`DtWM_BEHAVIOR_PANEL` / `DtWM_BEHAVIOR_SUBPANEL`), and compute the bottom
+    maximize/snap strut from the real panel's geometry.
+- Merge upstream `master` (`a6029287e`) and adopt CK Core Motif ABI 9
+  `d85fb6604a827a7ebfcdcadcbac4525dccc684d7` on the `x11_wayland` branch,
+  harmonizing `dtwm-wayland` and Ubuntu `.deb` packaging with the four desktop
+  appearance profiles (`classic`, `modern_light`, `modern_dark`, and
+  `high_contrast`).
+  - `cde/programs/dtwm/wayland/` (`dtwm_wayland.h`, `cde_bevel.c`,
+    `cde_workspace.c`, `dtwm_wayland_main.c`): support `--appearance-profile`,
+    live XWayland `RESOURCE_MANAGER` `*appearanceProfile:` watching, and
+    `_DT_WM_REQUEST` `f.set_appearance_profile` across window frames, workspace
+    backdrops, desktop icons, and the Front Panel.
+  - `scripts/build-ubuntu-debs.py` and `.ckgit/motif-revision`: pin Motif
+    `d85fb6604a827a7ebfcdcadcbac4525dccc684d7` and verify
+    `{ModernLight,ModernDark,HighContrast}.dp` installation in `ck-core-cde`.
+- Add open-window and minimized desktop icons, live dynamic icon streaming,
+  `ck-eyes` global cursor synchronization, `dtfile` pinned desktop object
+  layering, and Front Panel `TYPE client` window swallowing (`WP-04`) to
+  `dtwm-wayland` on the `x11_wayland` branch.
+  - `cde/programs/dtwm/wayland/cde_icons.c`, `cde_workspace.c`, `cde_bevel.c`,
+    `dtwm_wayland_main.c`, and `dtwm_wayland.h`: publish `_DT_WM_SETTINGS_V1`
+    (`DT_WM_SETTINGS_V1_SHOW_OPEN_WINDOW_ICONS`), `WM_ICON_SIZE` (`48×48` and
+    `96×96`), `WM_STATE`, and `_NET_WM_ICON_GEOMETRY`; capture live XWayland
+    `WM_HINTS` `icon_pixmap` and 1-bit `icon_mask` updates; implement the native
+    Wayland `xdg-toplevel-icon-v1` server global; synchronize the XWayland root
+    pointer across native Wayland surfaces for `ck-eyes`; layer `dtfile`
+    `popup_name*` desktop pins in `desktop_icon_tree`; and swallow `ck-clock`
+    into the Front Panel's recessed Clock slot.
+  - `cde/programs/dtwm/tests/check-dtwm-wayland-icons.py` and
+    `docs/improvements/wayland.md`: verify `WM_ICON_SIZE` `48→96` live resizing,
+    `xdg-toplevel-icon-v1`, XWayland root pointer sync over Wayland surfaces,
+    live `ck-clock` / `ck-load` / `ck-eyes` / `ck-plasma-1` animation, and Front
+    Panel `ck-clock` swallowing.
+- Implement CDE multi-workspace management, palette-tinted XPM/XBM backdrops,
+  `libDtSvc` / `ext-workspace-v1` protocol bridges, and the docked interactive
+  CDE Front Panel (`WP-03`) in `dtwm-wayland` on the `x11_wayland` branch.
+  - `cde/programs/dtwm/wayland/cde_workspace.c`, `cde_bevel.c`,
+    `dtwm_wayland_main.c`, and `dtwm_wayland.h`: add four default workspaces
+    (*One*..*Four*) with dynamic add/rename/delete, per-window occupancy
+    bitmasks, *Occupy All Workspaces* window-menu toggle, `Ctrl+Alt+1..8` and
+    `Ctrl+Alt+Left/Right` shortcuts, symbolic-color XPM/XBM backdrop rendering,
+    the docked 3D-beveled CDE Front Panel with bottom maximize/snap strut
+    reservation, XWayland `_MOTIF_WM_INFO` / `_DT_WORKSPACE_*` /
+    `_DT_WM_REQUEST` synchronization, and the native Wayland `ext-workspace-v1`
+    protocol server.
+  - `cde/lib/DtSvc/DtUtil1/` (`WmSetWs.c`, `WmAddDelWs.c`, `WmSetTitle.c`): fall
+    back to appending `f.goto_workspace`, `f.add_workspace`,
+    `f.delete_workspace`, and `f.set_workspace_title` to `_DT_WM_REQUEST` on the
+    workspace manager window when ToolTalk (`ttsession`) is unavailable.
+  - `cde/programs/dtwm/tests/check-dtwm-wayland-workspaces.py` and
+    `docs/improvements/wayland.md`: verify `libDtSvc` WSM queries and mutations,
+    Front Panel pointer switching, XPM/XBM backdrop changes, `ext-workspace-v1`
+    activation, and Front Panel maximize strut preservation.
+- Add the `dtwm-wayland` (`wlroots-0.19`) compositor core (`WP-02`) with
+  server-side 3D CDE bevel decorations and rootless `Xwayland` integration on
+  the `x11_wayland` branch.
+  - `cde/configure.ac` and `cde/programs/dtwm/Makefile.am`: add `--enable-wayland`
+    (`default=auto`) building `dtwm-wayland` alongside classic X11 `dtwm` and
+    generating `xdg-shell` and `wlr-layer-shell-unstable-v1` protocol headers via
+    `wayland-scanner`.
+  - `cde/programs/dtwm/wayland/` (`dtwm_wayland.h`, `cde_bevel.c`,
+    `dtwm_wayland_main.c`): implement server-side 3D mitered CDE bevel window
+    frames, corner resize handles, MWM system/minimize/maximize buttons, window
+    menu popup, half/quadrant snap preview, `Shift`-grid alignment, `Alt+Tab`
+    task switcher, desktop-click defocus, `wlr-layer-shell-v1`,
+    `zwlr_screencopy_manager_v1`, virtual pointer/keyboard protocols, and
+    rootless `Xwayland` honoring `_MOTIF_WM_HINTS`.
+  - `cde/programs/dtwm/tests/check-dtwm-wayland.py` and
+    `docs/improvements/wayland.md`: add dual-protocol Wayland + XWayland bevel
+    and focus regression coverage and document `dtwm-wayland`.
+- Modernize Debian/Ubuntu `.deb` packaging (`WP-01`) for the matched CK Core
+  cohort (`ck-core-motif9`, `ck-core-fs-lib`, `ck-core-cde`, `ck-core-dtlogin`,
+  and `ck-core-apps`) on the `x11_wayland` branch.
+  - `cde/programs/dtlogin/config/dtlogin.src`: add `-session optional pam_systemd.so`
+    so `systemd-logind` registers local Wayland and X11 login sessions cleanly on
+    Ubuntu and Debian while remaining optional on non-systemd platforms.
+  - `cde/debian/` and `scripts/build-ubuntu-debs.py`: replace obsolete Imake
+    debhelper stubs with `/usr/dt`-scoped ABI 9 packaging (`RUNPATH=/usr/dt/lib`,
+    coexisting cleanly with system `libxm4`), `shared/default-x-display-manager`
+    `debconf` scripts, `/lib/systemd/system/dtlogin.service`,
+    `/usr/share/xsessions/cde.desktop`,
+    `/usr/share/wayland-sessions/cde-wayland.desktop`, `/usr/dt/bin/Xsession.wayland`,
+    and local APT repository generation + `apt-get install` verification.
+- Add the Ubuntu 26.04 LTS Lima Wayland qualification harness (`WP-00`), fix
+  the `glibc 2.43` C23 `strstr` macro redeclaration in `dthelp`'s `htag2`
+  translator, and advance `.ckgit/motif-revision` to
+  `703101cea3db5f9fe5722c43bdb016d098d13804` on the `x11_wayland` branch.
+  - `cde/programs/dthelp/parser/pass2/htag2/fproto.h`: replace the legacy
+    manual `char *strstr(const char *, const char *)` declaration with
+    `#include <string.h>` so C23 builds succeed under `glibc 2.43`'s
+    qualifier-preserving `_Generic` `strstr` macro on Ubuntu 26.04 LTS.
+  - `scripts/lima/cde-ubuntu-26.04.yaml`,
+    `scripts/run-lima-wayland-harness.py`, `wayland_work_plan.md`, and
+    `docs/build.md`: add the reproducible Apple Silicon `vz` Ubuntu 26.04 LTS
+    Lima configuration and dual-output headless `wlroots` + rootless `Xwayland`
+    build/smoke runner verifying `/proc/<pid>/maps` `libXm.so.9` provenance and
+    `zwlr_screencopy_manager_v1` frame capture.
 - Integrate CK Core Motif ABI 9 appearance profiles (`classic`, `modern_light`,
   `modern_dark`, `high_contrast`) across `dtsession`, `dtwm`, `dtstyle`,
   `dtfile`, `libDtWidget`, and built-in desktop palettes (`ModernLight.dp`,

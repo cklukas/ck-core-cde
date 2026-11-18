@@ -464,14 +464,25 @@ char defaultRootMenuName[] = "DefaultRootMenu";
 char builtinRootMenuName[] = "_MwmRootMenu_";
 #define BUILTINROOTMENU "DefaultRootMenu\n\
 {\n\
-	\"Root Menu\"		f.title\n\
-	\"New Window\"		f.exec \"xterm &\"\n\
-	\"Shuffle Up\"		f.circle_up\n\
-	\"Shuffle Down\"	f.circle_down\n\
-	\"Refresh\"		f.refresh\n\
-	\"Pack Icons\"		f.pack_icons\n\
-	 no-label		f.separator\n\
-	\"Restart...\"		f.restart\n\
+	\"Workspace Menu\"			f.title\n\
+	\"Open Terminal\"			f.action Dtterm\n\
+	\"Open File Manager\"			f.action DtfileHome\n\
+	\"Application Manager\"			f.action Dtappmgr\n\
+	 no-label				f.separator\n\
+	\"Change Backdrop...\"			f.action DtstyleBackdrop\n\
+	\"Display Settings...\"			f.action DtstyleDisplay\n\
+	\"Style Manager...\"			f.action Dtstyle\n\
+	 no-label				f.separator\n\
+	\"Clean Up Icons\"			f.pack_icons\n\
+	\"Shuffle Up\"				f.circle_up\n\
+	\"Shuffle Down\"			f.circle_down\n\
+	\"Minimize/Restore Front Panel\"	f.toggle_frontpanel\n\
+	\"Refresh\"				f.refresh\n\
+	 no-label				f.separator\n\
+	\"Lock Screen\"				f.action LockDisplay\n\
+	\"Restart Workspace Manager...\"	f.restart\n\
+	 no-label				f.separator\n\
+	\"Log Out...\"				f.action ExitSession\n\
 }";
 char builtinRootMenu[] = BUILTINROOTMENU
 

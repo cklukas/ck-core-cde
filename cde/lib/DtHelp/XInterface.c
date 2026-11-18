@@ -733,6 +733,189 @@ DrawSearchTraversal(DtHelpDispAreaStruct* pDAS,
  * Purpose:	Renders an text string to the specified drawable.
  *
  *****************************************************************************/
+static const char *
+DtHelpUtf8ToLatin1Fallback(const char *src, int len, char *sbuf, size_t sbuf_sz,
+                           char **heap_out, int *out_len)
+{
+    *heap_out = nullptr;
+    if (!src || len <= 0) {
+        *out_len = 0;
+        return src ? src : "";
+    }
+    bool has_high = false;
+    for (int i = 0; i < len; ++i) {
+        if ((unsigned char)src[i] >= 0x80u) {
+            has_high = true;
+            break;
+        }
+    }
+    if (!has_high) {
+        *out_len = len;
+        return src;
+    }
+
+    size_t cap = (size_t)len * 3u + 1u;
+    char *dst = (cap <= sbuf_sz) ? sbuf : (char *)malloc(cap);
+    if (!dst) {
+        *out_len = len;
+        return src;
+    }
+    if (dst != sbuf) {
+        *heap_out = dst;
+    }
+
+    int o = 0;
+    for (int i = 0; i < len; ) {
+        unsigned char b0 = (unsigned char)src[i];
+        if (b0 < 0x80u) {
+            dst[o++] = (char)b0;
+            i += 1;
+        } else if ((b0 == 0xC2u || b0 == 0xC3u) && i + 1 < len &&
+                   ((unsigned char)src[i + 1] & 0xC0u) == 0x80u) {
+            unsigned int cp = ((unsigned int)(b0 & 0x1Fu) << 6) |
+                              (unsigned int)((unsigned char)src[i + 1] & 0x3Fu);
+            dst[o++] = (char)(unsigned char)cp;
+            i += 2;
+        } else if (b0 == 0xE2u && i + 2 < len &&
+                   ((unsigned char)src[i + 1] & 0xC0u) == 0x80u &&
+                   ((unsigned char)src[i + 2] & 0xC0u) == 0x80u) {
+            unsigned int cp = ((unsigned int)(b0 & 0x0Fu) << 12) |
+                              ((unsigned int)((unsigned char)src[i + 1] & 0x3Fu) << 6) |
+                              (unsigned int)((unsigned char)src[i + 2] & 0x3Fu);
+            if (cp == 0x2013u || cp == 0x2014u) dst[o++] = '-';
+            else if (cp == 0x2018u || cp == 0x2019u) dst[o++] = '\'';
+            else if (cp == 0x201Cu || cp == 0x201Du) dst[o++] = '"';
+            else if (cp == 0x2022u) dst[o++] = (char)0xB7u;
+            else if (cp == 0x2026u) { dst[o++] = '.'; dst[o++] = '.'; dst[o++] = '.'; }
+            else dst[o++] = '?';
+            i += 3;
+        } else {
+            dst[o++] = (char)b0;
+            i += 1;
+        }
+    }
+    *out_len = o;
+    return dst;
+}
+
+static bool
+DtHelpFontSetHasUnicode(XFontSet fs)
+{
+    if (!fs) return false;
+    XFontStruct **fs_list = nullptr;
+    char **fn_list = nullptr;
+    int n = XFontsOfFontSet(fs, &fs_list, &fn_list);
+    for (int i = 0; i < n; ++i) {
+        if (fn_list && fn_list[i] && strcasestr(fn_list[i], "iso10646") != nullptr) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static const char *
+DtHelpUtf8NormalizeForIsoFontSet(const char *src, int len, char *sbuf, size_t sbuf_sz,
+                                 char **heap_out, int *out_len)
+{
+    *heap_out = nullptr;
+    if (!src || len <= 0) {
+        *out_len = 0;
+        return src ? src : "";
+    }
+    bool has_e2 = false;
+    for (int i = 0; i + 2 < len; ++i) {
+        if ((unsigned char)src[i] == 0xE2u) {
+            has_e2 = true;
+            break;
+        }
+    }
+    if (!has_e2) {
+        *out_len = len;
+        return src;
+    }
+
+    size_t cap = (size_t)len * 3u + 1u;
+    char *dst = (cap <= sbuf_sz) ? sbuf : (char *)malloc(cap);
+    if (!dst) {
+        *out_len = len;
+        return src;
+    }
+    if (dst != sbuf) {
+        *heap_out = dst;
+    }
+
+    int o = 0;
+    for (int i = 0; i < len; ) {
+        unsigned char b0 = (unsigned char)src[i];
+        if (b0 == 0xE2u && i + 2 < len &&
+            ((unsigned char)src[i + 1] & 0xC0u) == 0x80u &&
+            ((unsigned char)src[i + 2] & 0xC0u) == 0x80u) {
+            unsigned int cp = ((unsigned int)(b0 & 0x0Fu) << 12) |
+                              ((unsigned int)((unsigned char)src[i + 1] & 0x3Fu) << 6) |
+                              (unsigned int)((unsigned char)src[i + 2] & 0x3Fu);
+            if (cp == 0x2013u || cp == 0x2014u) dst[o++] = '-';
+            else if (cp == 0x2018u || cp == 0x2019u) dst[o++] = '\'';
+            else if (cp == 0x201Cu || cp == 0x201Du) dst[o++] = '"';
+            else if (cp == 0x2022u) { dst[o++] = (char)0xC2u; dst[o++] = (char)0xB7u; }
+            else if (cp == 0x2026u) { dst[o++] = '.'; dst[o++] = '.'; dst[o++] = '.'; }
+            else {
+                dst[o++] = (char)b0;
+                dst[o++] = src[i + 1];
+                dst[o++] = src[i + 2];
+            }
+            i += 3;
+        } else {
+            dst[o++] = (char)b0;
+            i += 1;
+        }
+    }
+    *out_len = o;
+    return dst;
+}
+
+static const wchar_t *
+DtHelpWcNormalizeForIsoFontSet(const wchar_t *src, int len, wchar_t *sbuf, size_t sbuf_cnt,
+                               wchar_t **heap_out, int *out_len)
+{
+    *heap_out = nullptr;
+    if (!src || len <= 0) {
+        *out_len = 0;
+        return src;
+    }
+    bool need = false;
+    for (int i = 0; i < len; ++i) {
+        if ((unsigned int)src[i] >= 0x2010u && (unsigned int)src[i] <= 0x2030u) {
+            need = true;
+            break;
+        }
+    }
+    if (!need) {
+        *out_len = len;
+        return src;
+    }
+    size_t cap = (size_t)len * 3u + 1u;
+    wchar_t *dst = (cap <= sbuf_cnt) ? sbuf : (wchar_t *)malloc(cap * sizeof(wchar_t));
+    if (!dst) {
+        *out_len = len;
+        return src;
+    }
+    if (dst != sbuf) {
+        *heap_out = dst;
+    }
+    int o = 0;
+    for (int i = 0; i < len; ++i) {
+        unsigned int cp = (unsigned int)src[i];
+        if (cp == 0x2013u || cp == 0x2014u) dst[o++] = (wchar_t)'-';
+        else if (cp == 0x2018u || cp == 0x2019u) dst[o++] = (wchar_t)'\'';
+        else if (cp == 0x201Cu || cp == 0x201Du) dst[o++] = (wchar_t)'"';
+        else if (cp == 0x2022u) dst[o++] = (wchar_t)0x00B7u;
+        else if (cp == 0x2026u) { dst[o++] = (wchar_t)'.'; dst[o++] = (wchar_t)'.'; dst[o++] = (wchar_t)'.'; }
+        else dst[o++] = src[i];
+    }
+    *out_len = o;
+    return dst;
+}
+
 static void
 MyDrawString (
     Display	*dpy,
@@ -761,35 +944,68 @@ MyDrawString (
 	mySet = __DtHelpFontSetGet(font_info, font_index);
 
         if (wc) {
+	    wchar_t wbuf[256];
+	    wchar_t *wheap = nullptr;
+	    int wlen = length;
+	    const wchar_t *wstr = (const wchar_t *)string;
+	    if (!DtHelpFontSetHasUnicode(mySet)) {
+		wstr = DtHelpWcNormalizeForIsoFontSet(
+		    (const wchar_t *)string, length, wbuf, sizeof(wbuf) / sizeof(wbuf[0]), &wheap, &wlen
+		);
+	    }
 	    if (image)
-		XwcDrawImageString(dpy, d, mySet, gc, x, y,
-						(wchar_t*)string, length);
+		XwcDrawImageString(dpy, d, mySet, gc, x, y, wstr, wlen);
 	    else
-		XwcDrawString (dpy, d, mySet, gc, x, y,
-						(wchar_t*)string, length);
+		XwcDrawString (dpy, d, mySet, gc, x, y, wstr, wlen);
+	    free(wheap);
 	}
         else {
+	    char sbuf[512];
+	    char *heap_buf = nullptr;
+	    int draw_len = length;
+	    const char *draw_str = (const char *)string;
+	    if (!DtHelpFontSetHasUnicode(mySet)) {
+		draw_str = DtHelpUtf8NormalizeForIsoFontSet(
+		    (const char *)string, length, sbuf, sizeof(sbuf), &heap_buf, &draw_len
+		);
+	    }
 	    /*
 	     * have to use XmbDrawString here instead of XDrawString
 	     * because we need to use a font set to render the string.
 	     */
+#ifdef X_HAVE_UTF8_STRING
+	    if (MB_CUR_MAX == 1) {
+		if (image)
+		    Xutf8DrawImageString (dpy, d, mySet, gc, x, y, draw_str, draw_len);
+		else
+		    Xutf8DrawString (dpy, d, mySet, gc, x, y, draw_str, draw_len);
+	    } else
+#endif
 	    if (image)
-		XmbDrawImageString (dpy, d, mySet, gc, x, y, string, length);
+		XmbDrawImageString (dpy, d, mySet, gc, x, y, draw_str, draw_len);
 	    else
-		XmbDrawString (dpy, d, mySet, gc, x, y, string, length);
+		XmbDrawString (dpy, d, mySet, gc, x, y, draw_str, draw_len);
+	    free(heap_buf);
 	}
       }
     else
       {
 	XFontStruct  *myFont;
+	char sbuf[512];
+	char *heap_buf = nullptr;
+	int draw_len = length;
+	const char *draw_str = DtHelpUtf8ToLatin1Fallback(
+	    (const char *)string, length, sbuf, sizeof(sbuf), &heap_buf, &draw_len
+	);
 
 	myFont = __DtHelpFontStructGet(font_info, font_index);
 	XSetFont (dpy, gc, myFont->fid);
 
 	if (image)
-	    XDrawImageString (dpy, d, gc, x, y, string, length);
+	    XDrawImageString (dpy, d, gc, x, y, draw_str, draw_len);
 	else
-	    XDrawString (dpy, d, gc, x, y, string, length);
+	    XDrawString (dpy, d, gc, x, y, draw_str, draw_len);
+	free(heap_buf);
       }
 }
 
@@ -1184,7 +1400,9 @@ ResolveFont (
     if (nullptr == font_attr.xlfd &&
         nullptr == font_attr.xlfdb &&
         nullptr == font_attr.xlfdi &&
-        nullptr == font_attr.xlfdib)
+        nullptr == font_attr.xlfdib &&
+        font_attr.style != _DtHelpFontStyleSymbol &&
+        !(charset && strcasecmp(charset, "DT-SYMBOL-1") == 0))
       {
         Display *dpy = pDAS ? XtDisplay(pDAS->dispWid) : nullptr;
         XrmDatabase db = dpy ? XrmGetDatabase(dpy) : nullptr;
@@ -2983,18 +3201,54 @@ _DtHelpDAGetStrWidth (
     font_index = (long) strInfo->font_ptr;
     if (font_index < 0)
       {
-	if (0 == strInfo->wc)
-	length = XmbTextEscapement(
-			__DtHelpFontSetGet(pDAS->font_info, font_index),
-				(char *) strInfo->string, strInfo->byte_len);
-    else
-	    length = XwcTextEscapement(
-			__DtHelpFontSetGet(pDAS->font_info, font_index),
-				(wchar_t *) strInfo->string, strInfo->byte_len);
+	if (0 == strInfo->wc) {
+	    XFontSet mySet = __DtHelpFontSetGet(pDAS->font_info, font_index);
+	    char sbuf[512];
+	    char *heap_buf = nullptr;
+	    int draw_len = strInfo->byte_len;
+	    const char *draw_str = (const char *)strInfo->string;
+	    if (!DtHelpFontSetHasUnicode(mySet)) {
+		draw_str = DtHelpUtf8NormalizeForIsoFontSet(
+		    (const char *)strInfo->string, strInfo->byte_len,
+		    sbuf, sizeof(sbuf), &heap_buf, &draw_len
+		);
+	    }
+#ifdef X_HAVE_UTF8_STRING
+	    if (MB_CUR_MAX == 1)
+		length = Xutf8TextEscapement(mySet, draw_str, draw_len);
+	    else
+#endif
+		length = XmbTextEscapement(mySet, draw_str, draw_len);
+	    free(heap_buf);
+	} else {
+	    XFontSet mySet = __DtHelpFontSetGet(pDAS->font_info, font_index);
+	    wchar_t wbuf[256];
+	    wchar_t *wheap = nullptr;
+	    int wlen = strInfo->byte_len;
+	    const wchar_t *wstr = (const wchar_t *)strInfo->string;
+	    if (!DtHelpFontSetHasUnicode(mySet)) {
+		wstr = DtHelpWcNormalizeForIsoFontSet(
+		    (const wchar_t *)strInfo->string, strInfo->byte_len,
+		    wbuf, sizeof(wbuf) / sizeof(wbuf[0]), &wheap, &wlen
+		);
+	    }
+	    length = XwcTextEscapement(mySet, wstr, wlen);
+	    free(wheap);
+	}
       }
     else
+      {
+	char sbuf[512];
+	char *heap_buf = nullptr;
+	int draw_len = strInfo->byte_len;
+	const char *draw_str = DtHelpUtf8ToLatin1Fallback(
+	    (const char *)strInfo->string, strInfo->byte_len,
+	    sbuf, sizeof(sbuf), &heap_buf, &draw_len
+	);
         length = XTextWidth(__DtHelpFontStructGet(pDAS->font_info, font_index),
-				(char *) strInfo->string, strInfo->byte_len);
+				draw_str, draw_len);
+	free(heap_buf);
+      }
 
    return ((_DtCvUnit) length);
 }

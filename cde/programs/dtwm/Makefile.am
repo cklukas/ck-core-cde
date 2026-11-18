@@ -2,12 +2,24 @@ MAINTAINERCLEANFILES = Makefile.in
 
 bin_PROGRAMS = dtwm dtfplist
 
+if BUILD_DTWM_WAYLAND
+bin_PROGRAMS += dtwm-wayland dtwm-panel
+endif
+
 EXTRA_DIST = tests/check-property-readers.py tests/property-client.c \
              tests/check-desktop-requests.py tests/check-session-word-width.py tests/check-session-word-width.c \
              tests/check-config-temp-file.py tests/check-config-temp-file.c \
              tests/check-session-counts.py tests/check-session-counts.c \
              tests/check-quit-signal.py tests/check-quit-signal.c \
-             tests/check-dtwm-hardening.py tests/check-dtwm-hardening.c
+             tests/check-dtwm-hardening.py tests/check-dtwm-hardening.c \
+             tests/check-dtwm-wayland.py tests/check-dtwm-wayland-workspaces.py \
+             tests/check-dtwm-wayland-icons.py tests/check-dtwm-wayland-wp05.py \
+             tests/check-dtwm-wayland-wp06.py tests/check-dtwm-wayland-wp09.py \
+             tests/check-dtwm-wayland-wp10.py tests/check-dtwm-wayland-wp11.py \
+             wayland/protocols/wlr-layer-shell-unstable-v1.xml \
+             wayland/protocols/wlr-output-power-management-unstable-v1.xml \
+             wayland/protocols/wlr-foreign-toplevel-management-unstable-v1.xml \
+             wayland/protocols/input-method-unstable-v2.xml
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-property-readers.py
@@ -17,12 +29,97 @@ check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-config-temp-file.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-quit-signal.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-hardening.py
+if BUILD_DTWM_WAYLAND
+	python3 $(srcdir)/tests/check-dtwm-wayland.py --compositor ./dtwm-wayland
+	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-workspaces.py --compositor ./dtwm-wayland
+	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-icons.py --compositor ./dtwm-wayland
+	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp05.py --compositor ./dtwm-wayland
+	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp06.py --compositor ./dtwm-wayland
+	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp09.py --compositor ./dtwm-wayland
+	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp10.py --compositor ./dtwm-wayland
+	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp11.py --compositor ./dtwm-wayland
+endif
 
-configdir = $(CDE_INSTALLATION_TOP)/config/C
-dist_config_DATA = sys.dtwmrc
+noinst_DATA = sys.dtwmrc Dtwm.defs
 
 BUILT_SOURCES = sys.dtwmrc Dtwm.defs
 CLEANFILES = sys.dtwmrc Dtwm.defs
+
+if BUILD_DTWM_WAYLAND
+WAYLAND_GEN_HDRS = wayland/xdg-shell-protocol.h \
+                   wayland/wlr-layer-shell-unstable-v1-protocol.h \
+                   wayland/wlr-output-power-management-unstable-v1-protocol.h \
+                   wayland/ext-image-copy-capture-v1-protocol.h \
+                   wayland/ext-workspace-v1-protocol.h \
+                   wayland/xdg-toplevel-icon-v1-protocol.h
+WAYLAND_GEN_SRCS = wayland/xdg-shell-protocol.c \
+                   wayland/ext-workspace-v1-protocol.c \
+                   wayland/xdg-toplevel-icon-v1-protocol.c
+BUILT_SOURCES += $(WAYLAND_GEN_HDRS) $(WAYLAND_GEN_SRCS)
+CLEANFILES += $(WAYLAND_GEN_HDRS) $(WAYLAND_GEN_SRCS)
+
+wayland/xdg-shell-protocol.h: $(WAYLAND_PROTOCOLS_DATADIR)/stable/xdg-shell/xdg-shell.xml
+	@$(MKDIR_P) wayland
+	$(WAYLAND_SCANNER) server-header $< $@
+
+wayland/xdg-shell-protocol.c: $(WAYLAND_PROTOCOLS_DATADIR)/stable/xdg-shell/xdg-shell.xml
+	@$(MKDIR_P) wayland
+	$(WAYLAND_SCANNER) private-code $< $@
+
+wayland/wlr-layer-shell-unstable-v1-protocol.h: $(srcdir)/wayland/protocols/wlr-layer-shell-unstable-v1.xml
+	@$(MKDIR_P) wayland
+	$(WAYLAND_SCANNER) server-header $< $@
+
+wayland/wlr-output-power-management-unstable-v1-protocol.h: $(srcdir)/wayland/protocols/wlr-output-power-management-unstable-v1.xml
+	@$(MKDIR_P) wayland
+	$(WAYLAND_SCANNER) server-header $< $@
+
+wayland/ext-image-copy-capture-v1-protocol.h: $(WAYLAND_PROTOCOLS_DATADIR)/staging/ext-image-copy-capture/ext-image-copy-capture-v1.xml
+	@$(MKDIR_P) wayland
+	$(WAYLAND_SCANNER) server-header $< $@
+
+wayland/ext-workspace-v1-protocol.h: $(WAYLAND_PROTOCOLS_DATADIR)/staging/ext-workspace/ext-workspace-v1.xml
+	@$(MKDIR_P) wayland
+	$(WAYLAND_SCANNER) server-header $< $@
+
+wayland/ext-workspace-v1-protocol.c: $(WAYLAND_PROTOCOLS_DATADIR)/staging/ext-workspace/ext-workspace-v1.xml
+	@$(MKDIR_P) wayland
+	$(WAYLAND_SCANNER) private-code $< $@
+
+wayland/xdg-toplevel-icon-v1-protocol.h: $(WAYLAND_PROTOCOLS_DATADIR)/staging/xdg-toplevel-icon/xdg-toplevel-icon-v1.xml
+	@$(MKDIR_P) wayland
+	$(WAYLAND_SCANNER) server-header $< $@
+
+wayland/xdg-toplevel-icon-v1-protocol.c: $(WAYLAND_PROTOCOLS_DATADIR)/staging/xdg-toplevel-icon/xdg-toplevel-icon-v1.xml
+	@$(MKDIR_P) wayland
+	$(WAYLAND_SCANNER) private-code $< $@
+
+dtwm_wayland_SOURCES = wayland/dtwm_wayland.h \
+                       wayland/cde_bevel.c \
+                       wayland/cde_workspace.c \
+                       wayland/cde_icons.c \
+                       wayland/cde_xdnd_bridge.c \
+                       wayland/cde_session_lock.c \
+                       wayland/cde_output_mgmt.c \
+                       wayland/cde_ime.c \
+                       wayland/dtwm_wayland_main.c
+nodist_dtwm_wayland_SOURCES = $(WAYLAND_GEN_HDRS) $(WAYLAND_GEN_SRCS)
+dtwm_wayland_CPPFLAGS = -I$(builddir)/wayland -I$(srcdir)/wayland -DWLR_USE_UNSTABLE=1 \
+                        -DCDE_INSTALLATION_TOP=\"$(CDE_INSTALLATION_TOP)\"
+dtwm_wayland_CFLAGS = $(WAYLAND_COMP_CFLAGS)
+dtwm_wayland_LDADD = $(WAYLAND_COMP_LIBS) -lxcb-randr -lxcb-xfixes -linput
+
+dtwm_panel_SOURCES = wayland/WmFpWayland.c \
+                     Button.c        Callback.c      Clock.c \
+                     DataBaseLoad.c  PanelS.c        Parse.c \
+                     PopupMenu.c     Session.c       UI.c \
+                     WmFP.c          WmParse.c
+dtwm_panel_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)
+dtwm_panel_LDADD = $(DTCLIENTLIBS) $(XTOOLLIB) $(XCURSORLIB)
+if SOLARIS
+dtwm_panel_LDADD += -lintl -lresolv
+endif
+endif
 
 AM_CPPFLAGS = -DLARGECURSORS -DR2_COMPAT -DOPAQUE -DSHAPE -DUNMAP_ON_RESTART \
 	      -DBATCH_DRAG_REQUESTS -DCDE_INSTALLATION_TOP=\"$(CDE_INSTALLATION_TOP)\" \

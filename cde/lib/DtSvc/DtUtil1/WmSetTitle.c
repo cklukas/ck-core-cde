@@ -48,9 +48,28 @@
 #include <Dt/WsmP.h> 
 #include <Dt/WsmM.h>
 #include <Dt/Service.h>
+#include <string.h>
+#include <X11/Xatom.h>
 #include <Xm/Xm.h>
 #include <Xm/AtomMgr.h>
 #include <Tt/tttk.h>
+
+static int
+_DtWsmAppendWmRequestTitle(Widget widget, const char *req)
+{
+    if (!widget || !req)
+        return DT_SVC_FAIL;
+    Display *dpy = XtDisplay(widget);
+    Window root = RootWindowOfScreen(XtScreen(widget));
+    Window wmWindow = None;
+    if (_DtGetMwmWindow(dpy, root, &wmWindow) != Success || wmWindow == None)
+        return DT_SVC_FAIL;
+    Atom prop = XmInternAtom(dpy, _XA_DT_WM_REQUEST, False);
+    XChangeProperty(dpy, wmWindow, prop, XA_STRING, 8, PropModeAppend,
+                    (const unsigned char *)req, (int)strlen(req) + 1);
+    XFlush(dpy);
+    return DT_SVC_SUCCESS;
+}
 
 
 /*************************************<->*************************************
@@ -138,7 +157,9 @@ _DtWsmSetWorkspaceTitle (
 	    "DtWorkspace_Title_Set", 0);
     status = tt_ptr_error(msg);
     if (status != TT_OK) {
-	return DT_SVC_FAIL;
+	char req[256];
+	snprintf(req, sizeof req, "f.set_workspace_title %s %s", pch, pchNewName ? pchNewName : "");
+	return _DtWsmAppendWmRequestTitle(widget, req);
     }
     status = tt_message_arg_add(msg, TT_IN, "integer", nullptr);
     if (status != TT_OK) {
@@ -163,7 +184,10 @@ _DtWsmSetWorkspaceTitle (
     }
     status = tt_message_send(msg);
     if (status != TT_OK) {
-	return DT_SVC_FAIL;
+	tt_message_destroy(msg);
+	char req[256];
+	snprintf(req, sizeof req, "f.set_workspace_title %s %s", pch, pchNewName ? pchNewName : "");
+	return _DtWsmAppendWmRequestTitle(widget, req);
     }
 
     return DT_SVC_SUCCESS;

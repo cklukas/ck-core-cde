@@ -48,9 +48,28 @@
 #include <Dt/WsmP.h> 
 #include <Dt/WsmM.h>
 #include <Dt/Service.h>
+#include <string.h>
+#include <X11/Xatom.h>
 #include <Xm/Xm.h>
 #include <Xm/AtomMgr.h>
 #include <Tt/tttk.h>
+
+static int
+_DtWsmAppendWmRequestAddDel(Widget widget, const char *req)
+{
+    if (!widget || !req)
+        return dtmsg_FAIL;
+    Display *dpy = XtDisplay(widget);
+    Window root = RootWindowOfScreen(XtScreen(widget));
+    Window wmWindow = None;
+    if (_DtGetMwmWindow(dpy, root, &wmWindow) != Success || wmWindow == None)
+        return dtmsg_FAIL;
+    Atom prop = XmInternAtom(dpy, _XA_DT_WM_REQUEST, False);
+    XChangeProperty(dpy, wmWindow, prop, XA_STRING, 8, PropModeAppend,
+                    (const unsigned char *)req, (int)strlen(req) + 1);
+    XFlush(dpy);
+    return dtmsg_SUCCESS;
+}
 
 
 /*************************************<->*************************************
@@ -131,7 +150,9 @@ _DtWsmDeleteWorkspace (
 	    "DtWorkspace_Delete", 0);
     status = tt_ptr_error(msg);
     if (status != TT_OK) {
-	return dtmsg_FAIL;
+	char req[96];
+	snprintf(req, sizeof req, "f.delete_workspace %s", pch);
+	return _DtWsmAppendWmRequestAddDel(widget, req);
     }
     status = tt_message_arg_add(msg, TT_IN, Tttk_string, pch);
     if (status != TT_OK) {
@@ -143,7 +164,10 @@ _DtWsmDeleteWorkspace (
     }
     status = tt_message_send(msg);
     if (status != TT_OK) {
-	return dtmsg_FAIL;
+	tt_message_destroy(msg);
+	char req[96];
+	snprintf(req, sizeof req, "f.delete_workspace %s", pch);
+	return _DtWsmAppendWmRequestAddDel(widget, req);
     }
 
     return (dtmsg_SUCCESS);
@@ -225,7 +249,9 @@ _DtWsmCreateWorkspace (Widget widget, char * pchTitle)
 	    "DtWorkspace_Add", 0);
     status = tt_ptr_error(msg);
     if (status != TT_OK) {
-	return dtmsg_FAIL;
+	char req[256];
+	snprintf(req, sizeof req, "f.add_workspace %s", pchTitle ? pchTitle : "New");
+	return _DtWsmAppendWmRequestAddDel(widget, req);
     }
     status = tt_message_arg_add(msg, TT_IN, Tttk_string, pchTitle);
     if (status != TT_OK) {
@@ -237,7 +263,10 @@ _DtWsmCreateWorkspace (Widget widget, char * pchTitle)
     }
     status = tt_message_send(msg);
     if (status != TT_OK) {
-	return dtmsg_FAIL;
+	tt_message_destroy(msg);
+	char req[256];
+	snprintf(req, sizeof req, "f.add_workspace %s", pchTitle ? pchTitle : "New");
+	return _DtWsmAppendWmRequestAddDel(widget, req);
     }
 
     return (dtmsg_SUCCESS);

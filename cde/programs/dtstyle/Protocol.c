@@ -47,6 +47,8 @@
 /* include files                         */
 /*+++++++++++++++++++++++++++++++++++++++*/
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include <X11/Xlib.h>
 #include <X11/Intrinsic.h>
@@ -110,6 +112,69 @@ static Atom     xaDtSmPreeditInfo;
 /* local function definitions */
 static void SmRestoreDefault(Atom);
 
+Boolean
+DtstyleWaylandActive(void)
+{
+    const char *wl = getenv("WAYLAND_DISPLAY");
+    if (wl != nullptr && *wl != '\0')
+        return True;
+    if (style.display && style.root != None)
+    {
+        Atom wl_atom = XInternAtom(style.display, "_DT_WAYLAND_OUTPUTS", True);
+        if (wl_atom != None)
+        {
+            Atom actual_type = None;
+            int actual_format = 0;
+            unsigned long nitems = 0, bytes_after = 0;
+            unsigned char *prop = nullptr;
+            if (XGetWindowProperty(style.display, style.root, wl_atom, 0, 1, False,
+                                   AnyPropertyType, &actual_type, &actual_format,
+                                   &nitems, &bytes_after, &prop) == Success)
+            {
+                if (prop)
+                    XFree(prop);
+                if (actual_type != None)
+                    return True;
+            }
+        }
+    }
+    return False;
+}
+
+void
+DtstyleSendWaylandRequest(const char *cmd)
+{
+    if (!cmd || !*cmd || !style.display || !DtstyleWaylandActive())
+        return;
+
+    Window root = XRootWindow(style.display, 0);
+    Atom mwm_info = XInternAtom(style.display, "_MOTIF_WM_INFO", False);
+    Atom act_type = None;
+    int act_fmt = 0;
+    unsigned long nitems = 0, rem = 0;
+    unsigned char *prop = nullptr;
+
+    if (XGetWindowProperty(style.display, root, mwm_info, 0, 2, False,
+                           AnyPropertyType, &act_type, &act_fmt,
+                           &nitems, &rem, &prop) != Success ||
+        !prop || nitems < 2)
+    {
+        if (prop)
+            XFree(prop);
+        return;
+    }
+    Window wm_win = (Window)((unsigned long *)prop)[1];
+    XFree(prop);
+    if (wm_win == None)
+        return;
+
+    Atom req_atom = XInternAtom(style.display, "_DT_WM_REQUEST", False);
+    XChangeProperty(style.display, wm_win, req_atom, XA_STRING, 8,
+                    PropModeAppend, (const unsigned char *)cmd,
+                    (int)strlen(cmd) + 1);
+    XSync(style.display, False);
+}
+
 
 /*************************************<->*************************************
  *
@@ -159,7 +224,12 @@ InitDtstyleProtocol( void )
       if (_DtGetSmSaver (style.display, smWindow, &style.smSaver) != Success)
 	_DtSimpleError (progName, DtWarning, nullptr, ERR2, nullptr);
     }
-  else smWindow = 0;
+  else
+    {
+      smWindow = 0;
+      if (DtstyleWaylandActive())
+        style.smState.smSendSettings = True;
+    }
   
   
   XInternAtoms(style.display, atom_names, XtNumber(atom_names), False, atoms);
@@ -435,6 +505,7 @@ SmRestoreDefault(Atom toRestore)
 void 
 SmDefaultAudioSettings( void )
 {
+    DtstyleSendWaylandRequest("f.set_bell 50 400 100");
     if (smWindow != 0)
     {
         /*  Delete the property to indicate default settings to SM */
@@ -459,6 +530,10 @@ SmNewAudioSettings(
 {
 
     PropDtSmAudioInfo	audioProp;
+    char cmd[128];
+
+    snprintf(cmd, sizeof(cmd), "f.set_bell %d %d %d", volume, tone, duration);
+    DtstyleSendWaylandRequest(cmd);
 
     if (smWindow != 0)
     {
@@ -492,6 +567,7 @@ SmNewAudioSettings(
 void 
 SmDefaultScreenSettings( void )
 {
+    DtstyleSendWaylandRequest("f.set_saver_timeout 600 1800");
     if (smWindow != 0)
     {
         /*  Delete the property to indicate default settings to SM */
@@ -519,6 +595,10 @@ SmNewScreenSettings(
 {
 
     PropDtSmScreenInfo	screenProp;
+    char cmd[128];
+
+    snprintf(cmd, sizeof(cmd), "f.set_saver_timeout %d %d", timeout, timeout);
+    DtstyleSendWaylandRequest(cmd);
 
     if (smWindow != 0)
     {
@@ -564,6 +644,10 @@ SmNewSaverSettings(
   int saverTime_change;  /* saver timeout */
   int lockTime_change;   /* lock timeout */
   int cycleTime_change;  /* saver timeout */
+  char cmd[128];
+
+  snprintf(cmd, sizeof(cmd), "f.set_saver_timeout %d %d", saverTime, lockTime);
+  DtstyleSendWaylandRequest(cmd);
 
   if (smWindow != 0)
     {
@@ -605,6 +689,10 @@ void
 SmNewSaverTime(int saverTime)
 {
   SmStateInfo state;     /* structure that will contain new state info */
+  char cmd[128];
+
+  snprintf(cmd, sizeof(cmd), "f.set_saver_timeout %d %d", saverTime, style.smState.smLockTimeout);
+  DtstyleSendWaylandRequest(cmd);
 
   if (smWindow != 0)
     {
@@ -628,6 +716,7 @@ SmNewSaverTime(int saverTime)
 void 
 SmDefaultKeyboardSettings( void )
 {
+    DtstyleSendWaylandRequest("f.set_key_repeat 1 600 25");
     if (smWindow != 0)
     {
         /*  Delete the property to indicate default settings to SM */
@@ -651,6 +740,10 @@ SmNewKeyboardSettings(
 {
 
     PropDtSmKeyboardInfo	KeyboardProp;
+    char cmd[128];
+
+    snprintf(cmd, sizeof(cmd), "f.set_key_repeat %d 600 25", autoRepeat ? 1 : 0);
+    DtstyleSendWaylandRequest(cmd);
 
     if (smWindow != 0)
     {
@@ -683,6 +776,8 @@ SmNewKeyboardSettings(
 void 
 SmDefaultPointerSettings( void )
 {
+    DtstyleSendWaylandRequest("f.set_left_handed 0");
+    DtstyleSendWaylandRequest("f.set_pointer_accel 2 1 4");
     if (smWindow != 0)
     {
         /*  Delete the property to indicate default settings to SM */
@@ -703,6 +798,20 @@ void
 SmNewPointerSettings(
     char *pointerString)
 {
+    if (pointerString && DtstyleWaylandActive())
+    {
+        int nbtns = 0, b0 = 1, accel = 2, thresh = 4;
+        char map_tok[64] = {0};
+        if (sscanf(pointerString, "%d %63s %d %d", &nbtns, map_tok, &accel, &thresh) >= 3)
+        {
+            char cmd[128];
+            b0 = atoi(map_tok);
+            snprintf(cmd, sizeof(cmd), "f.set_left_handed %d", (b0 != 1) ? 1 : 0);
+            DtstyleSendWaylandRequest(cmd);
+            snprintf(cmd, sizeof(cmd), "f.set_pointer_accel %d 1 %d", accel, thresh);
+            DtstyleSendWaylandRequest(cmd);
+        }
+    }
 
     if (smWindow != 0)
     {

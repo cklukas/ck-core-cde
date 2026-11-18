@@ -62,6 +62,7 @@
 #include <Xm/VendorSEP.h>
 #include <X11/Xutil.h>
 #include <stdint.h>
+#include <time.h>
 
 #include <Dt/DialogBox.h>
 #include <Dt/Message.h>
@@ -336,6 +337,134 @@ static Widget midwarnDialog;
 
 static Mouse mouse;
 static saveRestore save = {FALSE, 0, };
+static Boolean dclickSelectState = False;
+static uint64_t lastPictBoxClickMonoMs = 0;
+static int pictBoxClickCount = 0;
+
+static Pixmap
+LoadMouseBitmap(const char *name, Pixel fg, Pixel bg)
+{
+    Pixmap pix = XmGetPixmap(style.screen, (char *)name, fg, bg);
+    if (pix == XmUNSPECIFIED_PIXMAP && name && name[0])
+    {
+        char fallback[PATH_MAX];
+#ifdef CDE_INSTALLATION_TOP
+        snprintf(fallback, sizeof(fallback), "%s/appconfig/icons/C/%s",
+                 CDE_INSTALLATION_TOP, name);
+        pix = XmGetPixmap(style.screen, fallback, fg, bg);
+#endif
+        if (pix == XmUNSPECIFIED_PIXMAP)
+        {
+            snprintf(fallback, sizeof(fallback), "/usr/dt/appconfig/icons/C/%s", name);
+            pix = XmGetPixmap(style.screen, fallback, fg, bg);
+        }
+    }
+    return pix;
+}
+
+static void
+toggleDoubleClickTestVisual(void)
+{
+    static Boolean haveOrigColors = False;
+    static Pixel origBg = 0;
+    static Pixel origFg = 0;
+    Arg color[4];
+    int n;
+
+    if (!haveOrigColors && mouse.pictLabel)
+    {
+        XtVaGetValues(mouse.pictLabel,
+                      XmNbackground, &origBg,
+                      XmNforeground, &origFg,
+                      nullptr);
+        haveOrigColors = True;
+    }
+
+    dclickSelectState = !dclickSelectState;
+    if (!dclickSelectState)
+    {
+        Pixel restoreBg = haveOrigColors ? origBg : style.secBgCol;
+        if (mouse.pictButton && mouse.pixmap != XmUNSPECIFIED_PIXMAP)
+        {
+            n = 0;
+            XtSetArg(color[n], XmNlabelPixmap, mouse.pixmap); n++;
+            XtSetValues(mouse.pictButton, color, n);
+        }
+        n = 0;
+        XtSetArg(color[n], XmNbackground, restoreBg); n++;
+        if (mouse.pictButton)
+            XtSetValues(mouse.pictButton, color, n);
+        if (mouse.pictRC)
+            XtSetValues(mouse.pictRC, color, n);
+        if (mouse.pictLabel)
+        {
+            if (haveOrigColors)
+                XtSetArg(color[n], XmNforeground, origFg), n++;
+            XtSetValues(mouse.pictLabel, color, n);
+        }
+    }
+    else
+    {
+        Pixel restoreBg = haveOrigColors ? origBg : style.secBgCol;
+        Pixel hiBg = (style.secBSCol != restoreBg) ? style.secBSCol : BlackPixelOfScreen(style.screen);
+        Pixel hiFg = (style.secTSCol != hiBg) ? style.secTSCol : WhitePixelOfScreen(style.screen);
+
+        if (mouse.pictButton && mouse.pixmapSel != XmUNSPECIFIED_PIXMAP)
+        {
+            n = 0;
+            XtSetArg(color[n], XmNlabelPixmap, mouse.pixmapSel); n++;
+            XtSetValues(mouse.pictButton, color, n);
+        }
+        n = 0;
+        XtSetArg(color[n], XmNbackground, hiBg); n++;
+        if (mouse.pictButton)
+            XtSetValues(mouse.pictButton, color, n);
+        if (mouse.pictRC)
+            XtSetValues(mouse.pictRC, color, n);
+        n = 0;
+        XtSetArg(color[n], XmNbackground, hiBg); n++;
+        XtSetArg(color[n], XmNforeground, hiFg); n++;
+        if (mouse.pictLabel)
+            XtSetValues(mouse.pictLabel, color, n);
+    }
+}
+
+static void
+pictBoxButtonPressEH(Widget w, XtPointer client_data, XEvent *event, Boolean *cont)
+{
+    struct timespec ts = {0};
+    uint64_t nowMs;
+    int mct;
+
+    (void)w;
+    (void)client_data;
+    (void)cont;
+    if (!event || event->type != ButtonPress)
+        return;
+    if (event->xbutton.button != Button1)
+        return;
+
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    nowMs = (uint64_t)ts.tv_sec * 1000ULL + (uint64_t)(ts.tv_nsec / 1000000L);
+    mct = XtGetMultiClickTime(style.display);
+    if (mct < 100)
+        mct = DCLICKDEFAULT;
+    if (lastPictBoxClickMonoMs != 0 &&
+        nowMs >= lastPictBoxClickMonoMs &&
+        (nowMs - lastPictBoxClickMonoMs) <= (uint64_t)mct)
+    {
+        pictBoxClickCount++;
+    }
+    else
+    {
+        pictBoxClickCount = 1;
+    }
+    lastPictBoxClickMonoMs = nowMs;
+    if (pictBoxClickCount >= 2 && (pictBoxClickCount % 2) == 0)
+    {
+        toggleDoubleClickTestVisual();
+    }
+}
 
 static void
 EnsureXcursorPath(void)
@@ -1197,14 +1326,10 @@ build_mouseDialog( Widget shell )
 
     if(mouse.type == POINTER3B) 
     {
-        mouse.b3     = XmGetPixmap(style.screen, B3,
-				 style.secBSCol, style.secTSCol);
-        mouse.b3_rev = XmGetPixmap(style.screen, B3_REV,
-                           	 style.secBSCol, style.secTSCol);
-        mouse.b3Sel  = XmGetPixmap(style.screen, B3,
-	                         style.secTSCol, style.secBSCol );
-        mouse.b3_revSel = XmGetPixmap(style.screen, B3_REV,
- 				 style.secTSCol, style.secBSCol);
+        mouse.b3     = LoadMouseBitmap(B3, style.secBSCol, style.secTSCol);
+        mouse.b3_rev = LoadMouseBitmap(B3_REV, style.secBSCol, style.secTSCol);
+        mouse.b3Sel  = LoadMouseBitmap(B3, style.secTSCol, style.secBSCol);
+        mouse.b3_revSel = LoadMouseBitmap(B3_REV, style.secTSCol, style.secBSCol);
 
         if(mouse.map_return[0] == 1) 
 	{
@@ -1219,14 +1344,10 @@ build_mouseDialog( Widget shell )
     }
     else /* 2 button mouse */ 
     {
-	mouse.b2        = XmGetPixmap(style.screen, B2,
-                             style.secBSCol, style.secTSCol);
-	mouse.b2_rev    = XmGetPixmap(style.screen, B2_REV,
-                            style.secBSCol, style.secTSCol);
-        mouse.b2Sel     = XmGetPixmap(style.screen, B2,
-                             style.secTSCol, style.secBSCol);
-        mouse.b2_revSel = XmGetPixmap(style.screen, B2_REV,
-                             style.secTSCol, style.secBSCol);
+	mouse.b2        = LoadMouseBitmap(B2, style.secBSCol, style.secTSCol);
+	mouse.b2_rev    = LoadMouseBitmap(B2_REV, style.secBSCol, style.secTSCol);
+        mouse.b2Sel     = LoadMouseBitmap(B2, style.secTSCol, style.secBSCol);
+        mouse.b2_revSel = LoadMouseBitmap(B2_REV, style.secTSCol, style.secBSCol);
 
         if(mouse.map_return[0] == 1)
         {
@@ -1241,6 +1362,22 @@ build_mouseDialog( Widget shell )
     }
 
     /*Get the value of doubleclick*/
+    {
+        char *mctRes = DupXrmResourceString("dtstyle.multiClickTime", "Dtstyle.MultiClickTime");
+        if (!mctRes)
+            mctRes = DupXrmResourceString("multiClickTime", "MultiClickTime");
+        if (mctRes)
+        {
+            int parsed = atoi(mctRes);
+            XtFree(mctRes);
+            if (parsed >= 100 && parsed <= 2000)
+                XtSetMultiClickTime(style.display, parsed);
+        }
+        else if (XtGetMultiClickTime(style.display) <= 200)
+        {
+            XtSetMultiClickTime(style.display, DCLICKDEFAULT);
+        }
+    }
     mouse.mydclick = XtGetMultiClickTime(style.display);
     if (mouse.mydclick > 0)
       mouse.mydclick = mouse.mydclick/100;
@@ -1350,7 +1487,10 @@ build_mouseDialog( Widget shell )
     n = 0;
     string = CMPSTR ((char *)GETMESSAGE(9, 17, "Test\nDouble-Click"));
     XtSetArg(args[n], XmNlabelString, string); n++;
-    mouse.pictLabel= XmCreateLabelGadget(mouse.pictRC, "mouseLabel", args, n);
+    XtSetArg(args[n], XmNshadowThickness, 0); n++;
+    XtSetArg(args[n], XmNhighlightThickness, 0); n++;
+    XtSetArg(args[n], XmNalignment, XmALIGNMENT_BEGINNING); n++;
+    mouse.pictLabel= XmCreatePushButton(mouse.pictRC, "mouseLabel", args, n);
     XmStringFree(string);
 
     n = 0;
@@ -1653,15 +1793,12 @@ build_mouseDialog( Widget shell )
     XtSetArg(args[n], XmNrightOffset, style.horizontalSpacing); n++;
     XtSetArg(args[n], XmNorientation, XmHORIZONTAL); n++;
     XtSetArg(args[n], XmNpacking, XmPACK_TIGHT); n++;
-    XtSetArg(args[n], XmNnumColumns, CURSOR_PREVIEW_COUNT); n++;
-    XtSetArg(args[n], XmNspacing, style.verticalSpacing); n++;
+    XtSetArg(args[n], XmNspacing, style.horizontalSpacing); n++;
     mouse.cursorPreviewGrid = XmCreateRowColumn(mouse.cursorPreviewForm, "cursorPreviewGrid", args, n);
     XtManageChild(mouse.cursorPreviewGrid);
 
     {
-	int previewSize = mouse.maxCursorSize + 16;
-	if (previewSize < 64)
-	    previewSize = 64;
+	int previewSize = 48;
 
     for (i = 0; i < CURSOR_PREVIEW_COUNT; i++)
     {
@@ -1682,13 +1819,13 @@ build_mouseDialog( Widget shell )
 	    n = 0;
 	    XtSetArg(args[n], XmNwidth, previewSize); n++;
 	    XtSetArg(args[n], XmNheight, previewSize); n++;
+	    XtSetArg(args[n], XmNmarginWidth, previewSize / 2); n++;
+	    XtSetArg(args[n], XmNmarginHeight, previewSize / 2); n++;
 	    XtSetArg(args[n], XmNshadowThickness, 1); n++;
 	    XtSetArg(args[n], XmNborderWidth, 1); n++;
 	    XtSetArg(args[n], XmNhighlightThickness, 1); n++;
             mouse.cursorPreviewArea[i] = XmCreateDrawingArea(cell, "cursorPreviewArea", args, n);
             XtManageChild(mouse.cursorPreviewArea[i]);
-            XtAddCallback(mouse.cursorPreviewArea[i], XmNmapCallback,
-			  cursorPreviewMapCB, nullptr);
             XtAddCallback(mouse.cursorPreviewArea[i], XmNexposeCallback,
 			  cursorPreviewExposeCB, (XtPointer)(intptr_t)i);
 
@@ -1709,10 +1846,11 @@ build_mouseDialog( Widget shell )
     string = CMPSTR(RESTART_WM_MSG);
     XtSetArg(args[n], XmNlabelString, string); n++;
     XtSetArg(args[n], XmNalignment, XmALIGNMENT_BEGINNING); n++;
-    widget_list[count++] =
     mouse.dtwmRestartTG = XmCreateToggleButtonGadget(form, "dtwmRestartTG", args, n);
+    if (!DtstyleWaylandActive())
+        widget_list[count++] = mouse.dtwmRestartTG;
     XmStringFree(string);
-    XmToggleButtonGadgetSetState(mouse.dtwmRestartTG, True, False);
+    XmToggleButtonGadgetSetState(mouse.dtwmRestartTG, !DtstyleWaylandActive(), False);
 
     {
 	Widget colorRef = mouse.threshScale ? mouse.threshScale : form;
@@ -1739,7 +1877,6 @@ build_mouseDialog( Widget shell )
 	}
     }
 
-    XtAddCallback(style.mouseDialog, XmNmapCallback, formLayoutCB, nullptr);
     XtAddCallback(style.mouseDialog, XmNmapCallback, _DtmapCB_mouseDialog, shell);
     XtAddCallback(mouse.systemDefault, XmNactivateCallback, 
                   systemDefaultCB, nullptr);
@@ -1800,14 +1937,16 @@ build_mouseDialog( Widget shell )
                   dclickVCCB, (caddr_t)mouse.pictButton);
     XtAddCallback(mouse.cursorPreviewForm, XmNmapCallback,
                   cursorPreviewMapCB, nullptr);
-    XtAddCallback(mouse.pictButton, XmNactivateCallback, 
-                  dclickTestCB, nullptr);  
+    XtAddEventHandler(mouse.pictButton, ButtonPressMask, False,
+                      pictBoxButtonPressEH, nullptr);
+    XtAddEventHandler(mouse.pictLabel, ButtonPressMask, False,
+                      pictBoxButtonPressEH, nullptr);
+    XtAddEventHandler(mouse.pictRC, ButtonPressMask, False,
+                      pictBoxButtonPressEH, nullptr);
 
-    XtManageChild(form);
-    XtManageChildren(widget_list,count);
-    XtManageChild(mouse.pictRC);
     XtManageChild(mouse.pictButton);
     XtManageChild(mouse.pictLabel);
+    XtManageChild(mouse.pictRC);
     XtManageChild(mouse.rightToggle);
     XtManageChild(mouse.leftToggle);
 
@@ -1829,6 +1968,10 @@ build_mouseDialog( Widget shell )
 	XtManageChild(mouse.transferToggle);
 	XtManageChild(mouse.adjustToggle);
     }
+
+    XtManageChildren(widget_list,count);
+    formLayoutCB(style.mouseDialog, nullptr, nullptr);
+    XtManageChild(form);
 
     return(style.mouseDialog);
 }
@@ -1913,7 +2056,7 @@ formLayoutCB(
     n=0;
     XtSetArg(args[n], XmNtopAttachment,    XmATTACH_WIDGET);    n++;
     XtSetArg(args[n], XmNtopWidget,        mouse.systemDefault); n++;
-    XtSetArg(args[n], XmNtopOffset,        4*style.verticalSpacing);   n++;
+    XtSetArg(args[n], XmNtopOffset,        2*style.verticalSpacing);   n++;
     XtSetArg(args[n], XmNbottomAttachment, XmATTACH_NONE);      n++;
     XtSetArg(args[n], XmNleftAttachment,   XmATTACH_WIDGET);    n++;
     XtSetArg(args[n], XmNleftWidget,       mouse.pictFrame);    n++;
@@ -1950,7 +2093,7 @@ formLayoutCB(
     n=0;
     XtSetArg(args[n], XmNtopAttachment,    XmATTACH_WIDGET);    n++;
     XtSetArg(args[n], XmNtopWidget,        mouse.handLabGad); n++;
-    XtSetArg(args[n], XmNtopOffset,        3*style.verticalSpacing);   n++;
+    XtSetArg(args[n], XmNtopOffset,        2*style.verticalSpacing);   n++;
     XtSetArg(args[n], XmNbottomAttachment, XmATTACH_NONE);      n++;
     XtSetArg(args[n], XmNleftAttachment,   XmATTACH_WIDGET);    n++;
     XtSetArg(args[n], XmNleftWidget,       mouse.pictFrame);    n++;
@@ -1985,127 +2128,142 @@ formLayoutCB(
 
 
 
-    TopOffset = ScaleHeight + style.verticalSpacing - LabelHeight;
+    /* Chain the controls top-to-bottom via XmATTACH_WIDGET so XmForm uses each
+     * scale/row/menu widget's true preferred height (including showValue text)
+     * before realization, and align each left-hand label to its control! */
+    {
+        XtWidgetGeometry pg = {0}, sg = {0}, hg = {0}, tg = {0};
+        XtQueryGeometry(mouse.pictFrame, nullptr, &pg);
+        XtQueryGeometry(mouse.systemDefault, nullptr, &sg);
+        XtQueryGeometry(mouse.handLabGad, nullptr, &hg);
+        XtQueryGeometry(mouse.transferToggle, nullptr, &tg);
+        int pictBottom = style.verticalSpacing + (int)(pg.height ? pg.height : XtHeight(mouse.pictFrame));
+        int rightBottom = style.verticalSpacing + (int)(sg.height ? sg.height : XtHeight(mouse.systemDefault)) +
+                          2 * style.verticalSpacing + (int)(hg.height ? hg.height : XtHeight(mouse.handLabGad)) +
+                          2 * style.verticalSpacing + (int)(tg.height ? tg.height : XtHeight(mouse.transferToggle)) +
+                          style.verticalSpacing;
+        Widget topAnchor = (pictBottom >= rightBottom) ? mouse.pictFrame : mouse.transferToggle;
+
+        /* DoubleClick Scale */
+        n=0;
+        XtSetArg(args[n], XmNtopAttachment,    XmATTACH_WIDGET);    n++;
+        XtSetArg(args[n], XmNtopWidget,        topAnchor);          n++;
+        XtSetArg(args[n], XmNtopOffset,        style.verticalSpacing); n++;
+        XtSetArg(args[n], XmNbottomAttachment, XmATTACH_NONE);      n++;
+        XtSetArg(args[n], XmNleftAttachment,   XmATTACH_WIDGET);    n++;
+        XtSetArg(args[n], XmNleftWidget,       mouse.dclickLabGad); n++;
+        XtSetArg(args[n], XmNleftOffset,       2*style.horizontalSpacing); n++;
+        XtSetArg(args[n], XmNrightAttachment,  XmATTACH_FORM);      n++;
+        XtSetValues (mouse.dclickScale, args, n);
+    }
 
     /* DoubleClick Label */
     n=0;
-    XtSetArg(args[n], XmNtopAttachment,    XmATTACH_WIDGET);    n++;
-    XtSetArg(args[n], XmNtopWidget,        mouse.pictFrame) ;   n++;
-    XtSetArg(args[n], XmNtopOffset,        TopOffset);          n++;    
-    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_NONE);      n++;
-    XtSetArg(args[n], XmNleftAttachment,   XmATTACH_FORM);      n++;
-    LeftOffset =  MaxLabelWidth + style.horizontalSpacing - DclickLabelWidth;
-    XtSetArg(args[n], XmNleftOffset,       LeftOffset);         n++;
-    XtSetArg(args[n], XmNrightAttachment,  XmATTACH_NONE);      n++;
-    XtSetValues (mouse.dclickLabGad, args, n);
-
-    /* DoubleClick Scale */
-    n=0;
-    XtSetArg(args[n], XmNtopAttachment,    XmATTACH_NONE);      n++;
+    XtSetArg(args[n], XmNtopAttachment,    XmATTACH_NONE);          n++;
     XtSetArg(args[n], XmNbottomAttachment, XmATTACH_OPPOSITE_WIDGET); n++;
-    XtSetArg(args[n], XmNbottomWidget,     mouse.dclickLabGad); n++;
-    XtSetArg(args[n], XmNbottomOffset,     0);                  n++;
-    XtSetArg(args[n], XmNleftAttachment,   XmATTACH_WIDGET);    n++;
-    XtSetArg(args[n], XmNleftWidget,       mouse.dclickLabGad); n++;
-    XtSetArg(args[n], XmNleftOffset,       2*style.horizontalSpacing); n++;
-    XtSetArg(args[n], XmNrightAttachment,  XmATTACH_FORM);      n++;
-    XtSetValues (mouse.dclickScale, args, n);
-
-    /* Acceleration Label */
-    n=0;
-    XtSetArg(args[n], XmNtopAttachment,    XmATTACH_WIDGET);    n++;
-    XtSetArg(args[n], XmNtopWidget,        mouse.dclickLabGad); n++;
-    XtSetArg(args[n], XmNtopOffset,        TopOffset);          n++;
-    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_NONE);      n++;
-    XtSetArg(args[n], XmNleftAttachment,   XmATTACH_FORM);      n++;
-    LeftOffset =  MaxLabelWidth + style.horizontalSpacing - AccelLabelWidth;
-    XtSetArg(args[n], XmNleftOffset,       LeftOffset);         n++;
-    XtSetArg(args[n], XmNrightAttachment,  XmATTACH_NONE);      n++;
-    XtSetValues (mouse.accelLabGad, args, n);
+    XtSetArg(args[n], XmNbottomWidget,     mouse.dclickScale);      n++;
+    XtSetArg(args[n], XmNbottomOffset,     0);                      n++;
+    XtSetArg(args[n], XmNleftAttachment,   XmATTACH_FORM);          n++;
+    LeftOffset =  MaxLabelWidth + style.horizontalSpacing - DclickLabelWidth;
+    XtSetArg(args[n], XmNleftOffset,       LeftOffset);             n++;
+    XtSetArg(args[n], XmNrightAttachment,  XmATTACH_NONE);          n++;
+    XtSetValues (mouse.dclickLabGad, args, n);
 
     /* Acceleration Scale */
     n=0;
-    XtSetArg(args[n], XmNtopAttachment,    XmATTACH_NONE);      n++;
-    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_OPPOSITE_WIDGET); n++;
-    XtSetArg(args[n], XmNbottomWidget,     mouse.accelLabGad);  n++;
-    XtSetArg(args[n], XmNbottomOffset,     0);                  n++;
-    XtSetArg(args[n], XmNleftAttachment,   XmATTACH_WIDGET);    n++;
-    XtSetArg(args[n], XmNleftWidget,       mouse.accelLabGad);  n++;
+    XtSetArg(args[n], XmNtopAttachment,    XmATTACH_WIDGET);        n++;
+    XtSetArg(args[n], XmNtopWidget,        mouse.dclickScale);      n++;
+    XtSetArg(args[n], XmNtopOffset,        style.verticalSpacing);  n++;
+    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_NONE);          n++;
+    XtSetArg(args[n], XmNleftAttachment,   XmATTACH_WIDGET);        n++;
+    XtSetArg(args[n], XmNleftWidget,       mouse.accelLabGad);      n++;
     XtSetArg(args[n], XmNleftOffset,       2*style.horizontalSpacing); n++;
-    XtSetArg(args[n], XmNrightAttachment,  XmATTACH_FORM);      n++;
+    XtSetArg(args[n], XmNrightAttachment,  XmATTACH_FORM);          n++;
     XtSetValues (mouse.accelScale, args, n);
 
-    /* Threshold Label */
+    /* Acceleration Label */
     n=0;
-    XtSetArg(args[n], XmNtopAttachment,    XmATTACH_WIDGET);    n++;
-    XtSetArg(args[n], XmNtopWidget,        mouse.accelScale);   n++;
-    XtSetArg(args[n], XmNtopOffset,        TopOffset);          n++;
-    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_NONE);      n++;
-    XtSetArg(args[n], XmNleftAttachment,   XmATTACH_FORM);      n++;
-    LeftOffset =  MaxLabelWidth + style.horizontalSpacing - ThreshLabelWidth;
-    XtSetArg(args[n], XmNleftOffset,       LeftOffset);         n++;
-    XtSetArg(args[n], XmNrightAttachment,  XmATTACH_NONE);      n++;
-    XtSetValues (mouse.threshLabGad, args, n);
+    XtSetArg(args[n], XmNtopAttachment,    XmATTACH_NONE);          n++;
+    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_OPPOSITE_WIDGET); n++;
+    XtSetArg(args[n], XmNbottomWidget,     mouse.accelScale);       n++;
+    XtSetArg(args[n], XmNbottomOffset,     0);                      n++;
+    XtSetArg(args[n], XmNleftAttachment,   XmATTACH_FORM);          n++;
+    LeftOffset =  MaxLabelWidth + style.horizontalSpacing - AccelLabelWidth;
+    XtSetArg(args[n], XmNleftOffset,       LeftOffset);             n++;
+    XtSetArg(args[n], XmNrightAttachment,  XmATTACH_NONE);          n++;
+    XtSetValues (mouse.accelLabGad, args, n);
 
     /* Threshold Scale */
     n=0;
-    XtSetArg(args[n], XmNtopAttachment,    XmATTACH_NONE);      n++;
-    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_OPPOSITE_WIDGET); n++;
-    XtSetArg(args[n], XmNbottomWidget,     mouse.threshLabGad); n++;
-    XtSetArg(args[n], XmNbottomOffset,     0);			n++;
-    XtSetArg(args[n], XmNleftAttachment,   XmATTACH_WIDGET);    n++;
-    XtSetArg(args[n], XmNleftWidget,       mouse.threshLabGad); n++;
+    XtSetArg(args[n], XmNtopAttachment,    XmATTACH_WIDGET);        n++;
+    XtSetArg(args[n], XmNtopWidget,        mouse.accelScale);       n++;
+    XtSetArg(args[n], XmNtopOffset,        style.verticalSpacing);  n++;
+    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_NONE);          n++;
+    XtSetArg(args[n], XmNleftAttachment,   XmATTACH_WIDGET);        n++;
+    XtSetArg(args[n], XmNleftWidget,       mouse.threshLabGad);     n++;
     XtSetArg(args[n], XmNleftOffset,       2*style.horizontalSpacing); n++;
-    XtSetArg(args[n], XmNrightAttachment,  XmATTACH_FORM);      n++;
+    XtSetArg(args[n], XmNrightAttachment,  XmATTACH_FORM);          n++;
     XtSetValues (mouse.threshScale, args, n);
+
+    /* Threshold Label */
+    n=0;
+    XtSetArg(args[n], XmNtopAttachment,    XmATTACH_NONE);          n++;
+    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_OPPOSITE_WIDGET); n++;
+    XtSetArg(args[n], XmNbottomWidget,     mouse.threshScale);      n++;
+    XtSetArg(args[n], XmNbottomOffset,     0);                      n++;
+    XtSetArg(args[n], XmNleftAttachment,   XmATTACH_FORM);          n++;
+    LeftOffset =  MaxLabelWidth + style.horizontalSpacing - ThreshLabelWidth;
+    XtSetArg(args[n], XmNleftOffset,       LeftOffset);             n++;
+    XtSetArg(args[n], XmNrightAttachment,  XmATTACH_NONE);          n++;
+    XtSetValues (mouse.threshLabGad, args, n);
+
+    /* Cursor Size RowColumn */
+    n=0;
+    XtSetArg(args[n], XmNtopAttachment,    XmATTACH_WIDGET);        n++;
+    XtSetArg(args[n], XmNtopWidget,        mouse.threshScale);      n++;
+    XtSetArg(args[n], XmNtopOffset,        style.verticalSpacing);  n++;
+    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_NONE);          n++;
+    XtSetArg(args[n], XmNleftAttachment,   XmATTACH_WIDGET);        n++;
+    XtSetArg(args[n], XmNleftWidget,       mouse.cursorSizeLabGad); n++;
+    XtSetArg(args[n], XmNleftOffset,       2*style.horizontalSpacing); n++;
+    XtSetArg(args[n], XmNrightAttachment,  XmATTACH_FORM);          n++;
+    XtSetValues (mouse.cursorSizeRC, args, n);
 
     /* Cursor Size Label */
     n=0;
-    XtSetArg(args[n], XmNtopAttachment,    XmATTACH_WIDGET);    n++;
-    XtSetArg(args[n], XmNtopWidget,        mouse.threshScale);  n++;
-    XtSetArg(args[n], XmNtopOffset,        TopOffset);          n++;
-    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_NONE);      n++;
-    XtSetArg(args[n], XmNleftAttachment,   XmATTACH_FORM);      n++;
-    LeftOffset =  MaxLabelWidth + style.horizontalSpacing - CursorSizeLabelWidth;
-    XtSetArg(args[n], XmNleftOffset,       LeftOffset);         n++;
-    XtSetArg(args[n], XmNrightAttachment,  XmATTACH_NONE);      n++;
-    XtSetValues (mouse.cursorSizeLabGad, args, n);
-
-    /* Cursor Size Scale */
-    n=0;
-    XtSetArg(args[n], XmNtopAttachment,    XmATTACH_NONE);      n++;
+    XtSetArg(args[n], XmNtopAttachment,    XmATTACH_OPPOSITE_WIDGET); n++;
+    XtSetArg(args[n], XmNtopWidget,        mouse.cursorSizeRC);     n++;
     XtSetArg(args[n], XmNbottomAttachment, XmATTACH_OPPOSITE_WIDGET); n++;
-    XtSetArg(args[n], XmNbottomWidget,     mouse.cursorSizeLabGad); n++;
-    XtSetArg(args[n], XmNbottomOffset,     0);                  n++;
-    XtSetArg(args[n], XmNleftAttachment,   XmATTACH_WIDGET);    n++;
-    XtSetArg(args[n], XmNleftWidget,       mouse.cursorSizeLabGad); n++;
-    XtSetArg(args[n], XmNleftOffset,       2*style.horizontalSpacing); n++;
-    XtSetArg(args[n], XmNrightAttachment,  XmATTACH_FORM);      n++;
-    XtSetValues (mouse.cursorSizeRC, args, n);
-
-    /* Cursor Theme Label */
-    n=0;
-    XtSetArg(args[n], XmNtopAttachment,    XmATTACH_WIDGET);    n++;
-    XtSetArg(args[n], XmNtopWidget,        mouse.cursorSizeRC); n++;
-    XtSetArg(args[n], XmNtopOffset,        TopOffset);          n++;
-    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_NONE);      n++;
-    XtSetArg(args[n], XmNleftAttachment,   XmATTACH_FORM);      n++;
-    LeftOffset =  MaxLabelWidth + style.horizontalSpacing - CursorThemeLabelWidth;
-    XtSetArg(args[n], XmNleftOffset,       LeftOffset);         n++;
-    XtSetArg(args[n], XmNrightAttachment,  XmATTACH_NONE);      n++;
-    XtSetValues (mouse.cursorThemeLabGad, args, n);
+    XtSetArg(args[n], XmNbottomWidget,     mouse.cursorSizeRC);     n++;
+    XtSetArg(args[n], XmNleftAttachment,   XmATTACH_FORM);          n++;
+    LeftOffset =  MaxLabelWidth + style.horizontalSpacing - CursorSizeLabelWidth;
+    XtSetArg(args[n], XmNleftOffset,       LeftOffset);             n++;
+    XtSetArg(args[n], XmNrightAttachment,  XmATTACH_NONE);          n++;
+    XtSetValues (mouse.cursorSizeLabGad, args, n);
 
     /* Cursor Theme Option Menu */
     n=0;
-    XtSetArg(args[n], XmNtopAttachment,    XmATTACH_NONE);      n++;
-    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_OPPOSITE_WIDGET); n++;
-    XtSetArg(args[n], XmNbottomWidget,     mouse.cursorThemeLabGad); n++;
-    XtSetArg(args[n], XmNbottomOffset,     0);                  n++;
-    XtSetArg(args[n], XmNleftAttachment,   XmATTACH_WIDGET);    n++;
+    XtSetArg(args[n], XmNtopAttachment,    XmATTACH_WIDGET);        n++;
+    XtSetArg(args[n], XmNtopWidget,        mouse.cursorSizeRC);     n++;
+    XtSetArg(args[n], XmNtopOffset,        style.verticalSpacing);  n++;
+    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_NONE);          n++;
+    XtSetArg(args[n], XmNleftAttachment,   XmATTACH_WIDGET);        n++;
     XtSetArg(args[n], XmNleftWidget,       mouse.cursorThemeLabGad); n++;
     XtSetArg(args[n], XmNleftOffset,       2*style.horizontalSpacing); n++;
-    XtSetArg(args[n], XmNrightAttachment,  XmATTACH_FORM);      n++;
+    XtSetArg(args[n], XmNrightAttachment,  XmATTACH_FORM);          n++;
     XtSetValues (mouse.cursorThemeOM, args, n);
+
+    /* Cursor Theme Label */
+    n=0;
+    XtSetArg(args[n], XmNtopAttachment,    XmATTACH_OPPOSITE_WIDGET); n++;
+    XtSetArg(args[n], XmNtopWidget,        mouse.cursorThemeOM);    n++;
+    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_OPPOSITE_WIDGET); n++;
+    XtSetArg(args[n], XmNbottomWidget,     mouse.cursorThemeOM);    n++;
+    XtSetArg(args[n], XmNleftAttachment,   XmATTACH_FORM);          n++;
+    LeftOffset =  MaxLabelWidth + style.horizontalSpacing - CursorThemeLabelWidth;
+    XtSetArg(args[n], XmNleftOffset,       LeftOffset);             n++;
+    XtSetArg(args[n], XmNrightAttachment,  XmATTACH_NONE);          n++;
+    XtSetValues (mouse.cursorThemeLabGad, args, n);
 
     /* Cursor Preview Frame */
     n=0;
@@ -2116,7 +2274,15 @@ formLayoutCB(
     XtSetArg(args[n], XmNleftOffset,       style.horizontalSpacing); n++;
     XtSetArg(args[n], XmNrightAttachment,  XmATTACH_FORM);      n++;
     XtSetArg(args[n], XmNrightOffset,      style.horizontalSpacing); n++;
-    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_NONE);      n++;
+    if (DtstyleWaylandActive())
+    {
+        XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM);  n++;
+        XtSetArg(args[n], XmNbottomOffset,     style.verticalSpacing); n++;
+    }
+    else
+    {
+        XtSetArg(args[n], XmNbottomAttachment, XmATTACH_NONE);  n++;
+    }
     XtSetValues (mouse.cursorPreviewFrame, args, n);
 
     /* Cursor Preview Form (inside frame) */
@@ -2128,18 +2294,19 @@ formLayoutCB(
     XtSetValues (mouse.cursorPreviewForm, args, n);
 
     /* Restart toggle */
-    n=0;
-    XtSetArg(args[n], XmNtopAttachment,    XmATTACH_WIDGET);    n++;
-    XtSetArg(args[n], XmNtopWidget,        mouse.cursorPreviewFrame); n++;
-    XtSetArg(args[n], XmNtopOffset,        style.verticalSpacing); n++;
-    XtSetArg(args[n], XmNleftAttachment,   XmATTACH_FORM);      n++;
-    XtSetArg(args[n], XmNleftOffset,       style.horizontalSpacing); n++;
-    XtSetArg(args[n], XmNrightAttachment,  XmATTACH_FORM);      n++;
-    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM);      n++;
-    XtSetArg(args[n], XmNbottomOffset,     style.verticalSpacing); n++;
-    XtSetValues (mouse.dtwmRestartTG, args, n);
-
-    XtRemoveCallback(style.mouseDialog, XmNmapCallback, formLayoutCB, nullptr);
+    if (!DtstyleWaylandActive())
+    {
+        n=0;
+        XtSetArg(args[n], XmNtopAttachment,    XmATTACH_WIDGET);    n++;
+        XtSetArg(args[n], XmNtopWidget,        mouse.cursorPreviewFrame); n++;
+        XtSetArg(args[n], XmNtopOffset,        style.verticalSpacing); n++;
+        XtSetArg(args[n], XmNleftAttachment,   XmATTACH_FORM);      n++;
+        XtSetArg(args[n], XmNleftOffset,       style.horizontalSpacing); n++;
+        XtSetArg(args[n], XmNrightAttachment,  XmATTACH_FORM);      n++;
+        XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM);      n++;
+        XtSetArg(args[n], XmNbottomOffset,     style.verticalSpacing); n++;
+        XtSetValues (mouse.dtwmRestartTG, args, n);
+    }
 
 }
 
@@ -2320,6 +2487,13 @@ valueChangedCB(
 
      XChangePointerControl(style.display, True, True, new_acceln,
                          new_acceld, new_thresh);
+     if (DtstyleWaylandActive())
+     {
+         char cmd[128];
+         snprintf(cmd, sizeof(cmd), "f.set_pointer_accel %d %d %d",
+                  new_acceln, new_acceld, new_thresh);
+         DtstyleSendWaylandRequest(cmd);
+     }
 
      mouse.systemDefaultFlag = False;
 
@@ -2448,53 +2622,17 @@ dclickTestCB(
         XtPointer client_data,
         XtPointer call_data )
 {
-    Arg  color[3], args[10];       /*  arg list            */
-    int    n;             /*  arg count           */
     XmPushButtonCallbackStruct *cb = (XmPushButtonCallbackStruct *)call_data;
-    static int selectstate = False;
+    (void)w;
+    (void)client_data;
 
-    if (cb->event->xbutton.button == 1)
+    if (!cb || !cb->event)
+        return;
+
+    if (cb->event->xbutton.button == Button1 &&
+        cb->click_count >= 2 && (cb->click_count % 2) == 0)
     {
-        if(cb->click_count == 2)
-        {
-	    if (selectstate) 
-	    {
-		n=0;
-		XtSetArg(color[n], XmNlabelPixmap, mouse.pixmap); n++; 
-		XtSetValues (w, color, n);
-
-                if (style.useMultiColorIcons)
-                {
-                    n=0;
-                    XtSetArg(color[n], XmNbackground, style.secBgCol); n++; 
-                    XtSetValues (w, color, n);
-                    XtSetValues (mouse.pictRC, color, n);
-                    XtSetValues (mouse.pictLabel, color, n);
-                }
-
-		selectstate = False;
-	    }   
-	    else 
-	    {
-		/* This will change the  background color to select color,
-		   but it causes the pixmap to redraw if IT was changed.*/ 
-
-		n=0;
-		XtSetArg(color[n], XmNlabelPixmap, mouse.pixmapSel); n++; 
-		XtSetValues (w, color, n);
-                
-                if (style.useMultiColorIcons)
-                {
-                    n=0;
-                    XtSetArg(color[n], XmNbackground, style.secSelectColor); n++; 
-                    XtSetValues (w, color, n);
-                    XtSetValues (mouse.pictRC, color, n);
-                    XtSetValues (mouse.pictLabel, color, n);
-                }
-
-		selectstate = True;
-	    }
-        }
+        toggleDoubleClickTestVisual();
     }
 }
 
@@ -2750,7 +2888,11 @@ reverseToggleCB(
         XtSetValues(mouse.pictButton, args, n);
   
   /* change Pointer Mapping */
-  if (XSetPointerMapping(style.display, mouse.new_map_return, mouse.numButtons) 
+  if (DtstyleWaylandActive())
+  {
+    DtstyleSendWaylandRequest(mouse.handed == LEFT_HANDED ? "f.set_left_handed 1" : "f.set_left_handed 0");
+  }
+  else if (XSetPointerMapping(style.display, mouse.new_map_return, mouse.numButtons) 
                    != MappingSuccess)
     _DtSimpleError (progName, DtWarning, nullptr, MSG3, nullptr);
   
@@ -3070,14 +3212,16 @@ ButtonCB(
 
 		     if (style.xrdb.writeXrdbImmediate)
 		     {
-			 InfoDialog(IMMEDIATE_MSG, style.shell, False);
+			 if (!DtstyleWaylandActive())
+			     InfoDialog(IMMEDIATE_MSG, style.shell, False);
 			 _DtAddResString(style.display, cursorRes,
 					 _DT_ATR_RESMGR|_DT_ATR_PREFS);
 			 XSync(style.display, False);
 			 RefreshXrmDatabaseFromRoot();
 			 SetRootCursorNow();
 
-			 if (mouse.dtwmRestartTG &&
+			 if (!DtstyleWaylandActive() &&
+			     mouse.dtwmRestartTG &&
 			     XmToggleButtonGadgetGetState(mouse.dtwmRestartTG))
 			 {
 			     _DtWmRestartNoConfirm(style.display, style.root);

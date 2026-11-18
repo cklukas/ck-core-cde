@@ -201,6 +201,12 @@ RemoveDisplay( struct display *old )
 	    IfFree (d->gettySpeed);
 	    IfFree (d->environStr);
 	    IfFree (d->verifyName);
+	    IfFree (d->greeterUser);
+	    IfFree (d->waylandSocket);
+	    IfFree (d->xwaylandDisplay);
+	    IfFree (d->waylandRuntimeDir);
+	    IfFree (d->seatConfigName);
+	    IfFree (d->defaultWaylandSession);
 
 	    /*
 	     *  turn off polling if we are removing a suspended display...
@@ -319,6 +325,15 @@ NewDisplay( char *name, char *class )
     d->verifyName = nullptr;
     d->pmSearchPath = nullptr;
     d->bmSearchPath = nullptr;
+    d->isWaylandSeat = 0;
+    d->waylandSessionActive = 0;
+    d->seatXserverPid = -1;
+    d->greeterUser = nullptr;
+    d->waylandSocket = nullptr;
+    d->xwaylandDisplay = nullptr;
+    d->waylandRuntimeDir = nullptr;
+    d->seatConfigName = nullptr;
+    d->defaultWaylandSession = nullptr;
     displays = d;
     return d;
 }

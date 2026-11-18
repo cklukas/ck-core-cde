@@ -1,19 +1,19 @@
 dnl When changing the version below, also change the CDE_VERSION_* macros
 dnl to match further below
 AC_INIT([Common Desktop Environment],
-        [2.5.3],
-        [https://sourceforge.net/projects/cdesktopenv],
+        [3.0.0],
+        [https://github.com/cklukas/ck-core-cde/issues],
         [cde],
-        [https://sourceforge.net/projects/cdesktopenv])
+        [https://github.com/cklukas/ck-core-cde])
 AC_CONFIG_HEADERS([include/cde_config.h])
 AC_CONFIG_MACRO_DIRS([m4])
 AM_INIT_AUTOMAKE([foreign subdir-objects no-define])
 
 dnl global CDE versioning
 
-CDE_VERSION_MAJOR=2
-CDE_VERSION_MINOR=5
-CDE_VERSION_MICRO=3
+CDE_VERSION_MAJOR=3
+CDE_VERSION_MINOR=0
+CDE_VERSION_MICRO=0
 dnl this is blank for a release, or contains an alpha character to indicate a
 dnl dev release.
 CDE_VERSION_DEV=
@@ -734,6 +734,44 @@ dnl Figure out TCL
 
 SC_PATH_TCLCONFIG
 SC_LOAD_TCLCONFIG
+
+dnl Optional Wayland compositor (dtwm-wayland) built on wlroots-0.19
+AC_ARG_ENABLE([wayland],
+  [AS_HELP_STRING([--enable-wayland],
+    [build dtwm-wayland compositor using wlroots-0.19 (default=auto)])],
+  [], [enable_wayland=auto])
+
+build_dtwm_wayland=no
+WAYLAND_COMP_CFLAGS=""
+WAYLAND_COMP_LIBS=""
+WAYLAND_CLIENT_CFLAGS=""
+WAYLAND_CLIENT_LIBS=""
+WAYLAND_PROTOCOLS_DATADIR=""
+AC_PATH_PROG([WAYLAND_SCANNER], [wayland-scanner])
+
+AS_IF([test "x$enable_wayland" != "xno"], [
+  AS_IF([test -n "$PKG_CONFIG" && test -n "$WAYLAND_SCANNER" && \
+         $PKG_CONFIG --exists wayland-protocols wayland-client libinput wlroots-0.19 wayland-server xkbcommon cairo pangocairo pixman-1 libdrm xcb xcb-icccm xcb-randr xcb-xfixes], [
+    WAYLAND_PROTOCOLS_DATADIR=`$PKG_CONFIG --variable=pkgdatadir wayland-protocols`
+    WAYLAND_COMP_CFLAGS=`$PKG_CONFIG --cflags wlroots-0.19 wayland-server libinput xkbcommon cairo pangocairo pixman-1 libdrm xcb xcb-icccm xcb-randr xcb-xfixes`
+    WAYLAND_COMP_LIBS=`$PKG_CONFIG --libs wlroots-0.19 wayland-server libinput xkbcommon cairo pangocairo pixman-1 libdrm xcb xcb-icccm xcb-randr xcb-xfixes`
+    WAYLAND_CLIENT_CFLAGS=`$PKG_CONFIG --cflags wayland-client`
+    WAYLAND_CLIENT_LIBS=`$PKG_CONFIG --libs wayland-client`
+    build_dtwm_wayland=yes
+  ], [
+    AS_IF([test "x$enable_wayland" = "xyes"], [
+      AC_MSG_ERROR([--enable-wayland requires wayland-scanner, wayland-protocols, wayland-client, libinput, wlroots-0.19, wayland-server, xkbcommon, cairo, pangocairo, pixman-1, libdrm, xcb, xcb-icccm, xcb-randr, and xcb-xfixes])
+    ])
+  ])
+])
+
+AM_CONDITIONAL([BUILD_DTWM_WAYLAND], [test "x$build_dtwm_wayland" = "xyes"])
+AC_SUBST([WAYLAND_SCANNER])
+AC_SUBST([WAYLAND_PROTOCOLS_DATADIR])
+AC_SUBST([WAYLAND_COMP_CFLAGS])
+AC_SUBST([WAYLAND_COMP_LIBS])
+AC_SUBST([WAYLAND_CLIENT_CFLAGS])
+AC_SUBST([WAYLAND_CLIENT_LIBS])
 
 dnl check MISSING_PROGS - error out here if there's stuff in it.
 

@@ -294,6 +294,44 @@ show_about(
 
 	XmStringFree(xstr);
 
+	{
+		Widget ck_label, url_label;
+		xstr = XmStringCreateLocalized("(c) 2025-2026 Dr. Christian Klukas (CK-Core CDE)");
+		ck_label = XtVaCreateWidget("ck_copyright_label",
+			xmLabelWidgetClass,
+			sub_form,
+			XmNlabelType,		XmSTRING,
+			XmNlabelString,		xstr,
+			XmNalignment,		XmALIGNMENT_BEGINNING,
+			XmNtopAttachment,	XmATTACH_WIDGET,
+			XmNtopOffset,		GAP,
+			XmNtopWidget,		data_version_label,
+			XmNleftAttachment,	XmATTACH_FORM,
+			XmNleftOffset,		0,
+			XmNrightAttachment,	XmATTACH_FORM,
+			XmNrightOffset,		GAP,
+			nullptr);
+		XmStringFree(xstr);
+
+		xstr = XmStringCreateLocalized("https://github.com/cklukas/ck-core-cde");
+		url_label = XtVaCreateWidget("ck_url_label",
+			xmLabelWidgetClass,
+			sub_form,
+			XmNlabelType,		XmSTRING,
+			XmNlabelString,		xstr,
+			XmNalignment,		XmALIGNMENT_BEGINNING,
+			XmNtopAttachment,	XmATTACH_WIDGET,
+			XmNtopOffset,		0,
+			XmNtopWidget,		ck_label,
+			XmNleftAttachment,	XmATTACH_FORM,
+			XmNleftOffset,		0,
+			XmNrightAttachment,	XmATTACH_FORM,
+			XmNrightOffset,		GAP,
+			nullptr);
+		XmStringFree(xstr);
+		data_version_label = url_label;
+	}
+
 #if defined(DTCM_SHOW_ABOUT_COPYRIGHT)
 
 	tm.tm_sec = 0;

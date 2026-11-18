@@ -1,0 +1,18 @@
+#!/bin/sh
+set -e
+
+if [ "$1" = "remove" ] || [ "$1" = "deconfigure" ]; then
+    if [ -f /usr/share/debconf/confmodule ]; then
+        . /usr/share/debconf/confmodule
+        db_get shared/default-x-display-manager || RET=""
+        if [ "$RET" = "ck-core-dtlogin" ]; then
+            rm -f /etc/X11/default-display-manager
+            if [ -L /etc/systemd/system/display-manager.service ] && \
+               [ "$(readlink /etc/systemd/system/display-manager.service)" = "/lib/systemd/system/dtlogin.service" ]; then
+                rm -f /etc/systemd/system/display-manager.service
+            fi
+        fi
+    fi
+fi
+
+exit 0

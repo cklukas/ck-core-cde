@@ -90,6 +90,7 @@
 #include "Protocol.h"
 #include "SaveRestore.h"
 #include "ColorPalette.h"
+#include "Backdrop.h"
 
 void loadDatabase(void); // ColorMain.c
 void ListenForWorkspaceChange(void); // Protocol.c
@@ -311,6 +312,54 @@ ErrDialog(
 
 
 
+static const char *s_startupDialogName = nullptr;
+
+static void
+openStartupDialogByName(Widget shell, const char *name)
+{
+    if (!shell || !style.display)
+        return;
+    if (XtIsRealized(shell))
+        XMapRaised(style.display, XtWindow(shell));
+    if (!name || name[0] == '\0' || strncmp(name, "Main", 4) == 0)
+        return;
+    if (strncmp(name, "Display", 7) == 0) {
+        extern void popup_displayBB(Widget);
+        popup_displayBB(shell);
+    } else if (strncmp(name, "Backdrop", 8) == 0) {
+        BackdropDialog(shell);
+    }
+}
+
+static void
+openDisplayDeferredCB(XtPointer client_data, XtIntervalId *id)
+{
+    (void)id;
+    openStartupDialogByName((Widget)client_data, s_startupDialogName);
+}
+
+static void
+openDialogPropEH(Widget w, XtPointer client_data, XEvent *ev, Boolean *cont)
+{
+    (void)w;
+    (void)client_data;
+    (void)cont;
+    if (!ev || ev->type != PropertyNotify || ev->xproperty.state != PropertyNewValue)
+        return;
+    Atom open_a = XInternAtom(style.display, "_DTSTYLE_OPEN_DIALOG", False);
+    if (ev->xproperty.atom != open_a)
+        return;
+    Atom act_t = None;
+    int act_f = 0;
+    unsigned long nitems = 0, rem = 0;
+    unsigned char *data = nullptr;
+    if (XGetWindowProperty(style.display, XtWindow(style.shell), open_a, 0, 16, True,
+                           XA_STRING, &act_t, &act_f, &nitems, &rem, &data) == Success && data) {
+        openStartupDialogByName(style.shell, (const char *)data);
+        XFree(data);
+    }
+}
+
 static void 
 errParentMap(
         Widget w,
@@ -436,9 +485,13 @@ putDialog(
     myHeight = XtHeight(dialog);
     myWidth = XtWidth(dialog);
 
-    if ((newY = pY - myHeight +5) < 0) 
+    if ((newY = pY - myHeight +5) < 32) 
         newY = pY + pHeight;
-    newX = pX + pWidth/2 - myWidth/2;
+    if (newY < 32)
+        newY = 32;
+    newX = pX + (Position)pWidth/2 - (Position)myWidth/2;
+    if (newX < 12)
+        newX = 12;
 
     n = 0;
     XtSetArg(args[n], XmNx, newX); n++;
@@ -479,7 +532,30 @@ malloc_trace(0);
 
     XtSetLanguageProc(nullptr, nullptr, nullptr);
     _DtEnvControl(DT_ENV_SET); 
-    
+
+    Boolean openDisplayDialogOnStart = False;
+    {
+        int out_argc = 1;
+        for (int ai = 1; ai < argc; ++ai) {
+            if (strcmp(argv[ai], "-display_dialog") == 0 ||
+                strcmp(argv[ai], "--display-dialog") == 0 ||
+                strcmp(argv[ai], "-monitors") == 0 ||
+                strcmp(argv[ai], "--monitors") == 0) {
+                openDisplayDialogOnStart = True;
+                s_startupDialogName = "Display";
+                continue;
+            }
+            if (strcmp(argv[ai], "-backdrop") == 0 ||
+                strcmp(argv[ai], "--backdrop") == 0) {
+                openDisplayDialogOnStart = True;
+                s_startupDialogName = "Backdrop";
+                continue;
+            }
+            argv[out_argc++] = argv[ai];
+        }
+        argv[out_argc] = nullptr;
+        argc = out_argc;
+    }
 
     /* Initialize the toolkit and open the display */
     style.shell = 
@@ -523,6 +599,7 @@ malloc_trace(0);
     style.mouseDialog = nullptr;
     style.audioDialog = nullptr;
     style.screenDialog = nullptr;
+    style.displayDialog = nullptr;
     style.startupDialog = nullptr;
     style.dtwmDialog = nullptr;
     style.i18nDialog = nullptr;
@@ -537,6 +614,28 @@ malloc_trace(0);
 
     if (_DtGetLock (style.display, STYLE_LOCK) == 0)
     {
+        {
+            Atom win_a = XInternAtom(style.display, "_DTSTYLE_SHELL_WIN", True);
+            Atom open_a = XInternAtom(style.display, "_DTSTYLE_OPEN_DIALOG", False);
+            Atom act_t = None;
+            int act_f = 0;
+            unsigned long nitems = 0, rem = 0;
+            unsigned char *pdata = nullptr;
+            if (win_a != None &&
+                XGetWindowProperty(style.display, style.root, win_a, 0, 1, False,
+                                   XA_WINDOW, &act_t, &act_f, &nitems, &rem, &pdata) == Success &&
+                pdata && nitems >= 1) {
+                Window target_w = *(Window *)pdata;
+                const char *dlg_name = s_startupDialogName ? s_startupDialogName : "Main";
+                XChangeProperty(style.display, target_w, open_a, XA_STRING, 8,
+                                PropModeReplace, (const unsigned char *)dlg_name,
+                                (int)strlen(dlg_name));
+                XFree(pdata);
+                XSync(style.display, False);
+                exit(0);
+            }
+            if (pdata) XFree(pdata);
+        }
         _DtSimpleError (progName, DtError, nullptr, "%s",
 	     ((char *)GETMESSAGE(2, 5, "Style Manager is already running, second attempt aborted.")));
         exit(1);
@@ -632,6 +731,19 @@ malloc_trace(0);
     /* backdrop dialog  needs to know when the workspace changes to recolor 
        the bitmap displayed in the dialog */
     ListenForWorkspaceChange();
+
+    if (XtIsRealized(style.shell)) {
+        Window sw = XtWindow(style.shell);
+        Atom win_a = XInternAtom(style.display, "_DTSTYLE_SHELL_WIN", False);
+        XChangeProperty(style.display, style.root, win_a, XA_WINDOW, 32,
+                        PropModeReplace, (const unsigned char *)&sw, 1);
+        XtAddEventHandler(style.shell, PropertyChangeMask, False, openDialogPropEH, nullptr);
+    }
+
+    if (openDisplayDialogOnStart) {
+        XtAppAddTimeOut(XtWidgetToApplicationContext(style.shell), 180UL,
+                        openDisplayDeferredCB, (XtPointer)style.shell);
+    }
 
     /* if using COLOR builtin, style.workProcs is True */
 

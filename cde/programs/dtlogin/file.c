@@ -373,6 +373,17 @@ ParseDisplay( char *source,
 	Debug ("Found new display:  %s %s %s", d->name, d->class ? d->class : "", type);
     }
     d->displayType = displayType;
+    d->isWaylandSeat = (strcmp(type, "wayland") == 0 ||
+                        strcmp(type, "wayland_uid") == 0);
+    if (d->isWaylandSeat) {
+	d->authorize = FALSE;
+	free(d->greeterUser);
+	if (strcmp(type, "wayland_uid") == 0 && puser && puser->pw_name) {
+	    d->greeterUser = strdup(puser->pw_name);
+	} else {
+	    d->greeterUser = strdup("_dtgreeter");
+	}
+    }
     d->argv = copyArgs (argv);
     if (!d->argv)
     {
@@ -417,6 +428,8 @@ static struct displayMatch {
 } displayTypes[] = {
 	"local",		{ Local, Permanent, FromFile },
 	"local_uid",		{ Local, Permanent, FromFile },
+	"wayland",		{ Local, Permanent, FromFile },
+	"wayland_uid",		{ Local, Permanent, FromFile },
 	"foreign",		{ Foreign, Permanent, FromFile },
 	0,			{ Local, Permanent, FromFile },
 };
@@ -431,7 +444,8 @@ parseDisplayType( char *string, int *usedDefaultType, int *parse_uid )
 	for (d = displayTypes; d->name; d++) {
 	    if (strcmp(d->name, string) == 0)
 	    {
-		if (strcmp(d->name, "local_uid") == 0) {
+		if (strcmp(d->name, "local_uid") == 0 ||
+		    strcmp(d->name, "wayland_uid") == 0) {
 		   *parse_uid = 1; 
 		}
 		*usedDefaultType = 0;

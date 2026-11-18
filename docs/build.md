@@ -707,3 +707,59 @@ not cast through unspecified-argument function-pointer aliases. Rebuilding
 consumer against the actual private DtHelp declarations. The DtInfo launcher
 registers its action-completion callback and timeout routine through their
 native CDE and Xt contracts without function-pointer casts.
+
+## Ubuntu 26.04 LTS Lima Wayland harness
+
+On Apple Silicon macOS hosts with Lima (`vmType: vz`), `scripts/lima/cde-ubuntu-26.04.yaml`
+and `scripts/run-lima-wayland-harness.py` provision an isolated ARM64 Ubuntu 26.04 LTS
+qualification guest and build the matched CK Core Motif ABI 9, `ck-core-fs-lib`,
+CK Core CDE, and `ck-core-apps` stack on guest-local storage (capped at six
+parallel jobs). All macOS temporary paths, `LIMA_HOME`, and `XDG_CACHE_HOME`
+must reside beneath `/Volumes/S8T/tmp`:
+
+```sh
+export TASK_ROOT=/Volumes/S8T/tmp/cde-wayland-task
+export TMPDIR="$TASK_ROOT/tmp"
+export LIMA_HOME="$TASK_ROOT/lima"
+export XDG_CACHE_HOME="$TASK_ROOT/cache"
+limactl start --tty=false --name=cde-ubuntu2604 scripts/lima/cde-ubuntu-26.04.yaml
+python3 scripts/run-lima-wayland-harness.py --task-root "$TASK_ROOT"
+```
+
+After staging the build, the runner starts a dual-output headless `wlroots`
+compositor with rootless `Xwayland`, launches both native Wayland and Motif/CDE
+clients, checks `/proc/<pid>/maps` so every Motif process maps the recorded
+`libXm.so.9` prefix, drives virtual pointer input, captures output PNG frames
+through `zwlr_screencopy_manager_v1`, and writes `receipt.json`.
+
+## Ubuntu and Debian `.deb` cohort packaging
+
+`scripts/build-ubuntu-debs.py` packages the matched native cohort into five
+Debian/Ubuntu archives (`ck-core-motif9`, `ck-core-fs-lib`, `ck-core-cde`,
+`ck-core-dtlogin`, and `ck-core-apps`) along with GPG-signed APT repository
+metadata (`Packages`, `Packages.gz`, `Release`, `Release.gpg`, `InRelease`, and
+`ck-core-archive-keyring.asc`):
+
+```sh
+python3 scripts/build-ubuntu-debs.py --task-root "$TASK_ROOT" --verify-install
+```
+
+All runtime libraries and executables install beneath `/usr/dt` with
+`RUNPATH=/usr/dt/lib` and `/etc/ld.so.conf.d/ck-core-cde.conf`, avoiding file or
+SONAME collisions with system `libxm4`. `ck-core-cde` ships `dtwm-wayland`,
+`dtwm-panel`, `/usr/dt/bin/Xsession.wayland`, `/usr/share/xsessions/cde.desktop`,
+and `/usr/share/wayland-sessions/cde-wayland.desktop`, while `ck-core-dtlogin`
+provides `/lib/systemd/system/dtlogin.service`, the unprivileged `_dtgreeter`
+account and `/etc/pam.d/dtlogin-greeter` PAM `greeter` stack, `pam_systemd.so`
+session hooks, and `shared/default-x-display-manager` `debconf` integration.
+
+To install from a generated local or published APT repository on Ubuntu LTS:
+
+```sh
+sudo install -d -m 0755 /etc/apt/keyrings
+sudo install -m 0644 ck-core-archive-keyring.asc /etc/apt/keyrings/ck-core-archive-keyring.asc
+echo "deb [signed-by=/etc/apt/keyrings/ck-core-archive-keyring.asc] file:/path/to/repo ./" \
+  | sudo tee /etc/apt/sources.list.d/ck-core.list
+sudo apt-get update
+sudo apt-get install ck-core-cde ck-core-apps ck-core-dtlogin
+```

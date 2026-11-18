@@ -1802,6 +1802,7 @@ ControlSetBehavior (ControlData * control_data,
             *expanded_file_name = (String) _DtWmParseFilenameExpand ((unsigned char*) file_name);
 
             XtSetArg (al[*ac], XmNfileName, *expanded_file_name);    (*ac)++;
+	    XtSetArg (al[*ac], XmNmonitorTime, 1500);                (*ac)++;
 	    XtSetArg (al[*ac], XmNcontrolType, XmCONTROL_MONITOR);  (*ac)++;
 	 }
          else if ((intptr_t) control_data->element_values[CONTROL_MONITOR_TYPE].parsed_value == MONITOR_MAIL)
@@ -1832,9 +1833,10 @@ ControlSetBehavior (ControlData * control_data,
          GeometryData * geometry_data;
 
          XtSetArg (al[*ac], XmNcontrolType, XmCONTROL_CLIENT);      (*ac)++;
-         XtSetArg (al[*ac], XmNshadowThickness, shadow_thickness);  (*ac)++;
+         XtSetArg (al[*ac], XmNshadowThickness, 0);                 (*ac)++;
+         XtSetArg (al[*ac], XmNmarginWidth, margin_width);          (*ac)++;
          XtSetArg (al[*ac], XmNsensitive, sensitive);               (*ac)++;
-         XtSetArg (al[*ac], XmNhighlightThickness,highlight_thickness); (*ac)++;
+         XtSetArg (al[*ac], XmNhighlightThickness, 0);              (*ac)++;
 
 
          geometry_data = (GeometryData *) control_data->
@@ -1844,12 +1846,12 @@ ControlSetBehavior (ControlData * control_data,
 	 {
             if (geometry_data->flags & WidthValue && geometry_data->width > 0)
 	    {
-               XtSetArg (al[*ac], XmNwidth, geometry_data->width + 6);  (*ac)++;
+               XtSetArg (al[*ac], XmNwidth, geometry_data->width + 12);  (*ac)++;
             }
 
             if (geometry_data->flags & HeightValue && geometry_data->height > 0)
 	    {
-               XtSetArg (al[*ac], XmNheight, geometry_data->height + 6);(*ac)++;
+               XtSetArg (al[*ac], XmNheight, geometry_data->height + 4);(*ac)++;
             }
          }
       }
@@ -2306,13 +2308,22 @@ SwitchCreate (BoxData * box_data)
          XmStringFree (icon_label);
 
       if (icon_name != nullptr)
+      {
          XtFree(icon_name);
+         icon_name = nullptr;
+      }
 
       if (alt_icon_name != nullptr)
+      {
          XtFree(alt_icon_name);
+         alt_icon_name = nullptr;
+      }
 
       if (exp_file_name != nullptr)
+      {
          XtFree(exp_file_name);
+         exp_file_name = nullptr;
+      }
 
       if (i % 2)
          prev_right = control_data->icon;
@@ -4429,4 +4440,111 @@ GetIconName (String       image_name,
    /*  Return value to be freed by caller.  */
 
    return (return_name);
+}
+
+
+/************************************************************************
+ *
+ *  WmFpUpdateTrashOpenIcon
+ *      Switch the Front Panel Trash control icon to the open-lid
+ *      graphic (Fptrsh5) while the Trash Can window is open and
+ *      visible, restoring Fptrsh / Fptrsh7 when closed or minimized.
+ *
+ ************************************************************************/
+
+void
+WmFpUpdateTrashOpenIcon (Display * dpy)
+{
+   static int last_trash_open = -1;
+   Boolean    trash_open = False;
+   Atom       prop;
+   Window     root;
+
+   if (dpy == nullptr || panel.shell == nullptr)
+      return;
+
+   root = DefaultRootWindow (dpy);
+   prop = XInternAtom (dpy, "_DT_TRASH_WINDOW", True);
+   if (prop != None)
+   {
+      Atom           actual = None;
+      int            fmt = 0;
+      unsigned long  nitems = 0, after = 0;
+      unsigned char *data = nullptr;
+
+      if (XGetWindowProperty (dpy, root, prop, 0, 1, False, XA_WINDOW,
+                              &actual, &fmt, &nitems, &after, &data) == Success && data)
+      {
+         if (fmt == 32 && nitems >= 1)
+         {
+            Window trash_win = *(Window *)data;
+            if (trash_win != None)
+            {
+               XWindowAttributes wattr;
+               if (XGetWindowAttributes (dpy, trash_win, &wattr) &&
+                   wattr.map_state == IsViewable)
+               {
+                  Boolean iconic = False;
+                  Atom wm_state = XInternAtom (dpy, "WM_STATE", True);
+                  if (wm_state != None)
+                  {
+                     Atom st_act = None;
+                     int st_fmt = 0;
+                     unsigned long st_n = 0, st_after = 0;
+                     unsigned char *st_data = nullptr;
+                     if (XGetWindowProperty (dpy, trash_win, wm_state, 0, 2, False,
+                                             AnyPropertyType, &st_act, &st_fmt,
+                                             &st_n, &st_after, &st_data) == Success && st_data)
+                     {
+                        if (st_fmt == 32 && st_n >= 1 && (*(long *)st_data) == IconicState)
+                           iconic = True;
+                        XFree (st_data);
+                     }
+                  }
+                  if (!iconic)
+                     trash_open = True;
+               }
+            }
+         }
+         XFree (data);
+      }
+   }
+
+   if ((int)trash_open == last_trash_open)
+      return;
+   last_trash_open = (int)trash_open;
+
+   for (int i = 0; i < panel.box_data_count; i++)
+   {
+      BoxData *bd = panel.box_data[i];
+      if (bd == nullptr)
+         continue;
+
+      for (int j = 0; j < bd->control_data_count; j++)
+      {
+         ControlData *cd = bd->control_data[j];
+         if (cd == nullptr || cd->icon == nullptr ||
+             cd->element_values[CONTROL_NAME].parsed_value == nullptr)
+            continue;
+
+         if (strcmp ((const char *)cd->element_values[CONTROL_NAME].parsed_value, "Trash") == 0)
+         {
+            unsigned int sz = panel.main_icon_size;
+            String img = trash_open
+                            ? GetIconName ("Fptrsh5", sz)
+                            : GetIconName ("Fptrsh", sz);
+            String alt = trash_open
+                            ? GetIconName ("Fptrsh5", sz)
+                            : GetIconName ("Fptrsh7", sz);
+            Arg al[2];
+            int ac = 0;
+            if (img != nullptr) { XtSetArg (al[ac], XmNimageName, img); ac++; }
+            if (alt != nullptr) { XtSetArg (al[ac], XmNalternateImage, alt); ac++; }
+            if (ac > 0)
+               XtSetValues (cd->icon, al, ac);
+            if (img != nullptr) XtFree (img);
+            if (alt != nullptr) XtFree (alt);
+         }
+      }
+   }
 }

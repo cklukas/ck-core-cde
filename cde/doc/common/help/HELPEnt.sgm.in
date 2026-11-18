@@ -1,12 +1,16 @@
 <!-- $TOG: HELPEnt.sgm /main/12 1999/10/12 09:35:15 mgreess $ -->
-<!ENTITY CDEcopyright "<GlossTerm Role=nogloss>Common Desktop Environment @CDE_VERSION_MAJOR@.@CDE_VERSION_MINOR@.@CDE_VERSION_MICRO@@CDE_VERSION_DEV@</GlossTerm>,
-
-&copy; Copyright 1993-2012 The Open Group
-&copy; Copyright 2012-2023 CDE Project contributors, see CONTRIBUTORS for details
-
-Project Website: http://cdesktopenv.sourceforge.net/
-
-CDE, the Common Desktop Environment, is released under the terms of the GNU LGPL, please see the file COPYING for more details.">
+<!ENTITY CDEcopyright "<GlossTerm Role=nogloss>CK-Core Common Desktop Environment @CDE_VERSION_MAJOR@.@CDE_VERSION_MINOR@.@CDE_VERSION_MICRO@@CDE_VERSION_DEV@</GlossTerm>&newline;
+&newline;
+&copy; Copyright 2025-2026 Dr. Christian Klukas&newline;
+GitHub: https://github.com/cklukas/ck-core-cde&newline;
+Documentation: https://cklukas.github.io/ck-core-cde/&newline;
+&newline;
+Based on Common Desktop Environment (CDE):&newline;
+&copy; Copyright 1993-2012 The Open Group&newline;
+&copy; Copyright 2012-2023 CDE Project contributors, see CONTRIBUTORS for details&newline;
+Upstream Project Website: http://cdesktopenv.sourceforge.net/&newline;
+&newline;
+CK-Core CDE is released under the terms of the GNU LGPL, please see the file COPYING for more details.">
 
 <!ENTITY headerFix "&empty;">
 <!ENTITY AbstractBullet "&bullet;">

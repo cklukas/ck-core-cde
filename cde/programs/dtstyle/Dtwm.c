@@ -42,6 +42,7 @@
 /*+++++++++++++++++++++++++++++++++++++++*/
 
 #include <X11/Xlib.h>
+#include <X11/Xatom.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
@@ -167,7 +168,48 @@ typedef struct {
 static Dtwm dtwm;
 static saveRestore save = {FALSE, 0, };
 
-static char dtwmRes[512]="";
+static char dtwmRes[1024]="";
+
+static Boolean
+is_wayland_dtwm_session(void)
+{
+    Atom wl_atom;
+    Atom actual_type = None;
+    int actual_format = 0;
+    unsigned long nitems = 0, bytes_after = 0;
+    unsigned char *prop = nullptr;
+
+    if (!style.display || style.root == None)
+        return False;
+    wl_atom = XInternAtom(style.display, "_DT_WAYLAND_OUTPUTS", True);
+    if (wl_atom == None)
+        return False;
+    if (XGetWindowProperty(style.display, style.root, wl_atom, 0, 1, False,
+                           AnyPropertyType, &actual_type, &actual_format,
+                           &nitems, &bytes_after, &prop) != Success)
+        return False;
+    if (prop)
+        XFree(prop);
+    return (actual_type != None) ? True : False;
+}
+
+static void
+commit_orig_dtwm_values(void)
+{
+    char *gapStr = XmTextFieldGetString(dtwm.iconGapText);
+    dtwm.origKeyboardFocusPolicy = XmToggleButtonGadgetGetState(dtwm.explicitTG);
+    dtwm.origFocusAutoRaise = XmToggleButtonGadgetGetState(dtwm.autoRaiseTG);
+    dtwm.origSecStack = !XmToggleButtonGadgetGetState(dtwm.secStackTG);
+    dtwm.origMoveOpaque = XmToggleButtonGadgetGetState(dtwm.moveOpaqueTG);
+    dtwm.origAnimateMinimize = XmToggleButtonGadgetGetState(dtwm.animateMinimizeTG);
+    dtwm.origShowTaskSwitcher = XmToggleButtonGadgetGetState(dtwm.showTaskSwitcherTG);
+    dtwm.origUseIconBox = XmToggleButtonGadgetGetState(dtwm.iconBoxTG);
+    dtwm.origIncreaseIconSize = XmToggleButtonGadgetGetState(dtwm.increaseIconSizeTG);
+    dtwm.origShowOpenIcons = XmToggleButtonGadgetGetState(dtwm.showOpenIconsTG);
+    dtwm.origIconPlacementMargin = atoi(gapStr ? gapStr : "0");
+    if (gapStr)
+        XtFree(gapStr);
+}
 
 static char *icon[] = {
     "iconTL",
@@ -208,6 +250,7 @@ popup_dtwmBB(
     }
     else 
     {
+        getDtwmValues();
         XtManageChild(style.dtwmDialog);
         raiseWindow(XtWindow(XtParent(style.dtwmDialog)));
     }
@@ -252,220 +295,219 @@ ReadIconImageMaximum(XrmDatabase db, const char *name,
     sscanf(buffer, "%dx%d", width, height);
 }
 
+static void
+merge_dtwm_res_into_xt_db(const char *res_text)
+{
+    XrmDatabase patch_db;
+    XrmDatabase xt_db;
+
+    if (!style.display || !res_text || !res_text[0])
+        return;
+
+    patch_db = XrmGetStringDatabase((char *)res_text);
+    if (!patch_db)
+        return;
+
+    xt_db = XtDatabase(style.display);
+    if (xt_db)
+        XrmCombineDatabase(patch_db, &xt_db, True);
+    else
+        XrmDestroyDatabase(patch_db);
+}
+
+static XrmDatabase
+open_live_resource_manager_db(void)
+{
+    Atom actual_type = None;
+    int actual_format = 0;
+    unsigned long nitems = 0, bytes_after = 0;
+    unsigned char *prop = nullptr;
+    XrmDatabase live_db = nullptr;
+
+    if (!style.display || style.root == None)
+        return nullptr;
+
+    if (XGetWindowProperty(style.display, style.root, XA_RESOURCE_MANAGER,
+                           0L, 100000L, False, XA_STRING,
+                           &actual_type, &actual_format,
+                           &nitems, &bytes_after, &prop) == Success &&
+        prop != nullptr)
+    {
+        if (actual_type == XA_STRING && actual_format == 8 && nitems > 0)
+            live_db = XrmGetStringDatabase((char *)prop);
+        XFree(prop);
+    }
+    return live_db;
+}
+
+static Boolean
+query_dtwm_res(XrmDatabase live_db, XrmDatabase fallback_db,
+               const char *res_name, const char *res_class,
+               XrmValue *value_out)
+{
+    char full_name_cap[128];
+    char full_name_low[128];
+    char full_class[128];
+    char *type_ret = nullptr;
+
+    snprintf(full_name_cap, sizeof(full_name_cap), "Dtwm.%s", res_name);
+    snprintf(full_name_low, sizeof(full_name_low), "dtwm.%s", res_name);
+    snprintf(full_class, sizeof(full_class), "Dtwm.%s", res_class);
+
+    if (live_db)
+    {
+        if (XrmGetResource(live_db, full_name_cap, full_class, &type_ret, value_out) &&
+            value_out->addr != nullptr)
+            return True;
+        if (XrmGetResource(live_db, full_name_low, full_class, &type_ret, value_out) &&
+            value_out->addr != nullptr)
+            return True;
+    }
+    if (fallback_db)
+    {
+        if (XrmGetResource(fallback_db, full_name_cap, full_class, &type_ret, value_out) &&
+            value_out->addr != nullptr)
+            return True;
+        if (XrmGetResource(fallback_db, full_name_low, full_class, &type_ret, value_out) &&
+            value_out->addr != nullptr)
+            return True;
+    }
+    return False;
+}
+
+static Boolean
+query_dtwm_string_lower(XrmDatabase live_db, XrmDatabase fallback_db,
+                        const char *res_name, const char *res_class,
+                        char *buf, size_t buf_sz)
+{
+    XrmValue val;
+    size_t len;
+
+    if (!buf || buf_sz == 0)
+        return False;
+    buf[0] = '\0';
+    if (!query_dtwm_res(live_db, fallback_db, res_name, res_class, &val) || !val.addr)
+        return False;
+
+    len = strnlen((const char *)val.addr, val.size > 0 ? (size_t)val.size : buf_sz - 1);
+    if (len >= buf_sz)
+        len = buf_sz - 1;
+    memcpy(buf, val.addr, len);
+    buf[len] = '\0';
+    _DtWmParseToLower((unsigned char *)buf);
+    /* Trim trailing whitespace */
+    while (len > 0 && isspace((unsigned char)buf[len - 1]))
+        buf[--len] = '\0';
+    return True;
+}
+
 static void 
 getDtwmValues(void)
 {
-    char *str_type_return;
     XrmValue value_return;
-    XrmValue    cvt_value;
     XrmDatabase db;
-    Boolean status;
-    char *string;
+    XrmDatabase live_db;
+    char sbuf[128];
 
     db = XtDatabase(style.display);
+    live_db = open_live_resource_manager_db();
 
     /* Get KeyboardFocusPolicy value */
-    if (status = XrmGetResource (db, "dtwm.keyboardFocusPolicy",
-                                 "Dtwm.KeyboardFocusPolicy",
-                                 &str_type_return, &value_return))
+    if (query_dtwm_string_lower(live_db, db, "keyboardFocusPolicy",
+                                "KeyboardFocusPolicy", sbuf, sizeof(sbuf)) &&
+        strcmp(sbuf, "pointer") == 0)
     {
-        /* make local copy of string */
-        string = (char *) XtMalloc( value_return.size );
-        strcpy (string, value_return.addr);
-
-        /* convert to lower case */
-        _DtWmParseToLower((unsigned char *)string);
-
-        if (strcmp(string, "pointer") == 0)
-        {
-            XmToggleButtonGadgetSetState (dtwm.pointerTG, True, True); 
-            dtwm.origKeyboardFocusPolicy = POINTER;
-        }
-        if (strcmp(string, "explicit") == 0)
-        {
-            XmToggleButtonGadgetSetState (dtwm.explicitTG, True, True); 
-            dtwm.origKeyboardFocusPolicy = EXPLICIT;
-        }
-        XtFree (string);
+        dtwm.origKeyboardFocusPolicy = POINTER;
+        XmToggleButtonGadgetSetState(dtwm.pointerTG, True, False);
+        XmToggleButtonGadgetSetState(dtwm.explicitTG, False, False);
     }
-    else /* KeyboardFocusPolicy not specified */
+    else
     {
-        /* set the Dtwm default value - explicit */
-        XmToggleButtonGadgetSetState (dtwm.explicitTG, True, True); 
         dtwm.origKeyboardFocusPolicy = EXPLICIT;
-    } 
+        XmToggleButtonGadgetSetState(dtwm.pointerTG, False, False);
+        XmToggleButtonGadgetSetState(dtwm.explicitTG, True, False);
+    }
 
     /* Get FocusAutoRaise value */
-    if (status = XrmGetResource (db, "dtwm.focusAutoRaise",
-                                     "Dtwm.FocusAutoRaise",
-                                     &str_type_return, &value_return))
+    if (query_dtwm_string_lower(live_db, db, "focusAutoRaise",
+                                "FocusAutoRaise", sbuf, sizeof(sbuf)))
     {
-        /* make local copy of string */
-        string = (char *) XtMalloc( value_return.size );
-        strcpy (string, value_return.addr);
-
-        /* convert to lower case */
-        _DtWmParseToLower((unsigned char *)string);
-
-        dtwm.origFocusAutoRaise =                
-               (strcmp(string, "true") ? False : True); 
-        XmToggleButtonGadgetSetState (dtwm.autoRaiseTG, 
-               dtwm.origFocusAutoRaise, True);
-
-        XtFree (string);
+        dtwm.origFocusAutoRaise = (strcmp(sbuf, "true") == 0) ? True : False;
     }
-    else /* FocusAutoRaise not specified */
+    else
     {
-        /* set the Dtwm default value: 
-         *  True when keyboardFocusPolicy is explicit 
-         *  False when keyboardFocusPolicy is pointer
-         */
-        dtwm.origFocusAutoRaise =   
-                ((dtwm.origKeyboardFocusPolicy == EXPLICIT) ? True : False); 
-        XmToggleButtonGadgetSetState (dtwm.autoRaiseTG, 
-                dtwm.origFocusAutoRaise, True);
+        dtwm.origFocusAutoRaise =
+            (dtwm.origKeyboardFocusPolicy == EXPLICIT) ? True : False;
     }
+    XmToggleButtonGadgetSetState(dtwm.autoRaiseTG, dtwm.origFocusAutoRaise, False);
 
-    /* Get SecStack value from secondaries OnTop resource*/
-    if (status = XrmGetResource (db, "dtwm.secondariesOnTop",
-                                     "Dtwm.secondariesOnTop",
-                                     &str_type_return, &value_return))
+    /* Get SecStack value from secondariesOnTop resource */
+    if (query_dtwm_string_lower(live_db, db, "secondariesOnTop",
+                                "SecondariesOnTop", sbuf, sizeof(sbuf)) ||
+        query_dtwm_string_lower(live_db, db, "secondariesOnTop",
+                                "secondariesOnTop", sbuf, sizeof(sbuf)))
     {
-        /* make local copy of string */
-        string = (char *) XtMalloc( value_return.size );
-        strcpy (string, value_return.addr);
-
-        /* convert to lower case */
-        _DtWmParseToLower((unsigned char *)string);
-
-        dtwm.origSecStack =                
-               (strcmp(string, "true") ? False : True); 
-        XmToggleButtonGadgetSetState (dtwm.secStackTG, 
-               !dtwm.origSecStack, True);
-
-        XtFree (string);
+        dtwm.origSecStack = (strcmp(sbuf, "true") == 0) ? True : False;
     }
-    else /* SecStack resource not specified */
-      {
+    else
+    {
 #ifdef sun
-	dtwm.origSecStack = False;
-	XmToggleButtonGadgetSetState (dtwm.secStackTG, 
-				      !dtwm.origSecStack, False);
+        dtwm.origSecStack = False;
 #else
-	dtwm.origSecStack = True;
-	XmToggleButtonGadgetSetState (dtwm.secStackTG, 
-				      !dtwm.origSecStack, True);
+        dtwm.origSecStack = True;
 #endif
-      }
-    /* Get UseIconBox value */
-    if (status = XrmGetResource (db, "dtwm.useIconBox",
-                                 "Dtwm.UseIconBox",
-                                 &str_type_return, &value_return))
-    {
-        /* make local copy of string */
-        string = (char *) XtMalloc( value_return.size );
-        strcpy (string, value_return.addr);
-
-        /* convert to lower case */
-        _DtWmParseToLower((unsigned char *)string);
-
-        dtwm.origUseIconBox =                
-              (strcmp(string, "true") ? False : True); 
-        if (dtwm.origUseIconBox)
-            XmToggleButtonGadgetSetState (dtwm.iconBoxTG, True, True); 
-        else
-            XmToggleButtonGadgetSetState (dtwm.desktopTG, True, True); 
-
-        XtFree (string);
-    }                                 
-    else /* UseIconBox not specified */
-    {
-        /* set the Dtwm default value - False, desktop - True*/
-        dtwm.origUseIconBox =  False;
-        XmToggleButtonGadgetSetState (dtwm.desktopTG, True, True); 
     }
+    XmToggleButtonGadgetSetState(dtwm.secStackTG, !dtwm.origSecStack, False);
+
+    /* Get UseIconBox value */
+    if (query_dtwm_string_lower(live_db, db, "useIconBox",
+                                "UseIconBox", sbuf, sizeof(sbuf)))
+    {
+        dtwm.origUseIconBox = (strcmp(sbuf, "true") == 0) ? True : False;
+    }
+    else
+    {
+        dtwm.origUseIconBox = False;
+    }
+    XmToggleButtonGadgetSetState(dtwm.iconBoxTG, dtwm.origUseIconBox, False);
+    XmToggleButtonGadgetSetState(dtwm.desktopTG, !dtwm.origUseIconBox, False);
 
     /* Get MoveOpaque value */
-    if (status = XrmGetResource (db, "dtwm.moveOpaque",
-                                     "Dtwm.MoveOpaque",
-                                     &str_type_return, &value_return))
+    if (query_dtwm_string_lower(live_db, db, "moveOpaque",
+                                "MoveOpaque", sbuf, sizeof(sbuf)))
     {
-        /* make local copy of string */
-        string = (char *) XtMalloc( value_return.size );
-        strcpy (string, value_return.addr);
-
-        /* convert to lower case */
-        _DtWmParseToLower((unsigned char *)string);
-
-        dtwm.origMoveOpaque =               
-               (strcmp(string, "true") ? False : True); 
-        XmToggleButtonGadgetSetState (dtwm.moveOpaqueTG, 
-               dtwm.origMoveOpaque, True);
-
-        XtFree (string);
+        dtwm.origMoveOpaque = (strcmp(sbuf, "true") == 0) ? True : False;
     }
-    else /* MoveOpaque not specified */
+    else
     {
-        /* set the Dtwm default value: False */
-
-        dtwm.origMoveOpaque =  False; 
-        XmToggleButtonGadgetSetState (dtwm.moveOpaqueTG, 
-                dtwm.origMoveOpaque, True);
+        /* Wayland compositor defaults to smooth opaque moves; X11 defaults to wireframe */
+        dtwm.origMoveOpaque = is_wayland_dtwm_session() ? True : False;
     }
+    XmToggleButtonGadgetSetState(dtwm.moveOpaqueTG, dtwm.origMoveOpaque, False);
 
     /* Get AnimateMinimizeRestore value */
-    if (status = XrmGetResource (db, "dtwm.animateMinimizeRestore",
-                                     "Dtwm.AnimateMinimizeRestore",
-                                     &str_type_return, &value_return))
+    if (query_dtwm_string_lower(live_db, db, "animateMinimizeRestore",
+                                "AnimateMinimizeRestore", sbuf, sizeof(sbuf)))
     {
-        /* make local copy of string */
-        string = (char *) XtMalloc( value_return.size );
-        strcpy (string, value_return.addr);
-
-        /* convert to lower case */
-        _DtWmParseToLower((unsigned char *)string);
-
-        dtwm.origAnimateMinimize =
-               (strcmp(string, "true") ? False : True);
-        XmToggleButtonGadgetSetState (dtwm.animateMinimizeTG,
-               dtwm.origAnimateMinimize, True);
-
-        XtFree (string);
+        dtwm.origAnimateMinimize = (strcmp(sbuf, "true") == 0) ? True : False;
     }
-    else /* AnimateMinimizeRestore not specified */
+    else
     {
-        /* set the Dtwm default value: True */
-        dtwm.origAnimateMinimize =  True;
-        XmToggleButtonGadgetSetState (dtwm.animateMinimizeTG,
-                dtwm.origAnimateMinimize, True);
+        dtwm.origAnimateMinimize = True;
     }
+    XmToggleButtonGadgetSetState(dtwm.animateMinimizeTG, dtwm.origAnimateMinimize, False);
 
     /* Get ShowTaskSwitcher value */
-    if (status = XrmGetResource (db, "dtwm.showTaskSwitcher",
-                                     "Dtwm.ShowTaskSwitcher",
-                                     &str_type_return, &value_return))
+    if (query_dtwm_string_lower(live_db, db, "showTaskSwitcher",
+                                "ShowTaskSwitcher", sbuf, sizeof(sbuf)))
     {
-        /* make local copy of string */
-        string = (char *) XtMalloc( value_return.size );
-        strcpy (string, value_return.addr);
-
-        /* convert to lower case */
-        _DtWmParseToLower((unsigned char *)string);
-
-        dtwm.origShowTaskSwitcher =
-               (strcmp(string, "true") ? False : True);
-        XmToggleButtonGadgetSetState (dtwm.showTaskSwitcherTG,
-               dtwm.origShowTaskSwitcher, True);
-
-        XtFree (string);
+        dtwm.origShowTaskSwitcher = (strcmp(sbuf, "true") == 0) ? True : False;
     }
-    else /* ShowTaskSwitcher not specified */
+    else
     {
-        /* set the Dtwm default value: True */
-        dtwm.origShowTaskSwitcher =  True;
-        XmToggleButtonGadgetSetState (dtwm.showTaskSwitcherTG,
-                dtwm.origShowTaskSwitcher, True);
+        dtwm.origShowTaskSwitcher = True;
     }
+    XmToggleButtonGadgetSetState(dtwm.showTaskSwitcherTG, dtwm.origShowTaskSwitcher, False);
 
     /* Determine icon image maximum and double state */
     {
@@ -480,6 +522,15 @@ getDtwmValues(void)
         ReadIconImageMaximum(db, "dtwm.iconImageMaximum",
                              "Dtwm.IconImageMaximum",
                              &iconWidth, &iconHeight);
+        if (live_db)
+        {
+            ReadIconImageMaximum(live_db, "Dtwm.iconImageMaximum",
+                                 "Dtwm.IconImageMaximum",
+                                 &iconWidth, &iconHeight);
+            ReadIconImageMaximum(live_db, "dtwm.iconImageMaximum",
+                                 "Dtwm.IconImageMaximum",
+                                 &iconWidth, &iconHeight);
+        }
 
         if (iconWidth <= 0)
             iconWidth = defaultSize;
@@ -490,17 +541,10 @@ getDtwmValues(void)
         dtwm.iconImageBaseHeight = iconHeight;
 
         dtwm.origIncreaseIconSize = False;
-        if (status = XrmGetResource(db, "dtwm.doubleIconSize",
-                                     "Dtwm.DoubleIconSize",
-                                     &str_type_return, &value_return))
+        if (query_dtwm_string_lower(live_db, db, "doubleIconSize",
+                                    "DoubleIconSize", sbuf, sizeof(sbuf)))
         {
-            int size = (int)value_return.size;
-            string = (char *)XtMalloc(size + 1);
-            memcpy(string, value_return.addr, size);
-            string[size] = '\0';
-            _DtWmParseToLower((unsigned char *)string);
-            dtwm.origIncreaseIconSize = (strcmp(string, "true") == 0);
-            XtFree(string);
+            dtwm.origIncreaseIconSize = (strcmp(sbuf, "true") == 0);
         }
 
         if (dtwm.origIncreaseIconSize)
@@ -512,39 +556,28 @@ getDtwmValues(void)
         }
 
         XmToggleButtonGadgetSetState(dtwm.increaseIconSizeTG,
-                                     dtwm.origIncreaseIconSize, True);
+                                     dtwm.origIncreaseIconSize, False);
     }
 
     /* Get ShowIconsForOpenWindows value */
     {
         dtwm.origShowOpenIcons = True;
-        if (status = XrmGetResource (db, "dtwm.showOpenWindowIcons",
-                                     "Dtwm.ShowOpenWindowIcons",
-                                     &str_type_return, &value_return))
+        if (query_dtwm_string_lower(live_db, db, "showOpenWindowIcons",
+                                    "ShowOpenWindowIcons", sbuf, sizeof(sbuf)))
         {
-            /* make local copy of string */
-            string = (char *) XtMalloc( value_return.size );
-            strcpy (string, value_return.addr);
-
-            /* convert to lower case */
-            _DtWmParseToLower((unsigned char *)string);
-
-            dtwm.origShowOpenIcons =
-                (strcmp(string, "true") ? False : True);
-
-            XtFree (string);
+            dtwm.origShowOpenIcons = (strcmp(sbuf, "true") == 0) ? True : False;
         }
 
         XmToggleButtonGadgetSetState(dtwm.showOpenIconsTG,
-                                     dtwm.origShowOpenIcons, True);
+                                     dtwm.origShowOpenIcons, False);
     }
 
     /* Get IconPlacementMargin value */
     {
         dtwm.origIconPlacementMargin = -1;
-        if (status = XrmGetResource (db, "dtwm.iconPlacementMargin",
-                                     "Dtwm.IconPlacementMargin",
-                                     &str_type_return, &value_return))
+        if (query_dtwm_res(live_db, db, "iconPlacementMargin",
+                           "IconPlacementMargin", &value_return) &&
+            value_return.addr != nullptr)
         {
             dtwm.origIconPlacementMargin = atoi((char *)value_return.addr);
         }
@@ -556,6 +589,8 @@ getDtwmValues(void)
         }
     }
 
+    if (live_db)
+        XrmDestroyDatabase(live_db);
 }
 
 /*+++++++++++++++++++++++++++++++++++++++*/
@@ -795,16 +830,11 @@ build_dtwmDlg(
     XtManageChild(dtwm.iconGapText);
     XtManageChild(dtwm.iconGapLabel);
 
-    XtAddCallback(style.dtwmDialog, XmNmapCallback, formLayoutCB, nullptr);
     XtAddCallback(style.dtwmDialog, XmNmapCallback, _DtmapCB_dtwmDlg, shell);
     XtAddCallback(style.dtwmDialog, XmNcallback, ButtonCB, nullptr);
     XtAddCallback(dtwm.systemDefault, XmNactivateCallback, systemDefaultCB, nullptr);
 
-    XtManageChild(form);
-    XtManageChildren(widgetList1,count); 
-
-    XtManageChild(windowFocusForm);
-    XtManageChild(iconPlacementForm);
+    formLayoutCB(style.dtwmDialog, nullptr, nullptr);
 
     XtManageChild(dtwm.focusPolicyRC);
     XtManageChild(dtwm.pointerTG);
@@ -823,6 +853,11 @@ build_dtwmDlg(
     XtManageChild(dtwm.increaseIconSizeTG);
     XtManageChild(dtwm.showOpenIconsTG);
     XtManageChild(dtwm.iconGapLabel);
+
+    XtManageChild(windowFocusForm);
+    XtManageChild(iconPlacementForm);
+    XtManageChildren(widgetList1,count); 
+    XtManageChild(form);
 
     return(style.dtwmDialog);
 }
@@ -965,7 +1000,7 @@ formLayoutCB(
     XtSetArg(args[n], XmNtopAttachment,      XmATTACH_WIDGET);       n++;
     XtSetArg(args[n], XmNtopWidget,          dtwm.animateMinimizeTG); n++;
     XtSetArg(args[n], XmNtopOffset,          style.verticalSpacing-3); n++;
-    XtSetArg(args[n], XmNbottomAttachment,   XmATTACH_NONE);         n++;
+    XtSetArg(args[n], XmNbottomAttachment,   XmATTACH_FORM);         n++;
     XtSetArg(args[n], XmNbottomOffset,       style.verticalSpacing); n++;
     XtSetArg(args[n], XmNleftAttachment,     XmATTACH_FORM);         n++;
     XtSetArg(args[n], XmNleftOffset,         0);  n++;
@@ -1019,8 +1054,6 @@ formLayoutCB(
     XtSetArg(args[n], XmNrightAttachment,    XmATTACH_FORM);         n++;
     XtSetArg(args[n], XmNrightOffset,        0);  n++;
     XtSetValues (dtwm.iconGapLabel, args, n);
-
-    XtRemoveCallback(style.dtwmDialog, XmNmapCallback, formLayoutCB, nullptr);
 }
 
 /*+++++++++++++++++++++++++++++++++++++++*/
@@ -1072,8 +1105,8 @@ systemDefaultCB(
     XmToggleButtonGadgetSetState (dtwm.secStackTG, False, True); 
 #endif
 
-    /* OpaqueMove:  False */
-    XmToggleButtonGadgetSetState (dtwm.moveOpaqueTG, False, True); 
+    /* OpaqueMove: True on Wayland, False on classic X11 */
+    XmToggleButtonGadgetSetState (dtwm.moveOpaqueTG, is_wayland_dtwm_session() ? True : False, True); 
 
     /* AnimateMinimizeRestore:  True */
     XmToggleButtonGadgetSetState (dtwm.animateMinimizeTG, True, True);
@@ -1112,6 +1145,7 @@ ButtonCB(
     case OK_BUTTON:
       
       XtUnmanageChild (w);
+      dtwmRes[0] = '\0';
       
       /* create the Dtwm resource specs for xrdb */
       
@@ -1223,6 +1257,15 @@ ButtonCB(
       
       if (changeFlag)
 	{
+	  if (is_wayland_dtwm_session())
+	    {
+	      /* dtwm-wayland applies RESOURCE_MANAGER changes live without restarting */
+	      commit_orig_dtwm_values();
+	      merge_dtwm_res_into_xt_db(dtwmRes);
+	      _DtAddToResource(style.display, dtwmRes);
+	      XFlush(style.display);
+	      break;
+	    }
 	  if (dtwm.warnDialog == nullptr)
 	    {
 	      n = 0;
@@ -1510,14 +1553,8 @@ okWarnCB(
         XtPointer client_data,
         XtPointer call_data )
 {
-  dtwm.origKeyboardFocusPolicy = XmToggleButtonGadgetGetState (dtwm.explicitTG);
-  dtwm.origFocusAutoRaise = XmToggleButtonGadgetGetState (dtwm.autoRaiseTG);
-  dtwm.origSecStack = !XmToggleButtonGadgetGetState (dtwm.secStackTG);
-  dtwm.origMoveOpaque = XmToggleButtonGadgetGetState (dtwm.moveOpaqueTG);
-  dtwm.origAnimateMinimize = XmToggleButtonGadgetGetState (dtwm.animateMinimizeTG);
-  dtwm.origShowTaskSwitcher = XmToggleButtonGadgetGetState (dtwm.showTaskSwitcherTG);
-  dtwm.origUseIconBox = XmToggleButtonGadgetGetState (dtwm.iconBoxTG);
-  
+  commit_orig_dtwm_values();
+  merge_dtwm_res_into_xt_db(dtwmRes);
 
   /* write out resources to xrdb */
   _DtAddToResource(style.display, dtwmRes);

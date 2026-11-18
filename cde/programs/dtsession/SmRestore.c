@@ -104,6 +104,7 @@
 #include "SmCommun.h"
 #include "SmRestore.h"
 #include "SmProtocol.h"
+#include "SmWayland.h"
 #include "SmConMgmt.h"
 #include "SmSave.h"
 #include "SmUI.h"
@@ -616,6 +617,13 @@ StartWM( void )
     Boolean goodWmStartup = True;
     int status;
   
+    if (SmWaylandActive())
+    {
+	smGD.dtwmRunning = True;
+	StartMsgServer();
+	return(0);
+    }
+
     if((smGD.wmStartup == nullptr) || (*smGD.wmStartup == 0))
     {
 	ForkWM();

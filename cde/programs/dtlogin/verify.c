@@ -58,6 +58,9 @@
 # include	"vgproto.h"
 
 #include <X11/Xresource.h>
+#ifdef DTLOGIN_WAYLAND_SEAT
+#include "wayland_seat.h"
+#endif
 
 #ifdef _AIX
 # include       <usersec.h>
@@ -210,6 +213,11 @@ Verify(
 	switch (notify_dt) {
         case NOTIFY_DT:
         case NOTIFY_OK:
+#ifdef DTLOGIN_WAYLAND_SEAT
+	    if (d->isWaylandSeat &&
+		DtloginResolveDefaultWaylandSession(d, XresourceDB, &argv))
+		break;
+#endif
 	    if(d->session && !parseArgs (&argv,d->session))
 		goto argument_failure;
               break;

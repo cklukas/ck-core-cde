@@ -10,7 +10,8 @@ EXTRA_DIST = tests/check-environment.py tests/check-session-path.py \
 	tests/check-greeter-request.py tests/check-x-timeouts.py tests/scenarios.py \
 	tests/check-forward-port.py tests/check-forward-port.c \
 	tests/check-greeter-terminate.py tests/check-greeter-terminate.c \
-	tests/check-xaccess-alias-cycle.py tests/check-xaccess-alias-cycle.c
+	tests/check-xaccess-alias-cycle.py tests/check-xaccess-alias-cycle.c \
+	tests/check-wayland-dtlogin.py
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-environment.py
@@ -29,6 +30,9 @@ check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-greeter-catalog.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-greeter-terminate.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-xaccess-alias-cycle.py
+if BUILD_DTWM_WAYLAND
+	CC="$(CC)" python3 $(srcdir)/tests/check-wayland-dtlogin.py --compositor ../dtwm/dtwm-wayland
+endif
 
 XDMDIR = $(CDE_LOGFILES_TOP)
 
@@ -44,13 +48,14 @@ AM_CFLAGS = -DCDE_CONFIGURATION_TOP=\"$(CDE_CONFIGURATION_TOP)\" \
             -DCDE_LOGFILES_TOP=\"$(CDE_LOGFILES_TOP)\" \
 	    -DBINDIR=\"$(XBINDIR)\" \
 	    -DXDMDIR=\"$(XDMDIR)\" \
-	    -DKORNSHELL=$(KSH) -DUNIXCONN -DTCPCONN -DXDMCP
+	    -DKORNSHELL=$(KSH) -DUNIXCONN -DTCPCONN -DXDMCP \
+	    -DDTLOGIN_WAYLAND_SEAT
 
 dtlogin_SOURCES = bounded.c access.c auth.c genauth.c daemon.c dm.c \
                   dpylist.c error.c file.c mitauth.c protodpy.c policy.c \
                   reset.c server.c session.c socket.c util.c \
                   verify.c sysauth.c fontpath.c qualify.c choose.c netaddr.c \
-		  xdmcp.c
+		  xdmcp.c wayland_seat.c wayland_seat.h
 
 # We play a game here with resources.o (dtlogin).  It needs special options.
 noinst_LIBRARIES = libresource.a
@@ -77,7 +82,7 @@ dtchooser_SOURCES = bounded.c chooser.c dtchooser.c vglogo.c vgutil.c \
 		    vgcallback.c vglang.c
 
 dtlogin_LDADD = libresource.a $(DTCLIENTLIBS) $(XDMCPLIB) \
-	$(XTOOLLIB) $(TIRPCLIB)
+	$(XTOOLLIB) $(TIRPCLIB) $(PAMLIB)
 
 dtgreet_LDADD = $(DTCLIENTLIBS) $(XTOOLLIB)
 

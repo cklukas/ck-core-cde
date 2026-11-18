@@ -65,3 +65,17 @@ See the [desktop screenshot gallery](../desktop.md) for side-by-side tabbed
 captures of the default session, Style Manager, Terminal, and File Manager
 across all four profiles, and [Build CK Core CDE](../build.md) for the source
 workflow.
+
+## Desktop version and Help / About attribution
+
+CK Core CDE identifies the modernized C23 + Motif ABI 9 + Wayland/X11 desktop
+release line as **3.0.0** (`DtVERSION = 3`, `DtREVISION = 0`,
+`DtUPDATE_LEVEL = 0`, `DtVERSION_NUMBER = 30000`, and
+`DtVERSION_STRING = "CK-Core CDE Version 3.0.0"` in `<Dt/Dt.h>` and `libDtSvc`).
+All SDL Help **Version** / **About** topics (`CDEcopyright` in
+`cde/doc/common/help/HELPEnt.sgm.in` and `Help4Help.sgm`), `dtcm`'s About
+dialog, and `dtlogin`'s Copyright notice display **CK-Core Common Desktop
+Environment 3.0.0**, Dr. Christian Klukas's copyright, and the project URLs
+(`https://github.com/cklukas/ck-core-cde` and
+`https://cklukas.github.io/ck-core-cde/`) alongside the upstream Open Group,
+CDE Project, and GNU LGPL notices.

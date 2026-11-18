@@ -48,6 +48,7 @@
 
 #include <Xm/Xm.h>
 #include <Xm/XmP.h>
+#include <X11/Xatom.h>
 #include <Xm/Form.h>
 #include <Xm/LabelG.h>
 #include <Xm/PushBG.h>
@@ -266,16 +267,53 @@ build_keyboardDlg(
     widget_list[count++] = 
     kbd.volumeScale= XmCreateScale(form,"volumeScale", args, n);
 
-    XtAddCallback(style.kbdDialog, XmNmapCallback, layoutCB, nullptr);
     XtAddCallback(style.kbdDialog, XmNmapCallback, _DtmapCB_keyboardDlg, shell);
     XtAddCallback(kbd.systemDefault, XmNactivateCallback, systemDefaultCB, nullptr);
     XtAddCallback(kbd.volumeScale, XmNvalueChangedCallback, valueChangedCB, nullptr);
     XtAddCallback(kbd.autoRepeatToggle, XmNvalueChangedCallback, autoRepeatToggleCB, nullptr);
 
+    XtManageChildren(widget_list,count);
+    layoutCB(style.kbdDialog, nullptr, nullptr);
     XtManageChild(form);
-    XtManageChildren(widget_list,count); 
 
     return(style.kbdDialog);
+}
+
+static Boolean
+queryWaylandKeyRepeatEnabled(Boolean fallback)
+{
+    Atom propAtom;
+    Atom actualType = None;
+    int actualFormat = 0;
+    unsigned long nitems = 0, bytesAfter = 0;
+    unsigned char *prop = nullptr;
+    Boolean enabled = fallback;
+
+    if (!DtstyleWaylandActive() || !style.display)
+        return fallback;
+
+    propAtom = XInternAtom(style.display, "_DT_WAYLAND_INPUT_STATE", True);
+    if (propAtom == None)
+        return fallback;
+
+    if (XGetWindowProperty(style.display, DefaultRootWindow(style.display),
+                           propAtom, 0, 256, False, XA_STRING,
+                           &actualType, &actualFormat, &nitems, &bytesAfter,
+                           &prop) == Success && prop != nullptr)
+    {
+        if (actualFormat == 8 && nitems > 0)
+        {
+            const char *rep = strstr((const char *)prop, "repeat=");
+            if (rep != nullptr)
+            {
+                int en = fallback ? 1 : 0;
+                if (sscanf(rep + 7, "%d", &en) == 1)
+                    enabled = (en != 0) ? True : False;
+            }
+        }
+        XFree(prop);
+    }
+    return enabled;
 }
 
 /*+++++++++++++++++++++++++++++++++++++++*/
@@ -321,18 +359,6 @@ layoutCB(
     XtSetArg(args[n], XmNrightAttachment,    XmATTACH_NONE);       n++;
     XtSetValues (kbd.autoRepeatToggle, args, n);
 
-    /* Volume Label */
-    n=0;
-
-    XtSetArg(args[n], XmNtopAttachment,      XmATTACH_NONE);     n++;
-    XtSetArg(args[n], XmNbottomAttachment,   XmATTACH_FORM);       n++;
-    XtSetArg(args[n], XmNbottomOffset,       style.verticalSpacing);    n++;
-    XtSetArg(args[n], XmNleftAttachment,     XmATTACH_FORM);       n++;
-    XtSetArg(args[n], XmNleftOffset,         style.horizontalSpacing);  n++;
-    XtSetArg(args[n], XmNrightAttachment,    XmATTACH_NONE);       n++;
-    XtSetValues (kbd.volumeLabGad, args, n);
-
-
     /* Volume Scale */
     n=0;
     XtSetArg(args[n], XmNtopAttachment,      XmATTACH_WIDGET);     n++;
@@ -344,9 +370,18 @@ layoutCB(
     XtSetArg(args[n], XmNleftWidget,         kbd.volumeLabGad);    n++;
     XtSetArg(args[n], XmNleftOffset,         style.horizontalSpacing);  n++;
     XtSetArg(args[n], XmNrightAttachment,    XmATTACH_FORM);       n++;
+    XtSetArg(args[n], XmNrightOffset,        style.horizontalSpacing);  n++;
     XtSetValues (kbd.volumeScale, args, n);
 
-    XtRemoveCallback(style.kbdDialog, XmNmapCallback, layoutCB, nullptr);
+    /* Volume Label */
+    n=0;
+    XtSetArg(args[n], XmNtopAttachment,      XmATTACH_NONE);     n++;
+    XtSetArg(args[n], XmNbottomAttachment,   XmATTACH_FORM);     n++;
+    XtSetArg(args[n], XmNbottomOffset,       style.verticalSpacing); n++;
+    XtSetArg(args[n], XmNleftAttachment,     XmATTACH_FORM);       n++;
+    XtSetArg(args[n], XmNleftOffset,         style.horizontalSpacing);  n++;
+    XtSetArg(args[n], XmNrightAttachment,    XmATTACH_NONE);       n++;
+    XtSetValues (kbd.volumeLabGad, args, n);
 }
 
 
@@ -361,6 +396,7 @@ _DtmapCB_keyboardDlg(
 {
     static int  first_time = 1;
     int         n;
+    int         clickPct;
     Arg         args[MAX_ARGS];
     Boolean     set;
 
@@ -376,15 +412,24 @@ _DtmapCB_keyboardDlg(
 
     /* get keyboard values for click volume */
     XGetKeyboardControl(style.display, &kbd.values);
-    kbd.new_key_click_percent = kbd.values.key_click_percent;
+    clickPct = kbd.values.key_click_percent;
+    if (clickPct < 0)
+        clickPct = 0;
+    else if (clickPct > VOLUME_MAX)
+        clickPct = VOLUME_MAX;
+    kbd.values.key_click_percent = clickPct;
+    kbd.new_key_click_percent = clickPct;
+
+    set = (kbd.values.global_auto_repeat == AutoRepeatModeOn) ? True : False;
+    set = queryWaylandKeyRepeatEnabled(set);
+    kbd.values.global_auto_repeat = set ? AutoRepeatModeOn : AutoRepeatModeOff;
     kbd.new_autoRepeat = kbd.values.global_auto_repeat;
 
     n=0;
-    XtSetArg(args[n], XmNvalue, kbd.values.key_click_percent); n++;
+    XtSetArg(args[n], XmNvalue, clickPct); n++;
     XtSetValues(kbd.volumeScale, args, n);
 
     n=0;
-    set = (kbd.values.global_auto_repeat == AutoRepeatModeOn) ? True : False;
     XtSetArg(args[n], XmNset, set);  n++;
     XtSetValues(kbd.autoRepeatToggle, args, n);
 }
@@ -440,11 +485,15 @@ autoRepeatToggleCB(
     if (((XmToggleButtonCallbackStruct *)call_data)->set)
     {
         XAutoRepeatOn(style.display);
+        if (DtstyleWaylandActive())
+            DtstyleSendWaylandRequest("f.set_key_repeat 1 600 25");
         kbd.new_autoRepeat = AutoRepeatModeOn;
     }
     else
     {
         XAutoRepeatOff(style.display);
+        if (DtstyleWaylandActive())
+            DtstyleSendWaylandRequest("f.set_key_repeat 0 600 25");
         kbd.new_autoRepeat = AutoRepeatModeOff;
     }
     kbd.systemDefaultFlag = False;
@@ -460,6 +509,7 @@ systemDefaultCB(
         XtPointer call_data )
 {
     int                 n;
+    int                 clickPct;
     Arg                 args[MAX_ARGS];
     XKeyboardControl    kbdControl;
     int                 kbdControlMask;
@@ -472,17 +522,28 @@ systemDefaultCB(
     kbdControl.key_click_percent = -1;
     kbdControl.auto_repeat_mode = AutoRepeatModeDefault;
     XChangeKeyboardControl(style.display, kbdControlMask, &kbdControl);
+    if (DtstyleWaylandActive())
+        DtstyleSendWaylandRequest("f.set_key_repeat 1 600 25");
 
     XGetKeyboardControl(style.display, &kbdState);
+    clickPct = kbdState.key_click_percent;
+    if (clickPct < 0)
+        clickPct = 0;
+    else if (clickPct > VOLUME_MAX)
+        clickPct = VOLUME_MAX;
 
     n=0;
-    XtSetArg(args[n], XmNvalue, kbdState.key_click_percent); n++;
+    XtSetArg(args[n], XmNvalue, clickPct); n++;
     XtSetValues(kbd.volumeScale, args, n);
 
     n=0;
-    set = (kbdState.global_auto_repeat == AutoRepeatModeOn) ? True : False;
+    set = DtstyleWaylandActive()
+              ? True
+              : ((kbdState.global_auto_repeat == AutoRepeatModeOn) ? True : False);
     XtSetArg(args[n], XmNset, set);  n++;
     XtSetValues(kbd.autoRepeatToggle, args, n);
+    kbd.new_key_click_percent = clickPct;
+    kbd.new_autoRepeat = set ? AutoRepeatModeOn : AutoRepeatModeOff;
 
     kbd.systemDefaultFlag = True;
 }
@@ -533,13 +594,21 @@ ButtonCB(
 	  XtSetValues(kbd.volumeScale, args, n);
 
           n=0;
-	  XtSetArg(args[n], XmNset, kbd.values.global_auto_repeat); n++;
+	  XtSetArg(args[n], XmNset,
+                   (kbd.values.global_auto_repeat == AutoRepeatModeOn) ? True : False); n++;
 	  XtSetValues(kbd.autoRepeatToggle, args, n);
 
           kbdControlMask = KBKeyClickPercent | KBAutoRepeatMode;
           kbdControl.key_click_percent = kbd.values.key_click_percent;
           kbdControl.auto_repeat_mode = kbd.values.global_auto_repeat;
           XChangeKeyboardControl(style.display, kbdControlMask, &kbdControl);
+          if (DtstyleWaylandActive())
+          {
+              DtstyleSendWaylandRequest(
+                  (kbd.values.global_auto_repeat == AutoRepeatModeOn)
+                      ? "f.set_key_repeat 1 600 25"
+                      : "f.set_key_repeat 0 600 25");
+          }
 
           XtUnmanageChild(w);
           break;

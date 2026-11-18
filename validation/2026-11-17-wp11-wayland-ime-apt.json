@@ -1,0 +1,38 @@
+{
+  "work_package": "WP-11",
+  "date": "2026-11-17",
+  "branch": "x11_wayland",
+  "host_vm": "cde-ubuntu2604 (Ubuntu 26.04.1 LTS aarch64, Linux 7.0.0-34-generic, clang 21, wlroots 0.19)",
+  "motif_revision": "a2f4a3b8428d40853342de301169ed6a904bd868",
+  "libXm_so_9_sha256": "eae935cdbae1ab993e36891e70639697cabbbc23cb74bb7f642ab60b5827b3ec",
+  "apps_revision": "04ea7f2ee6f34f3eb5c6f4c3f9e3e767a4e8061e",
+  "features_verified": [
+    "zwp_text_input_manager_v3 + zwp_input_method_manager_v2 CJK IME relay in dtwm-wayland (cde_ime.c)",
+    "zwp_input_method_keyboard_grab_v2 hardware/virtual key routing with hotplug keymap sync and IME virtual-keyboard feedback-loop prevention",
+    "zwp_input_popup_surface_v2 3D-beveled CJK candidate popup anchored to client cursor_rectangle and clamped to monitor workarea",
+    "ext-session-lock-v1 lock-screen IME isolation (immediate deactivate + leave + popup hide + zero password keystroke leakage)",
+    "dtstyle Internationalization (I18nEnv.c) modern local Linux fcitx5 / ibus discovery and Xsession.wayland / SmWayland.c XMODIFIERS sync",
+    "Refreshed GPG-signed Ubuntu 26.04.1 LTS APT repository (ck-core-motif9, ck-core-fs-lib, ck-core-cde, ck-core-dtlogin, ck-core-apps) installed alongside Ubuntu libxm4 and verified on both CDE (Wayland) and CDE (X11 / XLibre)"
+  ],
+  "commands": [
+    "make -j4 -C programs/dtstyle check",
+    "make -j4 -C programs/dtwm check",
+    "python3 scripts/build-ubuntu-debs.py --verify-install --output-dir /Volumes/S8T/tmp/cde-wayland-wp00-9a09ad77/receipts/wp11-apt-repo",
+    "ckdocs check --config ckdocs.yml --strict",
+    "ckdocs build --config ckdocs.yml --out /Volumes/S8T/tmp/cde-wayland-wp00-9a09ad77/tmp/ckdocs-site --clean --strict"
+  ],
+  "apt_packages": {
+    "ck-core-motif9_2.4.0-1_arm64.deb": "a2583d9858f8d2afd2fc2ff94a55a770c3e7842202e3f2ded430d075ac675593",
+    "ck-core-fs-lib_0.3.0-1_arm64.deb": "d56f1aeb0d5c824750d442e15a178dd7a82be3c880d41cf0476213cf3062c2ee",
+    "ck-core-cde_2.5.3-1_arm64.deb": "23e51e7c2e5dc883f986965a3b9477ce3af2c2944bdec48be4331b10a207eb56",
+    "ck-core-dtlogin_2.5.3-1_arm64.deb": "e71120e748ade756ece6538a992fa97babbb42a88207cb4460bee8fb9d8b93f4",
+    "ck-core-apps_1.0.0-1_arm64.deb": "328b5acdb73223542d8273c8956cb6b4d00d16c4365b2c71d24b3bfb522b661a"
+  },
+  "screenshots": {
+    "wp11_cjk_preedit_popup": "/Volumes/S8T/tmp/cde-wayland-wp00-9a09ad77/receipts/wp11/wp11-wayland-cjk-ime.png",
+    "wp11_cjk_committed": "/Volumes/S8T/tmp/cde-wayland-wp00-9a09ad77/receipts/wp11/wp11-wayland-cjk-committed.png",
+    "apt_installed_wayland_desktop": "/Volumes/S8T/tmp/cde-wayland-wp00-9a09ad77/receipts/wp11-apt-repo/wp08-cde-wayland-desktop.png",
+    "apt_installed_x11_desktop": "/Volumes/S8T/tmp/cde-wayland-wp00-9a09ad77/receipts/wp11-apt-repo/wp08-cde-x11-desktop.png"
+  },
+  "result": "pass"
+}

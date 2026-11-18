@@ -74,6 +74,7 @@
 #include "SmSave.h"
 #include "SmUI.h"
 #include "SmProtocol.h"
+#include "SmWayland.h"
 #include "SmGlobals.h"
 #include "SmXSMP.h"
 
@@ -781,6 +782,11 @@ ProcessClientMessage(
                 smGD.extensionSpec,
                 smSaverRes.saverTimeout/60);
       }
+      if (SmWaylandActive() && (flags & (SM_STATE_SAVERTIMEOUT | SM_STATE_LOCKTIMEOUT)))
+      {
+        int idle_sec = (smSaverRes.saverTimeout > 0) ? smSaverRes.saverTimeout : smSaverRes.lockTimeout;
+        SmWaylandUpdateIdleTimeout(idle_sec);
+      }
 
       if (flags & SM_STATE_RANDOM)
       {
@@ -796,6 +802,13 @@ ProcessClientMessage(
       }
 
       free(newRes);
+    }
+  }
+  else if (cEvent->message_type == XInternAtom(smGD.display, "_DT_SM_LOCK_DISPLAY", False))
+  {
+    if (smGD.lockedState == UNLOCKED)
+    {
+      LockDisplay(True);
     }
   }
   else if (cEvent->message_type == XaDtSmSaverInfo)

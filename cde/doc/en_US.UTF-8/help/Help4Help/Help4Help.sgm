@@ -25,15 +25,18 @@
 <!ENTITY % ISOboxandline PUBLIC "ISO 8879:1986//ENTITIES Box and Line Drawing//EN">
 %ISOboxandline;
 
-<!ENTITY ProductName "CDE Desktop">
-<!ENTITY CDEcopyright "<GlossTerm Role=nogloss>Common Desktop Environment 2.1 Snapshot Release</GlossTerm>,
-&copy; Copyright 1996 Digital Equipment Corp.
-&copy; Copyright 1996 Fujitsu Limited
-&copy; Copyright 1996 Hewlett-Packard Company
-&copy; Copyright 1996 Hitachi, Ltd.
-&copy; Copyright 1996 International Business Machines Corp.
-&copy; Copyright 1996 Novell, Inc.
-&copy; Copyright 1996 Sun Microsystems, Inc.">
+<!ENTITY ProductName "CK-Core CDE Desktop">
+<!ENTITY CDEcopyright "<GlossTerm Role=nogloss>CK-Core Common Desktop Environment 3.0.0</GlossTerm>&newline;
+&newline;
+&copy; Copyright 2025-2026 Dr. Christian Klukas&newline;
+GitHub: https://github.com/cklukas/ck-core-cde&newline;
+Documentation: https://cklukas.github.io/ck-core-cde/&newline;
+&newline;
+Based on Common Desktop Environment (CDE):&newline;
+&copy; Copyright 1993-2012 The Open Group&newline;
+&copy; Copyright 2012-2023 CDE Project contributors, see CONTRIBUTORS for details&newline;
+&newline;
+CK-Core CDE is released under the terms of the GNU LGPL, please see the file COPYING for more details.">
 <!ENTITY dquote "&rdquo;">
 <!ENTITY sigspace "&nbsp;">
 <!ENTITY newline SDATA "[newlin]">

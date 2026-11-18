@@ -868,6 +868,33 @@ convert_selection(
   if(*target == colorSrv.XA_PIXEL_SET)
   {
     /* wants to know the pixels allocated for the palette */
+     if (!colorSrv.DynamicColor[screen_number]) {
+       Atom pset_atom = XInternAtom(XtDisplay(w), XmSPIXEL_SET_PROP, True);
+       if (pset_atom != None) {
+         Atom act_t = None;
+         int act_f = 0;
+         unsigned long nitems = 0, rem = 0;
+         unsigned char *pdata = nullptr;
+         if (XGetWindowProperty(XtDisplay(w), XtWindow(w), pset_atom, 0, 2048,
+                                False, AnyPropertyType, &act_t, &act_f, &nitems,
+                                &rem, &pdata) == Success && pdata && nitems > 2) {
+           size_t slen = (size_t)nitems;
+           if (pdata[slen - 1] == XmPIXEL_SET_PROP_VERSION) {
+             slen--;
+           }
+           char *live_str = XtMalloc((Cardinal)(slen + 1));
+           memcpy(live_str, pdata, slen);
+           live_str[slen] = '\0';
+           XFree(pdata);
+           *type = XA_STRING;
+           *length = (unsigned long)slen;
+           *value = live_str;
+           *format = 8;
+           return TRUE;
+         }
+         if (pdata) XFree(pdata);
+       }
+     }
 
      if (palette->converted == nullptr)
      {

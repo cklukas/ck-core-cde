@@ -88,6 +88,7 @@ extern XmWidgetExtData _XmGetWidgetExtData(
 #define MOUSE    "Mouse"
 #define BEEP     "Beep"
 #define SCREEN   "Screen"
+#define DISPLAY_COMP "Display"
 #define DTWM     "Dtwm"
 #define STARTUP  "Startup"
 #define I18N     "I18N"
@@ -99,6 +100,7 @@ extern XmWidgetExtData _XmGetWidgetExtData(
 #define MOUSE_ICON    "DtMouse"
 #define BEEP_ICON     "DtBeep"
 #define SCREEN_ICON   "DtScrn"
+#define DISPLAY_ICON  "DtDisplay"
 #define DTWM_ICON     "DtDtwm"
 #define STARTUP_ICON  "DtStart"
 #define I18N_ICON     "DtI18N"
@@ -189,6 +191,7 @@ typedef struct {
                      mouseDialog,
                      audioDialog,
                      screenDialog,
+                     displayDialog,
                      startupDialog,
                      dtwmDialog,
                      i18nDialog,

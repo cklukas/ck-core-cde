@@ -270,13 +270,18 @@ CONTROL Busy
 }
 
 
-CONTROL Blank
+CONTROL Notifications
 {
-  TYPE			blank
+  TYPE			icon
   CONTAINER_NAME	Switch
   CONTAINER_TYPE	SWITCH
   POSITION_HINTS	3
-  ICON			FpblnkS
+  ICON			Fpnotif
+  ALTERNATE_ICON	FpnotifA
+  MONITOR_TYPE		file
+  FILE_NAME		$HOME/.dt/notifications.unread
+  LABEL			Notifications
+  PUSH_ACTION		CkNotify
   HELP_TOPIC		FPOnItemSwitch
   HELP_VOLUME		FPanel
 }
@@ -347,6 +352,90 @@ CONTROL PrintManager
   DROP_ANIMATION	PrinterDrop
   HELP_TOPIC		_hometopic
   HELP_VOLUME		Printmgr
+}
+
+SUBPANEL SystemSubpanel
+{
+   CONTAINER_NAME	Style
+   TITLE		System & Hardware
+}
+
+CONTROL SysStatus
+{
+  TYPE			icon
+  CONTAINER_NAME	SystemSubpanel
+  CONTAINER_TYPE	SUBPANEL
+  POSITION_HINTS	1
+  ICON			Fpstatus
+  LABEL			System Status & Tray
+  PUSH_ACTION		CkStatus
+  HELP_TOPIC		FPOnItemStyle
+  HELP_VOLUME		FPanel
+}
+
+CONTROL PowerBattery
+{
+  TYPE			icon
+  CONTAINER_NAME	SystemSubpanel
+  CONTAINER_TYPE	SUBPANEL
+  POSITION_HINTS	2
+  ICON			Fppower
+  LABEL			Power & Battery
+  PUSH_ACTION		CkPower
+  HELP_TOPIC		FPOnItemStyle
+  HELP_VOLUME		FPanel
+}
+
+CONTROL NetWifi
+{
+  TYPE			icon
+  CONTAINER_NAME	SystemSubpanel
+  CONTAINER_TYPE	SUBPANEL
+  POSITION_HINTS	3
+  ICON			Fpnet
+  LABEL			Network & Wi-Fi
+  PUSH_ACTION		CkNetwork
+  HELP_TOPIC		FPOnItemStyle
+  HELP_VOLUME		FPanel
+}
+
+CONTROL BluetoothCtrl
+{
+  TYPE			icon
+  CONTAINER_NAME	SystemSubpanel
+  CONTAINER_TYPE	SUBPANEL
+  POSITION_HINTS	4
+  ICON			Fpbt
+  LABEL			Bluetooth
+  PUSH_ACTION		CkBluetooth
+  HELP_TOPIC		FPOnItemStyle
+  HELP_VOLUME		FPanel
+}
+
+CONTROL AudioMixer
+{
+  TYPE			icon
+  CONTAINER_NAME	SystemSubpanel
+  CONTAINER_TYPE	SUBPANEL
+  POSITION_HINTS	5
+  ICON			Dtaudio
+  LABEL			Audio Mixer
+  PUSH_ACTION		CkMixer
+  HELP_TOPIC		FPOnItemStyle
+  HELP_VOLUME		FPanel
+}
+
+CONTROL DisplayMonitors
+{
+  TYPE			icon
+  CONTAINER_NAME	SystemSubpanel
+  CONTAINER_TYPE	SUBPANEL
+  POSITION_HINTS	6
+  ICON			Fpdisp
+  LABEL			Monitors & Display
+  PUSH_ACTION		DtstyleDisplay
+  HELP_TOPIC		FPOnItemStyle
+  HELP_VOLUME		FPanel
 }
 
 #ifndef NO_DTINFO

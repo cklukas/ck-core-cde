@@ -1174,6 +1174,23 @@ _DtTtContractIgnoreMsgCB(
 }
 
 
+static int s_ActTtRegisteredPatterns = 0;
+static char *s_ActTtRegisteredProcid = nullptr;
+
+static void
+_DtReconnectToolTalkForAction(Widget w)
+{
+    tt_close();
+    _DtSvcProcessLock();
+    s_ActTtRegisteredPatterns = 0;
+    if (s_ActTtRegisteredProcid) {
+	XtFree(s_ActTtRegisteredProcid);
+	s_ActTtRegisteredProcid = nullptr;
+    }
+    _DtSvcProcessUnlock();
+    (void)_DtInitializeToolTalk(w);
+}
+
 static void 
 InitiateTtRequest(
 	Widget         w,
@@ -1206,6 +1223,7 @@ InitiateTtRequest(
     int j;
     char *bufFilename = nullptr;
     int ttmedia_test;
+    int tt_retried = 0;
 
 
     /*
@@ -1217,6 +1235,8 @@ InitiateTtRequest(
     myassert(actChildRecP);
 
     actChildRecP->childState = _DtActCHILD_UNKNOWN;	/* really don't know */
+
+    (void)_DtInitializeToolTalk(w);
 
     /*
      * Future:
@@ -1319,6 +1339,12 @@ InitiateTtRequest(
 	    }
 	}
     }
+
+    retry_tt:
+    data = nullptr;
+    destroy_message = 0;
+    bufFilename = nullptr;
+    subcon_patterns = nullptr;
 
     if (ttmedia_test)
     {
@@ -1423,6 +1449,21 @@ InitiateTtRequest(
 				docname,
 				FALSE );
         status = tt_ptr_error(message);
+        if (status == TT_ERR_PROCID || status == TT_ERR_NOMP)
+        {
+	    _DtReconnectToolTalkForAction(w);
+	    message = ttmedia_load(	(Tt_message) 0,
+					Ttmedia_to_Dt_StatusUpdateCB,
+					(void *) data,
+					op,
+					tt->tt_argn_vtype[0].compiledMessage,
+					contents,
+					length,
+					file,
+					docname,
+					FALSE );
+	    status = tt_ptr_error(message);
+        }
         if (! tt_is_err(status))
         {
 	    /*
@@ -1448,6 +1489,18 @@ InitiateTtRequest(
 
 	    status = tt_message_send(message);
 	    destroy_message = 1;
+	    if ((status == TT_ERR_PROCID || status == TT_ERR_NOMP) && !tt_retried)
+	    {
+		XtFree(data->actionLabel);
+		_DtFreeRequest(data->requestPtr);
+		XtFree((char *)data);
+		tttk_message_destroy(message);
+		if (bufFilename)
+		    XtFree((char *) contents);
+		tt_retried = 1;
+		_DtReconnectToolTalkForAction(w);
+		goto retry_tt;
+	    }
         }
    
 	/*
@@ -1517,6 +1570,14 @@ InitiateTtRequest(
 	message = tttk_message_create( 0, tt->tt_class, tt->tt_scope, 0,
 					tt->tt_op.compiledMessage,
 					TtRequestCallbackHandler );
+	status = tt_ptr_error(message);
+	if (status == TT_ERR_PROCID || status == TT_ERR_NOMP)
+	{
+	    _DtReconnectToolTalkForAction(w);
+	    message = tttk_message_create( 0, tt->tt_class, tt->tt_scope, 0,
+					    tt->tt_op.compiledMessage,
+					    TtRequestCallbackHandler );
+	}
 
 	tt_message_file_set(message, tt->tt_file.compiledMessage);
 
@@ -1699,6 +1760,19 @@ InitiateTtRequest(
 			w, (void *) nullptr);
 
 	status = tt_message_send(message);
+	if ((status == TT_ERR_PROCID || status == TT_ERR_NOMP) && !tt_retried)
+	{
+	    if (tt->tt_class == TT_REQUEST)
+	    {
+		_DtFreeRequest(data->requestPtr);
+		XtFree(data->actionLabel);
+		XtFree((char *)data);
+	    }
+	    tttk_message_destroy(message);
+	    tt_retried = 1;
+	    _DtReconnectToolTalkForAction(w);
+	    goto retry_tt;
+	}
    
 	/* See if we failed right off the bat */
 	if (status != TT_OK)
@@ -1794,7 +1868,6 @@ InitiateTtRequest(
 Tt_status
 _DtInitializeToolTalk(Widget w)
 {
-   static int RegisteredPatterns = 0;
    char * procid;
    Tt_status status;
    int fd;
@@ -1817,8 +1890,16 @@ _DtInitializeToolTalk(Widget w)
    if ( (status = _DtSvcInitToolTalk(_DtInitTtContextWidget)) != TT_OK )
 	return status;
 
+   procid = tt_default_procid();
+   if ( tt_ptr_error(procid) != TT_OK )
+	procid = nullptr;
+
    _DtSvcProcessLock();
-   if ( !RegisteredPatterns )
+   if ( procid && (!s_ActTtRegisteredProcid || strcmp(s_ActTtRegisteredProcid, procid) != 0) )
+   {
+      s_ActTtRegisteredPatterns = 0;
+   }
+   if ( !s_ActTtRegisteredPatterns )
    {
       if ( !(session_id = tt_default_session()))
       {
@@ -1826,6 +1907,7 @@ _DtInitializeToolTalk(Widget w)
            * Unable to get session id -- what now?
            */
           myassert(0);
+	  if (procid) tt_free(procid);
 	  _DtSvcProcessUnlock();
           return(TT_ERR_NOMP);
       }
@@ -1857,8 +1939,13 @@ _DtInitializeToolTalk(Widget w)
       tt_pattern_register(pat);
 
       tt_free(session_id);
-      RegisteredPatterns = 1;
+      if (s_ActTtRegisteredProcid)
+         XtFree(s_ActTtRegisteredProcid);
+      s_ActTtRegisteredProcid = procid ? XtNewString(procid) : nullptr;
+      s_ActTtRegisteredPatterns = 1;
    }
+   if (procid)
+      tt_free(procid);
 
    _DtSvcProcessUnlock();      
    return (TT_OK);

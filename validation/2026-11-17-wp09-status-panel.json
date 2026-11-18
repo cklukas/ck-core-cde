@@ -1,0 +1,27 @@
+{
+  "work_package": "WP-09",
+  "date": "2026-11-17",
+  "branch": "x11_wayland",
+  "revisions": {
+    "ck_core_motif": "a2f4a3b8428d40853342de301169ed6a904bd868",
+    "ck_core_fs_lib": "39725163e43530b9ae35e9fed55f4fedb4d759b6",
+    "ck_core_apps": "eac8a976dfb726c899e8fe9bf762ae0e939fde72"
+  },
+  "guest_vm": {
+    "name": "cde-ubuntu2604",
+    "os": "Ubuntu 26.04.1 LTS (aarch64, Linux 7.0.0-34-generic, glibc 2.43)",
+    "compiler": "clang 21"
+  },
+  "checks": {
+    "ck_status_dbus_and_hw_unit_tests": "PASS (dbus-run-session -- make check: motif_abi_check + ck-status-test)",
+    "dtwm_full_check_suite": "PASS (make -j4 -C programs/dtwm check including check-dtwm-wayland-wp09.py)",
+    "switch_notifications_lamp": "PASS ($HOME/.dt/notifications.unread triggers amber FpnotifA lamp in Switch POSITION_HINTS 3)",
+    "system_subpanel_and_copy_to_main_panel": "PASS (SystemSubpanel slides up above Style; right-click Copy To Main Panel updates main panel and writes ~/.dt/sessions/dtwmfp.session)",
+    "embedded_live_gauge": "PASS (ck-status --gauge reparented inside Front Panel Blank2 slot 8 at 54x48)",
+    "ckdocs_strict": "PASS (ck-core-apps: 21 pages, ck-core-cde: 26 pages)"
+  },
+  "screenshots": {
+    "wp09_status_subpanel_and_toast_sha256": "e94e1a239d74626d380660dd29eca292c06e169e12dc399c828d275bd0718e9e",
+    "wp09_after_copy_to_main_sha256": "867af24bea43115ab9620d64f52fff633246f43b0e39dd88e0aa59d48da00c33"
+  }
+}

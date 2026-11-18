@@ -96,6 +96,8 @@ extern void SmDefaultPointerSettings(void);
 void SmNewSaverTime(int saverTime);
 void SmNewSaverSettings(int saverTime, int lockTime, int cycleTime,
                         char *selsaversList);
+Boolean DtstyleWaylandActive(void);
+void DtstyleSendWaylandRequest(const char *cmd);
 
 
 #endif /* _protocol_h */

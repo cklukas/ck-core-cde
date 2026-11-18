@@ -1,0 +1,26 @@
+{
+  "work_package": "WP-10",
+  "date": "2026-11-17",
+  "branch": "x11_wayland",
+  "revisions": {
+    "ck_core_motif": "a2f4a3b8428d40853342de301169ed6a904bd868",
+    "ck_core_fs_lib": "39725163e43530b9ae35e9fed55f4fedb4d759b6",
+    "ck_core_apps": "eac8a976dfb726c899e8fe9bf762ae0e939fde72"
+  },
+  "guest_vm": {
+    "name": "cde-ubuntu2604",
+    "os": "Ubuntu 26.04.1 LTS (aarch64, Linux 7.0.0-34-generic, glibc 2.43)",
+    "compiler": "clang 21"
+  },
+  "checks": {
+    "dtstyle_check_suite": "PASS (make -j4 -C programs/dtstyle check)",
+    "wlr_randr_output_management_v1": "PASS (wlr-randr --output HEADLESS-1 --pos 1280,120 --scale 1.5 applied & reflected in _DT_WAYLAND_OUTPUTS)",
+    "dtstyle_display_monitors_dialog_and_rotation": "PASS (Style Manager - Display & Monitors dialog mapped; f.set_output_layout 1440x900 @ 90 deg -> 900x1440 logical)",
+    "foreign_toplevel_and_capture_protocols": "PASS (zwlr_foreign_toplevel_manager_v1, zwlr_export_dmabuf_manager_v1, ext_image_copy_capture_manager_v1, zxdg_output_manager_v1)",
+    "xdg_desktop_portal_wlr_and_pipewire": "PASS (org.freedesktop.impl.portal.desktop.wlr registered on session D-Bus)",
+    "ckdocs_strict": "PASS (26 pages)"
+  },
+  "screenshots": {
+    "wp10_dtstyle_monitors_sha256": "c4c4d549669c50ccaf6884e14fd2c89d7c6b073de914c9f79c647aa995f9de9b"
+  }
+}

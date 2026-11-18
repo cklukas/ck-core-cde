@@ -453,9 +453,6 @@ static Boolean shelf_rebuild_after_drag = False;
 static FileMgrRec *shelf_rebuild_rec = nullptr;
 static Boolean shelf_rebuild_pending = False;
 static XtIntervalId shelf_rebuild_timer = 0;
-static Dimension shelf_row_height = 0;
-static Dimension shelf_slot_width = 140;
-static Dimension shelf_slot_height = 0;
 static Dimension shelf_slot_margin_w = 4;
 static Dimension shelf_slot_margin_h = 4;
 static Dimension shelf_slot_spacing = 4;
@@ -617,7 +614,6 @@ ShelfFitLabel(
 /* Forward declarations for helpers that use these globals. */
 static FileMgrRec **shelf_views;
 static int shelf_view_count;
-static Dimension shelf_slot_width;
 
 static Widget
 ShelfGetRowWidget(FileMgrRec *file_mgr_rec)
@@ -810,7 +806,8 @@ ShelfUpdateSlotWidgetWithData(
    }
 
    shelf_icon_size = ShelfGetIconSize(file_mgr_data, &shelf_icon_px);
-   max_label_px = (int)shelf_slot_width - 8;
+   max_label_px = (int)((file_mgr_rec->shelf_slot_width > 16)
+                        ? file_mgr_rec->shelf_slot_width : 96) - 8;
    if (font_list)
       fit_label = ShelfFitLabel(label_text, font_list, max_label_px);
    else
@@ -1282,20 +1279,25 @@ ShelfEnforceSizeEH(
         XEvent *event,
         Boolean *cont )
 {
+   FileMgrRec *file_mgr_rec = (FileMgrRec *)client_data;
    XConfigureEvent *cev;
+   Dimension target_h;
 
-   (void) client_data;
    (void) cont;
 
-   if (event == nullptr || event->type != ConfigureNotify)
+   if (event == nullptr || event->type != ConfigureNotify || file_mgr_rec == nullptr)
       return;
 
-   if (shelf_row_height <= 0)
+   target_h = file_mgr_rec->shelf_row_height;
+   if (target_h <= 0)
       return;
 
    cev = (XConfigureEvent *)event;
-   if ((Dimension)cev->height != shelf_row_height)
-      XtResizeWidget(w, (Dimension)cev->width, shelf_row_height, 0);
+   if ((Dimension)cev->height != target_h)
+      XtResizeWidget(w, (Dimension)cev->width, target_h, 0);
+
+   if (XtIsRealized(w) && XtName(w) && strcmp(XtName(w), "shelf_row") == 0)
+      XClearArea(XtDisplay(w), XtWindow(w), 0, 0, 0, 0, True);
 }
 
 
@@ -1588,10 +1590,14 @@ Create(
 
    file_mgr_rec = (FileMgrRec *) XtMalloc (sizeof (FileMgrRec));
    file_mgr_rec->action_pane_file_type = nullptr;
-  file_mgr_rec->shelf_frame = nullptr;
+   file_mgr_rec->shelf_frame = nullptr;
    file_mgr_rec->shelf_separator = nullptr;
    file_mgr_rec->shelf_popup = nullptr;
    file_mgr_rec->shelf_popup_data = nullptr;
+   file_mgr_rec->shelf_row_height = 0;
+   file_mgr_rec->shelf_slot_width = 140;
+   file_mgr_rec->shelf_slot_height = 0;
+   file_mgr_rec->shelf_icon_px = 0;
    ShelfRegisterView(file_mgr_rec);
 
    /* set up translations in main edit widget */
@@ -1719,7 +1725,7 @@ Create(
          _DtCreateShelf (header_frame, "shelf_frame", args, n);
       XtVaSetValues(file_mgr_rec->shelf_frame, XmNuserData, file_mgr_rec, nullptr);
       XtManageChild (file_mgr_rec->shelf_frame);
-      shelf_row_height = shelf_height;
+      file_mgr_rec->shelf_row_height = shelf_height;
 
       /* Separator between shelf and iconic path */
       n = 0;
@@ -1906,7 +1912,7 @@ Create(
             2*(highlight_thickness + shadow_thickness) + 8);
          XtSetArg (args[0], XmNheight, shelf_h);
          XtSetValues (file_mgr_rec->shelf_frame, args, 1);
-         shelf_row_height = shelf_h;
+         file_mgr_rec->shelf_row_height = shelf_h;
       }
 
       XtSetArg (args[0], XmNtopOffset, &cur_dir_offset);
@@ -2125,6 +2131,9 @@ GetDefaultValues( void )
 
    file_mgr_data->special_msg = nullptr;
    file_mgr_data->msg_timer_id = 0;
+   file_mgr_data->resize_timer_id = 0;
+   file_mgr_data->last_resize_w = 0;
+   file_mgr_data->last_resize_h = 0;
 
    file_mgr_data->show_type = SINGLE_DIRECTORY;
    file_mgr_data->tree_files = TREE_FILES_NEVER;
@@ -2407,6 +2416,9 @@ GetResourceValues(
    file_mgr_data->tree_files = TREE_FILES_NEVER;
    file_mgr_data->special_msg = nullptr;
    file_mgr_data->msg_timer_id = 0;
+   file_mgr_data->resize_timer_id = 0;
+   file_mgr_data->last_resize_w = 0;
+   file_mgr_data->last_resize_h = 0;
    file_mgr_data->show_shelf = True;
    file_mgr_data->show_iconic_path = True;
    file_mgr_data->show_current_dir = True;
@@ -3294,6 +3306,11 @@ FreeValues(
    file_mgr_data->special_msg = nullptr;
    if (file_mgr_data->msg_timer_id)
       XtRemoveTimeOut(file_mgr_data->msg_timer_id);
+   if (file_mgr_data->resize_timer_id)
+   {
+      XtRemoveTimeOut(file_mgr_data->resize_timer_id);
+      file_mgr_data->resize_timer_id = 0;
+   }
 
    _DtDestroySubdialog(file_mgr_data->change_dir);
    _DtDestroySubdialog(file_mgr_data->preferences);
@@ -6151,9 +6168,11 @@ ShelfRebuild(
    n = 0;
    XtSetArg (args[n], XmNorientation, XmHORIZONTAL); n++;
    XtSetArg (args[n], XmNpacking, XmPACK_TIGHT);     n++;
-  XtSetArg (args[n], XmNspacing, 4);                n++;
-  XtSetArg (args[n], XmNmarginWidth, 4);            n++;
-  XtSetArg (args[n], XmNmarginHeight, 4);           n++;
+   XtSetArg (args[n], XmNspacing, 4);                n++;
+   XtSetArg (args[n], XmNmarginWidth, 4);            n++;
+   XtSetArg (args[n], XmNmarginHeight, 4);           n++;
+   XtSetArg (args[n], XmNadjustLast, False);         n++;
+   XtSetArg (args[n], XmNentryVerticalAlignment, XmALIGNMENT_CONTENTS_TOP); n++;
    XtSetArg (args[n], XmNtopAttachment, XmATTACH_FORM); n++;
    XtSetArg (args[n], XmNleftAttachment, XmATTACH_FORM); n++;
    XtSetArg (args[n], XmNrightAttachment, XmATTACH_FORM); n++;
@@ -6187,8 +6206,10 @@ ShelfRebuild(
       shelf_slot_margin_h = 4;
 
    shelf_icon_size = ShelfGetIconSize(file_mgr_data, &shelf_icon_px);
-   if (file_mgr_rec->status_line != nullptr)
+   if (font_list == nullptr && file_mgr_rec->status_line != nullptr)
       XtVaGetValues(file_mgr_rec->status_line, XmNfontList, &font_list, nullptr);
+   if (font_list == nullptr)
+      XtVaGetValues(row, XmNbuttonFontList, &font_list, nullptr);
    entry = FontListDefaultEntry(font_list);
    if (entry)
    {
@@ -6212,74 +6233,55 @@ ShelfRebuild(
       }
    }
    if (font_height <= 0)
-      font_height = 12;
+      font_height = 14;
 
-   desired_row_height = (Dimension)(shelf_icon_px + font_height + 20);
-   if (desired_row_height < (Dimension)(shelf_icon_px + 24))
-      desired_row_height = (Dimension)(shelf_icon_px + 24);
-   shelf_row_height = desired_row_height;
-   ShelfLog("ShelfRebuild: font_height=%d shelf_icon_px=%d shelf_row_height=%u\n",
-            font_height, shelf_icon_px, (unsigned)shelf_row_height);
+   slot_height = (Dimension)(shelf_icon_px + font_height + 16);
+   if (slot_height < (Dimension)(shelf_icon_px + 24))
+      slot_height = (Dimension)(shelf_icon_px + 24);
+   desired_row_height = (Dimension)(slot_height + 2 * shelf_slot_margin_h);
+   file_mgr_rec->shelf_row_height = desired_row_height;
+   file_mgr_rec->shelf_icon_px = shelf_icon_px;
+   ShelfLog("ShelfRebuild: font_height=%d shelf_icon_px=%d slot_height=%u shelf_row_height=%u\n",
+            font_height, shelf_icon_px, (unsigned)slot_height, (unsigned)desired_row_height);
 
    XtVaSetValues(file_mgr_rec->shelf_frame,
-                 XmNheight, shelf_row_height,
-                 XmNminHeight, shelf_row_height,
-                 XmNmaxHeight, shelf_row_height,
-                 XmNresizeHeight, False,
+                 XmNheight, desired_row_height,
                  XmNresizeWidth, False,
                  nullptr);
 
-   layout_data = (IconLayoutData *)file_mgr_data->layout_data;
-   if (layout_data)
+   (void)layout_data;
+   XtVaGetValues(row,
+                 XmNbackground, &bg,
+                 XmNforeground, &fg,
+                 XmNtopShadowColor, &top_shadow,
+                 XmNbottomShadowColor, &bottom_shadow,
+                 XmNcolormap, &colormap,
+                 nullptr);
+   if (bg == fg && colormap != 0)
    {
-      bg = layout_data->background;
-      fg = layout_data->foreground;
-      pix_bg = layout_data->pixmap_back;
-      pix_fg = layout_data->pixmap_fore;
-      ShelfLog("ShelfRebuild: layout colors bg=%lu fg=%lu pix_bg=%lu pix_fg=%lu\n",
-               (unsigned long)bg, (unsigned long)fg,
-               (unsigned long)pix_bg, (unsigned long)pix_fg);
+      XmGetColors(XtScreen(file_mgr_rec->shelf_frame), colormap, bg,
+                  &fg, &top_shadow, &bottom_shadow, &select);
    }
-   else
-   {
-      XtVaGetValues(file_mgr_rec->shelf_frame,
-                    XmNbackground, &bg,
-                    XmNforeground, &fg,
-                    XmNcolormap, &colormap,
-                    nullptr);
-      if (colormap != 0)
-      {
-         XmGetColors(XtScreen(file_mgr_rec->shelf_frame), colormap, bg,
-                     &fg, &top_shadow, &bottom_shadow, &select);
-         pix_bg = bg;
-         pix_fg = fg;
-         ShelfLog("ShelfRebuild: default colors bg=%lu fg=%lu pix_bg=%lu pix_fg=%lu\n",
-                  (unsigned long)bg, (unsigned long)fg,
-                  (unsigned long)pix_bg, (unsigned long)pix_fg);
-      }
-      else
-      {
-         pix_bg = bg;
-         pix_fg = fg;
-      }
-   }
+   pix_bg = top_shadow;
+   pix_fg = bottom_shadow;
+   ShelfLog("ShelfRebuild: shelf colors bg=%lu fg=%lu pix_bg=%lu pix_fg=%lu\n",
+            (unsigned long)bg, (unsigned long)fg,
+            (unsigned long)pix_bg, (unsigned long)pix_fg);
 
    {
       Dimension sw = 0, sh = 0;
       XtVaGetValues(file_mgr_rec->shelf_frame, XmNwidth, &sw,
                     XmNheight, &sh, nullptr);
-      if (shelf_row_height > 0)
+      if (desired_row_height > 0)
       {
          XtVaSetValues(row,
-                       XmNheight, shelf_row_height,
-                       XmNminHeight, shelf_row_height,
-                       XmNmaxHeight, shelf_row_height,
+                       XmNheight, desired_row_height,
                        XmNresizeHeight, False,
                        XmNresizeWidth, True,
                        XmNrecomputeSize, False,
                        nullptr);
          ShelfLog("ShelfRebuild: set shelf_row height=%u\n",
-                  (unsigned)shelf_row_height);
+                  (unsigned)desired_row_height);
       }
       else if (sh > 0)
       {
@@ -6296,11 +6298,11 @@ ShelfRebuild(
    if (slot_count <= 0)
       return;
 
-   slot_height = (shelf_row_height > 0) ? shelf_row_height
-                                        : (Dimension)(shelf_icon_px + font_height + 20);
    slot_width = (Dimension)(shelf_icon_px * 3);
-   shelf_slot_width = slot_width;
-   shelf_slot_height = slot_height;
+   if (slot_width < 72)
+      slot_width = 72;
+   file_mgr_rec->shelf_slot_width = slot_width;
+   file_mgr_rec->shelf_slot_height = slot_height;
 
    {
       const ShelfSlot *slots = nullptr;
@@ -6380,12 +6382,11 @@ ShelfRebuild(
       XtSetArg (args[n], XmNforeground, fg);                n++;
       XtSetArg (args[n], XmNpixmapBackground, pix_bg);      n++;
       XtSetArg (args[n], XmNpixmapForeground, pix_fg);      n++;
+      if (font_list != nullptr) {
+         XtSetArg (args[n], XmNfontList, font_list);        n++;
+      }
       XtSetArg (args[n], XmNwidth, slot_width);             n++;
       XtSetArg (args[n], XmNheight, slot_height);           n++;
-      XtSetArg (args[n], XmNminWidth, slot_width);          n++;
-      XtSetArg (args[n], XmNmaxWidth, slot_width);          n++;
-      XtSetArg (args[n], XmNminHeight, slot_height);        n++;
-      XtSetArg (args[n], XmNmaxHeight, slot_height);        n++;
       item = _DtCreateIcon(row, "shelf_item", args, n);
       ShelfLog("ShelfRebuild: created shelf_item=%p slot=%d\n", (void *)item, i);
       if (item == nullptr)
@@ -6456,32 +6457,29 @@ ShelfRebuild(
 
    XtManageChild(row);
    if (XtIsRealized(row))
-      XtResizeWidget(row, XtWidth(row), shelf_row_height, 0);
+      XtResizeWidget(row, XtWidth(row), desired_row_height, 0);
 
    ShelfLog("ShelfRebuild: end shelf_frame=%p\n", (void *)file_mgr_rec->shelf_frame);
    ShelfUpdateSlotsRangeWithData(file_mgr_rec, file_mgr_data, 0, max_slot);
    /* Re-assert fixed shelf sizing after children are created to avoid collapse */
-   if (shelf_row_height > 0)
+   if (desired_row_height > 0)
    {
       XtVaSetValues(file_mgr_rec->shelf_frame,
-                    XmNheight, shelf_row_height,
-                    XmNminHeight, shelf_row_height,
-                    XmNmaxHeight, shelf_row_height,
+                    XmNheight, desired_row_height,
+                    nullptr);
+      XtVaSetValues(file_mgr_rec->shelf_frame,
                     XmNresizeHeight, False,
                     nullptr);
       XtVaSetValues(row,
-                    XmNheight, shelf_row_height,
-                    XmNminHeight, shelf_row_height,
-                    XmNmaxHeight, shelf_row_height,
+                    XmNheight, desired_row_height,
                     XmNresizeHeight, False,
                     XmNrecomputeSize, False,
                     nullptr);
       if (XtIsRealized(row))
-         XtResizeWidget(row, XtWidth(row), shelf_row_height, 0);
-      if (XtIsRealized(file_mgr_rec->shelf_frame))
-         XtResizeWidget(file_mgr_rec->shelf_frame,
-                        XtWidth(file_mgr_rec->shelf_frame),
-                        shelf_row_height, 0);
+      {
+         XtResizeWidget(row, XtWidth(row), desired_row_height, 0);
+         XClearArea(XtDisplay(row), XtWindow(row), 0, 0, 0, 0, True);
+      }
    }
    if (getenv("DTFILE_SHELF_DEBUG") != nullptr)
       XtAppAddTimeOut(XtWidgetToApplicationContext(file_mgr_rec->shelf_frame),
@@ -6819,8 +6817,11 @@ UpdateHeaders(
    if (file_mgr_data->show_shelf && file_mgr_rec->shelf_frame != nullptr)
    {
       XmManagerWidget shelf_mgr = (XmManagerWidget)file_mgr_rec->shelf_frame;
+      int want_shelf_px = 16;
+      (void)ShelfGetIconSize(file_mgr_data, &want_shelf_px);
       if (XtIsManaged(file_mgr_rec->shelf_frame) &&
-          shelf_mgr->composite.num_children == 0)
+          (shelf_mgr->composite.num_children == 0 ||
+           file_mgr_rec->shelf_icon_px != want_shelf_px))
       {
          ShelfRebuild(file_mgr_rec, file_mgr_data);
       }

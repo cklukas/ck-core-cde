@@ -32,6 +32,9 @@ int _DtSvcPamCloseSession(const char *service_name, const char *user,
 			  const char *display_name);
 int _DtSvcPamSetcred(const char *service_name, const char *user,
 		     const char *display_name);
+int _DtSvcPamPutenv(const char *service_name, const char *user,
+		    const char *display_name, const char *name_value);
+char **_DtSvcPamGetenvlist(void);
 
 struct pam_message;
 struct pam_response;

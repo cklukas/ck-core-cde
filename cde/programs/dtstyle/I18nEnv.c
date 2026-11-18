@@ -193,12 +193,15 @@ GetUserEnv(
     /* get the locale */
     if ((p = getenv("LANG")) && *p)
 	uenv->locale = XtNewString(p);
+    else if ((p = getenv("LC_ALL")) && *p)
+	uenv->locale = XtNewString(p);
     else
-	return ErrNoLocale;
+	uenv->locale = XtNewString("C");
     
-    /* find the CDE generic locale name */
-    if (FindCDELocaleName(uenv) != NoError)
-	return ErrNoCDELocale;
+    /* find the CDE generic locale name (fall back to POSIX/UTF-8 locale name) */
+    if (FindCDELocaleName(uenv) != NoError || !uenv->CDE_locale || !*uenv->CDE_locale) {
+	uenv->CDE_locale = XtNewString(uenv->locale);
+    }
     
     /* get the home directory */
     if ((p = getenv("HOME")) && *p)
@@ -247,10 +250,12 @@ GetUserIMSelectionFile(
     if (ret != NoError)
 	return ret;
 
-    /* Look if this file is readable */
+    /* Look if this file is readable; on first run initialize sensible defaults */
     if ((fp = fopen(env->file_sel->fname, "r")) == nullptr) {
-	env->file_sel->start_mode = -1;
-	return ErrNoSelectionFile;
+	env->file_sel->im_name = nullptr;
+	env->file_sel->hostname = nullptr;
+	env->file_sel->start_mode = 1;
+	return NoError;
     }
 
     start_tag_line(env->file_sel->fname);
@@ -381,6 +386,12 @@ _DtI18nGetImList(
 	    if (hostname && strcasecmp(hostname, "local") != 0)
 		env->ims_sel->host_name = hostname;
 	    ret = GetImsList(env, env->user_env->localhostname);
+	    if (ret == ErrNoDtimsstart) {
+		env->ims_sel->host_name = nullptr;
+		ret = ProcessBuf(nullptr, env);
+		if (ret == NoError)
+		    _DtI18nSetSensitiveImTB(env, True);
+	    }
 	    break;
     }
 
@@ -519,9 +530,41 @@ ProcessBuf(
     ImsEnt *ims_ent;
     char * filename, * label ;
 
-    /* The dtimsstart execution gave back an empty buffer */
-    if (!savebuf)
-	return(ErrRemoteFailed);
+    /* When dtimsstart returns empty output on the local workstation, discover
+     * modern Wayland / XIM Input Method frameworks (fcitx5, ibus) alongside Direct XKB. */
+    if (!savebuf || !*savebuf) {
+	if (env->ims_sel->host_name != nullptr)
+	    return(ErrRemoteFailed);
+	int has_fcitx5 = (access("/usr/bin/fcitx5", X_OK) == 0);
+	int has_ibus = (access("/usr/bin/ibus-daemon", X_OK) == 0);
+	if (has_fcitx5) {
+	    env->ims_sel->ims_list =
+		(ImsEnt *) XtRealloc((char *) env->ims_sel->ims_list, sizeof(ImsEnt) * (n + 1));
+	    env->ims_sel->ims_list[n].im_name = XtNewString("fcitx5");
+	    env->ims_sel->ims_list[n].im_label = XtNewString("Fcitx 5 (Wayland / XIM)");
+	    env->ims_sel->ims_list[n].inactive = 0;
+	    env->ims_sel->ims_list[n].im_default = 1;
+	    n++;
+	}
+	if (has_ibus) {
+	    env->ims_sel->ims_list =
+		(ImsEnt *) XtRealloc((char *) env->ims_sel->ims_list, sizeof(ImsEnt) * (n + 1));
+	    env->ims_sel->ims_list[n].im_name = XtNewString("ibus");
+	    env->ims_sel->ims_list[n].im_label = XtNewString("IBus (Wayland / XIM)");
+	    env->ims_sel->ims_list[n].inactive = 0;
+	    env->ims_sel->ims_list[n].im_default = has_fcitx5 ? 0 : 1;
+	    n++;
+	}
+	env->ims_sel->ims_list =
+	    (ImsEnt *) XtRealloc((char *) env->ims_sel->ims_list, sizeof(ImsEnt) * (n + 1));
+	env->ims_sel->ims_list[n].im_name = XtNewString("none");
+	env->ims_sel->ims_list[n].im_label = XtNewString("None (Direct XKB)");
+	env->ims_sel->ims_list[n].inactive = 0;
+	env->ims_sel->ims_list[n].im_default = (n == 0) ? 1 : 0;
+	n++;
+	env->ims_sel->ims_list_size = n;
+	return(NoError);
+    }
 	
     /* parse savebuf: The lines have the following syntax: 
      * [#](im_filename) im_label  or
@@ -644,7 +687,14 @@ _DtI18nWriteImSelectionFile(
 {
     FILE	*fp;
 
-    
+    if (env && env->user_env && env->user_env->homedir) {
+	char dir_buf[MAXPATHLEN + 1];
+	snprintf(dir_buf, sizeof(dir_buf), "%s/.dt", env->user_env->homedir);
+	(void)mkdir(dir_buf, 0755);
+	snprintf(dir_buf, sizeof(dir_buf), "%s%s", env->user_env->homedir, DtUSER_IMSFS_DIR);
+	(void)mkdir(dir_buf, 0755);
+    }
+
     /* Look if this file is writable */
     if ((fp = fopen(env->file_sel->fname, "w")) == nullptr)
 	return ErrFileCreate;

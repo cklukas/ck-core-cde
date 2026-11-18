@@ -6415,6 +6415,23 @@ _UpdateFileIcons(
    /* set up new layout data */
    layout_data = (IconLayoutData *)XtCalloc(1, sizeof(IconLayoutData));
    file_mgr_data->layout_data = (XtPointer)layout_data;
+   if (file_mgr_rec && file_mgr_rec->file_window)
+   {
+      XtVaGetValues(file_mgr_rec->file_window,
+                    XmNbackground, &layout_data->background,
+                    XmNforeground, &layout_data->foreground,
+#ifdef _SHOW_LINK
+                    XmNtopShadowColor, &layout_data->topshadow,
+#endif
+                    nullptr);
+   }
+   if (file_mgr_rec && file_mgr_rec->main)
+   {
+      XtVaGetValues(file_mgr_rec->main,
+                    XmNtopShadowColor, &layout_data->pixmap_back,
+                    XmNbottomShadowColor, &layout_data->pixmap_fore,
+                    nullptr);
+   }
 
    FlattenTree(file_mgr_data, &order_list, &order_count);
    layout_data->order_list = order_list;
@@ -6682,12 +6699,17 @@ GetIconLayoutParms(
       ld->margin = ld->highlight + shadowThickness + marginWidth;
 
       if (g->icon.pixmap_width < maxWidth)
-         ld->spacing = ld->spacing - (maxWidth - g->icon.pixmap_width);
+      {
+         Dimension diff = maxWidth - g->icon.pixmap_width;
+         ld->spacing = (ld->spacing > diff) ? (Dimension)(ld->spacing - diff) : 0;
+      }
 
-      ld->width = ((Widget)g)->core.width +
-                                     ld->pixmap_width  - g->icon.pixmap_width;
-      ld->height = ((Widget)g)->core.height +
-                                     ld->pixmap_height - g->icon.pixmap_height;
+      ld->width = (((Widget)g)->core.width + ld->pixmap_width > g->icon.pixmap_width)
+                     ? (Dimension)(((Widget)g)->core.width + ld->pixmap_width - g->icon.pixmap_width)
+                     : ld->pixmap_width;
+      ld->height = (((Widget)g)->core.height + ld->pixmap_height > g->icon.pixmap_height)
+                     ? (Dimension)(((Widget)g)->core.height + ld->pixmap_height - g->icon.pixmap_height)
+                     : ld->pixmap_height;
 
       if (ld->pixmap_position == XmPIXMAP_TOP)
       {
@@ -7731,8 +7753,8 @@ DisplayWorkProc(
    int n;
    Boolean commit_updates = False;
 
-   int n1 = 1;
-   int n2 = 1;
+   int n1 = 32;
+   int n2 = 64;
 
    dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec);
    if (dialog_data == nullptr)

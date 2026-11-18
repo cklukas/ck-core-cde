@@ -48,10 +48,32 @@ dtsession_SOURCES = SmMain.c SmHelp.c SmGlobals.c SmCommun.c		\
 	SmConMgmt.h SmResource.h SmWindow.h SrvPalette.h	\
 	SmDB.h SmLock.h SmRestore.h SmXdef.h SmError.h			\
 	SmSave.h SmXrm.h SmPriv.c SmPriv.h SmFiles.c SmFiles.h		\
-	SmPam.c SmPam.h
+	SmPam.c SmPam.h SmWayland.c SmWayland.h
 
 
 dtsession_LDADD = $(DTCLIENTLIBS) $(XTOOLLIB) $(PAMLIB)
+
+if BUILD_DTWM_WAYLAND
+SM_WL_GEN = ext-session-lock-v1-client-protocol.h \
+            ext-session-lock-v1-protocol.c \
+            ext-idle-notify-v1-client-protocol.h \
+            ext-idle-notify-v1-protocol.c
+nodist_dtsession_SOURCES = $(SM_WL_GEN)
+dtsession_CFLAGS += -DBUILD_DTWM_WAYLAND=1 $(WAYLAND_CLIENT_CFLAGS)
+dtsession_LDADD += $(WAYLAND_CLIENT_LIBS)
+
+ext-session-lock-v1-client-protocol.h: $(WAYLAND_PROTOCOLS_DATADIR)/staging/ext-session-lock/ext-session-lock-v1.xml
+	$(WAYLAND_SCANNER) client-header $< $@
+
+ext-session-lock-v1-protocol.c: $(WAYLAND_PROTOCOLS_DATADIR)/staging/ext-session-lock/ext-session-lock-v1.xml
+	$(WAYLAND_SCANNER) private-code $< $@
+
+ext-idle-notify-v1-client-protocol.h: $(WAYLAND_PROTOCOLS_DATADIR)/staging/ext-idle-notify/ext-idle-notify-v1.xml
+	$(WAYLAND_SCANNER) client-header $< $@
+
+ext-idle-notify-v1-protocol.c: $(WAYLAND_PROTOCOLS_DATADIR)/staging/ext-idle-notify/ext-idle-notify-v1.xml
+	$(WAYLAND_SCANNER) private-code $< $@
+endif
 
 # The file of the PAM service that unlocks the display, where config/Makefile.am
 # installs it.  dtsession checks for it when it starts and before it locks.
@@ -121,6 +143,9 @@ endif
 
 BUILT_SOURCES = Dtsession dtloadresources dtsession.msg sys.font	\
 	sys.resources sys.resources.ive sys.session sys.session.ive
+if BUILD_DTWM_WAYLAND
+BUILT_SOURCES += $(SM_WL_GEN)
+endif
 CLEANFILES = $(BUILT_SOURCES)
 
 Dtsession: Dtsession.src

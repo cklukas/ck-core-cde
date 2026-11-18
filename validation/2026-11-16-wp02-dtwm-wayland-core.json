@@ -1,0 +1,30 @@
+{
+  "date": "2026-11-16",
+  "work_package": "WP-02",
+  "branch": "x11_wayland",
+  "topic": "dtwm-wayland compositor core (wlroots-0.19), server-side CDE 3D bevel frames, and rootless XWayland",
+  "host": "Ubuntu 26.04.1 LTS arm64 (Lima vz guest on Apple M1 Max)",
+  "artifacts": {
+    "compositor": "/usr/dt/bin/dtwm-wayland",
+    "wayland_dual_output_png_sha256": "7582e46c3675351e87ae0efd7334e341a6ec5663996f16760c950bbbbecc2112",
+    "wayland_dual_output_dimensions": [
+      2560,
+      900
+    ]
+  },
+  "verification": {
+    "dtwm_check_suite": "pass (all 8 suites including ASan/UBSan property readers and check-dtwm-wayland.py)",
+    "dual_protocol_bevel_pixels": {
+      "active_crimson_px": 10294,
+      "inactive_slate_px": 22191,
+      "after_desktop_click_crimson_px": 0
+    },
+    "real_session_clients_verified": [
+      "foot (native Wayland xdg-shell + xdg-decoration SERVER_SIDE)",
+      "dtpad (CK Core Motif ABI 9 over rootless XWayland)",
+      "dtcalc (CK Core Motif ABI 9 over rootless XWayland)",
+      "ck-clock (CK Core Apps over rootless XWayland)",
+      "ck-eyes (CK Core Apps over rootless XWayland)"
+    ]
+  }
+}

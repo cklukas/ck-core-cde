@@ -63,6 +63,7 @@
 #include "WmWinState.h"
 #include "WmResNames.h"
 #include "WmResParse.h"
+#include "UI.h"
 #include "WmParse.h"
 #include "WmParseP.h"
 #include "Dt/Wsm.h"
@@ -960,6 +961,7 @@ Boolean WmDispatchWsEvent (XEvent *event)
 
 		UnManageWindow (pCD);
 	    }
+	    WmFpUpdateTrashOpenIcon (DISPLAY);
 	    break;
 	}
 
@@ -1020,6 +1022,13 @@ Boolean WmDispatchWsEvent (XEvent *event)
 
 	case FocusOut:
 	{
+	    break;
+	}
+
+	case PropertyNotify:
+	case MapNotify:
+	{
+	    WmFpUpdateTrashOpenIcon (DISPLAY);
 	    break;
 	}
 

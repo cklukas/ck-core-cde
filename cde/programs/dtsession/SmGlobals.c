@@ -89,6 +89,7 @@
 #include "SmRestore.h"
 #include "SmProtocol.h"
 #include "SmXSMP.h"
+#include "SmWayland.h"
 #include "SmPriv.h"
 #include "SmFiles.h"
 
@@ -2541,6 +2542,7 @@ SmExit (
 	  smXSMP.saveState.shutdown &&
 	  !smXSMP.saveState.shutdownCanceled)
 	XSMPExit ();
+      SmWaylandShutdown ();
       _exit(exitStatus);
     }
   else
