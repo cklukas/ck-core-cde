@@ -23,6 +23,7 @@
 #include <xkbcommon/xkbcommon.h>
 
 typedef struct {
+    struct wl_list link;
     DtwmServer *server;
     struct wlr_xdg_popup *xdg_popup;
     struct wlr_scene_tree *scene_tree;
@@ -130,6 +131,10 @@ static void sync_xwayland_client_pos(DtwmView *view) {
 static void view_apply_geometry(DtwmView *view, int x, int y, int client_w, int client_h) {
     if (client_w < 64) client_w = 64;
     if (client_h < 48) client_h = 48;
+    if (x == view->x && y == view->y &&
+        client_w == view->client_w && client_h == view->client_h) {
+        return;
+    }
     view->x = x;
     view->y = y;
     view->client_w = client_w;
@@ -148,6 +153,44 @@ static void view_apply_geometry(DtwmView *view, int x, int y, int client_w, int 
         dtwm_publish_active_window_box(view->server);
         dtwm_ime_set_focus(view->server, view_wlr_surface(view));
     }
+}
+
+static void view_dispatch_queued_resize(DtwmView *view, bool keep_inflight) {
+    if (!view || !view->has_queued_resize) {
+        return;
+    }
+    int qx = view->queued_x;
+    int qy = view->queued_y;
+    int qw = view->queued_w;
+    int qh = view->queued_h;
+    view->has_queued_resize = false;
+    if (qx == view->x && qy == view->y && qw == view->client_w && qh == view->client_h) {
+        view->resize_inflight = false;
+        return;
+    }
+    view->resize_inflight = keep_inflight;
+    if (keep_inflight) {
+        view->resize_sent_ms = dtwm_now_msec();
+    }
+    view_apply_geometry(view, qx, qy, qw, qh);
+}
+
+static int handle_resize_flush_timer(void *data) {
+    DtwmServer *server = data;
+    if (!server) {
+        return 0;
+    }
+    DtwmView *v;
+    wl_list_for_each(v, &server->views, link) {
+        if (v->mapped && v->has_queued_resize) {
+            bool active_resize =
+                (server->cursor_mode == DTWM_CURSOR_RESIZE && server->grabbed_view == v);
+            view_dispatch_queued_resize(v, active_resize);
+        } else if (!v->has_queued_resize) {
+            v->resize_inflight = false;
+        }
+    }
+    return 0;
 }
 
 static void clear_active_focus(DtwmServer *server) {
@@ -688,10 +731,101 @@ static void hide_wireframe_outline(DtwmServer *server) {
     }
 }
 
+static void dismiss_open_client_popups(DtwmServer *server, uint32_t t_ms) {
+    if (!server) {
+        return;
+    }
+    /* Dismiss any open native Wayland xdg_popups */
+    DtwmPopup *popup, *ptmp;
+    wl_list_for_each_safe(popup, ptmp, &server->popups, link) {
+        if (popup->xdg_popup) {
+            wlr_xdg_popup_destroy(popup->xdg_popup);
+        }
+    }
+
+    /* Check whether any XWayland override-redirect popup/menu (e.g. Motif XmMenuShell) is open */
+    DtwmView *or_view = nullptr;
+    DtwmView *v;
+    wl_list_for_each(v, &server->views, link) {
+        if (v == server->popup_sink_view || !v->mapped || v->kind != DTWM_VIEW_XWAYLAND ||
+            !v->xwayland_surface || !v->xwayland_surface->override_redirect ||
+            !v->xwayland_surface->surface || v->is_lock_dialog || v->is_desktop_pin ||
+            v->is_swallowed) {
+            continue;
+        }
+        or_view = v;
+        break;
+    }
+    if (!or_view || !server->xcb_conn || server->xcb_popup_sink_win == XCB_WINDOW_NONE) {
+        return;
+    }
+
+    /* Choose a 1x1 X11 root coordinate outside all open override-redirect popups */
+    struct wlr_box obox = {0};
+    get_primary_output_box(server, server->cursor->x, server->cursor->y, &obox);
+    int cand_pts[4][2] = {
+        {obox.x, obox.y},
+        {obox.x + (obox.width > 2 ? obox.width - 1 : 0), obox.y},
+        {obox.x, obox.y + (obox.height > 2 ? obox.height - 1 : 0)},
+        {obox.x + (obox.width > 2 ? obox.width - 1 : 0),
+         obox.y + (obox.height > 2 ? obox.height - 1 : 0)},
+    };
+    int16_t sink_x = (int16_t)cand_pts[0][0];
+    int16_t sink_y = (int16_t)cand_pts[0][1];
+    for (int i = 0; i < 4; ++i) {
+        int px = cand_pts[i][0];
+        int py = cand_pts[i][1];
+        bool inside_popup = false;
+        wl_list_for_each(v, &server->views, link) {
+            if (v == server->popup_sink_view || !v->mapped || v->kind != DTWM_VIEW_XWAYLAND ||
+                !v->xwayland_surface || !v->xwayland_surface->override_redirect) {
+                continue;
+            }
+            if (px >= v->x && px < v->x + v->client_w &&
+                py >= v->y && py < v->y + v->client_h) {
+                inside_popup = true;
+                break;
+            }
+        }
+        if (!inside_popup) {
+            sink_x = (int16_t)px;
+            sink_y = (int16_t)py;
+            break;
+        }
+    }
+
+    /* Position and raise the X11 sink window at (sink_x, sink_y) so XAllowEvents(ReplayPointer)
+     * lands harmlessly on xcb_popup_sink_win rather than any underlying X11 client window, then
+     * inject the outside click via the mapped override-redirect surface's Wayland coordinates. */
+    uint32_t cfg_vals[3] = {(uint32_t)(int32_t)sink_x, (uint32_t)(int32_t)sink_y, XCB_STACK_MODE_ABOVE};
+    xcb_configure_window(
+        server->xcb_conn,
+        server->xcb_popup_sink_win,
+        XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_STACK_MODE,
+        cfg_vals
+    );
+    xcb_flush(server->xcb_conn);
+
+    struct wlr_xwayland_surface *or_xs = or_view->xwayland_surface;
+    struct wlr_surface *or_surf = or_xs->surface;
+    double sx = (double)sink_x - (double)or_xs->x;
+    double sy = (double)sink_y - (double)or_xs->y;
+    uint32_t ts = t_ms ? t_ms : dtwm_now_msec();
+    wlr_seat_pointer_notify_enter(server->seat, or_surf, sx, sy);
+    wlr_seat_pointer_notify_motion(server->seat, ts, sx, sy);
+    wlr_seat_pointer_notify_button(server->seat, ts, BTN_LEFT, WL_POINTER_BUTTON_STATE_PRESSED);
+    wlr_seat_pointer_notify_button(server->seat, ts, BTN_LEFT, WL_POINTER_BUTTON_STATE_RELEASED);
+    wlr_seat_pointer_notify_frame(server->seat);
+    wlr_seat_pointer_notify_clear_focus(server->seat);
+}
+
 static void begin_interactive(DtwmView *view, DtwmCursorMode mode, uint32_t edges) {
     DtwmServer *server = view->server;
     close_window_menu(server);
+    dismiss_open_client_popups(server, dtwm_now_msec());
     hide_wireframe_outline(server);
+    view->resize_inflight = false;
+    view->has_queued_resize = false;
     server->grabbed_view = view;
     server->cursor_mode = mode;
     server->grab_x = server->cursor->x;
@@ -1189,6 +1323,9 @@ static void process_cursor_move(DtwmServer *server) {
         ny = align_to_grid(ny);
     }
     if (v->is_panel) {
+        if (nx == v->x && ny == v->y) {
+            return;
+        }
         v->x = nx;
         v->y = ny;
         wlr_scene_node_set_position(&v->frame_tree->node, v->x, v->y);
@@ -1218,6 +1355,9 @@ static void process_cursor_move(DtwmServer *server) {
     }
 
     hide_wireframe_outline(server);
+    if (nx == v->x && ny == v->y) {
+        return;
+    }
     v->x = nx;
     v->y = ny;
     wlr_scene_node_set_position(&v->frame_tree->node, v->x, v->y);
@@ -1280,6 +1420,25 @@ static void process_cursor_resize(DtwmServer *server) {
     }
 
     hide_wireframe_outline(server);
+    if (new_x == v->x && new_y == v->y &&
+        new_w == v->client_w && new_h == v->client_h && !v->has_queued_resize) {
+        return;
+    }
+    uint32_t now_ms = dtwm_now_msec();
+    if (v->resize_inflight && (now_ms - v->resize_sent_ms) < 120u) {
+        v->has_queued_resize = true;
+        v->queued_x = new_x;
+        v->queued_y = new_y;
+        v->queued_w = new_w;
+        v->queued_h = new_h;
+        if (server->resize_flush_timer) {
+            wl_event_source_timer_update(server->resize_flush_timer, 32);
+        }
+        return;
+    }
+    v->resize_inflight = true;
+    v->has_queued_resize = false;
+    v->resize_sent_ms = now_ms;
     view_apply_geometry(v, new_x, new_y, new_w, new_h);
 }
 
@@ -1376,26 +1535,61 @@ static void process_cursor_motion(DtwmServer *server, uint32_t time_msec) {
         focus_view_ex(server, view, surface, server->focus_auto_raise);
     }
 
-    if (!surface) {
-        wlr_cursor_set_xcursor(server->cursor, server->cursor_mgr, view ? cursor_name_for_part(part) : "default");
-        if (server->seat->drag != nullptr || server->pointer_buttons_down == 0) {
-            wlr_seat_pointer_notify_clear_focus(server->seat);
-        } else if (server->seat->pointer_state.focused_surface) {
-            struct wlr_surface *fsurf = server->seat->pointer_state.focused_surface;
+    if (surface) {
+        dtwm_xdnd_on_cursor_motion(server, surface, sx, sy, time_msec);
+    }
+
+    /* While a mouse button is held without a Wayland DnD session, preserve implicit pointer grab
+     * on the originally pressed surface so Motif menu-bar press-drag-release across override-
+     * redirect XmMenuShell popups and X11 drags never suffer a spurious wl_pointer.leave! */
+    if (server->seat->drag == nullptr && server->pointer_buttons_down > 0 &&
+        server->seat->pointer_state.focused_surface != nullptr) {
+        struct wlr_surface *fsurf = server->seat->pointer_state.focused_surface;
+        if (surface == fsurf) {
+            wlr_seat_pointer_notify_motion(server->seat, time_msec, sx, sy);
+        } else {
+            bool sent = false;
             DtwmView *fv;
             wl_list_for_each(fv, &server->views, link) {
-                if (fv->mapped && view_wlr_surface(fv) == fsurf) {
-                    int fl = 0, ft = 0, fr = 0, fb = 0;
-                    dtwm_view_insets(fv, &fl, &ft, &fr, &fb);
-                    double fsx = server->cursor->x - (double)(fv->x + fl);
-                    double fsy = server->cursor->y - (double)(fv->y + ft);
-                    wlr_seat_pointer_notify_motion(server->seat, time_msec, fsx, fsy);
+                if (fv != server->popup_sink_view && fv->mapped && view_wlr_surface(fv) == fsurf) {
+                    int gx = 0, gy = 0;
+                    struct wlr_scene_tree *st = fv->content_tree ? fv->content_tree : fv->frame_tree;
+                    if (st && wlr_scene_node_coords(&st->node, &gx, &gy)) {
+                        wlr_seat_pointer_notify_motion(
+                            server->seat,
+                            time_msec,
+                            server->cursor->x - (double)gx,
+                            server->cursor->y - (double)gy
+                        );
+                        sent = true;
+                    }
                     break;
                 }
             }
+            if (!sent) {
+                struct wlr_xdg_surface *fxdg = wlr_xdg_surface_try_from_wlr_surface(fsurf);
+                if (fxdg && fxdg->data) {
+                    int gx = 0, gy = 0;
+                    struct wlr_scene_tree *st = fxdg->data;
+                    if (wlr_scene_node_coords(&st->node, &gx, &gy)) {
+                        wlr_seat_pointer_notify_motion(
+                            server->seat,
+                            time_msec,
+                            server->cursor->x - (double)gx,
+                            server->cursor->y - (double)gy
+                        );
+                    }
+                }
+            }
         }
+        dtwm_icons_sync_xwayland_pointer(server, server->cursor->x, server->cursor->y, fsurf);
+        return;
+    }
+
+    if (!surface) {
+        wlr_cursor_set_xcursor(server->cursor, server->cursor_mgr, view ? cursor_name_for_part(part) : "default");
+        wlr_seat_pointer_notify_clear_focus(server->seat);
     } else {
-        dtwm_xdnd_on_cursor_motion(server, surface, sx, sy, time_msec);
         wlr_seat_pointer_notify_enter(server->seat, surface, sx, sy);
         wlr_seat_pointer_notify_motion(server->seat, time_msec, sx, sy);
     }
@@ -1496,10 +1690,16 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
                 sync_xwayland_client_pos(v);
                 dtwm_publish_active_window_box(server);
             }
-        } else if (server->cursor_mode == DTWM_CURSOR_RESIZE && server->grabbed_view && had_wireframe) {
-            view_apply_geometry(
-                server->grabbed_view, pending.x, pending.y, pending.width, pending.height
-            );
+        } else if (server->cursor_mode == DTWM_CURSOR_RESIZE && server->grabbed_view) {
+            DtwmView *rv = server->grabbed_view;
+            if (had_wireframe) {
+                rv->resize_inflight = false;
+                rv->has_queued_resize = false;
+                view_apply_geometry(rv, pending.x, pending.y, pending.width, pending.height);
+            } else {
+                view_dispatch_queued_resize(rv, false);
+                rv->resize_inflight = false;
+            }
         }
         if (server->cursor_mode != DTWM_CURSOR_PASSTHROUGH) {
             server->cursor_mode = DTWM_CURSOR_PASSTHROUGH;
@@ -1508,6 +1708,9 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
             return;
         }
         wlr_seat_pointer_notify_button(server->seat, t_ms, btn, ev->state);
+        if (server->pointer_buttons_down == 0 && server->seat->drag == nullptr) {
+            dtwm_recheck_cursor_focus(server);
+        }
         return;
     }
 
@@ -1523,6 +1726,24 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
     }
 
     if (server->menu_visible) {
+        if (!server->menu_is_root && server->menu_target && btn == BTN_LEFT) {
+            DtwmView *mt = server->menu_target;
+            DtwmFramePart mpart = dtwm_frame_hit_test(
+                mt, (int)(server->cursor->x - mt->x), (int)(server->cursor->y - mt->y)
+            );
+            if (mpart == DTWM_PART_BTN_MENU) {
+                uint32_t dc_ms = server->double_click_ms > 0 ? server->double_click_ms : 500u;
+                if (server->last_menu_btn_view == mt && (t_ms - server->last_menu_btn_ms) <= dc_ms) {
+                    server->last_menu_btn_view = nullptr;
+                    close_window_menu(server);
+                    view_close(mt);
+                    return;
+                }
+                server->last_menu_btn_view = nullptr;
+                close_window_menu(server);
+                return;
+            }
+        }
         int idx = menu_item_at(server, server->cursor->x, server->cursor->y);
         if (idx >= 0) {
             execute_menu_action(server, idx);
@@ -1538,6 +1759,7 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
     DtwmView *view = desktop_view_at(server, server->cursor->x, server->cursor->y, &surface, &sx, &sy, &part);
 
     if (!view && !surface) {
+        dismiss_open_client_popups(server, t_ms);
         close_docked_subpanels(server);
         DtwmView *icon_v = dtwm_icons_view_at(server, server->cursor->x, server->cursor->y);
         if (icon_v) {
@@ -1558,6 +1780,12 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
 
     if (view && !(view->kind == DTWM_VIEW_XWAYLAND && view->xwayland_surface &&
                   view->xwayland_surface->override_redirect)) {
+        if (part != DTWM_PART_CLIENT || view->kind == DTWM_VIEW_XDG) {
+            dismiss_open_client_popups(server, t_ms);
+            if (part == DTWM_PART_CLIENT && surface) {
+                wlr_seat_pointer_notify_enter(server->seat, surface, sx, sy);
+            }
+        }
         if (!view->is_panel && !view->is_subpanel) {
             close_docked_subpanels(server);
         }
@@ -1587,6 +1815,16 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
             if (btn == BTN_LEFT) {
                 switch (part) {
                 case DTWM_PART_BTN_MENU: {
+                    uint32_t dc_ms = server->double_click_ms > 0 ? server->double_click_ms : 500u;
+                    if (server->last_menu_btn_view == view &&
+                        (t_ms - server->last_menu_btn_ms) <= dc_ms) {
+                        server->last_menu_btn_view = nullptr;
+                        close_window_menu(server);
+                        view_close(view);
+                        return;
+                    }
+                    server->last_menu_btn_view = view;
+                    server->last_menu_btn_ms = t_ms;
                     int l, t, r, b;
                     dtwm_view_insets(view, &l, &t, &r, &b);
                     open_window_menu(server, view, view->x + DTWM_BORDER_WIDTH, view->y + t);
@@ -2130,9 +2368,17 @@ static void xdg_toplevel_unmap(struct wl_listener *listener, void *data) {
     if (view == view->server->focused_view) {
         clear_active_focus(view->server);
     }
+    if (view == view->server->last_title_click_view) {
+        view->server->last_title_click_view = nullptr;
+    }
+    if (view == view->server->last_menu_btn_view) {
+        view->server->last_menu_btn_view = nullptr;
+    }
     view->mapped = false;
     view->has_pending_geom = false;
     view->pending_pos_set = false;
+    view->resize_inflight = false;
+    view->has_queued_resize = false;
     wlr_scene_node_set_enabled(&view->frame_tree->node, false);
     dtwm_foreign_toplevel_destroy(view);
     dtwm_icons_on_view_unmap_or_destroy(view, false);
@@ -2162,6 +2408,15 @@ static void xdg_toplevel_commit(struct wl_listener *listener, void *data) {
             dtwm_view_update_frame(view);
             if (view == view->server->focused_view) {
                 dtwm_publish_active_window_box(view->server);
+            }
+        }
+        if (view->resize_inflight) {
+            bool active_resize =
+                (view->server->cursor_mode == DTWM_CURSOR_RESIZE &&
+                 view->server->grabbed_view == view);
+            view->resize_inflight = false;
+            if (view->has_queued_resize) {
+                view_dispatch_queued_resize(view, active_resize);
             }
         }
     }
@@ -2213,6 +2468,12 @@ static void xdg_toplevel_destroy(struct wl_listener *listener, void *data) {
     }
     if (view == server->menu_target) {
         close_window_menu(server);
+    }
+    if (view == server->last_title_click_view) {
+        server->last_title_click_view = nullptr;
+    }
+    if (view == server->last_menu_btn_view) {
+        server->last_menu_btn_view = nullptr;
     }
     wl_list_remove(&view->map.link);
     wl_list_remove(&view->unmap.link);
@@ -2296,6 +2557,7 @@ static void xdg_popup_commit(struct wl_listener *listener, void *data) {
 static void xdg_popup_destroy(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmPopup *popup = wl_container_of(listener, popup, destroy);
+    wl_list_remove(&popup->link);
     wl_list_remove(&popup->commit.link);
     wl_list_remove(&popup->destroy.link);
     free(popup);
@@ -2308,6 +2570,7 @@ static void handle_new_xdg_popup(struct wl_listener *listener, void *data) {
     DtwmPopup *popup = calloc(1, sizeof(*popup));
     popup->server = server;
     popup->xdg_popup = xdg_popup;
+    wl_list_insert(&server->popups, &popup->link);
 
     struct wlr_scene_tree *parent_tree = server->popup_tree;
     if (xdg_popup->parent) {
@@ -2588,6 +2851,12 @@ static void xwayland_map(struct wl_listener *listener, void *data) {
     }
 
     if (xs->override_redirect) {
+        if (view->server->xcb_popup_sink_win != XCB_WINDOW_NONE &&
+            xs->window_id == view->server->xcb_popup_sink_win) {
+            view->server->popup_sink_view = view;
+            view->frame_tree = nullptr;
+            return;
+        }
         view->x = xs->x;
         view->y = xs->y;
         view->client_w = xs->width > 0 ? xs->width : 1;
@@ -2724,9 +2993,31 @@ static void xwayland_unmap(struct wl_listener *listener, void *data) {
     if (view == view->server->focused_view) {
         clear_active_focus(view->server);
     }
+    if (view == view->server->last_title_click_view) {
+        view->server->last_title_click_view = nullptr;
+    }
+    if (view == view->server->last_menu_btn_view) {
+        view->server->last_menu_btn_view = nullptr;
+    }
+    if (view == view->server->popup_sink_view) {
+        view->server->popup_sink_view = nullptr;
+    } else if (view->xwayland_surface && view->xwayland_surface->override_redirect &&
+               view->server->xcb_conn &&
+               view->server->xcb_popup_sink_win != XCB_WINDOW_NONE) {
+        uint32_t stack_below = XCB_STACK_MODE_BELOW;
+        xcb_configure_window(
+            view->server->xcb_conn,
+            view->server->xcb_popup_sink_win,
+            XCB_CONFIG_WINDOW_STACK_MODE,
+            &stack_below
+        );
+        xcb_flush(view->server->xcb_conn);
+    }
     view->mapped = false;
     view->has_pending_geom = false;
     view->pending_pos_set = false;
+    view->resize_inflight = false;
+    view->has_queued_resize = false;
     if (view == view->server->panel_view) {
         view->server->panel_view = nullptr;
     }
@@ -2748,6 +3039,21 @@ static void xwayland_unmap(struct wl_listener *listener, void *data) {
     }
 }
 
+static void xwayland_surface_commit(struct wl_listener *listener, void *data) {
+    (void)data;
+    DtwmView *view = wl_container_of(listener, view, commit);
+    if (!view->mapped || !view->resize_inflight) {
+        return;
+    }
+    bool active_resize =
+        (view->server->cursor_mode == DTWM_CURSOR_RESIZE &&
+         view->server->grabbed_view == view);
+    view->resize_inflight = false;
+    if (view->has_queued_resize) {
+        view_dispatch_queued_resize(view, active_resize);
+    }
+}
+
 static void xwayland_associate(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmView *view = wl_container_of(listener, view, associate);
@@ -2757,10 +3063,15 @@ static void xwayland_associate(struct wl_listener *listener, void *data) {
     if (!wl_list_empty(&view->unmap.link)) {
         wl_list_remove(&view->unmap.link);
     }
+    if (!wl_list_empty(&view->commit.link)) {
+        wl_list_remove(&view->commit.link);
+    }
     view->map.notify = xwayland_map;
     wl_signal_add(&view->xwayland_surface->surface->events.map, &view->map);
     view->unmap.notify = xwayland_unmap;
     wl_signal_add(&view->xwayland_surface->surface->events.unmap, &view->unmap);
+    view->commit.notify = xwayland_surface_commit;
+    wl_signal_add(&view->xwayland_surface->surface->events.commit, &view->commit);
 }
 
 static void xwayland_dissociate(struct wl_listener *listener, void *data) {
@@ -2773,6 +3084,10 @@ static void xwayland_dissociate(struct wl_listener *listener, void *data) {
     if (!wl_list_empty(&view->unmap.link)) {
         wl_list_remove(&view->unmap.link);
         wl_list_init(&view->unmap.link);
+    }
+    if (!wl_list_empty(&view->commit.link)) {
+        wl_list_remove(&view->commit.link);
+        wl_list_init(&view->commit.link);
     }
 }
 
@@ -2951,6 +3266,15 @@ static void xwayland_destroy(struct wl_listener *listener, void *data) {
     if (view == server->menu_target) {
         close_window_menu(server);
     }
+    if (view == server->last_title_click_view) {
+        server->last_title_click_view = nullptr;
+    }
+    if (view == server->last_menu_btn_view) {
+        server->last_menu_btn_view = nullptr;
+    }
+    if (view == server->popup_sink_view) {
+        server->popup_sink_view = nullptr;
+    }
     if (!wl_list_empty(&view->map.link)) {
         wl_list_remove(&view->map.link);
         wl_list_init(&view->map.link);
@@ -2958,6 +3282,10 @@ static void xwayland_destroy(struct wl_listener *listener, void *data) {
     if (!wl_list_empty(&view->unmap.link)) {
         wl_list_remove(&view->unmap.link);
         wl_list_init(&view->unmap.link);
+    }
+    if (!wl_list_empty(&view->commit.link)) {
+        wl_list_remove(&view->commit.link);
+        wl_list_init(&view->commit.link);
     }
     wl_list_remove(&view->associate.link);
     wl_list_remove(&view->dissociate.link);
@@ -2992,6 +3320,7 @@ static void handle_new_xwayland_surface(struct wl_listener *listener, void *data
     view->workspace_mask = 1u << server->current_workspace;
     wl_list_init(&view->map.link);
     wl_list_init(&view->unmap.link);
+    wl_list_init(&view->commit.link);
     apply_xwayland_decorations(view);
 
     view->associate.notify = xwayland_associate;
@@ -3247,6 +3576,7 @@ int main(int argc, char **argv) {
     dtwm_palette_init_default(&server.palette);
     wl_list_init(&server.outputs);
     wl_list_init(&server.views);
+    wl_list_init(&server.popups);
     wl_list_init(&server.keyboards);
 
     server.wl_display = wl_display_create();
@@ -3311,6 +3641,7 @@ int main(int argc, char **argv) {
     server.anim_buf = wlr_scene_buffer_create(server.overlay_tree, nullptr);
     wlr_scene_node_set_enabled(&server.anim_buf->node, false);
     server.anim_timer = wl_event_loop_add_timer(ev_loop, handle_anim_timer, &server);
+    server.resize_flush_timer = wl_event_loop_add_timer(ev_loop, handle_resize_flush_timer, &server);
     server.menu_buf = wlr_scene_buffer_create(server.overlay_tree, nullptr);
     wlr_scene_node_set_enabled(&server.menu_buf->node, false);
     server.switcher_buf = wlr_scene_buffer_create(server.overlay_tree, nullptr);
@@ -3449,6 +3780,7 @@ int main(int argc, char **argv) {
 
 cleanup:
     if (server.anim_timer) wl_event_source_remove(server.anim_timer);
+    if (server.resize_flush_timer) wl_event_source_remove(server.resize_flush_timer);
     if (server.status_fallback_timer) wl_event_source_remove(server.status_fallback_timer);
     if (server.sigint_source) wl_event_source_remove(server.sigint_source);
     if (server.sigterm_source) wl_event_source_remove(server.sigterm_source);

@@ -185,6 +185,45 @@ FileWindowExposeCallback(
  *
  ************************************************************************/
 
+static void
+FileWindowResizeTimerCB(
+        XtPointer client_data,
+        XtIntervalId *id )
+{
+   FileMgrRec  * file_mgr_rec = (FileMgrRec *) client_data;
+   DialogData  * dialog_data;
+   FileMgrData * file_mgr_data;
+   Dimension     cur_w, cur_h;
+
+   (void)id;
+   if (file_mgr_rec == nullptr || file_mgr_rec->scroll_window == nullptr)
+      return;
+
+   dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec);
+   if (dialog_data == nullptr || dialog_data->data == nullptr)
+      return;
+
+   file_mgr_data = (FileMgrData *) dialog_data->data;
+   file_mgr_data->resize_timer_id = 0;
+
+   cur_w = file_mgr_rec->scroll_window->core.width;
+   cur_h = file_mgr_rec->scroll_window->core.height;
+   if (cur_w == file_mgr_data->last_resize_w &&
+       cur_h == file_mgr_data->last_resize_h)
+   {
+      return;
+   }
+   file_mgr_data->last_resize_w = cur_w;
+   file_mgr_data->last_resize_h = cur_h;
+
+   LayoutFileIcons (file_mgr_rec, file_mgr_data, False, False);
+   if (file_mgr_rec->file_window && XtIsRealized(file_mgr_rec->file_window))
+   {
+      XClearArea(XtDisplay(file_mgr_rec->file_window),
+                 XtWindow(file_mgr_rec->file_window), 0, 0, 0, 0, True);
+   }
+}
+
 void
 FileWindowResizeCallback(
         Widget w,
@@ -196,18 +235,25 @@ FileWindowResizeCallback(
    DialogData  * dialog_data;
    FileMgrData * file_mgr_data;
 
+   (void)continue_to_dispatch;
    if (event->type == ConfigureNotify)
    {
+      XEvent latest_ev;
       XConfigureEvent * cevent = (XConfigureEvent *) event;
+
+      /* Drain any queued ConfigureNotify events for this window so intermediate
+       * stale sizes never trigger redundant icon relayout passes. */
+      if (XtIsRealized(w))
+      {
+         while (XCheckTypedWindowEvent(XtDisplay(w), XtWindow(w),
+                                       ConfigureNotify, &latest_ev))
+         {
+            cevent = &latest_ev.xconfigure;
+         }
+      }
 
       file_mgr_rec = (FileMgrRec *) client_data;
 
-      /*
-       * If the incoming size is different than the current size of the
-       * scrolled window, then ignore this event, since it means that our
-       * size has changed since this configure notify event was generated;
-       * we'll wait for the next one to arrive, and try again.
-       */
       if ((file_mgr_rec->scroll_window->core.height != cevent->height) ||
           (file_mgr_rec->scroll_window->core.width != cevent->width))
       {
@@ -215,15 +261,24 @@ FileWindowResizeCallback(
       }
 
       dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec);
-      if(dialog_data != nullptr)
+      if(dialog_data != nullptr && dialog_data->data != nullptr)
       {
          file_mgr_data = (FileMgrData *) dialog_data->data;
 
-         LayoutFileIcons (file_mgr_rec, file_mgr_data, False, False);
-         if (file_mgr_rec->file_window && XtIsRealized(file_mgr_rec->file_window))
+         /* Skip position-only or duplicate ConfigureNotify events with no size change */
+         if (cevent->width == file_mgr_data->last_resize_w &&
+             cevent->height == file_mgr_data->last_resize_h)
          {
-            XClearArea(XtDisplay(file_mgr_rec->file_window),
-                       XtWindow(file_mgr_rec->file_window), 0, 0, 0, 0, True);
+            return;
+         }
+
+         if (file_mgr_data->resize_timer_id == 0)
+         {
+            file_mgr_data->resize_timer_id = XtAppAddTimeOut(
+               XtWidgetToApplicationContext(w),
+               16,
+               FileWindowResizeTimerCB,
+               (XtPointer)file_mgr_rec);
          }
       }
    }

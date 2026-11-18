@@ -277,6 +277,9 @@ typedef struct
 
    char *special_msg;
    XtIntervalId msg_timer_id;
+   XtIntervalId resize_timer_id;
+   Dimension last_resize_w;
+   Dimension last_resize_h;
 
    Boolean       cd_inited;
    XFontStruct * cd_font;

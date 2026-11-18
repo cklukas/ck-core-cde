@@ -37,7 +37,19 @@ framing or interaction rules.
 `dtwm-wayland` preserves the CK Core `dtwm` interaction model:
 
 - Double-clicking a title bar or pressing the Maximize button toggles
-  maximize/restore;
+  maximize/restore, and double-clicking the top-left Window Menu button (`[ - ]`)
+  closes the window;
+- Clicking or dragging a window title bar, frame border, window button, native
+  Wayland surface, or desktop background dismisses any open client popup or
+  Motif menu (`XmMenuShell` / `xdg_popup`), while holding a mouse button during
+  menu-bar press-drag-release keeps Wayland pointer focus on the grabbed client
+  surface across override-redirect pulldown items until release;
+- Interactive window resizing suppresses no-op configures and coalesces rapid
+  pointer-motion bursts against client surface commits (paired with `dtfile`
+  `ConfigureNotify` queue draining and 16 ms icon-relayout coalescing) so
+  resizing finishes immediately without trailing redraw lag, and `DtHelp`
+  display and TOC canvases support mouse-wheel scrolling (`Button4`/`Button5`
+  and horizontal `Shift+Wheel` / `Button6`/`Button7`);
 - Holding `Shift` during pointer move or resize aligns geometry to the 16-pixel
   desktop grid;
 - Dragging toward output edges or corners previews half-screen and quadrant snap

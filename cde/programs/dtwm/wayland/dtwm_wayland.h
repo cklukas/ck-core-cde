@@ -161,6 +161,10 @@ struct DtwmView {
     bool has_saved_geom;
     bool has_pending_geom;
     bool pending_pos_set;
+    bool resize_inflight;
+    bool has_queued_resize;
+    int queued_x, queued_y, queued_w, queued_h;
+    uint32_t resize_sent_ms;
 
     bool mapped;
     bool active;
@@ -316,6 +320,7 @@ struct DtwmServer {
 
     struct wl_list outputs;
     struct wl_list views;
+    struct wl_list popups;
     struct wl_list keyboards;
 
     DtwmPalette palette;
@@ -349,6 +354,8 @@ struct DtwmServer {
     xcb_connection_t *xcb_conn;
     xcb_window_t xcb_root;
     xcb_window_t xcb_wm_win;
+    xcb_window_t xcb_popup_sink_win;
+    DtwmView *popup_sink_view;
     struct wl_event_source *xcb_event_source;
     xcb_atom_t atom_mwm_info;
     xcb_atom_t atom_mwm_hints;
@@ -391,17 +398,20 @@ struct DtwmServer {
     int wireframe_w, wireframe_h;
     struct wlr_scene_buffer *wireframe_buf;
 
-    /* Minimize / restore wireframe zoom animation */
+    /* Minimize / restore wireframe zoom animation & interactive resize flush */
     struct wl_event_source *anim_timer;
+    struct wl_event_source *resize_flush_timer;
     struct wlr_scene_buffer *anim_buf;
     struct wlr_box anim_from_box;
     struct wlr_box anim_to_box;
     int anim_step;
 
-    /* Double-click titlebar detection & live XCursor theme/size */
+    /* Double-click titlebar / window-menu button detection & live XCursor theme/size */
     uint32_t double_click_ms;
     uint32_t last_title_click_ms;
     DtwmView *last_title_click_view;
+    uint32_t last_menu_btn_ms;
+    DtwmView *last_menu_btn_view;
     char cursor_theme[128];
     int cursor_size;
 

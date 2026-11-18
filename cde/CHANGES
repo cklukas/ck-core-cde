@@ -1,4 +1,29 @@
 2026-11-18
+- Support double-click Window Menu close, menu-bar press-drag-release and
+  titlebar popup dismissal, commit-paced window resize coalescing, and `DtHelp`
+  mouse-wheel scrolling (`cde/programs/dtwm/wayland/dtwm_wayland.h`,
+  `cde/programs/dtwm/wayland/cde_workspace.c`,
+  `cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `cde/programs/dtfile/FileMgr.h`, `cde/programs/dtfile/FileMgr.c`,
+  `cde/programs/dtfile/IconWindow.c`, `cde/lib/DtHelp/XUICreate.c`,
+  `docs/improvements/wayland.md`):
+  - Close the target window when double-clicking the top-left Window Menu button
+    (`[ - ]`) within `multiClickTime` (`double_click_ms`), matching X11 `dtwm`.
+  - Keep Wayland pointer focus on the grabbed client surface while a mouse
+    button is held without an active `wl_data_device` drag so Motif menu-bar
+    press-drag-release (`File` -> `Selected` / `View` -> menu item -> release)
+    selects items cleanly across override-redirect `XmMenuShell` popups, and
+    dismiss open native `xdg_popup` and XWayland override-redirect menus when
+    clicking or dragging a server-side window title bar, frame border, desktop
+    background, or native Wayland window.
+  - Suppress unchanged geometry configures in `dtwm-wayland`, coalesce
+    interactive opaque-resize configures against client surface commits (with a
+    32 ms fallback flush and immediate release flush), and drain/coalesce
+    `ConfigureNotify` bursts in `dtfile` (`FileWindowResizeCallback`) so window
+    resizing settles without rubber-band redraw lag.
+  - Add mouse-wheel scrolling (`Button4`/`Button5`, `Ctrl+Wheel` page scroll,
+    and `Shift+Wheel` / `Button6`/`Button7` horizontal scroll) over `DtHelp`
+    topic and TOC display areas (`_DtHelpWheelScrollEH`).
 - Center Front Panel `TYPE client` controls without redundant outer borders and
   keep embedded client slots responsive across restarts
   (`cde/programs/dtwm/UI.c`, `cde/programs/dtwm/wayland/WmFpWayland.c`,

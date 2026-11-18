@@ -252,6 +252,88 @@ DetectHelpMediaResolution(Display *display)
 /* This function returns the max value of XGetFontProperty calls for each
  * font in the fontset.
  */
+static void
+_DtHelpWheelScrollEH(
+        Widget widget,
+        XtPointer client_data,
+        XEvent *event,
+        Boolean *continue_to_dispatch)
+{
+    DtHelpDispAreaStruct *pDAS = (DtHelpDispAreaStruct *) client_data;
+    XButtonEvent *bev;
+    Widget sb = nullptr;
+    Boolean scroll_up = False;
+    Boolean is_horz = False;
+    int val = 0, slider = 0, inc = 0, page_inc = 0;
+    int minimum = 0, maximum = 0;
+    int step, max_val, new_val;
+    Arg args[2];
+
+    (void)widget;
+    if (pDAS == nullptr || event == nullptr || event->type != ButtonPress)
+        return;
+
+    bev = &event->xbutton;
+    if (bev->button == Button4 || bev->button == Button5)
+    {
+        scroll_up = (bev->button == Button4);
+        is_horz = ((bev->state & ShiftMask) != 0);
+    }
+    else if (bev->button == 6 || bev->button == 7)
+    {
+        scroll_up = (bev->button == 6);
+        is_horz = True;
+    }
+    else
+    {
+        return;
+    }
+
+    if (is_horz)
+    {
+        if (pDAS->horzScrollWid != nullptr && pDAS->horzIsMapped &&
+            XtIsManaged(pDAS->horzScrollWid))
+            sb = pDAS->horzScrollWid;
+    }
+    else
+    {
+        if (pDAS->vertScrollWid != nullptr && pDAS->vertIsMapped &&
+            XtIsManaged(pDAS->vertScrollWid))
+            sb = pDAS->vertScrollWid;
+    }
+
+    if (sb == nullptr)
+        return;
+
+    XmScrollBarGetValues(sb, &val, &slider, &inc, &page_inc);
+    XtSetArg(args[0], XmNminimum, &minimum);
+    XtSetArg(args[1], XmNmaximum, &maximum);
+    XtGetValues(sb, args, 2);
+
+    if (inc <= 0)
+        inc = is_horz ? (int)(pDAS->charWidth > 10 ? pDAS->charWidth / 10 : 8)
+                      : (int)(pDAS->lineHeight > 0 ? pDAS->lineHeight : 16);
+    step = ((bev->state & ControlMask) != 0 && page_inc > 0) ? page_inc : (inc * 3);
+    if (step < 1)
+        step = 1;
+
+    max_val = maximum - slider;
+    if (max_val < minimum)
+        max_val = minimum;
+
+    new_val = scroll_up ? (val - step) : (val + step);
+    if (new_val < minimum)
+        new_val = minimum;
+    if (new_val > max_val)
+        new_val = max_val;
+
+    if (new_val != val)
+        XmScrollBarSetValues(sb, new_val, slider, inc, page_inc, True);
+
+    if (continue_to_dispatch != nullptr)
+        *continue_to_dispatch = False;
+}
+
 static Boolean
 get_fontsetproperty(
         XFontSet fontset,
@@ -779,6 +861,10 @@ HelpCreateDA(
 			_DtHelpMouseMoveCB, (XtPointer) pDAS);
     XtAddEventHandler (pDAS->dispWid, PointerMotionMask, True,
 			_DtHelpLinkCursorCB, (XtPointer) pDAS);
+    XtAddEventHandler (pDAS->dispWid, ButtonPressMask, False,
+			_DtHelpWheelScrollEH, (XtPointer) pDAS);
+    XtAddEventHandler (form, ButtonPressMask, False,
+			_DtHelpWheelScrollEH, (XtPointer) pDAS);
 
     /*
      * add my actions

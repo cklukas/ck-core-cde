@@ -1728,6 +1728,34 @@ void dtwm_workspaces_on_xwayland_ready(DtwmServer *server) {
         mwm_info
     );
 
+    /* Hidden 1x1 override-redirect InputOutput window (excluded from the Wayland scene graph)
+     * used to deliver outside ButtonPress/Release events to XWayland's active pointer grab
+     * when the user clicks a server-side window titlebar, border, native Wayland client, or
+     * desktop background while an X11/Motif popup menu is posted. */
+    server->xcb_popup_sink_win = xcb_generate_id(server->xcb_conn);
+    uint32_t sink_vals[4] = {
+        screen->black_pixel,
+        1u,
+        XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE,
+        XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE,
+    };
+    xcb_create_window(
+        server->xcb_conn,
+        screen->root_depth,
+        server->xcb_popup_sink_win,
+        server->xcb_root,
+        0, 0, 1, 1, 0,
+        XCB_WINDOW_CLASS_INPUT_OUTPUT,
+        screen->root_visual,
+        XCB_CW_BACK_PIXEL | XCB_CW_OVERRIDE_REDIRECT | XCB_CW_EVENT_MASK | XCB_CW_DONT_PROPAGATE,
+        sink_vals
+    );
+    xcb_map_window(server->xcb_conn, server->xcb_popup_sink_win);
+    uint32_t stack_below = XCB_STACK_MODE_BELOW;
+    xcb_configure_window(
+        server->xcb_conn, server->xcb_popup_sink_win, XCB_CONFIG_WINDOW_STACK_MODE, &stack_below
+    );
+
     /* Watch RESOURCE_MANAGER on root so xrdb/dtstyle *appearanceProfile updates apply live */
     uint32_t root_mask = XCB_EVENT_MASK_PROPERTY_CHANGE;
     xcb_change_window_attributes(server->xcb_conn, server->xcb_root, XCB_CW_EVENT_MASK, &root_mask);

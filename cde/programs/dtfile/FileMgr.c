@@ -2131,6 +2131,9 @@ GetDefaultValues( void )
 
    file_mgr_data->special_msg = nullptr;
    file_mgr_data->msg_timer_id = 0;
+   file_mgr_data->resize_timer_id = 0;
+   file_mgr_data->last_resize_w = 0;
+   file_mgr_data->last_resize_h = 0;
 
    file_mgr_data->show_type = SINGLE_DIRECTORY;
    file_mgr_data->tree_files = TREE_FILES_NEVER;
@@ -2413,6 +2416,9 @@ GetResourceValues(
    file_mgr_data->tree_files = TREE_FILES_NEVER;
    file_mgr_data->special_msg = nullptr;
    file_mgr_data->msg_timer_id = 0;
+   file_mgr_data->resize_timer_id = 0;
+   file_mgr_data->last_resize_w = 0;
+   file_mgr_data->last_resize_h = 0;
    file_mgr_data->show_shelf = True;
    file_mgr_data->show_iconic_path = True;
    file_mgr_data->show_current_dir = True;
@@ -3300,6 +3306,11 @@ FreeValues(
    file_mgr_data->special_msg = nullptr;
    if (file_mgr_data->msg_timer_id)
       XtRemoveTimeOut(file_mgr_data->msg_timer_id);
+   if (file_mgr_data->resize_timer_id)
+   {
+      XtRemoveTimeOut(file_mgr_data->resize_timer_id);
+      file_mgr_data->resize_timer_id = 0;
+   }
 
    _DtDestroySubdialog(file_mgr_data->change_dir);
    _DtDestroySubdialog(file_mgr_data->preferences);
