@@ -220,6 +220,7 @@
 #include "Help.h"
 #include "SharedMsgs.h"
 #include "StorageSize.h"
+#include "OpenWith.h"
 #include "IconicPath.h"
 
 extern Widget _DtDuplicateIcon ( Widget, Widget, XmString, String, XtPointer, Boolean );
@@ -4978,6 +4979,12 @@ FmPopup (
                                   XmNactivateCallback);
            }
 
+           XtRemoveAllCallbacks(fileMgrPopup.objPopup[BTN_OPEN_WITH],
+                                XmNactivateCallback);
+           XtAddCallback(fileMgrPopup.objPopup[BTN_OPEN_WITH],
+                         XmNactivateCallback, OpenWithPopupCB,
+                         (XtPointer) fileViewData);
+
            XtRemoveAllCallbacks(fileMgrPopup.objPopup[BTN_PUTON],
                                 XmNactivateCallback);
            XtAddCallback(fileMgrPopup.objPopup[BTN_PUTON], XmNactivateCallback,
@@ -5004,6 +5011,7 @@ FmPopup (
              XtSetSensitive(fileMgrPopup.objPopup[BTN_PROPERTIES], False);
 
            XtSetSensitive(fileMgrPopup.objPopup[BTN_STORAGE_SIZE], False);
+           XtSetSensitive(fileMgrPopup.objPopup[BTN_OPEN_WITH], !file_mgr_data->toolbox);
 
            XtSetSensitive(fileMgrPopup.objPopup[BTN_HELP], False);
            XtSetSensitive(fileMgrPopup.objPopup[BTN_ADD_TO_SHELF], True);
@@ -5054,6 +5062,21 @@ FmPopup (
          else
          {
             XtSetSensitive(fileMgrPopup.objPopup[BTN_STORAGE_SIZE], False);
+         }
+
+         XtRemoveAllCallbacks(fileMgrPopup.objPopup[BTN_OPEN_WITH],
+                              XmNactivateCallback);
+         if (!file_mgr_data->toolbox &&
+             fileViewData->file_data->physical_type != DtDIRECTORY)
+         {
+            XtAddCallback(fileMgrPopup.objPopup[BTN_OPEN_WITH],
+                          XmNactivateCallback, OpenWithPopupCB,
+                          (XtPointer) fileViewData);
+            XtSetSensitive(fileMgrPopup.objPopup[BTN_OPEN_WITH], True);
+         }
+         else
+         {
+            XtSetSensitive(fileMgrPopup.objPopup[BTN_OPEN_WITH], False);
          }
 
             XtRemoveAllCallbacks(fileMgrPopup.objPopup[BTN_PUTON],

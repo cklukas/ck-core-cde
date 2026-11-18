@@ -39,6 +39,7 @@
  */
 
 #include "WmGlobal.h"
+#include "WmEwmh.h"
 /*
  * include extern functions
  */
@@ -842,12 +843,18 @@ Boolean WmDispatchWsEvent (XEvent *event)
 	     * function (e.g., shuffle the client windows).
 	     */
 
+	    HandleEwmhSuperKey ((XKeyEvent *)event, True);
 	    dispatchEvent = HandleWsKeyPress ((XKeyEvent *)event);
 	    break;
 	}
 
     case KeyRelease:
     {
+        if (HandleEwmhSuperKey ((XKeyEvent *)event, False))
+        {
+            dispatchEvent = False;
+            break;
+        }
         if (TaskSwitcherActive (ACTIVE_PSD))
         {
             if (ACTIVE_PSD->taskSwitchPinned)

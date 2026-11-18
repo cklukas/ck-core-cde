@@ -175,6 +175,8 @@ $ *
     Alt<Key>Down		root|icon|window	f.circle_down\n\
     Alt<Key>Up			root|icon|window	f.circle_up\n\
     Alt Ctrl Shift<Key>exclam	root|icon|window	f.set_behavior\n\
+    Alt<Key>F2			root|icon|window	f.exec "ck-launch --toggle"\n\
+    Mod4<Key>space		root|icon|window	f.exec "ck-launch --toggle"\n\
     Alt<Key>F6			window			f.next_key transient\n\
     Alt<Key>F10			root|icon|window	f.menu DtRootMenu
 $ *
@@ -196,6 +198,8 @@ $ *
     Alt<Key>Escape		root|icon|window	f.next_key\n\
     Alt Shift<Key>Escape	root|icon|window	f.prev_key\n\
     Alt Ctrl Shift<Key>exclam	root|icon|window	f.set_behavior\n\
+    Alt<Key>F2			root|icon|window	f.exec "ck-launch --toggle"\n\
+    Mod4<Key>space		root|icon|window	f.exec "ck-launch --toggle"\n\
     Alt<Key>F6			window			f.next_key transient
 $ *
 $ * #DefaultButtonBindings#
@@ -217,6 +221,8 @@ $ *
     Alt<Key>Down		root|icon|window	f.circle_down\n\
     Alt<Key>Up			root|icon|window	f.circle_up\n\
     Alt Ctrl Shift<Key>exclam	root|icon|window	f.set_behavior\n\
+    Alt<Key>F2			root|icon|window	f.exec "ck-launch --toggle"\n\
+    Mod4<Key>space		root|icon|window	f.exec "ck-launch --toggle"\n\
     Alt<Key>F6  		window			f.next_key transient\n\
     Alt Shift<Key>F6		window			f.prev_key transient\n\
     <Key>SunFront               ifkey|icon|window       f.raise_lower\n\

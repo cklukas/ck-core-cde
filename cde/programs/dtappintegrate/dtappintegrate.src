@@ -306,6 +306,18 @@ HELPFAMILY_FILES="*.hf"
 ACTIONDB_FILES="*.dt"
 APPMAN_FILES="(*)"
 
+XCOMM -------------------------------------------------------------------
+XCOMM  User-session XDG .desktop integration & inotify watcher (--xdg)
+XCOMM -------------------------------------------------------------------
+for _ck_arg in "$@"
+do
+  case "$_ck_arg" in
+    --xdg|--watch|--daemon|--open-mime)
+      exec CDE_INSTALLATION_TOP/bin/dtappintegrate-xdg "$@"
+      ;;
+  esac
+done
+
 ID=$(id)
 LOGFILE=$(mktemp /tmp/dtappint.logXXXXXXXXXXXXXXXX)
 PATH=CDE_INSTALLATION_TOP/bin:/usr/bin:/bin

@@ -1,0 +1,936 @@
+#!/usr/bin/env python3
+"""
+dtappintegrate-xdg - Automatic XDG .desktop -> CDE Application Manager indexer,
+                     live inotify session watcher, and XDG mimeapps.list launcher
+                     for CK-Core CDE (Wayland & X11/XLibre).
+"""
+
+import configparser
+import ctypes
+import ctypes.util
+import hashlib
+import mimetypes
+import os
+import pwd
+import re
+import select
+import shlex
+import shutil
+import signal
+import struct
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+CATEGORIES = [
+    ("XDG_Internet",    "Internet & Web",          "Dtnet",   ("Network", "WebBrowser", "Email", "InstantMessaging", "FileTransfer")),
+    ("XDG_Graphics",    "Graphics & Imaging",      "Dtpaint", ("Graphics", "2DGraphics", "3DGraphics", "VectorGraphics", "RasterGraphics", "Photography")),
+    ("XDG_AudioVideo",  "Sound & Video",           "Dtaudio", ("AudioVideo", "Audio", "Video", "Player", "Recorder", "Music")),
+    ("XDG_Office",      "Office & Documents",      "Dtpenpd", ("Office", "WordProcessor", "Spreadsheet", "Presentation", "Viewer", "Publishing")),
+    ("XDG_Development", "Development",             "Fpterm",  ("Development", "IDE", "Debugger", "RevisionControl", "Building")),
+    ("XDG_Games",       "Games",                   "Dtadskt", ("Game", "ActionGame", "LogicGame", "ArcadeGame")),
+    ("XDG_System",      "System & Settings",       "Dtstyle", ("Settings", "System", "Monitor", "PackageManager", "Security")),
+    ("XDG_Utilities",   "Utilities & Accessories", "Dtadskt", ("Utility", "Accessories", "Archiving", "Calculator", "TextEditor")),
+]
+
+
+def xdg_app_dirs() -> list[Path]:
+    dirs: list[Path] = []
+    home = Path(os.environ.get("HOME") or Path.home())
+    xdg_data_home = Path(os.environ.get("XDG_DATA_HOME") or (home / ".local" / "share"))
+    dirs.append(xdg_data_home / "applications")
+
+    raw_dirs = os.environ.get("XDG_DATA_DIRS", "")
+    if raw_dirs.strip():
+        parts = [p for p in raw_dirs.split(":") if p.strip()]
+    else:
+        parts = [
+            "/usr/local/share",
+            "/usr/share",
+            "/var/lib/flatpak/exports/share",
+            "/var/lib/snapd/desktop",
+        ]
+    for p in parts:
+        cand = Path(p) / "applications"
+        if cand not in dirs:
+            dirs.append(cand)
+    return dirs
+
+
+def xdg_icon_roots() -> list[Path]:
+    home = Path(os.environ.get("HOME") or Path.home())
+    xdg_data_home = Path(os.environ.get("XDG_DATA_HOME") or (home / ".local" / "share"))
+    roots = [xdg_data_home / "icons", home / ".icons"]
+    raw_dirs = os.environ.get("XDG_DATA_DIRS", "")
+    parts = [p for p in raw_dirs.split(":") if p.strip()] if raw_dirs.strip() else [
+        "/usr/local/share",
+        "/usr/share",
+        "/var/lib/flatpak/exports/share",
+        "/var/lib/snapd/desktop",
+    ]
+    for p in parts:
+        roots.append(Path(p) / "icons")
+        roots.append(Path(p) / "pixmaps")
+    return roots
+
+
+def which_prog(prog: str) -> str | None:
+    if not prog:
+        return None
+    if "/" in prog:
+        return prog if os.access(prog, os.X_OK) else None
+    path_env = os.environ.get("PATH") or "/usr/dt/bin:/usr/local/bin:/usr/bin:/bin"
+    return shutil.which(prog, path=path_env)
+
+
+def parse_desktop_entry(path: Path, desktop_id: str) -> dict | None:
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return None
+
+    in_entry = False
+    seen_entry = False
+    kv: dict[str, str] = {}
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("[") and line.endswith("]"):
+            in_entry = (line == "[Desktop Entry]")
+            if in_entry:
+                seen_entry = True
+            continue
+        if not in_entry or "=" not in line:
+            continue
+        k, v = line.split("=", 1)
+        k = k.strip()
+        v = v.strip()
+        if k not in kv:
+            kv[k] = v
+
+    if not seen_entry:
+        return None
+    if kv.get("Type", "Application") != "Application":
+        return None
+    if kv.get("Hidden", "").lower() == "true":
+        return None
+
+    lang = (os.environ.get("LC_MESSAGES") or os.environ.get("LANG") or "").split(".")[0].split("@")[0]
+    lang_short = lang.split("_")[0] if lang not in ("", "C", "POSIX") else ""
+    name = (
+        (kv.get(f"Name[{lang}]") if lang else None)
+        or (kv.get(f"Name[{lang_short}]") if lang_short else None)
+        or kv.get("Name", "")
+    )
+    raw_exec = kv.get("Exec", "")
+    if not name or not raw_exec:
+        return None
+
+    try_exec = kv.get("TryExec", "")
+    if try_exec and not which_prog(try_exec):
+        return None
+
+    not_show = [t.strip() for t in kv.get("NotShowIn", "").split(";") if t.strip()]
+    only_show = [t.strip() for t in kv.get("OnlyShowIn", "").split(";") if t.strip()]
+    if "CDE" in not_show:
+        return None
+
+    cats = [t.strip() for t in kv.get("Categories", "").split(";") if t.strip()]
+    mimes = [t.strip().lower() for t in kv.get("MimeType", "").split(";") if t.strip()]
+
+    return {
+        "id": desktop_id,
+        "path": str(path),
+        "name": name,
+        "generic_name": kv.get("GenericName", ""),
+        "comment": kv.get("Comment", ""),
+        "exec": raw_exec,
+        "icon": kv.get("Icon", ""),
+        "terminal": kv.get("Terminal", "").lower() == "true",
+        "no_display": kv.get("NoDisplay", "").lower() == "true",
+        "only_show": only_show,
+        "categories": cats,
+        "mimes": mimes,
+        "work_dir": kv.get("Path", ""),
+    }
+
+
+def collect_all_desktop_entries(include_nodisplay: bool = False) -> dict[str, dict]:
+    entries: dict[str, dict] = {}
+    for app_dir in xdg_app_dirs():
+        if not app_dir.is_dir():
+            continue
+        for root, dirs, files in os.walk(app_dir):
+            dirs[:] = [d for d in sorted(dirs) if not d.startswith(".")]
+            rel = Path(root).relative_to(app_dir)
+            prefix = "-".join(rel.parts) + "-" if rel.parts else ""
+            for fn in sorted(files):
+                if not fn.endswith(".desktop") or fn.startswith("."):
+                    continue
+                did = f"{prefix}{fn}"
+                if did in entries:
+                    continue
+                parsed = parse_desktop_entry(Path(root) / fn, did)
+                if not parsed:
+                    continue
+                if not include_nodisplay:
+                    if parsed["no_display"]:
+                        continue
+                    if parsed["only_show"] and "CDE" not in parsed["only_show"]:
+                        continue
+                entries[did] = parsed
+    return entries
+
+
+def expand_exec_for_cde_dt(entry: dict, with_file_args: bool) -> str:
+    raw = entry["exec"]
+    name_q = shlex.quote(entry["name"])
+    path_q = shlex.quote(entry["path"])
+    icon_part = f"--icon {shlex.quote(entry['icon'])}" if entry["icon"] else ""
+
+    out: list[str] = []
+    i = 0
+    used_file_arg = False
+    while i < len(raw):
+        ch = raw[i]
+        if ch == "%" and i + 1 < len(raw):
+            code = raw[i + 1]
+            i += 2
+            if code == "%":
+                out.append("%")
+            elif code in ("f", "F", "u", "U"):
+                if with_file_args:
+                    out.append('"%(File)Args%"')
+                    used_file_arg = True
+            elif code == "c":
+                out.append(name_q)
+            elif code == "i":
+                out.append(icon_part)
+            elif code == "k":
+                out.append(path_q)
+        else:
+            out.append(ch)
+            i += 1
+
+    cmd = "".join(out).strip()
+    if with_file_args and not used_file_arg:
+        cmd = f'{cmd} "%(File)Args%"'
+    if entry["work_dir"]:
+        wd = shlex.quote(entry["work_dir"])
+        cmd = f"sh -c 'cd {wd} 2>/dev/null || true; exec {cmd}'"
+    return cmd
+
+
+def expand_exec_with_files(entry: dict, files: list[str]) -> str:
+    raw = entry["exec"]
+    quoted_files = " ".join(shlex.quote(f) for f in files)
+    first_file = shlex.quote(files[0]) if files else ""
+    name_q = shlex.quote(entry["name"])
+    path_q = shlex.quote(entry["path"])
+    icon_part = f"--icon {shlex.quote(entry['icon'])}" if entry["icon"] else ""
+
+    out: list[str] = []
+    i = 0
+    used_files = False
+    while i < len(raw):
+        ch = raw[i]
+        if ch == "%" and i + 1 < len(raw):
+            code = raw[i + 1]
+            i += 2
+            if code == "%":
+                out.append("%")
+            elif code in ("F", "U"):
+                if quoted_files:
+                    out.append(quoted_files)
+                    used_files = True
+            elif code in ("f", "u"):
+                if first_file:
+                    out.append(first_file)
+                    used_files = True
+            elif code == "c":
+                out.append(name_q)
+            elif code == "i":
+                out.append(icon_part)
+            elif code == "k":
+                out.append(path_q)
+        else:
+            out.append(ch)
+            i += 1
+
+    cmd = "".join(out).strip()
+    if files and not used_files:
+        cmd = f"{cmd} {quoted_files}"
+    return cmd
+
+
+def resolve_icon_for_cde(icon_spec: str, fallback_cde_icon: str, user_icons_dir: Path, slug: str) -> str:
+    if not icon_spec:
+        return fallback_cde_icon
+
+    cands: list[Path] = []
+    p = Path(icon_spec)
+    if p.is_absolute():
+        if p.is_file():
+            cands.append(p)
+    else:
+        stem = p.stem if p.suffix in (".png", ".xpm", ".pm") else icon_spec
+        for root in xdg_icon_roots():
+            if not root.is_dir():
+                continue
+            for sub in (
+                "hicolor/48x48/apps",
+                "hicolor/32x32/apps",
+                "hicolor/16x16/apps",
+                "Adwaita/48x48/apps",
+                "Yaru/48x48/apps",
+                "",
+            ):
+                base = (root / sub) if sub else root
+                for ext in (".xpm", ".pm", ".png"):
+                    cand = base / f"{stem}{ext}"
+                    if cand.is_file():
+                        cands.append(cand)
+            if cands:
+                break
+
+    if not cands:
+        return fallback_cde_icon
+
+    chosen = cands[0]
+    user_icons_dir.mkdir(parents=True, exist_ok=True)
+    icon_base = f"ckxdg_{slug}"
+    if chosen.suffix in (".xpm", ".pm"):
+        for sz in ("l", "m", "t"):
+            dst = user_icons_dir / f"{icon_base}.{sz}.pm"
+            if not dst.exists():
+                shutil.copyfile(chosen, dst)
+        return icon_base
+    if chosen.suffix == ".png":
+        for sz in ("l", "m", "t"):
+            dst = user_icons_dir / f"{icon_base}.{sz}.png"
+            if not dst.exists():
+                shutil.copyfile(chosen, dst)
+        return icon_base
+    return fallback_cde_icon
+
+
+def map_entry_category(entry: dict) -> tuple[str, str, str]:
+    cats = set(entry["categories"])
+    for folder, label, cde_icon, match_cats in CATEGORIES:
+        if cats.intersection(match_cats):
+            return folder, label, cde_icon
+    return "XDG_Utilities", "Utilities & Accessories", "Dtadskt"
+
+
+def sanitize_dt_str(s: str) -> str:
+    return re.sub(r"[\r\n{}]+", " ", s).strip()
+
+
+def discover_software_store_cmd() -> tuple[str, str]:
+    for prog, label in (
+        ("snap-store", "Ubuntu App Center"),
+        ("gnome-software", "Software Center"),
+        ("synaptic", "Synaptic Package Manager"),
+        ("update-manager", "Software Updater"),
+    ):
+        resolved = which_prog(prog)
+        if resolved:
+            return resolved, label
+    return (
+        "/usr/dt/bin/dtterm -title 'System Package Updates' -e /bin/sh -c "
+        "\"echo '=== Upgradable APT Packages ==='; apt list --upgradable 2>/dev/null; "
+        "echo ''; echo 'Run: sudo apt update && sudo apt upgrade'; exec ${SHELL:-/bin/sh}\"",
+        "Software & Package Updates",
+    )
+
+
+def sync_appmanager_session_links(home: Path, managed_folders: list[str]) -> None:
+    appman_root = Path("/var/dt/appconfig/appmanager")
+    if not appman_root.is_dir():
+        return
+    uid = os.getuid()
+    session_dirs: list[Path] = []
+    env_sess = os.environ.get("DTUSERSESSION", "")
+    if env_sess and "/" not in env_sess:
+        cand = appman_root / env_sess
+        if cand.is_dir():
+            session_dirs.append(cand)
+    else:
+        try:
+            real_pw_home = Path(pwd.getpwuid(uid).pw_dir).resolve()
+            is_real_home = home.resolve() == real_pw_home
+        except Exception:
+            is_real_home = False
+        if is_real_home:
+            for child in appman_root.iterdir():
+                try:
+                    st = child.lstat()
+                except OSError:
+                    continue
+                if child.is_dir() and not child.is_symlink() and st.st_uid == uid and child not in session_dirs:
+                    session_dirs.append(child)
+
+    for sdir in session_dirs:
+        try:
+            orig_mode = sdir.stat().st_mode & 0o777
+            os.chmod(sdir, orig_mode | 0o200)
+        except OSError:
+            orig_mode = None
+        for folder in managed_folders:
+            target = home / ".dt" / "appmanager" / folder
+            link = sdir / folder
+            try:
+                if target.is_dir():
+                    if link.is_symlink():
+                        if link.resolve() != target.resolve():
+                            link.unlink()
+                            link.symlink_to(target)
+                    elif not link.exists():
+                        link.symlink_to(target)
+            except OSError:
+                pass
+        if orig_mode is not None:
+            try:
+                os.chmod(sdir, orig_mode)
+            except OSError:
+                pass
+
+
+def run_index_once(trigger_reload: bool = True) -> int:
+    home = Path(os.environ.get("HOME") or Path.home())
+    dt_dir = home / ".dt"
+    types_dir = dt_dir / "types"
+    icons_dir = dt_dir / "icons"
+    appman_dir = dt_dir / "appmanager"
+    desktop_apps_dir = appman_dir / "Desktop_Apps"
+
+    types_dir.mkdir(parents=True, exist_ok=True)
+    icons_dir.mkdir(parents=True, exist_ok=True)
+    appman_dir.mkdir(parents=True, exist_ok=True)
+
+    entries = collect_all_desktop_entries(include_nodisplay=False)
+
+    dt_lines: list[str] = [
+        "# Auto-generated by dtappintegrate --xdg (CK-Core CDE WP-12).",
+        "# Synchronizes XDG .desktop applications into CDE Application Manager.",
+        "",
+        "ACTION CkLaunch",
+        "{",
+        "    LABEL       Quick Launch",
+        "    TYPE        COMMAND",
+        "    ICON        Dtappmgr",
+        "    WINDOW_TYPE NO_STDIO",
+        "    EXEC_STRING ck-launch --toggle",
+        "    DESCRIPTION Search XDG applications, open windows, CDE settings, and calculator expressions.",
+        "}",
+        "",
+    ]
+
+    store_cmd, store_label = discover_software_store_cmd()
+    dt_lines.extend([
+        "ACTION CkSoftwareCenter",
+        "{",
+        f"    LABEL       {sanitize_dt_str(store_label)}",
+        "    TYPE        COMMAND",
+        "    ICON        Dtadskt",
+        "    WINDOW_TYPE NO_STDIO",
+        f"    EXEC_STRING {store_cmd}",
+        "    DESCRIPTION Browse and update Ubuntu packages and desktop applications.",
+        "}",
+        "",
+    ])
+
+    for folder, label, cde_icon, _ in CATEGORIES:
+        attr = f"CK_{folder.upper()}_APPGROUP"
+        dt_lines.extend([
+            f"DATA_ATTRIBUTES {attr}",
+            "{",
+            "    ACTIONS         OpenInPlace,OpenNewView,Print",
+            f"    ICON            {cde_icon}",
+            f"    LABEL           {label}",
+            "    MEDIA           FILE_NAME",
+            "    MOVE_TO_ACTION  FILESYSTEM_MOVE",
+            "    COPY_TO_ACTION  FILESYSTEM_COPY",
+            "    LINK_TO_ACTION  FILESYSTEM_LINK",
+            f"    DESCRIPTION     XDG {label} applications.",
+            "}",
+            f"DATA_CRITERIA {attr}_CRIT1",
+            "{",
+            f"    DATA_ATTRIBUTES_NAME {attr}",
+            "    MODE            d",
+            f"    PATH_PATTERN    */appmanager/*/{folder}",
+            "}",
+            f"DATA_CRITERIA {attr}_CRIT2",
+            "{",
+            f"    DATA_ATTRIBUTES_NAME {attr}",
+            "    MODE            d",
+            f"    PATH_PATTERN    */appmanager/{folder}",
+            "}",
+            "ACTION Open",
+            "{",
+            "    LABEL           Open",
+            f"    ARG_TYPE        {attr}",
+            "    TYPE            MAP",
+            "    MAP_ACTION      OpenAppGroup",
+            "}",
+            "",
+        ])
+
+    active_stubs_by_folder: dict[str, set[str]] = {f: set() for f, _, _, _ in CATEGORIES}
+    active_desktop_apps_stubs: set[str] = {"CkLaunch", "CkSoftwareCenter"}
+
+    for did, entry in sorted(entries.items()):
+        digest = hashlib.sha1(did.encode("utf-8")).hexdigest()[:8]
+        stem_clean = re.sub(r"[^A-Za-z0-9_]+", "_", Path(did).stem).strip("_")[:32] or "App"
+        slug = f"{stem_clean}_{digest}"
+        act_name = f"CkXdg_{slug}"
+
+        folder, _, fallback_icon = map_entry_category(entry)
+        icon_name = resolve_icon_for_cde(entry["icon"], fallback_icon, icons_dir, slug)
+        label = sanitize_dt_str(entry["name"]) or stem_clean
+        desc = sanitize_dt_str(entry["comment"] or entry["generic_name"] or entry["name"])
+        win_type = "PERM_TERMINAL" if entry["terminal"] else "NO_STDIO"
+        cmd_no_args = expand_exec_for_cde_dt(entry, with_file_args=False)
+        cmd_with_args = expand_exec_for_cde_dt(entry, with_file_args=True)
+
+        dt_lines.extend([
+            f"ACTION {act_name}",
+            "{",
+            f"    LABEL       {label}",
+            "    TYPE        COMMAND",
+            f"    ICON        {icon_name}",
+            f"    WINDOW_TYPE {win_type}",
+            "    ARG_COUNT   0",
+            f"    EXEC_STRING {cmd_no_args}",
+            f"    DESCRIPTION {desc}",
+            "}",
+            f"ACTION {act_name}",
+            "{",
+            f"    LABEL       {label}",
+            "    TYPE        COMMAND",
+            f"    ICON        {icon_name}",
+            f"    WINDOW_TYPE {win_type}",
+            "    ARG_COUNT   >0",
+            f"    EXEC_STRING {cmd_with_args}",
+            f"    DESCRIPTION {desc}",
+            "}",
+            "",
+        ])
+
+        cat_dir = appman_dir / folder
+        cat_dir.mkdir(parents=True, exist_ok=True)
+        stub = cat_dir / act_name
+        if not stub.exists():
+            stub.write_text("", encoding="utf-8")
+        os.chmod(stub, 0o755)
+        active_stubs_by_folder[folder].add(act_name)
+
+    sys_cat_dir = appman_dir / "XDG_System"
+    sys_cat_dir.mkdir(parents=True, exist_ok=True)
+    for builtin_act in ("CkLaunch", "CkSoftwareCenter"):
+        bs = sys_cat_dir / builtin_act
+        if not bs.exists():
+            bs.write_text("", encoding="utf-8")
+        os.chmod(bs, 0o755)
+        active_stubs_by_folder["XDG_System"].add(builtin_act)
+
+    # Clean stale CkXdg_* stubs removed from XDG directories
+    for folder, keep in active_stubs_by_folder.items():
+        cat_dir = appman_dir / folder
+        if not cat_dir.is_dir():
+            continue
+        for child in cat_dir.iterdir():
+            if (child.name.startswith("CkXdg_") or child.name in ("CkLaunch", "CkSoftwareCenter")) and child.name not in keep:
+                try:
+                    child.unlink()
+                except OSError:
+                    pass
+        if not any(cat_dir.iterdir()):
+            try:
+                cat_dir.rmdir()
+            except OSError:
+                pass
+
+    # Do not shadow CDE's built-in /usr/dt/appconfig/appmanager/C/Desktop_Apps
+    if desktop_apps_dir.is_dir():
+        for child in list(desktop_apps_dir.iterdir()):
+            if child.name.startswith("CkXdg_") or child.name in ("CkLaunch", "CkSoftwareCenter"):
+                try:
+                    child.unlink()
+                except OSError:
+                    pass
+        if not any(desktop_apps_dir.iterdir()):
+            try:
+                desktop_apps_dir.rmdir()
+            except OSError:
+                pass
+
+    dt_out = types_dir / "ck-xdg-apps.dt"
+    dt_tmp = types_dir / f".ck-xdg-apps.dt.{os.getpid()}.tmp"
+    new_content = "\n".join(dt_lines) + "\n"
+    changed = True
+    if dt_out.is_file():
+        try:
+            changed = (dt_out.read_text(encoding="utf-8", errors="replace") != new_content)
+        except OSError:
+            changed = True
+
+    dt_tmp.write_text(new_content, encoding="utf-8")
+    os.replace(dt_tmp, dt_out)
+
+    managed_folders = [f for f, _, _, _ in CATEGORIES if (appman_dir / f).is_dir()]
+    sync_appmanager_session_links(home, managed_folders)
+
+    if trigger_reload and changed and os.environ.get("DISPLAY") and (
+        os.environ.get("TT_SESSION") or os.environ.get("_SUN_TT_SESSION")
+    ):
+        dtaction = Path("/usr/dt/bin/dtaction")
+        if dtaction.is_file() and os.access(dtaction, os.X_OK):
+            try:
+                subprocess.run(
+                    [str(dtaction), "ReloadActions"],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    timeout=1.5,
+                    check=False,
+                )
+            except Exception:
+                pass
+
+    return len(entries)
+
+
+def detect_mime_type(target: Path) -> str:
+    try:
+        with target.open("rb") as fp:
+            hdr = fp.read(64)
+        if hdr.startswith(b"%PDF-"):
+            return "application/pdf"
+        if hdr.startswith(b"\x89PNG\r\n\x1a\n"):
+            return "image/png"
+        if hdr.startswith(b"\xff\xd8\xff"):
+            return "image/jpeg"
+        if hdr.startswith((b"GIF87a", b"GIF89a")):
+            return "image/gif"
+        if len(hdr) >= 12 and hdr[:4] == b"RIFF" and hdr[8:12] == b"WEBP":
+            return "image/webp"
+        if b"<svg" in hdr.lower():
+            return "image/svg+xml"
+        if hdr.startswith(b"%!PS"):
+            return "application/postscript"
+    except OSError:
+        pass
+
+    ext_overrides = {
+        ".pdf": "application/pdf",
+        ".webp": "image/webp",
+        ".svg": "image/svg+xml",
+        ".mp4": "video/mp4",
+        ".mkv": "video/x-matroska",
+        ".webm": "video/webm",
+        ".mp3": "audio/mpeg",
+        ".flac": "audio/flac",
+        ".ogg": "audio/ogg",
+        ".wav": "audio/x-wav",
+        ".odt": "application/vnd.oasis.opendocument.text",
+        ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    }
+    ext = target.suffix.lower()
+    if ext in ext_overrides:
+        return ext_overrides[ext]
+
+    guessed, _ = mimetypes.guess_type(str(target))
+    if guessed:
+        return guessed.lower()
+
+    xdg_mime = which_prog("xdg-mime")
+    if xdg_mime and target.exists():
+        try:
+            cp = subprocess.run([xdg_mime, "query", "filetype", str(target)],
+                                capture_output=True, text=True, timeout=2.0, check=False)
+            mt = cp.stdout.strip().lower()
+            if mt and "/" in mt:
+                return mt
+        except Exception:
+            pass
+    return "application/octet-stream"
+
+
+def read_mimeapps_candidates(mime_type: str) -> list[str]:
+    home = Path(os.environ.get("HOME") or Path.home())
+    cfg_home = Path(os.environ.get("XDG_CONFIG_HOME") or (home / ".config"))
+    cfg_dirs = [Path(p) for p in os.environ.get("XDG_CONFIG_DIRS", "/etc/xdg").split(":") if p.strip()]
+
+    files = [cfg_home / "mimeapps.list"] + [d / "mimeapps.list" for d in cfg_dirs]
+    for adir in xdg_app_dirs():
+        files.append(adir / "mimeapps.list")
+        files.append(adir / "mimeinfo.cache")
+
+    ordered: list[str] = []
+    major = mime_type.split("/", 1)[0] + "/*" if "/" in mime_type else ""
+
+    for fpath in files:
+        if not fpath.is_file():
+            continue
+        cp = configparser.ConfigParser(interpolation=None, strict=False)
+        try:
+            cp.read(fpath, encoding="utf-8")
+        except Exception:
+            continue
+        for sec in ("Default Applications", "Added Associations", "MIME Cache"):
+            if not cp.has_section(sec):
+                continue
+            for key in (mime_type, major):
+                if not key or not cp.has_option(sec, key):
+                    continue
+                raw = cp.get(sec, key)
+                for did in raw.split(";"):
+                    did = did.strip()
+                    if did and did not in ordered:
+                        ordered.append(did)
+    return ordered
+
+
+def open_via_xdg_mime(files: list[str], explicit_desktop_id: str = "", set_default: bool = False) -> int:
+    if not files:
+        return 2
+    target = Path(files[0])
+    mime_type = detect_mime_type(target)
+
+    if set_default and explicit_desktop_id:
+        set_mimeapps_default(mime_type, explicit_desktop_id)
+
+    all_entries = collect_all_desktop_entries(include_nodisplay=True)
+    candidates: list[str] = []
+    if explicit_desktop_id:
+        candidates.append(explicit_desktop_id)
+    else:
+        candidates.extend(read_mimeapps_candidates(mime_type))
+        major = mime_type.split("/", 1)[0] + "/*" if "/" in mime_type else ""
+        for did, ent in all_entries.items():
+            if mime_type in ent["mimes"] or (major and major in ent["mimes"]):
+                if did not in candidates:
+                    candidates.append(did)
+
+    for did in candidates:
+        ent = all_entries.get(did)
+        if not ent and not did.endswith(".desktop"):
+            ent = all_entries.get(f"{did}.desktop")
+        if not ent:
+            continue
+        cmd = expand_exec_with_files(ent, files)
+        if not cmd:
+            continue
+        if ent["work_dir"]:
+            try:
+                os.chdir(ent["work_dir"])
+            except OSError:
+                pass
+        if ent["terminal"] and os.access("/usr/dt/bin/dtterm", os.X_OK):
+            os.execv("/usr/dt/bin/dtterm", ["dtterm", "-title", ent["name"], "-e", "/bin/sh", "-c", cmd])
+        os.execv("/bin/sh", ["sh", "-c", cmd])
+    return 2
+
+
+def set_mimeapps_default(mime_type: str, desktop_id: str) -> None:
+    if not mime_type or not desktop_id:
+        return
+    if not desktop_id.endswith(".desktop"):
+        desktop_id = f"{desktop_id}.desktop"
+    home = Path(os.environ.get("HOME") or Path.home())
+    cfg_home = Path(os.environ.get("XDG_CONFIG_HOME") or (home / ".config"))
+    cfg_home.mkdir(parents=True, exist_ok=True)
+    mpath = cfg_home / "mimeapps.list"
+
+    cp = configparser.ConfigParser(interpolation=None, strict=False)
+    cp.optionxform = str  # type: ignore[assignment]
+    if mpath.is_file():
+        try:
+            cp.read(mpath, encoding="utf-8")
+        except Exception:
+            pass
+    if not cp.has_section("Default Applications"):
+        cp.add_section("Default Applications")
+    cp.set("Default Applications", mime_type, desktop_id)
+
+    if not cp.has_section("Added Associations"):
+        cp.add_section("Added Associations")
+    existing = [x.strip() for x in cp.get("Added Associations", mime_type, fallback="").split(";") if x.strip()]
+    merged = [desktop_id] + [x for x in existing if x != desktop_id]
+    cp.set("Added Associations", mime_type, ";".join(merged) + ";")
+
+    tmp = cfg_home / f".mimeapps.list.{os.getpid()}.tmp"
+    with tmp.open("w", encoding="utf-8") as fp:
+        cp.write(fp, space_around_delimiters=False)
+    os.replace(tmp, mpath)
+
+
+def run_inotify_watcher(pidfile: str = "") -> int:
+    stop = False
+
+    def handle_sig(_signum, _frame):
+        nonlocal stop
+        stop = True
+
+    signal.signal(signal.SIGTERM, handle_sig)
+    signal.signal(signal.SIGINT, handle_sig)
+
+    libc_name = ctypes.util.find_library("c")
+    libc = ctypes.CDLL(libc_name, use_errno=True) if libc_name else None
+    IN_CLOEXEC = 0x00080000
+    IN_NONBLOCK = 0x00000800
+    WATCH_MASK = 0x00000002 | 0x00000008 | 0x00000040 | 0x00000080 | 0x00000100 | 0x00000200
+
+    ifd = -1
+    if libc and hasattr(libc, "inotify_init1") and hasattr(libc, "inotify_add_watch"):
+        libc.inotify_init1.argtypes = [ctypes.c_int]
+        libc.inotify_init1.restype = ctypes.c_int
+        libc.inotify_add_watch.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_uint32]
+        libc.inotify_add_watch.restype = ctypes.c_int
+        ifd = libc.inotify_init1(IN_CLOEXEC | IN_NONBLOCK)
+
+    watched: dict[Path, int] = {}
+
+    def refresh_watches() -> None:
+        if ifd < 0:
+            return
+        for adir in xdg_app_dirs():
+            if not adir.is_dir():
+                continue
+            for root, dirs, _ in os.walk(adir):
+                dirs[:] = [d for d in dirs if not d.startswith(".")]
+                rp = Path(root)
+                if rp not in watched:
+                    wd = libc.inotify_add_watch(ifd, str(rp).encode("utf-8"), WATCH_MASK)
+                    if wd >= 0:
+                        watched[rp] = wd
+
+    def dir_fingerprint() -> str:
+        parts: list[str] = []
+        for adir in xdg_app_dirs():
+            if not adir.is_dir():
+                continue
+            for root, dirs, files in os.walk(adir):
+                dirs[:] = [d for d in sorted(dirs) if not d.startswith(".")]
+                for fn in sorted(files):
+                    if fn.endswith(".desktop"):
+                        fp = Path(root) / fn
+                        try:
+                            st = fp.stat()
+                            parts.append(f"{fp}:{st.st_mtime_ns}:{st.st_size}")
+                        except OSError:
+                            pass
+        return "|".join(parts)
+
+    refresh_watches()
+    last_snapshot = dir_fingerprint()
+    run_index_once(trigger_reload=True)
+
+    if pidfile:
+        Path(pidfile).parent.mkdir(parents=True, exist_ok=True)
+        Path(pidfile).write_text(f"{os.getpid()}\n", encoding="utf-8")
+
+    try:
+        while not stop:
+            if ifd >= 0:
+                r, _, _ = select.select([ifd], [], [], 2.0)
+                if r:
+                    # Drain queued events and debounce 350 ms for multi-file dpkg/flatpak transactions
+                    while True:
+                        try:
+                            chunk = os.read(ifd, 4096)
+                            if not chunk:
+                                break
+                        except BlockingIOError:
+                            break
+                        except OSError:
+                            break
+                    time.sleep(0.35)
+                    while True:
+                        try:
+                            if not os.read(ifd, 4096):
+                                break
+                        except OSError:
+                            break
+                    refresh_watches()
+                    snap = dir_fingerprint()
+                    if snap != last_snapshot:
+                        last_snapshot = snap
+                        run_index_once(trigger_reload=True)
+                else:
+                    # Periodically pick up newly created XDG_DATA_HOME/applications directories
+                    refresh_watches()
+                    snap = dir_fingerprint()
+                    if snap != last_snapshot:
+                        last_snapshot = snap
+                        run_index_once(trigger_reload=True)
+            else:
+                time.sleep(2.0)
+                snap = dir_fingerprint()
+                if snap != last_snapshot:
+                    last_snapshot = snap
+                    run_index_once(trigger_reload=True)
+    finally:
+        if ifd >= 0:
+            os.close(ifd)
+        if pidfile:
+            try:
+                Path(pidfile).unlink()
+            except OSError:
+                pass
+    return 0
+
+
+def main(argv: list[str]) -> int:
+    watch = False
+    pidfile = ""
+    open_mime = False
+    set_def = False
+    desktop_id = ""
+    rest: list[str] = []
+
+    i = 1
+    while i < len(argv):
+        a = argv[i]
+        if a in ("--xdg", "--once"):
+            i += 1
+        elif a in ("--watch", "--daemon"):
+            watch = True
+            i += 1
+        elif a == "--pidfile" and i + 1 < len(argv):
+            pidfile = argv[i + 1]
+            i += 2
+        elif a == "--open-mime":
+            open_mime = True
+            i += 1
+        elif a == "--desktop-id" and i + 1 < len(argv):
+            desktop_id = argv[i + 1]
+            i += 2
+        elif a == "--set-default":
+            set_def = True
+            i += 1
+        elif a in ("-h", "--help"):
+            print("Usage: dtappintegrate --xdg [--watch [--pidfile <file>]]\n"
+                  "       dtappintegrate-xdg --open-mime [--desktop-id <id>] [--set-default] <file...>")
+            return 0
+        else:
+            rest.append(a)
+            i += 1
+
+    if open_mime:
+        return open_via_xdg_mime(rest, explicit_desktop_id=desktop_id, set_default=set_def)
+    if watch:
+        return run_inotify_watcher(pidfile=pidfile)
+
+    count = run_index_once(trigger_reload=True)
+    if os.environ.get("DTAPPINTEGRATE_VERBOSE"):
+        print(f"dtappintegrate --xdg: indexed {count} XDG application(s)")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

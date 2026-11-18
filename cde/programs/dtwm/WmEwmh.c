@@ -26,12 +26,19 @@
 #include <stdlib.h>
 
 #include "WmGlobal.h"
+#include "WmEwmh.h"
 #include "WmEvent.h"
 #include "WmFunction.h"
+#include "WmKeyFocus.h"
 #include "WmMultiHead.h"
 #include "WmProperty.h"
 #include "WmWinState.h"
 #include "WmWrkspace.h"
+#include <X11/XKBlib.h>
+#include <X11/keysym.h>
+
+static Boolean g_superTapPending = False;
+static Time g_superTapPressTime = 0;
 
 static void ProcessNetWmStateAbove (ClientData *pCD, long action);
 static void ProcessNetWmStateBelow (ClientData *pCD, long action);
@@ -206,6 +213,147 @@ void ProcessNetWmState (ClientData *pCD, long action,
 	SetClientState (pCD, pCD->clientState | UNSEEN_STATE, GetTimestamp ());
 }
 
+void ProcessNetActiveWindow (ClientData *pCD, Time timestamp)
+{
+    XEvent ev;
+    Time t;
+
+    if (!pCD || !pCD->pSD) return;
+    t = timestamp ? timestamp : GetTimestamp ();
+
+    if (!ClientInWorkspace (pCD->pSD->pActiveWS, pCD))
+    {
+	int ws;
+	for (ws = 0; ws < pCD->pSD->numWorkspaces; ++ws)
+	{
+	    if (ClientInWorkspace (&pCD->pSD->pWS[ws], pCD))
+	    {
+		ChangeToWorkspace (&pCD->pSD->pWS[ws]);
+		break;
+	    }
+	}
+    }
+
+    memset (&ev, 0, sizeof(ev));
+    ev.xbutton.time = t;
+    F_Normalize_And_Raise (nullptr, pCD, &ev);
+    Do_Focus_Key (pCD, t, ALWAYS_SET_FOCUS);
+}
+
+void UpdateEwmhClientList (WmScreenData *pSD)
+{
+    ClientListEntry *pEntry;
+    Window *wins = nullptr;
+    int cap = 0;
+    int count = 0;
+
+    if (!pSD || !pSD->managed || !wmGD.xa__NET_CLIENT_LIST) return;
+
+    cap = (int)pSD->clientCounter + 8;
+    if (cap < 16) cap = 16;
+    wins = (Window *)calloc ((size_t)cap, sizeof(Window));
+    if (!wins) return;
+
+    for (pEntry = pSD->clientList; pEntry; pEntry = pEntry->nextSibling)
+    {
+	ClientData *pCD = pEntry->pCD;
+	int i;
+	Boolean dup = False;
+
+	if (!pCD || !pCD->client) continue;
+	if (pCD->clientFlags & CLIENT_DESTROYED) continue;
+	if (pSD->taskSwitchWin && pCD->client == pSD->taskSwitchWin) continue;
+
+	for (i = 0; i < count; ++i)
+	{
+	    if (wins[i] == pCD->client)
+	    {
+		dup = True;
+		break;
+	    }
+	}
+	if (dup) continue;
+
+	if (count >= cap)
+	{
+	    Window *grown;
+	    cap *= 2;
+	    grown = (Window *)realloc (wins, (size_t)cap * sizeof(Window));
+	    if (!grown) break;
+	    wins = grown;
+	}
+	wins[count++] = pCD->client;
+    }
+
+    XChangeProperty (DISPLAY, pSD->rootWindow, wmGD.xa__NET_CLIENT_LIST,
+		     XA_WINDOW, 32, PropModeReplace,
+		     (unsigned char *)wins, count);
+    XChangeProperty (DISPLAY, pSD->rootWindow, wmGD.xa__NET_CLIENT_LIST_STACKING,
+		     XA_WINDOW, 32, PropModeReplace,
+		     (unsigned char *)wins, count);
+    free (wins);
+}
+
+void UpdateEwmhActiveWindow (WmScreenData *pSD, ClientData *pCD)
+{
+    Window activeWin = None;
+    if (!pSD || !pSD->managed || !wmGD.xa__NET_ACTIVE_WINDOW) return;
+    if (pCD && pCD->client) activeWin = pCD->client;
+    XChangeProperty (DISPLAY, pSD->rootWindow, wmGD.xa__NET_ACTIVE_WINDOW,
+		     XA_WINDOW, 32, PropModeReplace,
+		     (unsigned char *)&activeWin, 1);
+}
+
+void CancelEwmhSuperTap (void)
+{
+    g_superTapPending = False;
+}
+
+Boolean HandleEwmhSuperKey (XKeyEvent *keyEvent, Boolean isPress)
+{
+    KeySym ks;
+    if (!keyEvent) return False;
+    ks = XkbKeycodeToKeysym (DISPLAY, (KeyCode)keyEvent->keycode, 0, 0);
+    if (ks != XK_Super_L && ks != XK_Super_R)
+    {
+	if (isPress) g_superTapPending = False;
+	return False;
+    }
+
+    if (isPress)
+    {
+	unsigned int mods = keyEvent->state & (ShiftMask | ControlMask | Mod1Mask | Mod4Mask);
+	if (mods == 0)
+	{
+	    g_superTapPending = True;
+	    g_superTapPressTime = keyEvent->time;
+	}
+	else
+	{
+	    g_superTapPending = False;
+	}
+	return False;
+    }
+    else
+    {
+	if (g_superTapPending)
+	{
+	    Time elapsed = keyEvent->time >= g_superTapPressTime
+		? (keyEvent->time - g_superTapPressTime) : 0;
+	    g_superTapPending = False;
+	    if (elapsed <= 600)
+	    {
+		XEvent ev;
+		memset (&ev, 0, sizeof(ev));
+		ev.xkey = *keyEvent;
+		F_Exec ("ck-launch --toggle", nullptr, &ev);
+		return True;
+	    }
+	}
+    }
+    return False;
+}
+
 /**
 * @brief Sets up the window manager handling of the EWMH.
 */
@@ -229,7 +377,10 @@ void SetupWmEwmh (void)
 	XA__NET_WM_STATE_MAXIMIZED_HORZ,
 	XA__NET_WM_STATE_FULLSCREEN,
 	XA__NET_WM_STATE_ABOVE,
-	XA__NET_WM_STATE_BELOW
+	XA__NET_WM_STATE_BELOW,
+	XA__NET_CLIENT_LIST,
+	XA__NET_CLIENT_LIST_STACKING,
+	XA__NET_ACTIVE_WINDOW
     };
 
     static char *atom_names[] = {
@@ -248,7 +399,10 @@ void SetupWmEwmh (void)
 	_XA__NET_WM_STATE_MAXIMIZED_HORZ,
 	_XA__NET_WM_STATE_FULLSCREEN,
 	_XA__NET_WM_STATE_ABOVE,
-	_XA__NET_WM_STATE_BELOW
+	_XA__NET_WM_STATE_BELOW,
+	_XA__NET_CLIENT_LIST,
+	_XA__NET_CLIENT_LIST_STACKING,
+	_XA__NET_ACTIVE_WINDOW
     };
 
     Atom atoms[XtNumber(atom_names) + 1];
@@ -271,11 +425,15 @@ void SetupWmEwmh (void)
     wmGD.xa__NET_WM_STATE_FULLSCREEN = atoms[XA__NET_WM_STATE_FULLSCREEN];
     wmGD.xa__NET_WM_STATE_ABOVE = atoms[XA__NET_WM_STATE_ABOVE];
     wmGD.xa__NET_WM_STATE_BELOW = atoms[XA__NET_WM_STATE_BELOW];
+    wmGD.xa__NET_CLIENT_LIST = atoms[XA__NET_CLIENT_LIST];
+    wmGD.xa__NET_CLIENT_LIST_STACKING = atoms[XA__NET_CLIENT_LIST_STACKING];
+    wmGD.xa__NET_ACTIVE_WINDOW = atoms[XA__NET_ACTIVE_WINDOW];
 
     for (scr = 0; scr < wmGD.numScreens; ++scr)
     {
 	Window childWindow;
 	WmScreenData *pSD;
+	KeyCode kcL, kcR;
 
 	pSD = &(wmGD.Screens[scr]);
 
@@ -298,6 +456,27 @@ void SetupWmEwmh (void)
 	XChangeProperty(DISPLAY, wmGD.Screens[scr].rootWindow,
 			atoms[XA__NET_SUPPORTED], XA_ATOM, 32, PropModeReplace,
 			(unsigned char *)&atoms[XA__NET_SUPPORTING_WM_CHECK],
-			12);
+			17);
+
+	UpdateEwmhClientList (pSD);
+	UpdateEwmhActiveWindow (pSD, wmGD.keyboardFocus);
+
+	/* Passive async grab on Super_L / Super_R so bare Super tap opens ck-launch */
+	kcL = XKeysymToKeycode (DISPLAY, XK_Super_L);
+	if (kcL != 0)
+	{
+	    XGrabKey (DISPLAY, kcL, 0, pSD->rootWindow, True, GrabModeAsync, GrabModeAsync);
+	    XGrabKey (DISPLAY, kcL, LockMask, pSD->rootWindow, True, GrabModeAsync, GrabModeAsync);
+	    XGrabKey (DISPLAY, kcL, Mod2Mask, pSD->rootWindow, True, GrabModeAsync, GrabModeAsync);
+	    XGrabKey (DISPLAY, kcL, LockMask | Mod2Mask, pSD->rootWindow, True, GrabModeAsync, GrabModeAsync);
+	}
+	kcR = XKeysymToKeycode (DISPLAY, XK_Super_R);
+	if (kcR != 0)
+	{
+	    XGrabKey (DISPLAY, kcR, 0, pSD->rootWindow, True, GrabModeAsync, GrabModeAsync);
+	    XGrabKey (DISPLAY, kcR, LockMask, pSD->rootWindow, True, GrabModeAsync, GrabModeAsync);
+	    XGrabKey (DISPLAY, kcR, Mod2Mask, pSD->rootWindow, True, GrabModeAsync, GrabModeAsync);
+	    XGrabKey (DISPLAY, kcR, LockMask | Mod2Mask, pSD->rootWindow, True, GrabModeAsync, GrabModeAsync);
+	}
     }
 }

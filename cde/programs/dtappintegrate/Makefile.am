@@ -1,6 +1,7 @@
 MAINTAINERCLEANFILES = Makefile.in
 
 bin_SCRIPTS = dtappintegrate
+dist_bin_SCRIPTS = dtappintegrate-xdg
 BUILT_SOURCES = $(bin_SCRIPTS)
 CLEANFILES = $(bin_SCRIPTS)
 

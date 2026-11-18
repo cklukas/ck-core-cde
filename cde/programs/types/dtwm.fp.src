@@ -438,6 +438,51 @@ CONTROL DisplayMonitors
   HELP_VOLUME		FPanel
 }
 
+SUBPANEL AppsSubpanel
+{
+  CONTAINER_NAME	Applications
+  TITLE			Applications & Quick Launch
+}
+
+CONTROL QuickLaunchCtrl
+{
+  TYPE			icon
+  CONTAINER_NAME	AppsSubpanel
+  CONTAINER_TYPE	SUBPANEL
+  POSITION_HINTS	1
+  ICON			Dtappmgr
+  LABEL			Quick Launch (Super)
+  PUSH_ACTION		CkLaunch
+  HELP_TOPIC		FPOnItemAppMgr
+  HELP_VOLUME		FPanel
+}
+
+CONTROL SoftwareCenterCtrl
+{
+  TYPE			icon
+  CONTAINER_NAME	AppsSubpanel
+  CONTAINER_TYPE	SUBPANEL
+  POSITION_HINTS	2
+  ICON			Dtadskt
+  LABEL			Software & Updates
+  PUSH_ACTION		CkSoftwareCenter
+  HELP_TOPIC		FPOnItemAppMgr
+  HELP_VOLUME		FPanel
+}
+
+CONTROL SyncXdgAppsCtrl
+{
+  TYPE			icon
+  CONTAINER_NAME	AppsSubpanel
+  CONTAINER_TYPE	SUBPANEL
+  POSITION_HINTS	3
+  ICON			Fpapps
+  LABEL			Reload XDG Apps
+  PUSH_ACTION		CkReloadXdgApps
+  HELP_TOPIC		FPOnItemAppMgr
+  HELP_VOLUME		FPanel
+}
+
 #ifndef NO_DTINFO
 SUBPANEL InfoManagerSubpanel
 {

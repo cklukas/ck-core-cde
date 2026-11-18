@@ -365,4 +365,34 @@ ACTION Print
         MAP_ACTION      PrintAppGroup
 }
 
+ACTION CkLaunch
+{
+        LABEL           Quick Launch
+        TYPE            COMMAND
+        ICON            Dtappmgr
+        WINDOW_TYPE     NO_STDIO
+        EXEC_STRING     ck-launch --toggle
+        DESCRIPTION     Search XDG applications, open windows, CDE settings, and calculator expressions.
+}
+
+ACTION CkSoftwareCenter
+{
+        LABEL           Software & Updates
+        TYPE            COMMAND
+        ICON            Dtadskt
+        WINDOW_TYPE     NO_STDIO
+        EXEC_STRING     sh -c 'for p in snap-store gnome-software synaptic update-manager; do command -v "$p" >/dev/null 2>&1 && exec "$p"; done; exec /usr/dt/bin/dtterm -title "System Package Updates" -e /bin/sh -c "apt list --upgradable 2>/dev/null; exec ${SHELL:-/bin/sh}"'
+        DESCRIPTION     Open the installed Software Center or inspect pending APT package updates.
+}
+
+ACTION CkReloadXdgApps
+{
+        LABEL           Reload XDG Apps
+        TYPE            COMMAND
+        ICON            Fpapps
+        WINDOW_TYPE     NO_STDIO
+        EXEC_STRING     /usr/dt/bin/dtappintegrate --xdg
+        DESCRIPTION     Re-scan XDG .desktop directories and refresh CDE Application Manager.
+}
+
 XCOMM ######################## EOF ############################################

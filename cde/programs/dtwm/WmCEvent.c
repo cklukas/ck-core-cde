@@ -2828,6 +2828,10 @@ void HandleClientMessage (ClientData *pCD, XClientMessageEvent *clientEvent)
 	ProcessNetWmState (pCD, clientEvent->data.l[0], clientEvent->data.l[1],
 	    clientEvent->data.l[2]);
     }
+    else if (clientEvent->message_type == wmGD.xa__NET_ACTIVE_WINDOW)
+    {
+	ProcessNetActiveWindow (pCD, (Time)clientEvent->data.l[1]);
+    }
 } /* END OF FUNCTION HandleClientMessage */
 
 

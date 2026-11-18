@@ -1,0 +1,40 @@
+{
+  "work_package": "WP-12",
+  "date": "2026-11-18",
+  "branch": "x11_wayland",
+  "host_vm": "cde-ubuntu2604 (Ubuntu 26.04.1 LTS aarch64, Linux 7.0.0-34-generic, clang 21, wlroots 0.19)",
+  "motif_revision": "bd8043040a5257ac02a46c6ecf6cc711e9c099a0",
+  "installed_sha256": {
+    "/usr/dt/bin/ck-launch": "ac1e6ef7f0eaf394f3d3025e2b65eabbff91fe25289a3466cba3bc14ec922a2e",
+    "/usr/dt/bin/ck-status": "f0d1fbe48be7278d9707ffda25a5c8b75a295408448b5ebd949a0ac2feca1231",
+    "/usr/dt/bin/dtfile": "90d52d4a254715463b93f772aa75d0bec20e04163468d729aa3ea41666874f1e",
+    "/usr/dt/bin/dtappintegrate": "6770686b99398d9ce99c095475b1c0a5353f821dd669cb636f25f9e874e9b21c",
+    "/usr/dt/bin/dtappintegrate-xdg": "df13eccfd822681af05eb6018cf9d1b206f9fca44c972d29582459a588054734",
+    "/usr/dt/bin/dtopen": "6965ee5a74f1582f4c07e57f82cb6738d23fa42701f0b7d7350c7ddaddab998b",
+    "/usr/dt/bin/dtwm": "5b4ac571c2a1ba9d28cb7201d0596174d590705901f08f2a8288e6c1c1d0f0a1",
+    "/usr/dt/bin/dtwm-wayland": "1fc19fdd98cdbe156c517c94411013d30d47c5f486d7cdc54dab5f9afa07dd76"
+  },
+  "features_verified": [
+    "Automatic XDG .desktop application indexer (dtappintegrate --xdg) and live Linux inotify session watcher (dtappintegrate --xdg --watch) active in both Xsession.wayland / dtsession --wayland and classic X11 Xsession",
+    "Categorized XDG_* Application Manager action groups with scaled PNG/XPM icons and non-shadowing preservation of built-in CDE Desktop_Apps",
+    "Front Panel AppsSubpanel (Quick Launch, Software & Updates, Reload XDG Apps) and ck-status pending APT/security updates indicator",
+    "Super tap, Super+Space, and Alt+F2 quick-launcher (ck-launch) bound in both dtwm-wayland and classic X11 dtwm (sys.dtwmrc + passive Super_L/Super_R grabs), verified mapping libXm.so.9",
+    "Open-window discovery and activation via zwlr_foreign_toplevel_manager_v1 on Wayland and newly added _NET_CLIENT_LIST / _NET_CLIENT_LIST_STACKING / _NET_ACTIVE_WINDOW on X11 dtwm",
+    "Inline math expression evaluator and fuzzy XDG/CDE/dtstyle search in ck-launch",
+    "Modernized dtopen (consulting ~/.config/mimeapps.list via dtappintegrate-xdg --open-mime, modern Ubuntu viewers, and xdg-open) + WEBP/SVG/VIDEO_MODERN/AUDIO_MODERN/OFFICE_DOC CDE datatypes",
+    "Interactive Motif Open With... dialog in dtfile (Selected -> Open With... and right-click context popup Open With...) with MIME detection, command preview, and atomic ~/.config/mimeapps.list persistence"
+  ],
+  "commands": [
+    "make -j4 -C /var/tmp/ck-wayland-build/wp00/apps-src BUILD_DIR=/var/tmp/ck-wayland-build/wp00/apps-build MOTIF_PREFIX=/var/tmp/ck-wayland-build/wp00/motif-prefix CDE_PREFIX=/usr/dt check",
+    "CC=clang python3 cde/programs/dtwm/tests/check-dtwm-wayland-wp12.py --compositor ./dtwm-wayland (parallel Wayland + X11 Xvfb lanes: 3.01s PASS)",
+    "make -j4 -C /var/tmp/ck-wayland-build/wp00/cde-build/programs/dtfile check-local",
+    "ckdocs check --config ckdocs.yml --strict (ck-core-apps & ck-core-cde)"
+  ],
+  "screenshots": {
+    "live_wayland_ck_launch_windows": "wp12_live_launch_and_appmgr_v2.png",
+    "live_wayland_ck_launch_math": "wp12_live_launch_math.png",
+    "live_wayland_dtfile_popup_open_with": "wp12_live_popup_menu.png",
+    "live_wayland_dtfile_open_with_dialog": "wp12_live_open_with_dialog_v6.png"
+  },
+  "result": "pass"
+}

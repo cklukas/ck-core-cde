@@ -104,15 +104,16 @@
 #include "SharedMsgs.h"
 #include "Shelf.h"
 #include "Mounts.h"
+#include "OpenWith.h"
 
 #include <stdarg.h>
 
 #define INDICATOR_TIME 12
 
 #if defined(ADD_SHOW_TRASH)
-static int menuItemCount = 54;
+static int menuItemCount = 55;
 #else
-static int menuItemCount = 53;
+static int menuItemCount = 54;
 #endif
 #if DTFILE_SYNC_FEATURE_ENABLED
 static Widget * synchronizeFoldersBtn = nullptr;
@@ -377,6 +378,14 @@ CreateMenu(
       mainMenu[j].type = SHARED_MENU_PANE;
       mainMenu[j].name = "actionMenu";
       mainMenu[j++].helpData = HELP_SELECTED_MENU_STR;
+
+      mainMenu[j].type = MENU_BUTTON;
+      mainMenu[j].maskBit = OPEN_WITH;
+      mainMenu[j].label = XtNewString("Open With...");
+      mainMenu[j].mnemonic = XtNewString("O");
+      mainMenu[j].helpData = HELP_SELECTED_MENU_STR;
+      mainMenu[j].name = "openWith";
+      mainMenu[j++].activateCallback = OpenWithMenuCB;
 
       moveBtn = &(mainMenu[j].widget);
       mainMenu[j].type = MENU_BUTTON;
@@ -799,10 +808,15 @@ ActivateSingleSelect(
        || (strcmp(file_mgr_data->selection_list[0]->file_data->file_name, "." ) == 0 ) )
    {
      file_mgr_rec->menuStates |= TRASH | MODIFY | PUT_ON_DESKTOP;
-     file_mgr_rec->menuStates &= (~RENAME);
+     file_mgr_rec->menuStates &= ~(RENAME | OPEN_WITH);
+   }
+   else if (file_mgr_data->selection_list[0]->file_data->physical_type == DtDIRECTORY)
+   {
+     file_mgr_rec->menuStates |= RENAME | TRASH | MODIFY | PUT_ON_DESKTOP;
+     file_mgr_rec->menuStates &= ~OPEN_WITH;
    }
    else
-     file_mgr_rec->menuStates |= RENAME | TRASH | MODIFY | PUT_ON_DESKTOP;
+     file_mgr_rec->menuStates |= RENAME | TRASH | MODIFY | PUT_ON_DESKTOP | OPEN_WITH;
 
    if ((strcmp(file_type, LT_BROKEN_LINK) != 0)
        && (strcmp(file_type, LT_RECURSIVE_LINK) != 0)
@@ -855,7 +869,7 @@ void
 ActivateMultipleSelect(
         FileMgrRec *file_mgr_rec )
 {
-   file_mgr_rec->menuStates |= TRASH | PUT_ON_DESKTOP;
+   file_mgr_rec->menuStates |= TRASH | PUT_ON_DESKTOP | OPEN_WITH;
    file_mgr_rec->menuStates &= ~(RENAME | MOVE | DUPLICATE | LINK |
                                  MODIFY);
 
@@ -878,7 +892,7 @@ ActivateNoSelect(
         FileMgrRec *file_mgr_rec )
 {
    file_mgr_rec->menuStates &= ~(RENAME | MOVE | DUPLICATE | LINK | TRASH |
-                                 MODIFY | PUT_ON_DESKTOP);
+                                 MODIFY | PUT_ON_DESKTOP | OPEN_WITH);
 
    UnmanageAllActionItems (file_mgr_rec);
 }

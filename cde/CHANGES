@@ -1,4 +1,55 @@
 2026-11-18
+- Deliver **WP-12 — XDG Application Discovery, `Super` Quick-Launcher
+  (`ck-launch`) & Modernized `dtopen` / *"Open With..."*** across both
+  `CDE (Wayland)` and `CDE (X11 / XLibre)`
+  (`cde/programs/dtappintegrate/dtappintegrate-xdg`,
+  `cde/programs/dtappintegrate/dtappintegrate.src`,
+  `cde/programs/dtappintegrate/Makefile.am`, `cde/debian/Xsession.wayland`,
+  `cde/programs/dtsession/SmWayland.c`,
+  `cde/programs/dtlogin/config/Xsession.src`,
+  `cde/programs/types/dtwm.fp.src`, `cde/programs/types/dtappman.dt.src`,
+  `cde/programs/types/datatypes.dt.src`, `cde/programs/dtopen/dtopen.src`,
+  `cde/programs/dtopen/Makefile.am`, `cde/programs/dtfile/OpenWith.h`,
+  `cde/programs/dtfile/OpenWith.c`, `cde/programs/dtfile/FileMgr.h`,
+  `cde/programs/dtfile/Main.h`, `cde/programs/dtfile/Main.c`,
+  `cde/programs/dtfile/Menu.c`, `cde/programs/dtfile/FileMgr.c`,
+  `cde/programs/dtfile/File.c`, `cde/programs/dtfile/Makefile.am`,
+  `cde/programs/dtwm/wayland/dtwm_wayland.h`,
+  `cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `cde/programs/dtwm/WmGlobal.h`, `cde/programs/dtwm/WmEwmh.h`,
+  `cde/programs/dtwm/WmEwmh.c`, `cde/programs/dtwm/WmCEvent.c`,
+  `cde/programs/dtwm/WmManage.c`, `cde/programs/dtwm/WmWinList.c`,
+  `cde/programs/dtwm/WmKeyFocus.c`, `cde/programs/dtwm/WmEvent.c`,
+  `cde/programs/localized/C/config/sys.dtwmrc.tmsg`,
+  `cde/programs/dtwm/tests/check-dtwm-wayland-wp12.py`,
+  `docs/improvements/launching.md`, `docs/improvements/file-manager.md`,
+  `docs/improvements/wayland.md`):
+  - Add `dtappintegrate --xdg` (`dtappintegrate-xdg`) and session-persistent
+    `dtappintegrate --xdg --watch` (`inotify` watcher with 350 ms multi-file
+    debounce) started automatically in both `Xsession.wayland` /
+    `dtsession --wayland` and classic X11 `Xsession`, indexing system, Flatpak,
+    Snap, and user `.desktop` applications into `~/.dt/types/ck-xdg-apps.dt`,
+    `~/.dt/icons/`, and categorized Application Manager groups (`XDG_*`) without
+    shadowing CDE's built-in `Desktop_Apps` folder, plus a Front Panel
+    `AppsSubpanel` (*Quick Launch (Super)*, *Software & Updates*, *Reload XDG
+    Apps*).
+  - Bind bare `Super` tap, `Super+Space`, and `Alt+F2` to `ck-launch --toggle`
+    in both `dtwm-wayland` and classic X11 `dtwm` (`sys.dtwmrc` + passive
+    `Super_L`/`Super_R` key grabs), and publish `_NET_CLIENT_LIST`,
+    `_NET_CLIENT_LIST_STACKING`, and `_NET_ACTIVE_WINDOW` (including
+    cross-workspace raise/focus) on X11 `dtwm` so `ck-launch` enumerates and
+    activates open windows identically across Wayland and X11.
+  - Modernize `dtopen` (`dtopen_image`, `dtopen_pdf`, `dtopen_ps`,
+    `dtopen_video`, `dtopen_audio`, `dtopen_office`, `dtopen_any`) and
+    `datatypes.dt` (`WEBP`, `SVG`, `VIDEO_MODERN`, `AUDIO_MODERN`,
+    `OFFICE_DOC`) to consult `dtappintegrate-xdg --open-mime` /
+    `~/.config/mimeapps.list` first, then modern Ubuntu viewers, then
+    `xdg-open`, and add an interactive Motif **Open With...** dialog in `dtfile`
+    (**Selected → Open With...** and file context popup **Open With...**) with
+    MIME detection, compatible `.desktop` ranking, command preview, and atomic
+    `~/.config/mimeapps.list` `[Default Applications]` persistence.
+  - Add `check-dtwm-wayland-wp12.py` running headless `dtwm-wayland` and X11
+    `Xvfb` + `dtwm` verification lanes in parallel.
 - Integrate the CK-Core CDE 3.0.0 Wayland & X11 desktop stack onto `master` and
   advance `.ckgit/motif-revision` and `.ckgit/ci.yml` to published CK Core Motif
   ABI 9 `bd8043040a5257ac02a46c6ecf6cc711e9c099a0`.

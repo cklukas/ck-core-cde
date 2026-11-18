@@ -48,6 +48,7 @@
 #include "WmWinList.h"
 #include "WmCEvent.h"
 #include "WmEvent.h"
+#include "WmEwmh.h"
 #include "WmFunction.h"
 #include "WmKeyFocus.h"
 #include "WmMenu.h"
@@ -201,6 +202,8 @@ void AddClientToList (WmWorkspaceData *pWS, ClientData *pCD, Boolean onTop)
 	    pSD->lastClient = &pCD->iconEntry;
 	}
     }
+
+    UpdateEwmhClientList (pSD);
 
 } /* END OF FUNCTION AddClientToList */
 
@@ -498,6 +501,8 @@ void DeleteClientFromList (WmWorkspaceData *pWS, ClientData *pCD)
 	    pSD->lastClient = pCD->clientEntry.prevSibling;
 	}
     }
+
+    UpdateEwmhClientList (pSD);
 
 } /* END OF FUNCTION DeleteClientFromList */
 

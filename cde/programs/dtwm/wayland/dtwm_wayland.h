@@ -333,6 +333,8 @@ struct DtwmServer {
 
     /* Docked genuine CDE Front Panel (dtwm-panel) & TYPE client swallowing */
     bool greeter_mode;
+    bool super_tap_pending;
+    uint32_t super_tap_press_ms;
     bool show_front_panel;
     bool show_open_window_icons;
     bool use_icon_box;

@@ -1640,6 +1640,7 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
     struct wlr_pointer_button_event *ev = data;
     uint32_t t_ms = ev->time_msec ? ev->time_msec : dtwm_now_msec();
     dtwm_lock_notify_activity(server);
+    server->super_tap_pending = false;
 
     uint32_t btn = ev->button;
     if (server->left_handed) {
@@ -1929,7 +1930,28 @@ static void handle_keyboard_modifiers(struct wl_listener *listener, void *data) 
     }
 }
 
+static void spawn_quick_launcher(DtwmServer *server) {
+    if (!server || server->session_locked || server->greeter_mode) return;
+    pid_t pid = fork();
+    if (pid == 0) {
+        setsid();
+        if (server->wayland_socket) setenv("WAYLAND_DISPLAY", server->wayland_socket, 1);
+        if (server->xwayland && server->xwayland->display_name) {
+            setenv("DISPLAY", server->xwayland->display_name, 1);
+        }
+        execlp("ck-launch", "ck-launch", "--toggle", (char *)nullptr);
+        execl("/usr/dt/bin/ck-launch", "ck-launch", "--toggle", (char *)nullptr);
+        execl("/usr/bin/ck-launch", "ck-launch", "--toggle", (char *)nullptr);
+        _exit(127);
+    }
+}
+
 static bool handle_compositor_keybinding(DtwmServer *server, uint32_t mods, xkb_keysym_t sym) {
+    if (((mods & WLR_MODIFIER_ALT) && sym == XKB_KEY_F2) ||
+        ((mods & WLR_MODIFIER_LOGO) && sym == XKB_KEY_space)) {
+        spawn_quick_launcher(server);
+        return true;
+    }
     if ((mods & WLR_MODIFIER_CTRL) && (mods & WLR_MODIFIER_ALT)) {
         if (sym >= XKB_KEY_1 && sym <= XKB_KEY_8) {
             uint32_t ws = (uint32_t)(sym - XKB_KEY_1);
@@ -2048,11 +2070,36 @@ static void handle_keyboard_key(struct wl_listener *listener, void *data) {
 
     bool handled = false;
     uint32_t mods = wlr_keyboard_get_modifiers(kb->wlr_keyboard);
+    bool is_super_sym = false;
+    for (int i = 0; i < nsyms; ++i) {
+        if (syms[i] == XKB_KEY_Super_L || syms[i] == XKB_KEY_Super_R) {
+            is_super_sym = true;
+            break;
+        }
+    }
+
     if (ev->state == WL_KEYBOARD_KEY_STATE_PRESSED) {
-        for (int i = 0; i < nsyms; ++i) {
-            if (handle_compositor_keybinding(server, mods, syms[i])) {
-                handled = true;
-                break;
+        if (is_super_sym) {
+            if ((mods & ~(uint32_t)WLR_MODIFIER_LOGO) == 0) {
+                server->super_tap_pending = true;
+                server->super_tap_press_ms = t_ms;
+            } else {
+                server->super_tap_pending = false;
+            }
+        } else {
+            server->super_tap_pending = false;
+            for (int i = 0; i < nsyms; ++i) {
+                if (handle_compositor_keybinding(server, mods, syms[i])) {
+                    handled = true;
+                    break;
+                }
+            }
+        }
+    } else if (ev->state == WL_KEYBOARD_KEY_STATE_RELEASED) {
+        if (is_super_sym && server->super_tap_pending) {
+            server->super_tap_pending = false;
+            if ((uint32_t)(t_ms - server->super_tap_press_ms) <= 600u) {
+                spawn_quick_launcher(server);
             }
         }
     }

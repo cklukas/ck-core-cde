@@ -153,7 +153,7 @@ flowchart TD
 
 > **Reference:** Resolves the user-experience gaps cataloged in [`planning/GAPS.md`](planning/GAPS.md). Every WP below targets **both `CDE (Wayland)` and `CDE (X11 / XLibre)`** (wherever sensible) and requires **parallel automated verification** in both environments.
 
-### [ ] WP-12 — XDG Application Discovery, `Super` Quick-Launcher (`ck-launch`) & Modernized `dtopen` / *"Open With..."*
+### [x] WP-12 — XDG Application Discovery, `Super` Quick-Launcher (`ck-launch`) & Modernized `dtopen` / *"Open With..."*
 - **Closes**: `GAP-LAUNCH-01`, `GAP-LAUNCH-02`, `GAP-LAUNCH-03`, `GAP-FILES-03`
 - **Repos**: `ck-core-cde` (`cde/programs/dtappintegrate/`, `cde/programs/dtopen/`, `cde/programs/dtfile/`, `cde/programs/dtwm/`, `cde/programs/types/`), `ck-core-apps` (`src/ck-launch/`, `src/ck-status/`)
 - **Dual Wayland + X11 Scope**:

@@ -123,7 +123,7 @@ dtfile_SOURCES = ChangeDir.c     ChangeDirP.c    Command.c       Common.c \
 		 ModAttr.c       ModAttrP.c      MultiView.c     OverWrite.c \
 		 Prefs.c         PrefsP.c        SharedMsgs.c    SharedProcs.c \
 		 ToolTalk.c      Trash.c         TrashMetadata.c TrashMetadata.h XdgTrashInfo.c XdgTrashInfo.h Utils.c fsDialog.c \
-		 StorageSize.c
+		 StorageSize.c   OpenWith.c      OpenWith.h
 
 # Mind the quoting here...
 SCRIPTFLAGS = -DSHAPE -D_ILS_MACROS -DSUN_PERF \

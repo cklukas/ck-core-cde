@@ -1,141 +1,150 @@
 XCOMM!KORNSHELL
 XCOMM
-XCOMM dtopen - provide an interface for some useful applications.
+XCOMM dtopen - XDG MIME & modern desktop helper launcher for CK-Core CDE
+XCOMM          (Wayland & X11/XLibre).
 XCOMM
-XCOMM #############################################################
-XCOMM #set -x           # uncomment for debugging
-XCOMM ###############################################################
-XCOMM Init
 
-DTOPEN="dtopen"                   # Identity crisis
-APPNAME="$(basename "$0")"        # the app to locate/run
+DTOPEN="dtopen"
+APPNAME="$(basename "$0")"
+DTAPPINT_XDG=CDE_INSTALLATION_TOP/bin/dtappintegrate-xdg
 
-XCOMM apps to look for, given an action (based on APPNAME - see MAIN)
-
-XCOMM image viewing
+XCOMM Default helper chains (modern Ubuntu/Linux viewers ahead of legacy X11 viewers)
 if [ -z "$DTOPEN_VIMAGE" ]
 then
-    VIMAGE="xv display gimp"
+    VIMAGE="loupe eog gthumb feh sxiv display gimp xv"
 else
     VIMAGE="$DTOPEN_VIMAGE"
 fi
 
-XCOMM video viewing
 if [ -z "$DTOPEN_VVIDEO" ]
 then
-    VVIDEO="vlc ffplay"
+    VVIDEO="mpv vlc totem celluloid ffplay"
 else
     VVIDEO="$DTOPEN_VVIDEO"
 fi
 
-XCOMM postscript viewing
+if [ -z "$DTOPEN_VAUDIO" ]
+then
+    VAUDIO="mpv vlc rhythmbox audacious ffplay"
+else
+    VAUDIO="$DTOPEN_VAUDIO"
+fi
+
 if [ -z "$DTOPEN_VPS" ]
 then
-    VPS="mgv gv"
+    VPS="papers evince okular gv mgv"
 else
     VPS="$DTOPEN_VPS"
 fi
 
-XCOMM PDF viewing
 if [ -z "$DTOPEN_VPDF" ]
 then
-    VPDF="okular xpdf"
+    VPDF="papers evince okular zathura qpdfview mupdf ck-browser xpdf"
 else
     VPDF="$DTOPEN_VPDF"
 fi
 
-XCOMM ##############################################################
-XCOMM ## Utility Functions
+if [ -z "$DTOPEN_VOFFICE" ]
+then
+    VOFFICE="libreoffice soffice abiword gnumeric"
+else
+    VOFFICE="$DTOPEN_VOFFICE"
+fi
 
-XCOMM ## Find the path of a program
 FindProg()
 {
-XCOMM   FindProg "program"
-XCOMM   - returns full path, or ""
-
-    whence "$1"
-
+    whence "$1" 2>/dev/null
     return 0
 }
 
-XCOMM ## Show an error message
 ErrorMsg()
 {
-XCOMM   ErrorMsg "Title "Message" ["OK"]
-XCOMM   use dterror.ds to display it...
-
     if [ -z "$3" ]
-    then    # default to 'OK'
+    then
         OKM="OK"
     else
         OKM="$3"
     fi
-
     CDE_INSTALLATION_TOP/bin/dterror.ds "$2" "$1" "$OKM"
-
     return 0
 }
 
-XCOMM ## do a simple command
+TryXdgMimeOpen()
+{
+    if [ $# -gt 0 ] && [ -x "$DTAPPINT_XDG" ]
+    then
+        "$DTAPPINT_XDG" --open-mime "$@"
+        rc=$?
+        if [ $rc -eq 0 ]
+        then
+            exit 0
+        fi
+    fi
+    return 1
+}
+
 DoSimpleCmd()
 {
-XCOMM   DoSimpleCmd "commands" args
-
-    didone=0
     cmds="$1"
     shift
-    args="$*"
 
     for i in $cmds
     do
         thecmd="$(FindProg "$i")"
-
-        if [ ! -z "$thecmd" ]
-        then    # it's there
-            $thecmd "$args"
-            didone=1
-            break
+        if [ -n "$thecmd" ]
+        then
+            "$thecmd" "$@"
+            return 0
         fi
     done
 
-    if [ $didone -eq 0 ]
-    then    # couldn't find a viewer
-        ErrorMsg "Helper not found" \
-                 "${DTOPEN}: Could not find any of the following\ncommands for this file type:\n\n$cmds"
+    xdgcmd="$(FindProg xdg-open)"
+    if [ -n "$xdgcmd" ] && [ $# -gt 0 ]
+    then
+        "$xdgcmd" "$1"
+        return 0
     fi
 
+    ErrorMsg "Helper not found" \
+             "${DTOPEN}: Could not find any installed application or XDG handler\nfor this file:\n\n$cmds"
     return 0
 }
 
-
-XCOMM ##################################################################
-XCOMM ## MAIN
-
-XCOMM # We'll just look at our args and decide what to do...
-
-XCOMM # Commands we'll recognize
-
-COMMANDS="dtopen_image dtopen_pdf dtopen_ps dtopen_video"
+COMMANDS="dtopen dtopen_any dtopen_image dtopen_pdf dtopen_ps dtopen_video dtopen_audio dtopen_office"
 
 case $APPNAME in
     dtopen_image)
-        DoSimpleCmd "$VIMAGE" "$*"
+        if [ -z "$DTOPEN_VIMAGE" ]; then TryXdgMimeOpen "$@"; fi
+        DoSimpleCmd "$VIMAGE" "$@"
         ;;
     dtopen_pdf)
-        DoSimpleCmd "$VPDF" "$*"
+        if [ -z "$DTOPEN_VPDF" ]; then TryXdgMimeOpen "$@"; fi
+        DoSimpleCmd "$VPDF" "$@"
         ;;
     dtopen_ps)
-        DoSimpleCmd "$VPS" "$*"
+        if [ -z "$DTOPEN_VPS" ]; then TryXdgMimeOpen "$@"; fi
+        DoSimpleCmd "$VPS" "$@"
         ;;
     dtopen_video)
-        DoSimpleCmd "$VVIDEO" "$*"
+        if [ -z "$DTOPEN_VVIDEO" ]; then TryXdgMimeOpen "$@"; fi
+        DoSimpleCmd "$VVIDEO" "$@"
+        ;;
+    dtopen_audio)
+        if [ -z "$DTOPEN_VAUDIO" ]; then TryXdgMimeOpen "$@"; fi
+        DoSimpleCmd "$VAUDIO" "$@"
+        ;;
+    dtopen_office)
+        if [ -z "$DTOPEN_VOFFICE" ]; then TryXdgMimeOpen "$@"; fi
+        DoSimpleCmd "$VOFFICE" "$@"
+        ;;
+    dtopen|dtopen_any)
+        TryXdgMimeOpen "$@"
+        DoSimpleCmd "xdg-open ck-browser dtpad" "$@"
         ;;
     *)
-XCOMM   Unknown
         ErrorMsg "${DTOPEN}: Unknown Helper Application" \
-                  "\"$APPNAME\" is not a recognized Helper Application.  \nKnown Helper Applications are:\n\n$COMMANDS"
+                  "\"$APPNAME\" is not a recognized Helper Application.\nKnown Helper Applications are:\n\n$COMMANDS"
         ;;
 esac
 
-XCOMM # Fini
 exit 0

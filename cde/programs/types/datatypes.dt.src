@@ -898,4 +898,215 @@ ACTION Print
 	MAP_ACTION		DisplayPDF
 }
 
+XCOMM #######################################################################
+XCOMM ## Modern XDG Image, Video, Audio & Office Formats (WP-12)
+
+DATA_ATTRIBUTES WEBP
+{
+	ACTIONS         Open
+	ICON            Dtimage
+	NAME_TEMPLATE   %s.webp
+	MIME_TYPE       image/webp
+	DESCRIPTION     WebP raster image file.
+	TYPE_LABEL      WEBP
+}
+DATA_CRITERIA WEBP1
+{
+	DATA_ATTRIBUTES_NAME WEBP
+	MODE            f
+	NAME_PATTERN    *.webp
+}
+DATA_CRITERIA WEBP2
+{
+	DATA_ATTRIBUTES_NAME WEBP
+	MODE            f
+	NAME_PATTERN    *.WEBP
+}
+ACTION Open
+{
+	LABEL           %|nls-1-Open|
+	ARG_TYPE        WEBP
+	TYPE            MAP
+	MAP_ACTION      DisplayImage
+}
+
+DATA_ATTRIBUTES SVG
+{
+	ACTIONS         Open
+	ICON            Dtimage
+	NAME_TEMPLATE   %s.svg
+	MIME_TYPE       image/svg+xml
+	DESCRIPTION     Scalable Vector Graphics (SVG) image file.
+	TYPE_LABEL      SVG
+}
+DATA_CRITERIA SVG1
+{
+	DATA_ATTRIBUTES_NAME SVG
+	MODE            f
+	NAME_PATTERN    *.svg
+}
+DATA_CRITERIA SVG2
+{
+	DATA_ATTRIBUTES_NAME SVG
+	MODE            f
+	NAME_PATTERN    *.SVG
+}
+ACTION Open
+{
+	LABEL           %|nls-1-Open|
+	ARG_TYPE        SVG
+	TYPE            MAP
+	MAP_ACTION      DisplayImage
+}
+
+DATA_ATTRIBUTES VIDEO_MODERN
+{
+	ACTIONS         Open
+	ICON            Dtmpg
+	MIME_TYPE       video/mp4
+	DESCRIPTION     Modern digital video file (MP4, MKV, WebM, MOV).
+	TYPE_LABEL      VIDEO
+}
+DATA_CRITERIA VIDEO_MODERN1
+{
+	DATA_ATTRIBUTES_NAME VIDEO_MODERN
+	MODE            f
+	NAME_PATTERN    *.mp4
+}
+DATA_CRITERIA VIDEO_MODERN2
+{
+	DATA_ATTRIBUTES_NAME VIDEO_MODERN
+	MODE            f
+	NAME_PATTERN    *.mkv
+}
+DATA_CRITERIA VIDEO_MODERN3
+{
+	DATA_ATTRIBUTES_NAME VIDEO_MODERN
+	MODE            f
+	NAME_PATTERN    *.webm
+}
+DATA_CRITERIA VIDEO_MODERN4
+{
+	DATA_ATTRIBUTES_NAME VIDEO_MODERN
+	MODE            f
+	NAME_PATTERN    *.mov
+}
+ACTION Open
+{
+	LABEL           %|nls-1-Open|
+	ARG_TYPE        VIDEO_MODERN
+	TYPE            MAP
+	MAP_ACTION      DisplayVideo
+}
+
+ACTION DisplayAudio
+{
+	LABEL           Audio Player
+	TYPE            COMMAND
+	ICON            Dtaudio
+	WINDOW_TYPE     NO_STDIO
+	ARG_COUNT       >0
+	EXEC_STRING     dtopen_audio %(File)Args%
+}
+DATA_ATTRIBUTES AUDIO_MODERN
+{
+	ACTIONS         Open
+	ICON            Dtaudio
+	MIME_TYPE       audio/mpeg
+	DESCRIPTION     Digital audio file (MP3, FLAC, OGG, M4A).
+	TYPE_LABEL      AUDIO
+}
+DATA_CRITERIA AUDIO_MODERN1
+{
+	DATA_ATTRIBUTES_NAME AUDIO_MODERN
+	MODE            f
+	NAME_PATTERN    *.mp3
+}
+DATA_CRITERIA AUDIO_MODERN2
+{
+	DATA_ATTRIBUTES_NAME AUDIO_MODERN
+	MODE            f
+	NAME_PATTERN    *.flac
+}
+DATA_CRITERIA AUDIO_MODERN3
+{
+	DATA_ATTRIBUTES_NAME AUDIO_MODERN
+	MODE            f
+	NAME_PATTERN    *.ogg
+}
+DATA_CRITERIA AUDIO_MODERN4
+{
+	DATA_ATTRIBUTES_NAME AUDIO_MODERN
+	MODE            f
+	NAME_PATTERN    *.m4a
+}
+ACTION Open
+{
+	LABEL           %|nls-1-Open|
+	ARG_TYPE        AUDIO_MODERN
+	TYPE            MAP
+	MAP_ACTION      DisplayAudio
+}
+
+ACTION DisplayOffice
+{
+	LABEL           Office Document Viewer
+	TYPE            COMMAND
+	ICON            Dtpenpd
+	WINDOW_TYPE     NO_STDIO
+	ARG_COUNT       >0
+	EXEC_STRING     dtopen_office %(File)Args%
+}
+DATA_ATTRIBUTES OFFICE_DOC
+{
+	ACTIONS         Open
+	ICON            Dtpenpd
+	MIME_TYPE       application/vnd.oasis.opendocument.text
+	DESCRIPTION     OpenDocument / Office Open XML document, spreadsheet, or presentation.
+	TYPE_LABEL      OFFICE_DOC
+}
+DATA_CRITERIA OFFICE_DOC1
+{
+	DATA_ATTRIBUTES_NAME OFFICE_DOC
+	MODE            f
+	NAME_PATTERN    *.odt
+}
+DATA_CRITERIA OFFICE_DOC2
+{
+	DATA_ATTRIBUTES_NAME OFFICE_DOC
+	MODE            f
+	NAME_PATTERN    *.ods
+}
+DATA_CRITERIA OFFICE_DOC3
+{
+	DATA_ATTRIBUTES_NAME OFFICE_DOC
+	MODE            f
+	NAME_PATTERN    *.odp
+}
+DATA_CRITERIA OFFICE_DOC4
+{
+	DATA_ATTRIBUTES_NAME OFFICE_DOC
+	MODE            f
+	NAME_PATTERN    *.docx
+}
+DATA_CRITERIA OFFICE_DOC5
+{
+	DATA_ATTRIBUTES_NAME OFFICE_DOC
+	MODE            f
+	NAME_PATTERN    *.xlsx
+}
+DATA_CRITERIA OFFICE_DOC6
+{
+	DATA_ATTRIBUTES_NAME OFFICE_DOC
+	MODE            f
+	NAME_PATTERN    *.pptx
+}
+ACTION Open
+{
+	LABEL           %|nls-1-Open|
+	ARG_TYPE        OFFICE_DOC
+	TYPE            MAP
+	MAP_ACTION      DisplayOffice
+}
+
 XCOMM ######################## EOF ############################################

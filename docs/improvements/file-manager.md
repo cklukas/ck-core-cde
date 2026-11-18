@@ -130,5 +130,24 @@ bounds and handle relative links without directory separators.
 
 File actions also accept filenames containing quotes and backslashes.
 
+## XDG MIME associations, `dtopen`, and *Open With...* (`WP-12`)
+
+- **Interactive *Open With...* dialog (`OpenWith.c`):** Selecting one or more
+  files and choosing **Selected → Open With...** or right-clicking a file and
+  choosing **Open With...** detects the target file's MIME type (magic-header
+  inspection plus extension/XDG lookup), ranks compatible XDG `.desktop`
+  handlers ahead of general applications, previews or edits the expanded command
+  line, and optionally persists the user's choice to
+  `~/.config/mimeapps.list` (`[Default Applications]` and
+  `[Added Associations]`).
+- **Modernized `dtopen` and datatypes:** `dtopen` (`dtopen_image`, `dtopen_pdf`,
+  `dtopen_ps`, `dtopen_video`, `dtopen_audio`, `dtopen_office`, `dtopen_any`)
+  consults `dtappintegrate-xdg --open-mime` (`~/.config/mimeapps.list`) first,
+  then modern Linux viewers (`papers`, `evince`, `okular`, `loupe`, `eog`,
+  `mpv`, `vlc`, `libreoffice`, `ck-browser`), and finally `xdg-open`. Built-in
+  CDE datatypes (`datatypes.dt`) include `WEBP`, `SVG`, `VIDEO_MODERN` (`.mp4`,
+  `.mkv`, `.webm`), `AUDIO_MODERN` (`.mp3`, `.flac`, `.ogg`, `.opus`, `.m4a`),
+  and `OFFICE_DOC` (`.odt`, `.ods`, `.odp`, `.docx`, `.xlsx`, `.pptx`).
+
 The [desktop gallery](../desktop.md#file-manager) shows File Manager browsing
 the staged CDE installation.

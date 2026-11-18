@@ -501,6 +501,11 @@ StartFirst()
     fi
 #endif
     StartFirst dtstart_appgather            # setup session applications
+    if [ -x "$DT_BINPATH/dtappintegrate" ]; then
+        "$DT_BINPATH/dtappintegrate" --xdg >/dev/null 2>&1 || true
+        "$DT_BINPATH/dtappintegrate" --xdg --watch \
+            --pidfile "${XDG_RUNTIME_DIR:-/tmp}/ck-xdg-watch-x11-$$.pid" >/dev/null 2>&1 &
+    fi
   fi
 
   HASH 

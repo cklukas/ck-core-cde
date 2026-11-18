@@ -145,6 +145,9 @@ extern Pixel		FPselectcolor;
 #define _XA__NET_WM_STATE_FULLSCREEN "_NET_WM_STATE_FULLSCREEN"
 #define _XA__NET_WM_STATE_ABOVE "_NET_WM_STATE_ABOVE"
 #define _XA__NET_WM_STATE_BELOW "_NET_WM_STATE_BELOW"
+#define _XA__NET_CLIENT_LIST "_NET_CLIENT_LIST"
+#define _XA__NET_CLIENT_LIST_STACKING "_NET_CLIENT_LIST_STACKING"
+#define _XA__NET_ACTIVE_WINDOW "_NET_ACTIVE_WINDOW"
 
 /* window manager exit value on fatal errors: */
 #define WM_ERROR_EXIT_VALUE	1
@@ -2075,6 +2078,9 @@ typedef struct _WmGlobalData
     Atom	xa__NET_WM_STATE_FULLSCREEN;
     Atom	xa__NET_WM_STATE_ABOVE;
     Atom	xa__NET_WM_STATE_BELOW;
+    Atom	xa__NET_CLIENT_LIST;
+    Atom	xa__NET_CLIENT_LIST_STACKING;
+    Atom	xa__NET_ACTIVE_WINDOW;
 
     /* atoms used for workspace management: */
 

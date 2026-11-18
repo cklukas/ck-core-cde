@@ -30,6 +30,11 @@ void ProcessNetWmFullscreenMonitors (ClientData *pCD,
     int top, int bottom, int left, int right);
 void ProcessNetWmState (ClientData *pCD, long action,
     Atom firstProperty, Atom secondProperty);
+void ProcessNetActiveWindow (ClientData *pCD, Time timestamp);
+void UpdateEwmhClientList (WmScreenData *pSD);
+void UpdateEwmhActiveWindow (WmScreenData *pSD, ClientData *pCD);
+Boolean HandleEwmhSuperKey (XKeyEvent *keyEvent, Boolean isPress);
+void CancelEwmhSuperTap (void);
 void SetupWmEwmh (void);
 
 #endif

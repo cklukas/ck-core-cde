@@ -328,10 +328,15 @@ atomically once both the Wayland socket and rootless `Xwayland` are ready.
   embedding, `StatusNotifier` tray, and toast banner),
   `check-dtwm-wayland-wp10.py` (`WP-10` `wlr-randr`, `dtstyle` *Display &
   Monitors*, `zwlr_foreign_toplevel_manager_v1`, `ext-image-copy-capture-v1`,
-  and `xdg-desktop-portal-wlr`), and `check-dtwm-wayland-wp11.py` (`WP-11`
+  and `xdg-desktop-portal-wlr`), `check-dtwm-wayland-wp11.py` (`WP-11`
   `zwp_text_input_v3`, `zwp_input_method_v2`, `zwp_input_popup_surface_v2` CJK
-  candidate popups, `keyboard_grab`, and `ext-session-lock-v1` isolation) run
-  automatically under `make check`.
+  candidate popups, `keyboard_grab`, and `ext-session-lock-v1` isolation), and
+  `check-dtwm-wayland-wp12.py` (`WP-12` parallel dual Wayland + X11 `Xvfb`
+  verification of `dtappintegrate --xdg --watch` live `inotify` indexing,
+  `Super`/`Super+Space` → `ck-launch` `libXm.so.9` activation, Wayland
+  `zwlr_foreign_toplevel_manager_v1` and X11 `_NET_CLIENT_LIST` /
+  `_NET_ACTIVE_WINDOW` window switching, and `dtopen` / `mimeapps.list`
+  persistence) run automatically under `make check`.
 - **Signed Ubuntu LTS `.deb` and APT repository qualification (`WP-08`):**
   `scripts/build-ubuntu-debs.py --verify-install` packages `ck-core-motif9`,
   `ck-core-fs-lib`, `ck-core-cde`, `ck-core-dtlogin`, and `ck-core-apps` into a

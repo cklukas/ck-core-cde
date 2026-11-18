@@ -83,6 +83,7 @@
    is being reread) not to reload icon positions from the .!dt<userid> file.
 */
 #define CLEAN_UP_OP    (1 << 21)
+#define OPEN_WITH      (1 << 22)
 
 
 #define NOT_DESKTOP         0
@@ -375,7 +376,7 @@ typedef struct
    Widget menu;
    Widget title;
    Widget wsPopup[6];
-   Widget objPopup[7];
+   Widget objPopup[8];
    Widget trash_objPopup[2];
    Widget action_separator;
 } FileMgrPopup;
@@ -476,12 +477,12 @@ typedef struct
 
 
 
-#define FM_POPUP_CHILDREN    18
-#define FM_POPUP_CHILDREN_NA 17
+#define FM_POPUP_CHILDREN    19
+#define FM_POPUP_CHILDREN_NA 18
 
 #define WS_BTNS              6
-#define OBJ_BTNS             7
-#define OBJ_BTNS_NA          6
+#define OBJ_BTNS             8
+#define OBJ_BTNS_NA          7
 #define TRASH_OBJ_BTNS       2
 
 #define BTN_PROPERTIES       0
@@ -495,10 +496,11 @@ typedef struct
 
 /* object buttons */
 #define BTN_STORAGE_SIZE     1
-#define BTN_PUTON            2
-#define BTN_TRASH            3
-#define BTN_ADD_TO_SHELF     4
-#define BTN_HELP             5
+#define BTN_OPEN_WITH        2
+#define BTN_PUTON            3
+#define BTN_TRASH            4
+#define BTN_ADD_TO_SHELF     5
+#define BTN_HELP             6
 
 /* trash object buttons */
 #define BTN_RESTORE          0

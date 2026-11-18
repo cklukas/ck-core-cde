@@ -15,6 +15,7 @@
 #include <limits.h>
 #include <pwd.h>
 #include <signal.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -501,21 +502,54 @@ static void ensure_appmanager_gathered_wl(void) {
     snprintf(check_path, sizeof(check_path),
              "/var/dt/appconfig/appmanager/%s/Desktop_Apps", usess);
     struct stat st;
-    if (stat(check_path, &st) == 0) {
-        return;
+    if (stat(check_path, &st) != 0) {
+        const char *gather_bin = CDE_INSTALLATION_TOP "/bin/dtappgather";
+        if (access(gather_bin, X_OK) == 0) {
+            pid_t pid = fork();
+            if (pid == 0) {
+                (void)setgid(getgid());
+                execl(gather_bin, "dtappgather", (char *)nullptr);
+                _exit(127);
+            } else if (pid > 0) {
+                int status = 0;
+                (void)waitpid(pid, &status, 0);
+            }
+        }
     }
-    const char *gather_bin = CDE_INSTALLATION_TOP "/bin/dtappgather";
-    if (access(gather_bin, X_OK) != 0) {
-        return;
-    }
-    pid_t pid = fork();
-    if (pid == 0) {
-        (void)setgid(getgid());
-        execl(gather_bin, "dtappgather", (char *)nullptr);
-        _exit(127);
-    } else if (pid > 0) {
-        int status = 0;
-        (void)waitpid(pid, &status, 0);
+
+    const char *xdg_bin = CDE_INSTALLATION_TOP "/bin/dtappintegrate";
+    if (access(xdg_bin, X_OK) == 0) {
+        pid_t xpid = fork();
+        if (xpid == 0) {
+            execl(xdg_bin, "dtappintegrate", "--xdg", (char *)nullptr);
+            _exit(127);
+        } else if (xpid > 0) {
+            int status = 0;
+            (void)waitpid(xpid, &status, 0);
+        }
+
+        /* Start live inotify watcher if not already running for this session */
+        const char *rdir = getenv("XDG_RUNTIME_DIR");
+        char pidfile[PATH_MAX];
+        snprintf(pidfile, sizeof(pidfile), "%s/ck-xdg-watch-wayland.pid",
+                 (rdir && rdir[0]) ? rdir : "/tmp");
+        bool already_watching = false;
+        FILE *pf = fopen(pidfile, "r");
+        if (pf) {
+            long wpid = 0;
+            if (fscanf(pf, "%ld", &wpid) == 1 && wpid > 1 && kill((pid_t)wpid, 0) == 0) {
+                already_watching = true;
+            }
+            fclose(pf);
+        }
+        if (!already_watching) {
+            pid_t wpid = fork();
+            if (wpid == 0) {
+                setsid();
+                execl(xdg_bin, "dtappintegrate", "--xdg", "--watch", "--pidfile", pidfile, (char *)nullptr);
+                _exit(127);
+            }
+        }
     }
 }
 

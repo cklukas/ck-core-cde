@@ -35,6 +35,7 @@
  */
 
 #include "WmGlobal.h"
+#include "WmEwmh.h"
 /*
  * include extern functions
  */
@@ -333,6 +334,8 @@ void SetKeyboardFocus (ClientData *pCD, long focusFlags)
 	pCD->focusPriority = ACTIVE_PSD->focusPriority;
 	SetFocusIndication (pCD);
     }
+
+    UpdateEwmhActiveWindow (ACTIVE_PSD, pCD);
 
 } /* END OF FUNCTION SetKeyboardFocus */
 

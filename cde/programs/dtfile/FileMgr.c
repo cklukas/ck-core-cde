@@ -10020,6 +10020,20 @@ CreateFmPopup (Widget w)
    XmStringFree (label_string);
 
 
+   /* Create 'Open With...' option -- object popup */
+   label_string = XmStringCreateLocalized ("Open With...");
+   XtSetArg (args[0], XmNlabelString, label_string);
+   XtSetArg (args[1], XmNmnemonic, 'O');
+
+   fileMgrPopup.objPopup[BTN_OPEN_WITH] = popupBtns[i] =
+          XmCreatePushButtonGadget (fileMgrPopup.menu, "openWithPopup", args, 2);
+   XtAddCallback (popupBtns[i++], XmNhelpCallback,
+                                  HelpRequestCB,
+                                  HELP_POPUP_MENU_STR);
+
+   XmStringFree (label_string);
+
+
    /* Create 'Put In Workspace' option -- object popup */
    label_string = XmStringCreateLocalized ((GETMESSAGE(20, 84, "Put in Workspace")));
    XtSetArg (args[0], XmNlabelString, label_string);

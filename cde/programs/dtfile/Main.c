@@ -508,7 +508,7 @@ Widget * usingHelpTrash = nullptr;
 unsigned int currentMenuStates = ( RENAME | MOVE | DUPLICATE | LINK | TRASH |
                                  MODIFY | CHANGEDIR | PREFERENCES | FILTER |
                                  FIND | CREATE_DIR | CREATE_FILE |
-                                 PUT_ON_DESKTOP | PUTBACK |
+                                 PUT_ON_DESKTOP | PUTBACK | OPEN_WITH |
                                  CLEAN_UP | MOVE_UP |
                                  HOME | CHANGE_DIR | TERMINAL);
 

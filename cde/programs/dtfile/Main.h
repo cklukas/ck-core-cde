@@ -204,7 +204,7 @@
 #define BRANCH_COLLAPSE 2
 
 /* defines for Selected Menu button */
-#define SELECTED_MENU_MAX  12  /* This is the number of children in Selected
+#define SELECTED_MENU_MAX  13  /* This is the number of children in Selected
                                   menu pane excluding all action items
                                   ('move to', 'copy to' ...
                                    'change permission', separator)

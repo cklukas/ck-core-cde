@@ -47,6 +47,7 @@
 #include "WmColormap.h"
 #include "WmError.h"
 #include "WmEvent.h"
+#include "WmEwmh.h"
 #include "WmFunction.h"
 #include "WmGraphics.h"
 #include "WmIDecor.h"
@@ -704,6 +705,7 @@ ManageWindow (WmScreenData *pSD, Window clientWindow, long manageFlags)
     AddClientToList (GetWorkspaceData (pSD, pCD->pWsList[0].wsID),
 	pCD, True /*on top*/);
     SetClientState (pCD, initialState, GetTimestamp());
+    UpdateEwmhClientList (pSD);
 
     if (pSD->showOpenWindowIcons &&
 	((initialState & ~UNSEEN_STATE) == NORMAL_STATE ||
