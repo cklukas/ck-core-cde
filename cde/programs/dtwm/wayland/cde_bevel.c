@@ -874,3 +874,164 @@ struct wlr_buffer *dtwm_render_task_switcher(DtwmServer *server, int *out_w, int
     cairo_destroy(cr);
     return &buf->base;
 }
+
+static void draw_osd_vector_icon(cairo_t *cr, const char *kind, bool muted, double bx, double by, double bsz) {
+    double cx = bx + bsz * 0.5;
+    double cy = by + bsz * 0.5;
+    cairo_save(cr);
+    cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
+    cairo_set_line_join(cr, CAIRO_LINE_JOIN_ROUND);
+
+    if (kind && strncmp(kind, "bright", 6) == 0) {
+        cairo_set_source_rgba(cr, 0.98, 0.80, 0.24, 1.0);
+        cairo_arc(cr, cx, cy, 7.0, 0.0, 2.0 * M_PI);
+        cairo_fill(cr);
+        cairo_set_line_width(cr, 2.2);
+        for (int i = 0; i < 8; ++i) {
+            double ang = (double)i * (M_PI / 4.0);
+            cairo_move_to(cr, cx + cos(ang) * 10.5, cy + sin(ang) * 10.5);
+            cairo_line_to(cr, cx + cos(ang) * 15.0, cy + sin(ang) * 15.0);
+        }
+        cairo_stroke(cr);
+    } else if (kind && strncmp(kind, "kbd", 3) == 0) {
+        cairo_set_source_rgba(cr, 0.35, 0.85, 0.95, 1.0);
+        cairo_set_line_width(cr, 2.0);
+        cairo_rectangle(cr, cx - 12.0, cy + 2.0, 24.0, 10.0);
+        cairo_stroke(cr);
+        for (int i = -1; i <= 1; ++i) {
+            cairo_move_to(cr, cx + i * 7.0, cy - 2.0);
+            cairo_line_to(cr, cx + i * 9.5, cy - 10.0);
+        }
+        cairo_stroke(cr);
+    } else if (kind && strcmp(kind, "mic") == 0) {
+        if (muted) cairo_set_source_rgba(cr, 0.92, 0.34, 0.34, 1.0);
+        else cairo_set_source_rgba(cr, 0.22, 0.86, 0.50, 1.0);
+        cairo_arc(cr, cx, cy - 5.0, 4.5, M_PI, 0.0);
+        cairo_arc(cr, cx, cy + 2.0, 4.5, 0.0, M_PI);
+        cairo_close_path(cr);
+        cairo_fill(cr);
+        cairo_set_line_width(cr, 2.0);
+        cairo_arc(cr, cx, cy + 1.5, 8.5, 0.0, M_PI);
+        cairo_stroke(cr);
+        cairo_move_to(cr, cx, cy + 10.0);
+        cairo_line_to(cr, cx, cy + 14.5);
+        cairo_move_to(cr, cx - 5.0, cy + 14.5);
+        cairo_line_to(cr, cx + 5.0, cy + 14.5);
+        cairo_stroke(cr);
+        if (muted) {
+            cairo_set_line_width(cr, 2.6);
+            cairo_move_to(cr, cx - 12.0, cy - 12.0);
+            cairo_line_to(cr, cx + 12.0, cy + 12.0);
+            cairo_stroke(cr);
+        }
+    } else if (kind && (strcmp(kind, "media") == 0 || strcmp(kind, "screenshot") == 0 || strcmp(kind, "lock") == 0)) {
+        cairo_set_source_rgba(cr, 0.35, 0.85, 0.95, 1.0);
+        cairo_move_to(cr, cx - 8.0, cy - 9.0);
+        cairo_line_to(cr, cx + 4.0, cy);
+        cairo_line_to(cr, cx - 8.0, cy + 9.0);
+        cairo_close_path(cr);
+        cairo_fill(cr);
+        cairo_rectangle(cr, cx + 7.0, cy - 9.0, 3.5, 18.0);
+        cairo_fill(cr);
+    } else {
+        if (muted) cairo_set_source_rgba(cr, 0.92, 0.34, 0.34, 1.0);
+        else cairo_set_source_rgba(cr, 0.22, 0.86, 0.50, 1.0);
+        cairo_move_to(cr, cx - 13.0, cy - 4.5);
+        cairo_line_to(cr, cx - 7.5, cy - 4.5);
+        cairo_line_to(cr, cx - 1.0, cy - 11.0);
+        cairo_line_to(cr, cx - 1.0, cy + 11.0);
+        cairo_line_to(cr, cx - 7.5, cy + 4.5);
+        cairo_line_to(cr, cx - 13.0, cy + 4.5);
+        cairo_close_path(cr);
+        cairo_fill(cr);
+
+        if (muted) {
+            cairo_set_line_width(cr, 2.5);
+            cairo_move_to(cr, cx + 4.0, cy - 5.5);
+            cairo_line_to(cr, cx + 13.0, cy + 5.5);
+            cairo_move_to(cr, cx + 13.0, cy - 5.5);
+            cairo_line_to(cr, cx + 4.0, cy + 5.5);
+            cairo_stroke(cr);
+        } else {
+            cairo_set_line_width(cr, 2.0);
+            cairo_arc(cr, cx + 0.5, cy, 6.5, -0.75, 0.75);
+            cairo_stroke(cr);
+            cairo_arc(cr, cx + 0.5, cy, 11.5, -0.75, 0.75);
+            cairo_stroke(cr);
+        }
+    }
+
+    cairo_restore(cr);
+}
+
+struct wlr_buffer *dtwm_render_osd_gauge(
+    const DtwmPalette *pal,
+    const char *kind,
+    int level,
+    bool muted,
+    const char *label,
+    int *out_w,
+    int *out_h
+) {
+    int w = 336;
+    int h = 84;
+    if (out_w) *out_w = w;
+    if (out_h) *out_h = h;
+
+    cairo_t *cr = nullptr;
+    DtwmCairoBuffer *buf = dtwm_cairo_buffer_create(w, h, &cr);
+    if (!buf) return nullptr;
+
+    const DtwmColorSet *cs = &pal->menu;
+    set_rgba(cr, cs->bg);
+    cairo_rectangle(cr, 0, 0, w, h);
+    cairo_fill(cr);
+
+    draw_bevel(cr, 0, 0, w, h, 3.0, cs->top_shadow, cs->bottom_shadow);
+    draw_bevel(cr, 5, 5, w - 10, h - 10, 1.0, cs->bottom_shadow, cs->top_shadow);
+
+    double bx = 14.0, by = 16.0, bsz = 52.0;
+    cairo_set_source_rgba(cr, 0.082, 0.106, 0.133, 1.0);
+    cairo_rectangle(cr, bx, by, bsz, bsz);
+    cairo_fill(cr);
+    draw_bevel(cr, bx, by, bsz, bsz, 2.0, cs->bottom_shadow, cs->top_shadow);
+    draw_osd_vector_icon(cr, kind, muted, bx, by, bsz);
+
+    draw_pango_label(cr, (label && label[0]) ? label : "System", 74.0, 14.0, w - 88.0, 24.0, cs->fg, false, true);
+
+    double tx = 78.0, ty = 44.0, tw = w - 94.0, th = 22.0;
+    cairo_set_source_rgba(cr, 0.075, 0.098, 0.122, 1.0);
+    cairo_rectangle(cr, tx, ty, tw, th);
+    cairo_fill(cr);
+    draw_bevel(cr, tx, ty, tw, th, 2.0, cs->bottom_shadow, cs->top_shadow);
+
+    int clamped = level < 0 ? 0 : (level > 100 ? 100 : level);
+    int lit_segs = muted ? 0 : ((clamped + 5) / 10);
+    if (!muted && clamped > 0 && lit_segs == 0) lit_segs = 1;
+
+    double pad = 4.0;
+    double gap = 3.0;
+    double seg_w = floor((tw - 2.0 * pad - 9.0 * gap) / 10.0);
+    double seg_h = th - 2.0 * pad;
+    for (int i = 0; i < 10; ++i) {
+        double sx = tx + pad + (double)i * (seg_w + gap);
+        double sy = ty + pad;
+        if (i < lit_segs) {
+            if (kind && strncmp(kind, "bright", 6) == 0) {
+                cairo_set_source_rgba(cr, 0.96, 0.78, 0.22, 1.0);
+            } else {
+                cairo_set_source_rgba(cr, 0.16, 0.82, 0.44, 1.0);
+            }
+        } else if (muted && i < (clamped + 9) / 10) {
+            cairo_set_source_rgba(cr, 0.48, 0.20, 0.22, 1.0);
+        } else {
+            cairo_set_source_rgba(cr, 0.18, 0.22, 0.26, 1.0);
+        }
+        cairo_rectangle(cr, sx, sy, seg_w, seg_h);
+        cairo_fill(cr);
+    }
+
+    cairo_surface_flush(buf->surface);
+    cairo_destroy(cr);
+    return &buf->base;
+}

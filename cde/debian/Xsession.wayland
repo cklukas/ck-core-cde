@@ -35,6 +35,9 @@ if [ -x /usr/dt/bin/dtappintegrate ]; then
     /usr/dt/bin/dtappintegrate --xdg --watch \
         --pidfile "${XDG_RUNTIME_DIR:-/tmp}/ck-xdg-watch-wayland.pid" >/dev/null 2>&1 &
 fi
+if [ -x /usr/dt/bin/cde-color-sync ]; then
+    /usr/dt/bin/cde-color-sync --daemon >/dev/null 2>&1 &
+fi
 export XBMLANGPATH="${XBMLANGPATH:-${HOME:+$HOME/.dt/icons/%B%M.bm:$HOME/.dt/icons/%B:}/usr/dt/appconfig/icons/%L/%B%M.bm:/usr/dt/appconfig/icons/%L/%B:/usr/dt/appconfig/icons/C/%B%M.bm:/usr/dt/appconfig/icons/C/%B}"
 
 # Synchronize CDE IMS selection (~/.dt/ims/*) or installed Wayland IME (fcitx5 / ibus)

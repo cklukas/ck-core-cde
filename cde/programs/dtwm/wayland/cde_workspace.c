@@ -1028,6 +1028,8 @@ static int find_ws_by_name_or_title(const DtwmServer *server, const char *tok) {
     return -1;
 }
 
+static void spawn_color_sync_for_profile(DtwmServer *server, DtwmAppearanceProfile profile);
+
 static bool dtwm_server_apply_palette_file(DtwmServer *server, const char *raw_name);
 
 static void handle_dt_wm_request_item(DtwmServer *server, const char *cmd) {
@@ -1444,7 +1446,37 @@ static bool dtwm_server_apply_palette_file(DtwmServer *server, const char *raw_n
     dtwm_update_front_panel(server);
     dtwm_icons_relayout(server);
     xcb_sync_wm_properties(server);
+    spawn_color_sync_for_profile(server, DTWM_PROFILE_CLASSIC);
     return true;
+}
+
+static void spawn_color_sync_for_profile(DtwmServer *server, DtwmAppearanceProfile profile) {
+    if (!server || server->greeter_mode) return;
+    const char *sync_arg =
+        (profile == DTWM_PROFILE_MODERN_DARK) ? "dark" :
+        (profile == DTWM_PROFILE_HIGH_CONTRAST) ? "high_contrast" : "light";
+    pid_t pid = fork();
+    if (pid == 0) {
+        if (fork() == 0) {
+            setsid();
+            if (server->wayland_socket) setenv("WAYLAND_DISPLAY", server->wayland_socket, 1);
+            if (server->xwayland && server->xwayland->display_name) {
+                setenv("DISPLAY", server->xwayland->display_name, 1);
+            }
+            if (server->exe_dir[0]) {
+                char local_bin[1152];
+                snprintf(local_bin, sizeof(local_bin), "%s/cde-color-sync", server->exe_dir);
+                execl(local_bin, "cde-color-sync", "--apply", sync_arg, (char *)nullptr);
+            }
+            execlp("cde-color-sync", "cde-color-sync", "--apply", sync_arg, (char *)nullptr);
+            execl(CDE_INSTALLATION_TOP "/bin/cde-color-sync", "cde-color-sync", "--apply", sync_arg, (char *)nullptr);
+            _exit(127);
+        }
+        _exit(0);
+    } else if (pid > 0) {
+        int st = 0;
+        (void)waitpid(pid, &st, 0);
+    }
 }
 
 void dtwm_server_apply_appearance_profile(DtwmServer *server, DtwmAppearanceProfile profile) {
@@ -1468,6 +1500,7 @@ void dtwm_server_apply_appearance_profile(DtwmServer *server, DtwmAppearanceProf
     dtwm_update_front_panel(server);
     dtwm_icons_relayout(server);
     xcb_sync_wm_properties(server);
+    spawn_color_sync_for_profile(server, profile);
 }
 
 static void xcb_drain_dt_wm_requests(DtwmServer *server) {
@@ -1564,6 +1597,7 @@ static void sync_xcb_resource_manager_profile(DtwmServer *server) {
             char xcursor_theme[128] = {0};
             int xcursor_size = server->cursor_size > 0 ? server->cursor_size : 24;
             bool cursor_changed = false;
+            bool tp_changed = false;
             bool has_auto_raise = false;
             snprintf(xcursor_theme, sizeof(xcursor_theme), "%s", server->cursor_theme);
 
@@ -1627,10 +1661,29 @@ static void sync_xcb_resource_manager_profile(DtwmServer *server) {
                         xcursor_size = sz;
                         cursor_changed = true;
                     }
+                } else if (xrdb_key_matches(line, klen, "touchpadTapToClick")) {
+                    server->tp_tap_to_click = parse_xrdb_bool(val, server->tp_tap_to_click);
+                    tp_changed = true;
+                } else if (xrdb_key_matches(line, klen, "touchpadNaturalScroll")) {
+                    server->tp_natural_scroll = parse_xrdb_bool(val, server->tp_natural_scroll);
+                    tp_changed = true;
+                } else if (xrdb_key_matches(line, klen, "touchpadClickfinger")) {
+                    server->tp_clickfinger = parse_xrdb_bool(val, server->tp_clickfinger);
+                    tp_changed = true;
+                } else if (xrdb_key_matches(line, klen, "touchpadDisableWhileTyping")) {
+                    server->tp_dwt = parse_xrdb_bool(val, server->tp_dwt);
+                    tp_changed = true;
+                } else if (xrdb_key_matches(line, klen, "touchpadDisableWithExternalMouse")) {
+                    server->tp_disable_with_ext_mouse = parse_xrdb_bool(val, server->tp_disable_with_ext_mouse);
+                    tp_changed = true;
                 }
             }
             if (cursor_changed) {
                 dtwm_reload_cursor_theme(server, xcursor_theme, xcursor_size);
+            }
+            if (tp_changed) {
+                dtwm_hw_reapply_all_pointers(server);
+                dtwm_hw_publish_state(server);
             }
             if (last_prof) {
                 dtwm_server_apply_appearance_profile(server, dtwm_parse_appearance_profile(last_prof));

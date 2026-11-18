@@ -1,0 +1,43 @@
+{
+  "work_package": "WP-13",
+  "date": "2026-11-18",
+  "branch": "x11_wayland",
+  "host_vm": "cde-ubuntu2604 (Ubuntu 26.04.1 LTS aarch64, Linux 7.0.0-34-generic, clang 21, wlroots 0.19)",
+  "motif_revision": "bd8043040a5257ac02a46c6ecf6cc711e9c099a0",
+  "build_timing": {
+    "start": "2026-11-18T12:14:04+01:00",
+    "end": "2026-11-18T12:14:08+01:00",
+    "elapsed_seconds": 4,
+    "mode": "incremental (-j4) across programs/dtwm, programs/dtstyle, programs/dtsession, programs/dtlogin/config, programs/localized/C/config"
+  },
+  "installed_sha256": {
+    "/usr/dt/bin/dtwm": "5102f75b8506f8c5617623f36911e4df4c89014541facdc091df683a76d7ec3e",
+    "/usr/dt/bin/dtwm-wayland": "2b94b84dfe72c2fad091264b3ec19a4697e4354baf092649e69e1643c80ef3bb",
+    "/usr/dt/bin/dtwm-media-ctl": "1db11db5b27d893aa2923748237b1da72afe0a468b6be85e6328c5b2dfca3f26",
+    "/usr/dt/bin/cde-color-sync": "7c5e9b46d734da0a09c2aaf3760577de1b6bb3bbac7f67c73d9a1ac5d089aa0b",
+    "/usr/dt/bin/dtstyle": "605a0e6a39baa2101bfbb78203fed2aa3e2ba863e6e02fd563aab806ce39f622",
+    "/usr/dt/bin/dtsession": "2cdaabc1f3b15eb8e79a2c414bb7ba0d34dfd2313c8bf3c445fd22d351f3d395",
+    "/usr/dt/bin/Xsession.wayland": "017c08b30be062ddb7bf572bfd2cef899caf0beaf4ace68c01fb525de1d14f16",
+    "/usr/share/xdg-desktop-portal/cde-portals.conf": "1109b1d6b2b0419353ad293c6c72b5180c95d03f5555a746a10eff4518048a06"
+  },
+  "features_verified": [
+    "Hardware multimedia, backlight, MPRIS, screenshot (Print -> ck-grab), and session lock (Super+L -> LockDisplay) bindings in both dtwm-wayland and classic X11 dtwm (WmEwmh.c passive XGrabKey + sys.dtwmrc)",
+    "Shared dtwm-media-ctl helper (wpctl -> pactl -> libasound, /sys/class/backlight + systemd-logind SetBrightness with 5% minimum display floor, MPRIS org.mpris.MediaPlayer2.Player)",
+    "Non-focus-stealing 336x84 3D-beveled CDE OSD gauge (_DT_OSD_STATE visible=1 -> 1.6s auto-hide visible=0) verified on both Wayland and X11 without FocusOut on the active client window",
+    "dtstyle Mouse Touchpad configuration section (Tap to Click, Natural Scrolling, Two-Finger Right-Click, Disable While Typing, Disable With External Mouse) backed by libinput IPC (_DT_WAYLAND_INPUT_STATE) on Wayland and XInput2 (libXi.so.6 libinput properties + _DT_X11_TOUCHPAD_STATE) on X11, plus RESOURCE_MANAGER persistence",
+    "3-finger horizontal touchpad swipe workspace switching (ws0 -> ws1 -> ws0) on both dtwm-wayland (wlr_pointer_gestures_v1 / f.touchpad_swipe) and X11 dtwm (XI_GestureSwipe* / _DT_WM_SWIPE)",
+    "Cross-toolkit dark/light mode synchronization daemon (cde-color-sync) updating org.freedesktop.portal.Settings (color-scheme uint32 1 / 2 + SettingChanged), X11 _XSETTINGS_S0 binary _XSETTINGS_SETTINGS (Net/ThemeName), gsettings, and ~/.config/gtk-{3,4}.0/settings.ini live on both Wayland and X11"
+  ],
+  "commands": [
+    "CC=clang python3 cde/programs/dtwm/tests/check-dtwm-wayland-wp13.py --compositor ./dtwm-wayland (parallel Wayland + X11 Xvfb lanes: 4.67s PASS)",
+    "CC=clang python3 cde/programs/dtwm/tests/check-dtwm-wayland-wp12.py --compositor ./dtwm-wayland (3.11s PASS)",
+    "make -j4 -C /var/tmp/ck-wayland-build/wp00/cde-build/programs/dtstyle check (5/5 PASS)",
+    "make -j4 -C /var/tmp/ck-wayland-build/wp00/cde-build/programs/dtsession check (16/16 PASS)",
+    "ckdocs check --config ckdocs.yml --strict"
+  ],
+  "screenshots": {
+    "live_wayland_ws1_mouse_touchpad_and_osd": "wp13_live_mouse_touchpad_and_osd.png",
+    "live_wayland_ws2_swipe_mouse_touchpad_and_osd": "wp13_live_clean_ws2_touchpad_and_osd.png"
+  },
+  "result": "pass"
+}

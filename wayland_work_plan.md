@@ -162,7 +162,7 @@ flowchart TD
   - **XDG MIME Integration, `dtopen` Modernization & *"Open With..."*:** Update `dtopen` to consult `xdg-mime` / `~/.config/mimeapps.list` / `xdg-open` and modern Ubuntu viewers (`papers`, `evince`, `loupe`, `eog`, `mpv`, `ck-browser`) ahead of legacy `xv`/`xpdf`; add a Motif *"Open With..."* dialog in `dtfile` listing compatible `.desktop` handlers with a *"Set as default"* toggle; and add software-store launch discovery (*Ubuntu App Center* / `gnome-software` / `synaptic`) plus an optional pending-security-updates indicator in `ck-status`.
 - **Parallel Wayland + X11 Acceptance Gate**: Automated tests run in parallel under `dtwm-wayland` and `Xvfb` + X11 `dtwm`, installing synthetic `.desktop` entries and verifying live *Application Manager* refresh, `Super` → `ck-launch` fuzzy app/window activation, and `dtfile` double-click + *"Open With..."* `mimeapps.list` persistence.
 
-### [ ] WP-13 — Hardware Media/Brightness Keys + OSD, Laptop Touchpad Settings (`dtstyle`) & Toolkit Dark-Mode Sync
+### [x] WP-13 — Hardware Media/Brightness Keys + OSD, Laptop Touchpad Settings (`dtstyle`) & Toolkit Dark-Mode Sync
 - **Closes**: `GAP-SHELL-01`, `GAP-SHELL-02`, `GAP-SYS-05`
 - **Repos**: `ck-core-cde` (`cde/programs/dtwm/`, `cde/programs/dtwm/wayland/`, `cde/programs/dtstyle/`, `cde/programs/dtsession/`)
 - **Dual Wayland + X11 Scope**:

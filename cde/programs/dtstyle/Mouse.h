@@ -47,6 +47,7 @@
 extern void popup_mouseBB( Widget shell) ;
 extern void restoreMouse( Widget shell, XrmDatabase db) ;
 extern void saveMouse( int fd) ;
+extern void ApplyAndPersistTouchpadCLI( int tap, int nat, int cf, int dwt, int dext) ;
 
 
 #endif /* _mouse_h */

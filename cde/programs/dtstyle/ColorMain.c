@@ -45,6 +45,7 @@
 #include <locale.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <errno.h>
 #include <X11/Intrinsic.h>
@@ -972,9 +973,28 @@ selectPaletteCB(
 	    XtSetValues (colorDialog.buttonsTB, args, n);
             XmStringFree(string);
 
-            (void)XmApplyAppearanceProfile(
-                style.display,
-                DtstyleProfileForPaletteName(pCurrentPalette->name));
+            {
+                XmAppearanceProfile sel_prof = DtstyleProfileForPaletteName(pCurrentPalette->name);
+                (void)XmApplyAppearanceProfile(style.display, sel_prof);
+                {
+                    const char *sync_arg =
+                        (sel_prof == XmAPPEARANCE_MODERN_DARK) ? "dark" :
+                        (sel_prof == XmAPPEARANCE_HIGH_CONTRAST) ? "high_contrast" : "light";
+                    pid_t spid = fork();
+                    if (spid == 0) {
+                        if (fork() == 0) {
+                            setsid();
+                            execlp("cde-color-sync", "cde-color-sync", "--apply", sync_arg, (char *)nullptr);
+                            execl(CDE_INSTALLATION_TOP "/bin/cde-color-sync", "cde-color-sync", "--apply", sync_arg, (char *)nullptr);
+                            _exit(127);
+                        }
+                        _exit(0);
+                    } else if (spid > 0) {
+                        int st = 0;
+                        (void)waitpid(spid, &st, 0);
+                    }
+                }
+            }
             if (DtstyleIsWaylandSession() && pCurrentPalette->name) {
                 char wcmd[192];
                 snprintf(wcmd, sizeof(wcmd), "f.set_palette %s", pCurrentPalette->name);

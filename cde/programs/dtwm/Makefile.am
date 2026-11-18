@@ -1,6 +1,6 @@
 MAINTAINERCLEANFILES = Makefile.in
 
-bin_PROGRAMS = dtwm dtfplist
+bin_PROGRAMS = dtwm dtfplist dtwm-media-ctl cde-color-sync
 
 if BUILD_DTWM_WAYLAND
 bin_PROGRAMS += dtwm-wayland dtwm-panel
@@ -16,7 +16,7 @@ EXTRA_DIST = tests/check-property-readers.py tests/property-client.c \
              tests/check-dtwm-wayland-icons.py tests/check-dtwm-wayland-wp05.py \
              tests/check-dtwm-wayland-wp06.py tests/check-dtwm-wayland-wp09.py \
              tests/check-dtwm-wayland-wp10.py tests/check-dtwm-wayland-wp11.py \
-             tests/check-dtwm-wayland-wp12.py \
+             tests/check-dtwm-wayland-wp12.py tests/check-dtwm-wayland-wp13.py \
              wayland/protocols/wlr-layer-shell-unstable-v1.xml \
              wayland/protocols/wlr-output-power-management-unstable-v1.xml \
              wayland/protocols/wlr-foreign-toplevel-management-unstable-v1.xml \
@@ -40,6 +40,7 @@ if BUILD_DTWM_WAYLAND
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp10.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp11.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp12.py --compositor ./dtwm-wayland
+	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp13.py --compositor ./dtwm-wayland
 endif
 
 noinst_DATA = sys.dtwmrc Dtwm.defs
@@ -127,7 +128,7 @@ AM_CPPFLAGS = -DLARGECURSORS -DR2_COMPAT -DOPAQUE -DSHAPE -DUNMAP_ON_RESTART \
 	      -DBATCH_DRAG_REQUESTS -DCDE_INSTALLATION_TOP=\"$(CDE_INSTALLATION_TOP)\" \
 	      -DCDE_CONFIGURATION_TOP=\"$(CDE_CONFIGURATION_TOP)\"
 
-dtwm_LDADD = $(DTCLIENTLIBS) $(XTOOLLIB) $(XCURSORLIB)
+dtwm_LDADD = $(DTCLIENTLIBS) $(XTOOLLIB) $(XCURSORLIB) -ldl
 dtfplist_LDADD = $(DTCLIENTLIBS) $(TIRPCLIB) $(XTOOLLIB)
 
 if SOLARIS
@@ -154,6 +155,13 @@ dtwm_SOURCES = WmCDInfo.c      WmCDecor.c      WmCEvent.c \
                WmPresence.c    WmWrkspace.c    WmXSMP.c
 
 dtfplist_SOURCES = Print.c Parse.c DataBaseLoad.c WmParse.c Session.c
+
+dtwm_media_ctl_SOURCES = dtwm_media_ctl.c
+dtwm_media_ctl_LDADD = -ldl -lm
+
+cde_color_sync_SOURCES = cde_color_sync.c
+cde_color_sync_CPPFLAGS = $(AM_CPPFLAGS)
+cde_color_sync_LDADD = -lX11 -ldl
 
 SCRIPTFLAGS = -DCDE_INSTALLATION_TOP=$(CDE_INSTALLATION_TOP) \
               -DCDE_CONFIGURATION_TOP=$(CDE_CONFIGURATION_TOP)

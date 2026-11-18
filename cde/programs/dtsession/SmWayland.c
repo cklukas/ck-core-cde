@@ -507,7 +507,6 @@ static void ensure_appmanager_gathered_wl(void) {
         if (access(gather_bin, X_OK) == 0) {
             pid_t pid = fork();
             if (pid == 0) {
-                (void)setgid(getgid());
                 execl(gather_bin, "dtappgather", (char *)nullptr);
                 _exit(127);
             } else if (pid > 0) {
@@ -530,17 +529,24 @@ static void ensure_appmanager_gathered_wl(void) {
 
         /* Start live inotify watcher if not already running for this session */
         const char *rdir = getenv("XDG_RUNTIME_DIR");
+        const char *hdir = getenv("HOME");
         char pidfile[PATH_MAX];
-        snprintf(pidfile, sizeof(pidfile), "%s/ck-xdg-watch-wayland.pid",
-                 (rdir && rdir[0]) ? rdir : "/tmp");
-        bool already_watching = false;
-        FILE *pf = fopen(pidfile, "r");
-        if (pf) {
-            long wpid = 0;
-            if (fscanf(pf, "%ld", &wpid) == 1 && wpid > 1 && kill((pid_t)wpid, 0) == 0) {
-                already_watching = true;
+        pidfile[0] = '\0';
+        if (rdir && rdir[0] == '/') {
+            snprintf(pidfile, sizeof(pidfile), "%s/ck-xdg-watch-wayland.pid", rdir);
+        } else if (hdir && hdir[0] == '/') {
+            snprintf(pidfile, sizeof(pidfile), "%s/.dt/ck-xdg-watch-wayland.pid", hdir);
+        }
+        bool already_watching = (pidfile[0] == '\0');
+        if (!already_watching) {
+            FILE *pf = fopen(pidfile, "r");
+            if (pf) {
+                long wpid = 0;
+                if (fscanf(pf, "%ld", &wpid) == 1 && wpid > 1 && kill((pid_t)wpid, 0) == 0) {
+                    already_watching = true;
+                }
+                fclose(pf);
             }
-            fclose(pf);
         }
         if (!already_watching) {
             pid_t wpid = fork();
@@ -549,6 +555,16 @@ static void ensure_appmanager_gathered_wl(void) {
                 execl(xdg_bin, "dtappintegrate", "--xdg", "--watch", "--pidfile", pidfile, (char *)nullptr);
                 _exit(127);
             }
+        }
+    }
+
+    const char *csync_bin = CDE_INSTALLATION_TOP "/bin/cde-color-sync";
+    if (access(csync_bin, X_OK) == 0) {
+        pid_t cpid = fork();
+        if (cpid == 0) {
+            setsid();
+            execl(csync_bin, "cde-color-sync", "--daemon", (char *)nullptr);
+            _exit(127);
         }
     }
 }

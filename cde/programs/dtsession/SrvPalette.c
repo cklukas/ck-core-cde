@@ -63,6 +63,8 @@ static char rcsid[] =
 **********************************<+>*************************************/
 
 #include <ctype.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 #include <X11/Xatom.h>
 #include <Xm/Appearance.h>
@@ -357,6 +359,25 @@ InitializeDtcolor(
                  "*appearanceProfile: %s\n",
                  ProfileNameString(profile));
         _DtAddToResource(dpy, xrdb_string);
+    }
+
+    {
+        const char *sync_arg =
+            (profile == XmAPPEARANCE_MODERN_DARK) ? "dark" :
+            (profile == XmAPPEARANCE_HIGH_CONTRAST) ? "high_contrast" : "light";
+        pid_t spid = fork();
+        if (spid == 0) {
+            if (fork() == 0) {
+                setsid();
+                execlp("cde-color-sync", "cde-color-sync", "--apply", sync_arg, (char *)nullptr);
+                execl(CDE_INSTALLATION_TOP "/bin/cde-color-sync", "cde-color-sync", "--apply", sync_arg, (char *)nullptr);
+                _exit(127);
+            }
+            _exit(0);
+        } else if (spid > 0) {
+            int st = 0;
+            (void)waitpid(spid, &st, 0);
+        }
     }
 
     /* don't set resources if writeXrdbColors == false */

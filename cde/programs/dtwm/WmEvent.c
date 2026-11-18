@@ -843,7 +843,11 @@ Boolean WmDispatchWsEvent (XEvent *event)
 	     * function (e.g., shuffle the client windows).
 	     */
 
-	    HandleEwmhSuperKey ((XKeyEvent *)event, True);
+	    if (HandleEwmhSuperKey ((XKeyEvent *)event, True))
+	    {
+		dispatchEvent = False;
+		break;
+	    }
 	    dispatchEvent = HandleWsKeyPress ((XKeyEvent *)event);
 	    break;
 	}
@@ -1036,6 +1040,18 @@ Boolean WmDispatchWsEvent (XEvent *event)
 	case MapNotify:
 	{
 	    WmFpUpdateTrashOpenIcon (DISPLAY);
+	    break;
+	}
+
+	case ClientMessage:
+	{
+	    HandleEwmhRootClientMessage ((XClientMessageEvent *)event);
+	    break;
+	}
+
+	case GenericEvent:
+	{
+	    HandleEwmhGenericEvent (event);
 	    break;
 	}
 

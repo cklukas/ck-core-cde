@@ -91,6 +91,7 @@
 #include "SaveRestore.h"
 #include "ColorPalette.h"
 #include "Backdrop.h"
+#include "Mouse.h"
 
 void loadDatabase(void); // ColorMain.c
 void ListenForWorkspaceChange(void); // Protocol.c
@@ -328,6 +329,10 @@ openStartupDialogByName(Widget shell, const char *name)
         popup_displayBB(shell);
     } else if (strncmp(name, "Backdrop", 8) == 0) {
         BackdropDialog(shell);
+    } else if (strncmp(name, "Mouse", 5) == 0 || strncmp(name, "Touchpad", 8) == 0) {
+        popup_mouseBB(shell);
+    } else if (strncmp(name, "Color", 5) == 0) {
+        Customize(shell);
     }
 }
 
@@ -534,6 +539,8 @@ malloc_trace(0);
     _DtEnvControl(DT_ENV_SET); 
 
     Boolean openDisplayDialogOnStart = False;
+    Boolean applyTouchpadCli = False;
+    int cliTp[5] = { 1, 0, 1, 1, 0 };
     {
         int out_argc = 1;
         for (int ai = 1; ai < argc; ++ai) {
@@ -549,6 +556,29 @@ malloc_trace(0);
                 strcmp(argv[ai], "--backdrop") == 0) {
                 openDisplayDialogOnStart = True;
                 s_startupDialogName = "Backdrop";
+                continue;
+            }
+            if (strcmp(argv[ai], "-mouse") == 0 ||
+                strcmp(argv[ai], "--mouse") == 0 ||
+                strcmp(argv[ai], "-touchpad") == 0 ||
+                strcmp(argv[ai], "--touchpad") == 0) {
+                openDisplayDialogOnStart = True;
+                s_startupDialogName = "Mouse";
+                continue;
+            }
+            if (strcmp(argv[ai], "-color") == 0 ||
+                strcmp(argv[ai], "--color") == 0) {
+                openDisplayDialogOnStart = True;
+                s_startupDialogName = "Color";
+                continue;
+            }
+            if ((strcmp(argv[ai], "-apply-touchpad") == 0 ||
+                 strcmp(argv[ai], "--apply-touchpad") == 0) &&
+                ai + 5 < argc) {
+                applyTouchpadCli = True;
+                for (int ti = 0; ti < 5; ++ti)
+                    cliTp[ti] = atoi(argv[ai + 1 + ti]) ? 1 : 0;
+                ai += 5;
                 continue;
             }
             argv[out_argc++] = argv[ai];
@@ -608,6 +638,14 @@ malloc_trace(0);
     
     if (progName = DtStrrchr(argv[0], '/')) progName++;
     else progName = argv[0];
+
+    if (applyTouchpadCli)
+    {
+        InitDtstyleProtocol();
+        ApplyAndPersistTouchpadCLI(cliTp[0], cliTp[1], cliTp[2], cliTp[3], cliTp[4]);
+        XSync(style.display, False);
+        return 0;
+    }
 
     /* Get the lock established to ensure only one dtstyle process
      * is running per screen .. first malloc enough space*/

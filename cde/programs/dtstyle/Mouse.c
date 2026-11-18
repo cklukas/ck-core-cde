@@ -39,10 +39,13 @@
 /*$XConsortium: Mouse.c /main/5 1996/07/19 13:45:42 pascale $*/
 
 #include <X11/Xlib.h>
+#include <X11/Xatom.h>
+#include <dlfcn.h>
 #include <errno.h>
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <dirent.h>
 #include <sys/stat.h>
 
@@ -163,6 +166,12 @@ require the use of Button 1."))
 #define CURSOR_PREVIEW_MSG ((char *)GETMESSAGE(9, 23, "Preview"))
 #define CURSOR_PREVIEW_HINT_MSG ((char *)GETMESSAGE(9, 24, "Move pointer here to preview"))
 #define RESTART_WM_MSG ((char *)GETMESSAGE(9, 25, "Restart Window Manager now (recommended)"))
+#define TOUCHPAD_FRAME_MSG ((char *)GETMESSAGE(9, 32, "Touchpad"))
+#define TP_TAP_MSG         ((char *)GETMESSAGE(9, 33, "Tap to Click"))
+#define TP_NATURAL_MSG     ((char *)GETMESSAGE(9, 34, "Natural Scrolling"))
+#define TP_CLICKFINGER_MSG ((char *)GETMESSAGE(9, 35, "Two-Finger Right-Click"))
+#define TP_DWT_MSG         ((char *)GETMESSAGE(9, 36, "Disable While Typing"))
+#define TP_DEXT_MSG        ((char *)GETMESSAGE(9, 37, "Disable With External Mouse"))
 
 #define B2	        "Dtms2B.bm"
 #define B2_REV	        "Dtms2BR.bm"
@@ -330,6 +339,25 @@ typedef struct {
     Pixmap      cursorPreviewPixmaps[CURSOR_PREVIEW_COUNT];
     int         cursorPreviewPixmapW[CURSOR_PREVIEW_COUNT];
     int         cursorPreviewPixmapH[CURSOR_PREVIEW_COUNT];
+    Widget      touchpadFrame;
+    Widget      touchpadFrameTitle;
+    Widget      touchpadForm;
+    Widget      tpTapToggle;
+    Widget      tpNaturalToggle;
+    Widget      tpClickfingerToggle;
+    Widget      tpDwtToggle;
+    Widget      tpDextToggle;
+    Boolean     tpTap;
+    Boolean     tpNatural;
+    Boolean     tpClickfinger;
+    Boolean     tpDwt;
+    Boolean     tpDext;
+    Boolean     origTpTap;
+    Boolean     origTpNatural;
+    Boolean     origTpClickfinger;
+    Boolean     origTpDwt;
+    Boolean     origTpDext;
+    Boolean     tpChanged;
 } Mouse;
 
 static Widget warnDialog;
@@ -629,6 +657,315 @@ RefreshXrmDatabaseFromRoot(void)
     XrmSetDatabase(style.display, newDb);
     if (oldDb)
 	XrmDestroyDatabase(oldDb);
+}
+
+static int
+IgnoreXiError(Display *dpy, XErrorEvent *err)
+{
+    (void)dpy;
+    (void)err;
+    return 0;
+}
+
+static Boolean
+ParseBoolValue(const char *val, Boolean fallback)
+{
+    if (!val || !val[0])
+	return fallback;
+    while (*val == ' ' || *val == '\t')
+	++val;
+    if (*val == '1' || *val == 't' || *val == 'T' ||
+	*val == 'y' || *val == 'Y' || strncasecmp(val, "on", 2) == 0)
+	return True;
+    if (*val == '0' || *val == 'f' || *val == 'F' ||
+	*val == 'n' || *val == 'N' || strncasecmp(val, "off", 3) == 0)
+	return False;
+    return fallback;
+}
+
+static void
+LoadTouchpadResources(Boolean *tapOut, Boolean *natOut, Boolean *cfOut,
+		      Boolean *dwtOut, Boolean *dextOut)
+{
+    Boolean tap = True, nat = False, cf = True, dwt = True, dext = False;
+    Atom actualType = None;
+    int actualFormat = 0;
+    unsigned long nitems = 0, bytesAfter = 0;
+    unsigned char *prop = nullptr;
+    XrmDatabase db = nullptr;
+    Boolean freeDb = False;
+
+    if (style.display && style.root != None &&
+	XGetWindowProperty(style.display, style.root, XA_RESOURCE_MANAGER,
+			   0, 65536, False, XA_STRING, &actualType,
+			   &actualFormat, &nitems, &bytesAfter, &prop) == Success &&
+	prop && actualFormat == 8)
+    {
+	db = XrmGetStringDatabase((const char *)prop);
+	freeDb = (db != nullptr);
+    }
+    if (prop)
+	XFree(prop);
+    if (!db && style.display)
+	db = XrmGetDatabase(style.display);
+
+    if (db)
+    {
+	char *typeRet = nullptr;
+	XrmValue val = { 0, nullptr };
+	if (XrmGetResource(db, "dtstyle.touchpadTapToClick",
+			   "Dtstyle.TouchpadTapToClick", &typeRet, &val) && val.addr)
+	    tap = ParseBoolValue(val.addr, tap);
+	if (XrmGetResource(db, "dtstyle.touchpadNaturalScroll",
+			   "Dtstyle.TouchpadNaturalScroll", &typeRet, &val) && val.addr)
+	    nat = ParseBoolValue(val.addr, nat);
+	if (XrmGetResource(db, "dtstyle.touchpadClickfinger",
+			   "Dtstyle.TouchpadClickfinger", &typeRet, &val) && val.addr)
+	    cf = ParseBoolValue(val.addr, cf);
+	if (XrmGetResource(db, "dtstyle.touchpadDisableWhileTyping",
+			   "Dtstyle.TouchpadDisableWhileTyping", &typeRet, &val) && val.addr)
+	    dwt = ParseBoolValue(val.addr, dwt);
+	if (XrmGetResource(db, "dtstyle.touchpadDisableWithExternalMouse",
+			   "Dtstyle.TouchpadDisableWithExternalMouse", &typeRet, &val) && val.addr)
+	    dext = ParseBoolValue(val.addr, dext);
+	if (freeDb)
+	    XrmDestroyDatabase(db);
+    }
+
+    if (tapOut)  *tapOut  = tap;
+    if (natOut)  *natOut  = nat;
+    if (cfOut)   *cfOut   = cf;
+    if (dwtOut)  *dwtOut  = dwt;
+    if (dextOut) *dextOut = dext;
+}
+
+static Boolean
+DeviceHasPropertyAtom(Atom *props, int nprops, Atom target)
+{
+    int i;
+    if (!props || target == None)
+	return False;
+    for (i = 0; i < nprops; ++i)
+    {
+	if (props[i] == target)
+	    return True;
+    }
+    return False;
+}
+
+static void
+ApplyTouchpadBackend(Boolean tap, Boolean nat, Boolean cf, Boolean dwt, Boolean dext)
+{
+    if (!style.display)
+	return;
+
+    if (DtstyleWaylandActive())
+    {
+	char cmd[128];
+	snprintf(cmd, sizeof(cmd), "f.set_touchpad %d %d %d %d %d",
+		 tap ? 1 : 0, nat ? 1 : 0, cf ? 1 : 0, dwt ? 1 : 0, dext ? 1 : 0);
+	DtstyleSendWaylandRequest(cmd);
+	return;
+    }
+
+    /* Classic X11 / XLibre backend via XInput2 libinput properties */
+    {
+	struct LocalXIDeviceInfo {
+	    int deviceid;
+	    char *name;
+	    int use;
+	    int attachment;
+	    Bool enabled;
+	    int num_classes;
+	    void **classes;
+	};
+	typedef int (*pfn_XIQueryVersion)(Display *, int *, int *);
+	typedef struct LocalXIDeviceInfo *(*pfn_XIQueryDevice)(Display *, int, int *);
+	typedef void (*pfn_XIFreeDeviceInfo)(struct LocalXIDeviceInfo *);
+	typedef Atom *(*pfn_XIListProperties)(Display *, int, int *);
+	typedef void (*pfn_XIChangeProperty)(Display *, int, Atom, Atom, int, int,
+					     unsigned char *, int);
+
+	int evBase = 0, errBase = 0, xiOp = 0;
+	int xiDevicesConfigured = 0;
+	void *xiLib = nullptr;
+
+	if (XQueryExtension(style.display, "XInputExtension", &xiOp, &evBase, &errBase))
+	    xiLib = dlopen("libXi.so.6", RTLD_LAZY | RTLD_LOCAL);
+
+	if (xiLib)
+	{
+	    pfn_XIQueryVersion fnVer = (pfn_XIQueryVersion)dlsym(xiLib, "XIQueryVersion");
+	    pfn_XIQueryDevice fnQuery = (pfn_XIQueryDevice)dlsym(xiLib, "XIQueryDevice");
+	    pfn_XIFreeDeviceInfo fnFree = (pfn_XIFreeDeviceInfo)dlsym(xiLib, "XIFreeDeviceInfo");
+	    pfn_XIListProperties fnList = (pfn_XIListProperties)dlsym(xiLib, "XIListProperties");
+	    pfn_XIChangeProperty fnChange = (pfn_XIChangeProperty)dlsym(xiLib, "XIChangeProperty");
+	    int maj = 2, min = 0;
+
+	    if (fnVer && fnQuery && fnFree && fnList && fnChange &&
+		fnVer(style.display, &maj, &min) == Success && maj >= 2)
+	    {
+		Atom aTap = XInternAtom(style.display, "libinput Tapping Enabled", False);
+		Atom aNat = XInternAtom(style.display, "libinput Natural Scrolling Enabled", False);
+		Atom aCf  = XInternAtom(style.display, "libinput Click Method Enabled", False);
+		Atom aDwt = XInternAtom(style.display, "libinput Disable While Typing Enabled", False);
+		Atom aSend = XInternAtom(style.display, "libinput Send Events Mode Enabled", False);
+		int ndevs = 0;
+		int (*oldErr)(Display *, XErrorEvent *) = XSetErrorHandler(IgnoreXiError);
+		struct LocalXIDeviceInfo *devs = fnQuery(style.display, 0 /* XIAllDevices */, &ndevs);
+
+		if (devs)
+		{
+		    int di;
+		    for (di = 0; di < ndevs; ++di)
+		    {
+			int nprops = 0;
+			Atom *props;
+			Boolean touched = False;
+			/* XISlavePointer = 4, XIFloatingSlave = 5 */
+			if (devs[di].use != 4 && devs[di].use != 5)
+			    continue;
+			props = fnList(style.display, devs[di].deviceid, &nprops);
+			if (!props)
+			    continue;
+
+			if (DeviceHasPropertyAtom(props, nprops, aTap))
+			{
+			    unsigned char v = (unsigned char)(tap ? 1 : 0);
+			    fnChange(style.display, devs[di].deviceid, aTap, XA_INTEGER,
+				     8, PropModeReplace, &v, 1);
+			    touched = True;
+			}
+			if (DeviceHasPropertyAtom(props, nprops, aNat))
+			{
+			    unsigned char v = (unsigned char)(nat ? 1 : 0);
+			    fnChange(style.display, devs[di].deviceid, aNat, XA_INTEGER,
+				     8, PropModeReplace, &v, 1);
+			    touched = True;
+			}
+			if (DeviceHasPropertyAtom(props, nprops, aCf))
+			{
+			    unsigned char v[2];
+			    v[0] = (unsigned char)(cf ? 0 : 1); /* button_areas */
+			    v[1] = (unsigned char)(cf ? 1 : 0); /* clickfinger */
+			    fnChange(style.display, devs[di].deviceid, aCf, XA_INTEGER,
+				     8, PropModeReplace, v, 2);
+			    touched = True;
+			}
+			if (DeviceHasPropertyAtom(props, nprops, aDwt))
+			{
+			    unsigned char v = (unsigned char)(dwt ? 1 : 0);
+			    fnChange(style.display, devs[di].deviceid, aDwt, XA_INTEGER,
+				     8, PropModeReplace, &v, 1);
+			    touched = True;
+			}
+			if (DeviceHasPropertyAtom(props, nprops, aSend))
+			{
+			    unsigned char v[2];
+			    v[0] = 0; /* disabled */
+			    v[1] = (unsigned char)(dext ? 1 : 0); /* disabled_on_external_mouse */
+			    fnChange(style.display, devs[di].deviceid, aSend, XA_INTEGER,
+				     8, PropModeReplace, v, 2);
+			    touched = True;
+			}
+			if (touched)
+			    ++xiDevicesConfigured;
+			XFree(props);
+		    }
+		    fnFree(devs);
+		}
+		XSync(style.display, False);
+		XSetErrorHandler(oldErr);
+	    }
+	}
+
+	if (style.root != None)
+	{
+	    Atom aTpState = XInternAtom(style.display, "_DT_X11_TOUCHPAD_STATE", False);
+	    char summary[160];
+	    snprintf(summary, sizeof(summary),
+		     "tap=%d;nat=%d;cf=%d;dwt=%d;dext=%d;xi2_devices=%d",
+		     tap ? 1 : 0, nat ? 1 : 0, cf ? 1 : 0,
+		     dwt ? 1 : 0, dext ? 1 : 0, xiDevicesConfigured);
+	    XChangeProperty(style.display, style.root, aTpState, XA_STRING, 8,
+			    PropModeReplace, (const unsigned char *)summary,
+			    (int)strlen(summary));
+	}
+    }
+}
+
+static void
+PersistTouchpadResources(Boolean tap, Boolean nat, Boolean cf, Boolean dwt, Boolean dext)
+{
+    char res[512];
+    int flags = style.xrdb.writeXrdbImmediate
+	? (_DT_ATR_RESMGR | _DT_ATR_PREFS)
+	: _DT_ATR_PREFS;
+
+    snprintf(res, sizeof(res),
+	     "*touchpadTapToClick: %s\n"
+	     "*touchpadNaturalScroll: %s\n"
+	     "*touchpadClickfinger: %s\n"
+	     "*touchpadDisableWhileTyping: %s\n"
+	     "*touchpadDisableWithExternalMouse: %s\n",
+	     tap ? "True" : "False",
+	     nat ? "True" : "False",
+	     cf ? "True" : "False",
+	     dwt ? "True" : "False",
+	     dext ? "True" : "False");
+    _DtAddResString(style.display, res, flags);
+    XSync(style.display, False);
+    RefreshXrmDatabaseFromRoot();
+}
+
+static void
+SyncTouchpadTogglesFromState(void)
+{
+    if (mouse.tpTapToggle)
+	XmToggleButtonGadgetSetState(mouse.tpTapToggle, mouse.tpTap, False);
+    if (mouse.tpNaturalToggle)
+	XmToggleButtonGadgetSetState(mouse.tpNaturalToggle, mouse.tpNatural, False);
+    if (mouse.tpClickfingerToggle)
+	XmToggleButtonGadgetSetState(mouse.tpClickfingerToggle, mouse.tpClickfinger, False);
+    if (mouse.tpDwtToggle)
+	XmToggleButtonGadgetSetState(mouse.tpDwtToggle, mouse.tpDwt, False);
+    if (mouse.tpDextToggle)
+	XmToggleButtonGadgetSetState(mouse.tpDextToggle, mouse.tpDext, False);
+}
+
+static void
+touchpadToggleCB(Widget w, XtPointer client_data, XtPointer call_data)
+{
+    (void)w;
+    (void)client_data;
+    (void)call_data;
+    if (mouse.tpTapToggle)
+	mouse.tpTap = XmToggleButtonGadgetGetState(mouse.tpTapToggle);
+    if (mouse.tpNaturalToggle)
+	mouse.tpNatural = XmToggleButtonGadgetGetState(mouse.tpNaturalToggle);
+    if (mouse.tpClickfingerToggle)
+	mouse.tpClickfinger = XmToggleButtonGadgetGetState(mouse.tpClickfingerToggle);
+    if (mouse.tpDwtToggle)
+	mouse.tpDwt = XmToggleButtonGadgetGetState(mouse.tpDwtToggle);
+    if (mouse.tpDextToggle)
+	mouse.tpDext = XmToggleButtonGadgetGetState(mouse.tpDextToggle);
+    mouse.tpChanged = True;
+    mouse.systemDefaultFlag = False;
+    ApplyTouchpadBackend(mouse.tpTap, mouse.tpNatural, mouse.tpClickfinger,
+			 mouse.tpDwt, mouse.tpDext);
+}
+
+void
+ApplyAndPersistTouchpadCLI(int tap, int nat, int cf, int dwt, int dext)
+{
+    Boolean bTap = tap ? True : False;
+    Boolean bNat = nat ? True : False;
+    Boolean bCf  = cf  ? True : False;
+    Boolean bDwt = dwt ? True : False;
+    Boolean bDext = dext ? True : False;
+    style.xrdb.writeXrdbImmediate = True;
+    ApplyTouchpadBackend(bTap, bNat, bCf, bDwt, bDext);
+    PersistTouchpadResources(bTap, bNat, bCf, bDwt, bDext);
 }
 
 static void
@@ -1280,7 +1617,7 @@ build_mouseDialog( Widget shell )
     XmString         button_string[NUM_LABELS]; 
     Widget           form;
     int              count = 0;
-    Widget           widget_list[25]; 
+    Widget           widget_list[32]; 
     XmString         string;
     
     Dimension        MaxLabelWidth1;
@@ -1842,6 +2179,116 @@ build_mouseDialog( Widget shell )
 	}
     }
 
+    /* Touchpad configuration frame (libinput on Wayland, XInput2 on X11) */
+    LoadTouchpadResources(&mouse.tpTap, &mouse.tpNatural, &mouse.tpClickfinger,
+			  &mouse.tpDwt, &mouse.tpDext);
+    mouse.origTpTap = mouse.tpTap;
+    mouse.origTpNatural = mouse.tpNatural;
+    mouse.origTpClickfinger = mouse.tpClickfinger;
+    mouse.origTpDwt = mouse.tpDwt;
+    mouse.origTpDext = mouse.tpDext;
+    mouse.tpChanged = False;
+
+    n = 0;
+    XtSetArg(args[n], XmNshadowType, XmSHADOW_ETCHED_IN); n++;
+    XtSetArg(args[n], XmNmarginWidth, style.horizontalSpacing); n++;
+    XtSetArg(args[n], XmNmarginHeight, style.verticalSpacing); n++;
+    widget_list[count++] =
+    mouse.touchpadFrame = XmCreateFrame(form, "touchpadFrame", args, n);
+
+    n = 0;
+    string = CMPSTR(TOUCHPAD_FRAME_MSG);
+    XtSetArg(args[n], XmNchildType, XmFRAME_TITLE_CHILD); n++;
+    XtSetArg(args[n], XmNchildHorizontalAlignment, XmALIGNMENT_BEGINNING); n++;
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    mouse.touchpadFrameTitle =
+	XmCreateLabelGadget(mouse.touchpadFrame, "touchpadFrameTitle", args, n);
+    XmStringFree(string);
+    XtManageChild(mouse.touchpadFrameTitle);
+
+    n = 0;
+    XtSetArg(args[n], XmNfractionBase, 100); n++;
+    XtSetArg(args[n], XmNhorizontalSpacing, style.horizontalSpacing); n++;
+    XtSetArg(args[n], XmNverticalSpacing, 2); n++;
+    mouse.touchpadForm =
+	XmCreateForm(mouse.touchpadFrame, "touchpadForm", args, n);
+    XtManageChild(mouse.touchpadForm);
+
+    n = 0;
+    string = CMPSTR(TP_TAP_MSG);
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    XtSetArg(args[n], XmNalignment, XmALIGNMENT_BEGINNING); n++;
+    XtSetArg(args[n], XmNtopAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNrightAttachment, XmATTACH_POSITION); n++;
+    XtSetArg(args[n], XmNrightPosition, 49); n++;
+    mouse.tpTapToggle =
+	XmCreateToggleButtonGadget(mouse.touchpadForm, "tpTapToggle", args, n);
+    XmStringFree(string);
+    XtManageChild(mouse.tpTapToggle);
+    XtAddCallback(mouse.tpTapToggle, XmNvalueChangedCallback, touchpadToggleCB, nullptr);
+
+    n = 0;
+    string = CMPSTR(TP_NATURAL_MSG);
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    XtSetArg(args[n], XmNalignment, XmALIGNMENT_BEGINNING); n++;
+    XtSetArg(args[n], XmNtopAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNleftAttachment, XmATTACH_POSITION); n++;
+    XtSetArg(args[n], XmNleftPosition, 50); n++;
+    XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
+    mouse.tpNaturalToggle =
+	XmCreateToggleButtonGadget(mouse.touchpadForm, "tpNaturalToggle", args, n);
+    XmStringFree(string);
+    XtManageChild(mouse.tpNaturalToggle);
+    XtAddCallback(mouse.tpNaturalToggle, XmNvalueChangedCallback, touchpadToggleCB, nullptr);
+
+    n = 0;
+    string = CMPSTR(TP_CLICKFINGER_MSG);
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    XtSetArg(args[n], XmNalignment, XmALIGNMENT_BEGINNING); n++;
+    XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET); n++;
+    XtSetArg(args[n], XmNtopWidget, mouse.tpTapToggle); n++;
+    XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNrightAttachment, XmATTACH_POSITION); n++;
+    XtSetArg(args[n], XmNrightPosition, 49); n++;
+    mouse.tpClickfingerToggle =
+	XmCreateToggleButtonGadget(mouse.touchpadForm, "tpClickfingerToggle", args, n);
+    XmStringFree(string);
+    XtManageChild(mouse.tpClickfingerToggle);
+    XtAddCallback(mouse.tpClickfingerToggle, XmNvalueChangedCallback, touchpadToggleCB, nullptr);
+
+    n = 0;
+    string = CMPSTR(TP_DWT_MSG);
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    XtSetArg(args[n], XmNalignment, XmALIGNMENT_BEGINNING); n++;
+    XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET); n++;
+    XtSetArg(args[n], XmNtopWidget, mouse.tpNaturalToggle); n++;
+    XtSetArg(args[n], XmNleftAttachment, XmATTACH_POSITION); n++;
+    XtSetArg(args[n], XmNleftPosition, 50); n++;
+    XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
+    mouse.tpDwtToggle =
+	XmCreateToggleButtonGadget(mouse.touchpadForm, "tpDwtToggle", args, n);
+    XmStringFree(string);
+    XtManageChild(mouse.tpDwtToggle);
+    XtAddCallback(mouse.tpDwtToggle, XmNvalueChangedCallback, touchpadToggleCB, nullptr);
+
+    n = 0;
+    string = CMPSTR(TP_DEXT_MSG);
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    XtSetArg(args[n], XmNalignment, XmALIGNMENT_BEGINNING); n++;
+    XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET); n++;
+    XtSetArg(args[n], XmNtopWidget, mouse.tpClickfingerToggle); n++;
+    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
+    mouse.tpDextToggle =
+	XmCreateToggleButtonGadget(mouse.touchpadForm, "tpDextToggle", args, n);
+    XmStringFree(string);
+    XtManageChild(mouse.tpDextToggle);
+    XtAddCallback(mouse.tpDextToggle, XmNvalueChangedCallback, touchpadToggleCB, nullptr);
+
+    SyncTouchpadTogglesFromState();
+
     n = 0;
     string = CMPSTR(RESTART_WM_MSG);
     XtSetArg(args[n], XmNlabelString, string); n++;
@@ -1866,6 +2313,14 @@ build_mouseDialog( Widget shell )
 	ApplyDialogBgFg(colorRef, mouse.cursorPreviewForm);
 	ApplyDialogBgFg(colorRef, mouse.cursorPreviewGrid);
 	ApplyDialogBgFg(colorRef, mouse.cursorPreviewHint);
+	ApplyDialogBgFg(colorRef, mouse.touchpadFrame);
+	ApplyDialogBgFg(colorRef, mouse.touchpadFrameTitle);
+	ApplyDialogBgFg(colorRef, mouse.touchpadForm);
+	ApplyDialogBgFg(colorRef, mouse.tpTapToggle);
+	ApplyDialogBgFg(colorRef, mouse.tpNaturalToggle);
+	ApplyDialogBgFg(colorRef, mouse.tpClickfingerToggle);
+	ApplyDialogBgFg(colorRef, mouse.tpDwtToggle);
+	ApplyDialogBgFg(colorRef, mouse.tpDextToggle);
 	ApplyDialogBgFg(colorRef, mouse.dtwmRestartTG);
 	for (i = 0; i < mouse.cursorThemeCount; i++)
 	    ApplyDialogBgFg(colorRef, mouse.cursorThemeItems[i]);
@@ -2274,15 +2729,7 @@ formLayoutCB(
     XtSetArg(args[n], XmNleftOffset,       style.horizontalSpacing); n++;
     XtSetArg(args[n], XmNrightAttachment,  XmATTACH_FORM);      n++;
     XtSetArg(args[n], XmNrightOffset,      style.horizontalSpacing); n++;
-    if (DtstyleWaylandActive())
-    {
-        XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM);  n++;
-        XtSetArg(args[n], XmNbottomOffset,     style.verticalSpacing); n++;
-    }
-    else
-    {
-        XtSetArg(args[n], XmNbottomAttachment, XmATTACH_NONE);  n++;
-    }
+    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_NONE);      n++;
     XtSetValues (mouse.cursorPreviewFrame, args, n);
 
     /* Cursor Preview Form (inside frame) */
@@ -2293,12 +2740,32 @@ formLayoutCB(
     XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
     XtSetValues (mouse.cursorPreviewForm, args, n);
 
+    /* Touchpad Frame */
+    n=0;
+    XtSetArg(args[n], XmNtopAttachment,    XmATTACH_WIDGET);    n++;
+    XtSetArg(args[n], XmNtopWidget,        mouse.cursorPreviewFrame); n++;
+    XtSetArg(args[n], XmNtopOffset,        style.verticalSpacing); n++;
+    XtSetArg(args[n], XmNleftAttachment,   XmATTACH_FORM);      n++;
+    XtSetArg(args[n], XmNleftOffset,       style.horizontalSpacing); n++;
+    XtSetArg(args[n], XmNrightAttachment,  XmATTACH_FORM);      n++;
+    XtSetArg(args[n], XmNrightOffset,      style.horizontalSpacing); n++;
+    if (DtstyleWaylandActive())
+    {
+        XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM);  n++;
+        XtSetArg(args[n], XmNbottomOffset,     style.verticalSpacing); n++;
+    }
+    else
+    {
+        XtSetArg(args[n], XmNbottomAttachment, XmATTACH_NONE);  n++;
+    }
+    XtSetValues (mouse.touchpadFrame, args, n);
+
     /* Restart toggle */
     if (!DtstyleWaylandActive())
     {
         n=0;
         XtSetArg(args[n], XmNtopAttachment,    XmATTACH_WIDGET);    n++;
-        XtSetArg(args[n], XmNtopWidget,        mouse.cursorPreviewFrame); n++;
+        XtSetArg(args[n], XmNtopWidget,        mouse.touchpadFrame); n++;
         XtSetArg(args[n], XmNtopOffset,        style.verticalSpacing); n++;
         XtSetArg(args[n], XmNleftAttachment,   XmATTACH_FORM);      n++;
         XtSetArg(args[n], XmNleftOffset,       style.horizontalSpacing); n++;
@@ -2450,8 +2917,17 @@ _DtmapCB_mouseDialog(
 
 	UpdateCursorPreview();
     }
-    
-    
+
+    /* Touchpad controls */
+    LoadTouchpadResources(&mouse.tpTap, &mouse.tpNatural, &mouse.tpClickfinger,
+			  &mouse.tpDwt, &mouse.tpDext);
+    mouse.origTpTap = mouse.tpTap;
+    mouse.origTpNatural = mouse.tpNatural;
+    mouse.origTpClickfinger = mouse.tpClickfinger;
+    mouse.origTpDwt = mouse.tpDwt;
+    mouse.origTpDext = mouse.tpDext;
+    mouse.tpChanged = False;
+    SyncTouchpadTogglesFromState();
 }
 
 static int 
@@ -3078,6 +3554,19 @@ systemDefaultCB(
       mouse.cursorChanged = True;
       UpdateCursorPreview();
   }
+
+  /* reset touchpad settings to defaults */
+  mouse.tpTap = True;
+  mouse.tpNatural = False;
+  mouse.tpClickfinger = True;
+  mouse.tpDwt = True;
+  mouse.tpDext = False;
+  mouse.tpChanged = True;
+  SyncTouchpadTogglesFromState();
+  ApplyTouchpadBackend(mouse.tpTap, mouse.tpNatural, mouse.tpClickfinger,
+		       mouse.tpDwt, mouse.tpDext);
+  PersistTouchpadResources(mouse.tpTap, mouse.tpNatural, mouse.tpClickfinger,
+			   mouse.tpDwt, mouse.tpDext);
   
   mouse.systemDefaultFlag = True;
 }
@@ -3245,6 +3734,26 @@ ButtonCB(
 	     }
 	 }
 
+	 /* Touchpad settings */
+	 if (mouse.tpChanged ||
+	     mouse.tpTap != mouse.origTpTap ||
+	     mouse.tpNatural != mouse.origTpNatural ||
+	     mouse.tpClickfinger != mouse.origTpClickfinger ||
+	     mouse.tpDwt != mouse.origTpDwt ||
+	     mouse.tpDext != mouse.origTpDext)
+	 {
+	     ApplyTouchpadBackend(mouse.tpTap, mouse.tpNatural, mouse.tpClickfinger,
+				  mouse.tpDwt, mouse.tpDext);
+	     PersistTouchpadResources(mouse.tpTap, mouse.tpNatural, mouse.tpClickfinger,
+				      mouse.tpDwt, mouse.tpDext);
+	     mouse.origTpTap = mouse.tpTap;
+	     mouse.origTpNatural = mouse.tpNatural;
+	     mouse.origTpClickfinger = mouse.tpClickfinger;
+	     mouse.origTpDwt = mouse.tpDwt;
+	     mouse.origTpDext = mouse.tpDext;
+	     mouse.tpChanged = False;
+	 }
+
 	 break;
 	 
        case CANCEL_BUTTON:
@@ -3347,6 +3856,24 @@ ButtonCB(
 		 XmToggleButtonGadgetSetState(mouse.transferToggle, False, False);
 		 XmToggleButtonGadgetSetState(mouse.adjustToggle, True, True);
 	       }
+	   }
+
+	 if (mouse.tpChanged ||
+	     mouse.tpTap != mouse.origTpTap ||
+	     mouse.tpNatural != mouse.origTpNatural ||
+	     mouse.tpClickfinger != mouse.origTpClickfinger ||
+	     mouse.tpDwt != mouse.origTpDwt ||
+	     mouse.tpDext != mouse.origTpDext)
+	   {
+	     mouse.tpTap = mouse.origTpTap;
+	     mouse.tpNatural = mouse.origTpNatural;
+	     mouse.tpClickfinger = mouse.origTpClickfinger;
+	     mouse.tpDwt = mouse.origTpDwt;
+	     mouse.tpDext = mouse.origTpDext;
+	     mouse.tpChanged = False;
+	     SyncTouchpadTogglesFromState();
+	     ApplyTouchpadBackend(mouse.tpTap, mouse.tpNatural, mouse.tpClickfinger,
+				  mouse.tpDwt, mouse.tpDext);
 	   }
 	 break;
 	 

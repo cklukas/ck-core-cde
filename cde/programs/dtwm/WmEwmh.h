@@ -35,6 +35,8 @@ void UpdateEwmhClientList (WmScreenData *pSD);
 void UpdateEwmhActiveWindow (WmScreenData *pSD, ClientData *pCD);
 Boolean HandleEwmhSuperKey (XKeyEvent *keyEvent, Boolean isPress);
 void CancelEwmhSuperTap (void);
+void HandleEwmhRootClientMessage (XClientMessageEvent *clientEvent);
+void HandleEwmhGenericEvent (XEvent *event);
 void SetupWmEwmh (void);
 
 #endif

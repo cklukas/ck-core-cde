@@ -31,6 +31,7 @@
 #include <wlr/types/wlr_output.h>
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_pointer.h>
+#include <wlr/types/wlr_pointer_gestures_v1.h>
 #include <wlr/types/wlr_primary_selection.h>
 #include <wlr/types/wlr_primary_selection_v1.h>
 #include <wlr/types/wlr_scene.h>
@@ -289,6 +290,11 @@ struct DtwmServer {
     double ptr_accel_speed;
     int ptr_accel_thresh;
     bool left_handed;
+    bool tp_tap_to_click;
+    bool tp_natural_scroll;
+    bool tp_clickfinger;
+    bool tp_dwt;
+    bool tp_disable_with_ext_mouse;
     bool key_repeat_enabled;
     int key_repeat_delay;
     int key_repeat_rate;
@@ -302,6 +308,7 @@ struct DtwmServer {
     xcb_atom_t atom_dt_sm_win_info;
     xcb_atom_t atom_wayland_input_state;
     xcb_atom_t atom_wayland_outputs;
+    xcb_atom_t atom_osd_state;
 
     /* Output management, portals, foreign-toplevel & CJK IME globals (WP-10 / WP-11) */
     struct wlr_output_manager_v1 *output_mgr;
@@ -449,10 +456,31 @@ struct DtwmServer {
     bool menu_drag_moved;
     struct wlr_scene_buffer *menu_buf;
 
-    /* CDE Keyboard Task Switcher overlay */
+    /* CDE Keyboard Task Switcher & Hardware OSD overlays */
     bool switcher_visible;
     int switcher_index;
     struct wlr_scene_buffer *switcher_buf;
+
+    bool osd_visible;
+    char osd_kind[32];
+    int osd_level;
+    bool osd_muted;
+    char osd_label[128];
+    struct wlr_scene_buffer *osd_buf;
+    struct wl_event_source *osd_timer;
+
+    struct wlr_pointer_gestures_v1 *pointer_gestures;
+    bool swipe_active;
+    uint32_t swipe_fingers;
+    double swipe_dx, swipe_dy;
+    struct wl_listener cursor_swipe_begin;
+    struct wl_listener cursor_swipe_update;
+    struct wl_listener cursor_swipe_end;
+    struct wl_listener cursor_pinch_begin;
+    struct wl_listener cursor_pinch_update;
+    struct wl_listener cursor_pinch_end;
+    struct wl_listener cursor_hold_begin;
+    struct wl_listener cursor_hold_end;
 
     /* Listeners */
     struct wl_listener new_output;
@@ -517,6 +545,15 @@ int dtwm_root_menu_item_at(int rx, int ry, int menu_w, int menu_h);
 struct wlr_buffer *dtwm_render_snap_preview(const DtwmPalette *pal, int w, int h);
 struct wlr_buffer *dtwm_render_wireframe_outline(int w, int h);
 struct wlr_buffer *dtwm_render_task_switcher(DtwmServer *server, int *out_w, int *out_h);
+struct wlr_buffer *dtwm_render_osd_gauge(
+    const DtwmPalette *pal,
+    const char *kind,
+    int level,
+    bool muted,
+    const char *label,
+    int *out_w,
+    int *out_h
+);
 
 /* cde_workspace.c */
 bool dtwm_view_visible_on_current_ws(const DtwmView *view);
@@ -585,9 +622,11 @@ bool dtwm_lock_is_sm_lock_window(DtwmServer *server, xcb_window_t win);
 void dtwm_lock_focus_surface(DtwmServer *server, struct wlr_surface *surf);
 struct wlr_surface *dtwm_lock_surface_at(DtwmServer *server, double lx, double ly, double *sx, double *sy);
 void dtwm_hw_apply_input_device(DtwmServer *server, struct wlr_input_device *dev);
+void dtwm_hw_reapply_all_pointers(DtwmServer *server);
 void dtwm_hw_apply_keyboard_defaults(DtwmServer *server, struct wlr_keyboard *wlr_kbd);
 bool dtwm_hw_handle_wm_request(DtwmServer *server, const char *cmd);
 void dtwm_hw_publish_state(DtwmServer *server);
+void dtwm_handle_touchpad_swipe(DtwmServer *server, uint32_t fingers, double dx, double dy);
 void dtwm_restore_view_focus(DtwmServer *server, DtwmView *view);
 void dtwm_open_window_menu_for_view(DtwmServer *server, DtwmView *view, int x, int y);
 void dtwm_view_set_maximized(DtwmView *view, bool maximized);

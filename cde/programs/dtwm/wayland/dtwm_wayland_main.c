@@ -7,6 +7,7 @@
 
 #include "dtwm_wayland.h"
 
+#include <fcntl.h>
 #include <getopt.h>
 #include <limits.h>
 #include <linux/input-event-codes.h>
@@ -1912,6 +1913,100 @@ static void handle_cursor_frame(struct wl_listener *listener, void *data) {
     wlr_seat_pointer_notify_frame(server->seat);
 }
 
+static void handle_cursor_swipe_begin(struct wl_listener *listener, void *data) {
+    DtwmServer *server = wl_container_of(listener, server, cursor_swipe_begin);
+    struct wlr_pointer_swipe_begin_event *ev = data;
+    dtwm_lock_notify_activity(server);
+    if (ev->fingers == 3 && !server->session_locked && !server->greeter_mode) {
+        server->swipe_active = true;
+        server->swipe_fingers = 3;
+        server->swipe_dx = 0.0;
+        server->swipe_dy = 0.0;
+        return;
+    }
+    server->swipe_active = false;
+    if (server->pointer_gestures) {
+        wlr_pointer_gestures_v1_send_swipe_begin(server->pointer_gestures, server->seat, ev->time_msec, ev->fingers);
+    }
+}
+
+static void handle_cursor_swipe_update(struct wl_listener *listener, void *data) {
+    DtwmServer *server = wl_container_of(listener, server, cursor_swipe_update);
+    struct wlr_pointer_swipe_update_event *ev = data;
+    dtwm_lock_notify_activity(server);
+    if (server->swipe_active && server->swipe_fingers == 3) {
+        server->swipe_dx += ev->dx;
+        server->swipe_dy += ev->dy;
+        return;
+    }
+    if (server->pointer_gestures) {
+        wlr_pointer_gestures_v1_send_swipe_update(server->pointer_gestures, server->seat, ev->time_msec, ev->dx, ev->dy);
+    }
+}
+
+static void handle_cursor_swipe_end(struct wl_listener *listener, void *data) {
+    DtwmServer *server = wl_container_of(listener, server, cursor_swipe_end);
+    struct wlr_pointer_swipe_end_event *ev = data;
+    dtwm_lock_notify_activity(server);
+    if (server->swipe_active && server->swipe_fingers == 3) {
+        server->swipe_active = false;
+        if (!ev->cancelled) {
+            dtwm_handle_touchpad_swipe(server, 3, server->swipe_dx, server->swipe_dy);
+        }
+        return;
+    }
+    if (server->pointer_gestures) {
+        wlr_pointer_gestures_v1_send_swipe_end(server->pointer_gestures, server->seat, ev->time_msec, ev->cancelled);
+    }
+}
+
+static void handle_cursor_pinch_begin(struct wl_listener *listener, void *data) {
+    DtwmServer *server = wl_container_of(listener, server, cursor_pinch_begin);
+    struct wlr_pointer_pinch_begin_event *ev = data;
+    dtwm_lock_notify_activity(server);
+    if (server->pointer_gestures && !server->session_locked) {
+        wlr_pointer_gestures_v1_send_pinch_begin(server->pointer_gestures, server->seat, ev->time_msec, ev->fingers);
+    }
+}
+
+static void handle_cursor_pinch_update(struct wl_listener *listener, void *data) {
+    DtwmServer *server = wl_container_of(listener, server, cursor_pinch_update);
+    struct wlr_pointer_pinch_update_event *ev = data;
+    dtwm_lock_notify_activity(server);
+    if (server->pointer_gestures && !server->session_locked) {
+        wlr_pointer_gestures_v1_send_pinch_update(
+            server->pointer_gestures, server->seat, ev->time_msec, ev->dx, ev->dy, ev->scale, ev->rotation
+        );
+    }
+}
+
+static void handle_cursor_pinch_end(struct wl_listener *listener, void *data) {
+    DtwmServer *server = wl_container_of(listener, server, cursor_pinch_end);
+    struct wlr_pointer_pinch_end_event *ev = data;
+    dtwm_lock_notify_activity(server);
+    if (server->pointer_gestures && !server->session_locked) {
+        wlr_pointer_gestures_v1_send_pinch_end(server->pointer_gestures, server->seat, ev->time_msec, ev->cancelled);
+    }
+}
+
+static void handle_cursor_hold_begin(struct wl_listener *listener, void *data) {
+    DtwmServer *server = wl_container_of(listener, server, cursor_hold_begin);
+    struct wlr_pointer_hold_begin_event *ev = data;
+    dtwm_lock_notify_activity(server);
+    if (server->pointer_gestures && !server->session_locked) {
+        wlr_pointer_gestures_v1_send_hold_begin(server->pointer_gestures, server->seat, ev->time_msec, ev->fingers);
+    }
+}
+
+static void handle_cursor_hold_end(struct wl_listener *listener, void *data) {
+    DtwmServer *server = wl_container_of(listener, server, cursor_hold_end);
+    struct wlr_pointer_hold_end_event *ev = data;
+    dtwm_lock_notify_activity(server);
+    if (server->pointer_gestures && !server->session_locked) {
+        wlr_pointer_gestures_v1_send_hold_end(server->pointer_gestures, server->seat, ev->time_msec, ev->cancelled);
+    }
+}
+
 /* --- Keyboard Input & CDE Shortcuts (Alt+Tab, Alt+F4, Alt+Space) --- */
 static void handle_keyboard_modifiers(struct wl_listener *listener, void *data) {
     (void)data;
@@ -1930,23 +2025,238 @@ static void handle_keyboard_modifiers(struct wl_listener *listener, void *data) 
     }
 }
 
+static void publish_osd_state(DtwmServer *server) {
+    if (!server || !server->xcb_conn || server->xcb_root == XCB_WINDOW_NONE ||
+        server->atom_osd_state == XCB_ATOM_NONE) {
+        return;
+    }
+    char buf[256];
+    int n = snprintf(
+        buf, sizeof(buf),
+        "visible=%d;kind=%s;level=%d;muted=%d;label=%s",
+        server->osd_visible ? 1 : 0,
+        server->osd_kind[0] ? server->osd_kind : "none",
+        server->osd_level,
+        server->osd_muted ? 1 : 0,
+        server->osd_label
+    );
+    if (n > 0) {
+        xcb_change_property(
+            server->xcb_conn, XCB_PROP_MODE_REPLACE, server->xcb_root,
+            server->atom_osd_state, XCB_ATOM_STRING, 8, (uint32_t)n, buf
+        );
+        xcb_flush(server->xcb_conn);
+    }
+}
+
+static int handle_osd_timer(void *data) {
+    DtwmServer *server = data;
+    if (!server || !server->osd_buf) return 0;
+    server->osd_visible = false;
+    wlr_scene_node_set_enabled(&server->osd_buf->node, false);
+    wlr_scene_buffer_set_buffer(server->osd_buf, nullptr);
+    publish_osd_state(server);
+    return 0;
+}
+
+static void show_hardware_osd(
+    DtwmServer *server, const char *kind, int level, bool muted, const char *label
+) {
+    if (!server || !server->osd_buf) return;
+    snprintf(server->osd_kind, sizeof(server->osd_kind), "%s", kind ? kind : "volume");
+    server->osd_level = level;
+    server->osd_muted = muted;
+    snprintf(server->osd_label, sizeof(server->osd_label), "%s", label ? label : "");
+
+    int ow = 0, oh = 0;
+    struct wlr_buffer *buf = dtwm_render_osd_gauge(&server->palette, server->osd_kind, level, muted, server->osd_label, &ow, &oh);
+    if (!buf) return;
+
+    struct wlr_box usable = {0, 0, 1280, 900};
+    dtwm_get_usable_output_box(server, server->cursor->x, server->cursor->y, &usable);
+    int ox = usable.x + (usable.width - ow) / 2;
+    int oy = usable.y + usable.height - oh - 44;
+    if (oy < usable.y + 24) oy = usable.y + 24;
+
+    wlr_scene_buffer_set_buffer(server->osd_buf, buf);
+    wlr_buffer_drop(buf);
+    wlr_scene_node_set_position(&server->osd_buf->node, ox, oy);
+    wlr_scene_node_set_enabled(&server->osd_buf->node, true);
+    server->osd_visible = true;
+    publish_osd_state(server);
+
+    if (server->osd_timer) {
+        wl_event_source_timer_update(server->osd_timer, 1600);
+    }
+}
+
+static void invoke_media_ctl_and_osd(DtwmServer *server, const char *action) {
+    if (!server || server->greeter_mode) return;
+    int pfd[2];
+    if (pipe(pfd) != 0) return;
+    pid_t pid = fork();
+    if (pid < 0) {
+        close(pfd[0]);
+        close(pfd[1]);
+        return;
+    }
+    if (pid == 0) {
+        close(pfd[0]);
+        dup2(pfd[1], STDOUT_FILENO);
+        int dn = open("/dev/null", O_RDWR);
+        if (dn >= 0) {
+            dup2(dn, STDIN_FILENO);
+            dup2(dn, STDERR_FILENO);
+            if (dn > 2) close(dn);
+        }
+        close(pfd[1]);
+        if (server->exe_dir[0]) {
+            char local_bin[1152];
+            snprintf(local_bin, sizeof(local_bin), "%s/dtwm-media-ctl", server->exe_dir);
+            execl(local_bin, "dtwm-media-ctl", action, (char *)nullptr);
+        }
+        execlp("dtwm-media-ctl", "dtwm-media-ctl", action, (char *)nullptr);
+        execl(CDE_INSTALLATION_TOP "/bin/dtwm-media-ctl", "dtwm-media-ctl", action, (char *)nullptr);
+        _exit(127);
+    }
+    close(pfd[1]);
+    char line[256] = {0};
+    size_t used = 0;
+    while (used + 1 < sizeof(line)) {
+        ssize_t r = read(pfd[0], line + used, sizeof(line) - 1 - used);
+        if (r > 0) used += (size_t)r;
+        else if (r == -1 && errno == EINTR) continue;
+        else break;
+    }
+    close(pfd[0]);
+    int st = 0;
+    (void)waitpid(pid, &st, 0);
+
+    char *nl = strpbrk(line, "\r\n");
+    if (nl) *nl = '\0';
+    if (strncmp(line, "OSD|", 4) == 0) {
+        char *p = line + 4;
+        char *save = nullptr;
+        const char *kind = strtok_r(p, "|", &save);
+        const char *lvl_s = strtok_r(nullptr, "|", &save);
+        const char *mut_s = strtok_r(nullptr, "|", &save);
+        const char *lbl = strtok_r(nullptr, "", &save);
+        if (kind && lvl_s && mut_s) {
+            show_hardware_osd(server, kind, atoi(lvl_s), atoi(mut_s) != 0, lbl ? lbl : "");
+        }
+    }
+}
+
+static void spawn_session_helper(DtwmServer *server, const char *prog, const char *arg1) {
+    if (!server || server->session_locked || server->greeter_mode) return;
+    pid_t pid = fork();
+    if (pid == 0) {
+        if (fork() == 0) {
+            setsid();
+            if (server->wayland_socket) setenv("WAYLAND_DISPLAY", server->wayland_socket, 1);
+            if (server->xwayland && server->xwayland->display_name) {
+                setenv("DISPLAY", server->xwayland->display_name, 1);
+            }
+            if (arg1) {
+                execlp(prog, prog, arg1, (char *)nullptr);
+                char dt_path[256];
+                snprintf(dt_path, sizeof(dt_path), CDE_INSTALLATION_TOP "/bin/%s", prog);
+                execl(dt_path, prog, arg1, (char *)nullptr);
+            } else {
+                execlp(prog, prog, (char *)nullptr);
+                char dt_path[256];
+                snprintf(dt_path, sizeof(dt_path), CDE_INSTALLATION_TOP "/bin/%s", prog);
+                execl(dt_path, prog, (char *)nullptr);
+                execl("/usr/bin/ck-grab", prog, (char *)nullptr);
+            }
+            _exit(127);
+        }
+        _exit(0);
+    } else if (pid > 0) {
+        int st = 0;
+        (void)waitpid(pid, &st, 0);
+    }
+}
+
 static void spawn_quick_launcher(DtwmServer *server) {
     if (!server || server->session_locked || server->greeter_mode) return;
     pid_t pid = fork();
     if (pid == 0) {
-        setsid();
-        if (server->wayland_socket) setenv("WAYLAND_DISPLAY", server->wayland_socket, 1);
-        if (server->xwayland && server->xwayland->display_name) {
-            setenv("DISPLAY", server->xwayland->display_name, 1);
+        if (fork() == 0) {
+            setsid();
+            if (server->wayland_socket) setenv("WAYLAND_DISPLAY", server->wayland_socket, 1);
+            if (server->xwayland && server->xwayland->display_name) {
+                setenv("DISPLAY", server->xwayland->display_name, 1);
+            }
+            execlp("ck-launch", "ck-launch", "--toggle", (char *)nullptr);
+            execl("/usr/dt/bin/ck-launch", "ck-launch", "--toggle", (char *)nullptr);
+            execl("/usr/bin/ck-launch", "ck-launch", "--toggle", (char *)nullptr);
+            _exit(127);
         }
-        execlp("ck-launch", "ck-launch", "--toggle", (char *)nullptr);
-        execl("/usr/dt/bin/ck-launch", "ck-launch", "--toggle", (char *)nullptr);
-        execl("/usr/bin/ck-launch", "ck-launch", "--toggle", (char *)nullptr);
-        _exit(127);
+        _exit(0);
+    } else if (pid > 0) {
+        int st = 0;
+        (void)waitpid(pid, &st, 0);
     }
 }
 
 static bool handle_compositor_keybinding(DtwmServer *server, uint32_t mods, xkb_keysym_t sym) {
+    /* Hardware Multimedia, Backlight, Screenshot & Lock Keys (WP-13) */
+    switch (sym) {
+    case XKB_KEY_XF86AudioRaiseVolume:
+        invoke_media_ctl_and_osd(server, "vol-up");
+        return true;
+    case XKB_KEY_XF86AudioLowerVolume:
+        invoke_media_ctl_and_osd(server, "vol-down");
+        return true;
+    case XKB_KEY_XF86AudioMute:
+        invoke_media_ctl_and_osd(server, "vol-mute");
+        return true;
+    case XKB_KEY_XF86AudioMicMute:
+        invoke_media_ctl_and_osd(server, "mic-mute");
+        return true;
+    case XKB_KEY_XF86MonBrightnessUp:
+        invoke_media_ctl_and_osd(server, "bright-up");
+        return true;
+    case XKB_KEY_XF86MonBrightnessDown:
+        invoke_media_ctl_and_osd(server, "bright-down");
+        return true;
+    case XKB_KEY_XF86KbdBrightnessUp:
+        invoke_media_ctl_and_osd(server, "kbd-bright-up");
+        return true;
+    case XKB_KEY_XF86KbdBrightnessDown:
+        invoke_media_ctl_and_osd(server, "kbd-bright-down");
+        return true;
+    case XKB_KEY_XF86AudioPlay:
+        invoke_media_ctl_and_osd(server, "media-play");
+        return true;
+    case XKB_KEY_XF86AudioPause:
+        invoke_media_ctl_and_osd(server, "media-pause");
+        return true;
+    case XKB_KEY_XF86AudioNext:
+        invoke_media_ctl_and_osd(server, "media-next");
+        return true;
+    case XKB_KEY_XF86AudioPrev:
+        invoke_media_ctl_and_osd(server, "media-prev");
+        return true;
+    case XKB_KEY_XF86AudioStop:
+        invoke_media_ctl_and_osd(server, "media-stop");
+        return true;
+    case XKB_KEY_Print:
+    case XKB_KEY_Sys_Req:
+        spawn_session_helper(server, "ck-grab", nullptr);
+        show_hardware_osd(server, "screenshot", 100, false, "Screenshot: ck-grab");
+        return true;
+    default:
+        break;
+    }
+
+    if ((mods & WLR_MODIFIER_LOGO) && (sym == XKB_KEY_l || sym == XKB_KEY_L)) {
+        show_hardware_osd(server, "lock", 100, false, "Session: Lock Screen");
+        spawn_session_helper(server, "dtaction", "LockDisplay");
+        return true;
+    }
+
     if (((mods & WLR_MODIFIER_ALT) && sym == XKB_KEY_F2) ||
         ((mods & WLR_MODIFIER_LOGO) && sym == XKB_KEY_space)) {
         spawn_quick_launcher(server);
@@ -3724,6 +4034,9 @@ int main(int argc, char **argv) {
     wlr_scene_node_set_enabled(&server.menu_buf->node, false);
     server.switcher_buf = wlr_scene_buffer_create(server.overlay_tree, nullptr);
     wlr_scene_node_set_enabled(&server.switcher_buf->node, false);
+    server.osd_buf = wlr_scene_buffer_create(server.overlay_tree, nullptr);
+    wlr_scene_node_set_enabled(&server.osd_buf->node, false);
+    server.osd_timer = wl_event_loop_add_timer(ev_loop, handle_osd_timer, &server);
 
     server.move_opaque = true;
     server.focus_follows_mouse = false;
@@ -3788,6 +4101,24 @@ int main(int argc, char **argv) {
     wl_signal_add(&server.cursor->events.axis, &server.cursor_axis);
     server.cursor_frame.notify = handle_cursor_frame;
     wl_signal_add(&server.cursor->events.frame, &server.cursor_frame);
+
+    server.pointer_gestures = wlr_pointer_gestures_v1_create(server.wl_display);
+    server.cursor_swipe_begin.notify = handle_cursor_swipe_begin;
+    wl_signal_add(&server.cursor->events.swipe_begin, &server.cursor_swipe_begin);
+    server.cursor_swipe_update.notify = handle_cursor_swipe_update;
+    wl_signal_add(&server.cursor->events.swipe_update, &server.cursor_swipe_update);
+    server.cursor_swipe_end.notify = handle_cursor_swipe_end;
+    wl_signal_add(&server.cursor->events.swipe_end, &server.cursor_swipe_end);
+    server.cursor_pinch_begin.notify = handle_cursor_pinch_begin;
+    wl_signal_add(&server.cursor->events.pinch_begin, &server.cursor_pinch_begin);
+    server.cursor_pinch_update.notify = handle_cursor_pinch_update;
+    wl_signal_add(&server.cursor->events.pinch_update, &server.cursor_pinch_update);
+    server.cursor_pinch_end.notify = handle_cursor_pinch_end;
+    wl_signal_add(&server.cursor->events.pinch_end, &server.cursor_pinch_end);
+    server.cursor_hold_begin.notify = handle_cursor_hold_begin;
+    wl_signal_add(&server.cursor->events.hold_begin, &server.cursor_hold_begin);
+    server.cursor_hold_end.notify = handle_cursor_hold_end;
+    wl_signal_add(&server.cursor->events.hold_end, &server.cursor_hold_end);
 
     server.seat = wlr_seat_create(server.wl_display, "seat0");
     wlr_seat_set_capabilities(server.seat, WL_SEAT_CAPABILITY_POINTER | WL_SEAT_CAPABILITY_KEYBOARD);
@@ -3857,6 +4188,7 @@ int main(int argc, char **argv) {
     wl_display_run(server.wl_display);
 
 cleanup:
+    if (server.osd_timer) wl_event_source_remove(server.osd_timer);
     if (server.anim_timer) wl_event_source_remove(server.anim_timer);
     if (server.resize_flush_timer) wl_event_source_remove(server.resize_flush_timer);
     if (server.status_fallback_timer) wl_event_source_remove(server.status_fallback_timer);

@@ -27,3 +27,29 @@ selection visible and supports pointer hover and pinning. It is enabled by the
 
 Open-window desktop icons complement these controls by keeping running
 applications represented on their workspace.
+
+## Hardware keys, 3D bevel OSD and touchpad gestures
+
+Both `dtwm` on X11 and `dtwm-wayland` on Wayland bind standard laptop and
+workstation hardware keys without stealing keyboard focus from the active
+application:
+
+- `XF86AudioRaiseVolume`, `XF86AudioLowerVolume`, `XF86AudioMute`, and
+  `XF86AudioMicMute` adjust output volume and microphone mute via
+  `dtwm-media-ctl` (PipeWire `wpctl`, PulseAudio `pactl`, or ALSA `libasound`)
+  and display a non-focus-stealing `336×84` 3D-beveled CDE OSD gauge;
+- `XF86MonBrightnessUp`, `XF86MonBrightnessDown`, `XF86KbdBrightnessUp`, and
+  `XF86KbdBrightnessDown` adjust `/sys/class/backlight` and keyboard LEDs (with
+  `org.freedesktop.login1.Session.SetBrightness` fallback and a 5% minimum
+  display brightness floor);
+- `XF86AudioPlay`, `XF86AudioPause`, `XF86AudioNext`, `XF86AudioPrev`, and
+  `XF86AudioStop` dispatch MPRIS (`org.mpris.MediaPlayer2.Player`) transport
+  commands; and
+- `Print` launches `ck-grab`, while `Super+L` invokes `dtaction LockDisplay`.
+
+Three-finger horizontal touchpad swipes (`wlr_pointer_gestures_v1` on Wayland
+and XInput 2.4 `XI_GestureSwipe*` / `_DT_WM_SWIPE` on X11) switch to the next or
+previous CDE workspace, while `dtstyle`'s **Mouse** dialog provides a
+**Touchpad** section controlling tap-to-click, natural scrolling, two-finger
+right-click, disable-while-typing, and disable-with-external-mouse across both
+`libinput` (Wayland) and `XInput2` (X11).

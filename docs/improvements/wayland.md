@@ -306,6 +306,45 @@ panel instrumentation:
   synchronize `XMODIFIERS`, `GTK_IM_MODULE`, and `QT_IM_MODULE` so native Wayland
   and Motif XWayland (`XmIm`) applications share the same IME daemon.
 
+## Hardware media/brightness OSD, touchpad configuration, and cross-toolkit dark-mode sync (`WP-13`)
+
+`CDE (Wayland)` and `CDE (X11 / XLibre)` provide unified laptop/workstation
+hardware controls, touchpad configuration, and cross-toolkit appearance
+synchronization:
+
+- **Hardware multimedia, backlight & session keys + non-focus-stealing 3D OSD
+  (`dtwm-media-ctl`):** Both `dtwm-wayland` and classic X11 `dtwm` (`WmEwmh.c`
+  passive `XGrabKey`s + `sys.dtwmrc`) bind `XF86AudioRaiseVolume`,
+  `XF86AudioLowerVolume`, `XF86AudioMute`, `XF86AudioMicMute`,
+  `XF86MonBrightnessUp/Down` (enforcing a 5% minimum sysfs brightness floor via
+  `/sys/class/backlight` or `systemd-logind` `SetBrightness`),
+  `XF86KbdBrightnessUp/Down`, `XF86AudioPlay/Pause/Next/Prev/Stop` (MPRIS
+  `org.mpris.MediaPlayer2.Player`), `Print` (`ck-grab`), and `Super+L`
+  (`dtaction LockDisplay`). Volume, microphone, backlight, and media actions
+  render a `336×84` 3D-beveled CDE OSD gauge (`_DT_OSD_STATE`, auto-hiding after
+  `1.6 s`) without stealing focus from the active window.
+- **Laptop touchpad settings (`dtstyle`) & 3-finger workspace swipe:** `dtstyle`
+  **Mouse** (`dtstyle -mouse`) adds an etched **Touchpad** section controlling
+  *Tap to Click*, *Natural Scrolling*, *Two-Finger Right-Click* (`clickfinger`
+  vs. button areas), *Disable While Typing*, and *Disable With External Mouse*,
+  persisting `*touchpad*` X resources while driving `libinput` IPC
+  (`f.set_touchpad`, `_DT_WAYLAND_INPUT_STATE`) on Wayland and `XInput2`
+  (`libXi.so.6` `libinput *` properties + `_DT_X11_TOUCHPAD_STATE`) on X11.
+  Three-finger horizontal touchpad swipes (`wlr_pointer_gestures_v1` on Wayland;
+  XInput 2.4 `XI_GestureSwipe*` and `_DT_WM_SWIPE` on X11) switch workspaces
+  forward and backward.
+- **Cross-toolkit dark/light mode synchronization (`cde-color-sync`):** Started
+  automatically as `cde-color-sync --daemon` in `Xsession.wayland`,
+  `dtsession --wayland`, and X11 `Xsession` (and registered in
+  `cde-portals.conf` as `org.freedesktop.impl.portal.Settings=cde;gtk`).
+  Switching between `ModernDark.dp` (`modern_dark`), `HighContrast.dp`
+  (`high_contrast`), and light/classic palettes in `dtstyle`, `dtsession`, or
+  `dtwm-wayland` updates D-Bus `org.freedesktop.portal.Settings`
+  (`org.freedesktop.appearance` `color-scheme` `1` = `prefer-dark` / `2` =
+  `prefer-light` + `SettingChanged`), X11 `_XSETTINGS_S0` binary
+  `_XSETTINGS_SETTINGS` (`Net/ThemeName`), `gsettings`, and
+  `~/.config/gtk-{3,4}.0/settings.ini` live.
+
 ## Readiness reporting, Ubuntu LTS APT packaging, and automated qualification
 
 Passing `--status-file PATH` writes `WAYLAND_DISPLAY`, `DISPLAY`, and `PID`
@@ -330,13 +369,17 @@ atomically once both the Wayland socket and rootless `Xwayland` are ready.
   Monitors*, `zwlr_foreign_toplevel_manager_v1`, `ext-image-copy-capture-v1`,
   and `xdg-desktop-portal-wlr`), `check-dtwm-wayland-wp11.py` (`WP-11`
   `zwp_text_input_v3`, `zwp_input_method_v2`, `zwp_input_popup_surface_v2` CJK
-  candidate popups, `keyboard_grab`, and `ext-session-lock-v1` isolation), and
+  candidate popups, `keyboard_grab`, and `ext-session-lock-v1` isolation),
   `check-dtwm-wayland-wp12.py` (`WP-12` parallel dual Wayland + X11 `Xvfb`
   verification of `dtappintegrate --xdg --watch` live `inotify` indexing,
   `Super`/`Super+Space` → `ck-launch` `libXm.so.9` activation, Wayland
   `zwlr_foreign_toplevel_manager_v1` and X11 `_NET_CLIENT_LIST` /
   `_NET_ACTIVE_WINDOW` window switching, and `dtopen` / `mimeapps.list`
-  persistence) run automatically under `make check`.
+  persistence), and `check-dtwm-wayland-wp13.py` (`WP-13` parallel dual Wayland +
+  X11 `Xvfb` verification of `XF86Audio*` / `XF86MonBrightness*` 5% floor /
+  MPRIS keys + non-focus-stealing 3D bevel OSD, `dtstyle` touchpad settings +
+  3-finger workspace swipe, and `cde-color-sync` portal / `XSETTINGS` / GTK3-4
+  dark-light sync) run automatically under `make check`.
 - **Signed Ubuntu LTS `.deb` and APT repository qualification (`WP-08`):**
   `scripts/build-ubuntu-debs.py --verify-install` packages `ck-core-motif9`,
   `ck-core-fs-lib`, `ck-core-cde`, `ck-core-dtlogin`, and `ck-core-apps` into a

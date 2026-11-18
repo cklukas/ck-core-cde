@@ -364,6 +364,42 @@ static void apply_libinput_ptr_config(DtwmServer *server, struct wlr_input_devic
     if (libinput_device_config_left_handed_is_available(ldev)) {
         libinput_device_config_left_handed_set(ldev, server->left_handed ? 1 : 0);
     }
+    if (libinput_device_config_tap_get_finger_count(ldev) > 0) {
+        libinput_device_config_tap_set_enabled(
+            ldev, server->tp_tap_to_click ? LIBINPUT_CONFIG_TAP_ENABLED : LIBINPUT_CONFIG_TAP_DISABLED
+        );
+        if (libinput_device_config_scroll_has_natural_scroll(ldev)) {
+            libinput_device_config_scroll_set_natural_scroll_enabled(ldev, server->tp_natural_scroll ? 1 : 0);
+        }
+        uint32_t click_methods = libinput_device_config_click_get_methods(ldev);
+        if (server->tp_clickfinger && (click_methods & LIBINPUT_CONFIG_CLICK_METHOD_CLICKFINGER)) {
+            libinput_device_config_click_set_method(ldev, LIBINPUT_CONFIG_CLICK_METHOD_CLICKFINGER);
+        } else if (!server->tp_clickfinger && (click_methods & LIBINPUT_CONFIG_CLICK_METHOD_BUTTON_AREAS)) {
+            libinput_device_config_click_set_method(ldev, LIBINPUT_CONFIG_CLICK_METHOD_BUTTON_AREAS);
+        }
+        if (libinput_device_config_dwt_is_available(ldev)) {
+            libinput_device_config_dwt_set_enabled(
+                ldev, server->tp_dwt ? LIBINPUT_CONFIG_DWT_ENABLED : LIBINPUT_CONFIG_DWT_DISABLED
+            );
+        }
+        uint32_t send_modes = libinput_device_config_send_events_get_modes(ldev);
+        if (server->tp_disable_with_ext_mouse &&
+            (send_modes & LIBINPUT_CONFIG_SEND_EVENTS_DISABLED_ON_EXTERNAL_MOUSE)) {
+            libinput_device_config_send_events_set_mode(
+                ldev, LIBINPUT_CONFIG_SEND_EVENTS_DISABLED_ON_EXTERNAL_MOUSE
+            );
+        } else {
+            libinput_device_config_send_events_set_mode(ldev, LIBINPUT_CONFIG_SEND_EVENTS_ENABLED);
+        }
+    }
+}
+
+void dtwm_hw_reapply_all_pointers(DtwmServer *server) {
+    if (!server || !g_ptr_list_inited) return;
+    DtwmPointerDev *pd;
+    wl_list_for_each(pd, &g_pointer_devs, link) {
+        apply_libinput_ptr_config(server, pd->dev);
+    }
 }
 
 static void handle_ptr_dev_destroy(struct wl_listener *listener, void *data) {
@@ -416,14 +452,19 @@ void dtwm_hw_publish_state(DtwmServer *server) {
         server->atom_wayland_input_state == XCB_ATOM_NONE) {
         return;
     }
-    char buf[512];
+    char buf[640];
     int n = snprintf(
         buf, sizeof(buf),
-        "locked=%d;accel=%.2f;thresh=%d;left_handed=%d;repeat=%d:%d:%d;xkb=%s;bell=%d:%d:%d;saver=%d:%d",
+        "locked=%d;accel=%.2f;thresh=%d;left_handed=%d;tp=%d:%d:%d:%d:%d;repeat=%d:%d:%d;xkb=%s;bell=%d:%d:%d;saver=%d:%d",
         server->session_locked ? 1 : 0,
         server->ptr_accel_speed,
         server->ptr_accel_thresh,
         server->left_handed ? 1 : 0,
+        server->tp_tap_to_click ? 1 : 0,
+        server->tp_natural_scroll ? 1 : 0,
+        server->tp_clickfinger ? 1 : 0,
+        server->tp_dwt ? 1 : 0,
+        server->tp_disable_with_ext_mouse ? 1 : 0,
         server->key_repeat_enabled ? 1 : 0,
         server->key_repeat_delay,
         server->key_repeat_rate,
@@ -440,6 +481,24 @@ void dtwm_hw_publish_state(DtwmServer *server) {
             server->atom_wayland_input_state, XCB_ATOM_STRING, 8, (uint32_t)n, buf
         );
         xcb_flush(server->xcb_conn);
+    }
+}
+
+void dtwm_handle_touchpad_swipe(DtwmServer *server, uint32_t fingers, double dx, double dy) {
+    if (!server || server->session_locked || server->greeter_mode || server->num_workspaces <= 1) {
+        return;
+    }
+    if (fingers != 3) return;
+    double adx = dx < 0.0 ? -dx : dx;
+    double ady = dy < 0.0 ? -dy : dy;
+    if (adx < 60.0 || adx < ady * 1.3) return;
+
+    if (dx < 0.0) {
+        dtwm_switch_workspace(server, (server->current_workspace + 1) % server->num_workspaces);
+    } else {
+        dtwm_switch_workspace(
+            server, (server->current_workspace + server->num_workspaces - 1) % server->num_workspaces
+        );
     }
 }
 
@@ -575,6 +634,29 @@ bool dtwm_hw_handle_wm_request(DtwmServer *server, const char *cmd) {
         return true;
     }
 
+    if (strncmp(cmd, "f.set_touchpad", 14) == 0) {
+        int tap = 1, nat = 0, cf = 1, dwt = 1, dext = 0;
+        if (sscanf(cmd + 14, "%d %d %d %d %d", &tap, &nat, &cf, &dwt, &dext) >= 3) {
+            server->tp_tap_to_click = (tap != 0);
+            server->tp_natural_scroll = (nat != 0);
+            server->tp_clickfinger = (cf != 0);
+            server->tp_dwt = (dwt != 0);
+            server->tp_disable_with_ext_mouse = (dext != 0);
+            dtwm_hw_reapply_all_pointers(server);
+            dtwm_hw_publish_state(server);
+        }
+        return true;
+    }
+
+    if (strncmp(cmd, "f.touchpad_swipe", 16) == 0) {
+        unsigned int fingers = 3;
+        double dx = 0.0, dy = 0.0;
+        if (sscanf(cmd + 16, "%u %lf %lf", &fingers, &dx, &dy) == 3) {
+            dtwm_handle_touchpad_swipe(server, fingers, dx, dy);
+        }
+        return true;
+    }
+
     return false;
 }
 
@@ -583,6 +665,7 @@ void dtwm_lock_on_xwayland_ready(DtwmServer *server) {
     server->atom_session_lock_dlg = intern_lock_atom(server->xcb_conn, "_DT_SESSION_LOCK_DIALOG");
     server->atom_dt_sm_win_info = intern_lock_atom(server->xcb_conn, "_DT_SM_WINDOW_INFO");
     server->atom_wayland_input_state = intern_lock_atom(server->xcb_conn, "_DT_WAYLAND_INPUT_STATE");
+    server->atom_osd_state = intern_lock_atom(server->xcb_conn, "_DT_OSD_STATE");
     dtwm_hw_publish_state(server);
 }
 
@@ -592,6 +675,11 @@ void dtwm_lock_init(DtwmServer *server) {
         wl_list_init(&g_pointer_devs);
         g_ptr_list_inited = true;
     }
+    server->tp_tap_to_click = true;
+    server->tp_natural_scroll = false;
+    server->tp_clickfinger = true;
+    server->tp_dwt = true;
+    server->tp_disable_with_ext_mouse = false;
     server->key_repeat_enabled = true;
     server->key_repeat_delay = 600;
     server->key_repeat_rate = 25;

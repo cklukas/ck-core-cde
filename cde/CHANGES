@@ -1,4 +1,54 @@
 2026-11-18
+- Deliver **WP-13 — Hardware Media/Brightness Keys + 3D Bevel OSD, Laptop
+  Touchpad Settings (`dtstyle`) & Cross-Toolkit Dark-Mode Sync** across both
+  `CDE (Wayland)` and `CDE (X11 / XLibre)`
+  (`cde/programs/dtwm/dtwm_media_ctl.c`, `cde/programs/dtwm/cde_color_sync.c`,
+  `cde/programs/dtwm/Makefile.am`, `cde/programs/dtwm/WmEwmh.h`,
+  `cde/programs/dtwm/WmEwmh.c`, `cde/programs/dtwm/WmEvent.c`,
+  `cde/programs/dtwm/wayland/dtwm_wayland.h`,
+  `cde/programs/dtwm/wayland/cde_bevel.c`,
+  `cde/programs/dtwm/wayland/cde_session_lock.c`,
+  `cde/programs/dtwm/wayland/cde_workspace.c`,
+  `cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `cde/programs/dtstyle/Makefile.am`, `cde/programs/dtstyle/Main.c`,
+  `cde/programs/dtstyle/Mouse.h`, `cde/programs/dtstyle/Mouse.c`,
+  `cde/programs/dtstyle/ColorMain.c`, `cde/programs/dtsession/SmWayland.c`,
+  `cde/programs/dtsession/SrvPalette.c`,
+  `cde/programs/dtlogin/config/Xsession.src`,
+  `cde/programs/localized/C/config/sys.dtwmrc.tmsg`,
+  `cde/debian/Xsession.wayland`, `cde/debian/cde-portals.conf`,
+  `cde/programs/dtwm/tests/check-dtwm-wayland-wp13.py`,
+  `docs/improvements/window-management.md`, `docs/improvements/wayland.md`):
+  - Add `dtwm-media-ctl` and bind `XF86AudioRaiseVolume`,
+    `XF86AudioLowerVolume`, `XF86AudioMute`, `XF86AudioMicMute`,
+    `XF86MonBrightnessUp`, `XF86MonBrightnessDown`, `XF86KbdBrightnessUp/Down`,
+    `XF86AudioPlay/Pause/Next/Prev/Stop` (MPRIS), `Print` (`ck-grab`), and
+    `Super+L` (`dtaction LockDisplay`) in both `dtwm-wayland` and classic X11
+    `dtwm` (`XGrabKey` + `sys.dtwmrc`), displaying a non-focus-stealing `336×84`
+    3D-beveled CDE OSD gauge (`_DT_OSD_STATE`) and enforcing a 5% minimum
+    display backlight floor on `/sys/class/backlight` (`systemd-logind`
+    `SetBrightness` fallback).
+  - Add a **Touchpad** configuration section to `dtstyle` **Mouse**
+    (`dtstyle -mouse` and `-apply-touchpad`) controlling *Tap to Click*,
+    *Natural Scrolling*, *Two-Finger Right-Click* (`clickfinger` vs. button
+    areas), *Disable While Typing*, and *Disable With External Mouse*, backed by
+    `libinput` IPC (`f.set_touchpad`, `_DT_WAYLAND_INPUT_STATE`) on Wayland and
+    `XInput2` (`libXi.so.6` `libinput *` properties + `_DT_X11_TOUCHPAD_STATE`)
+    on X11, plus 3-finger horizontal touchpad swipe workspace switching on both
+    `dtwm-wayland` (`wlr_pointer_gestures_v1`) and X11 `dtwm` (XInput 2.4
+    `XI_GestureSwipe*` and `_DT_WM_SWIPE`).
+  - Add `cde-color-sync` (`--daemon` auto-started in `Xsession.wayland`,
+    `dtsession --wayland`, and X11 `Xsession`; registered in `cde-portals.conf`
+    as `org.freedesktop.impl.portal.Settings=cde;gtk`) synchronizing CDE
+    `ModernDark.dp` (`modern_dark`), `HighContrast.dp` (`high_contrast`), and
+    classic/light palette changes live across D-Bus
+    `org.freedesktop.portal.Settings` (`color-scheme` `1`/`2` +
+    `SettingChanged`), X11 `_XSETTINGS_S0` binary `_XSETTINGS_SETTINGS`
+    (`Net/ThemeName`), `gsettings`, and `~/.config/gtk-{3,4}.0/settings.ini`.
+  - Add `check-dtwm-wayland-wp13.py` verifying both headless `dtwm-wayland` and
+    X11 `Xvfb` + `dtwm` lanes in parallel, and harden `SmWayland.c` against
+    redundant `setgid` calls and `/tmp` pidfile paths so all 16 `dtsession`
+    security and session checks pass.
 - Deliver **WP-12 — XDG Application Discovery, `Super` Quick-Launcher
   (`ck-launch`) & Modernized `dtopen` / *"Open With..."*** across both
   `CDE (Wayland)` and `CDE (X11 / XLibre)`
