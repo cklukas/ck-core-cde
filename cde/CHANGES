@@ -1,4 +1,28 @@
 2026-11-18
+- Fix XWayland Motif pulldown/popup menu selection reliability, virtual-pointer
+  button recovery, and post-modeset `Screen` bounds under `CDE (Wayland)`
+  (`cde/programs/dtwm/wayland/dtwm_wayland.h`,
+  `cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `cde/programs/dtwm/wayland/cde_xdnd_bridge.c`,
+  `cde/lib/DtSvc/DtUtil2/DtUtil.c`, `cde/programs/dtfile/Main.c`,
+  `cde/programs/dtwm/Makefile.am`,
+  `cde/programs/dtwm/tests/check-dtwm-wayland-menus.py`,
+  `docs/improvements/wayland.md`):
+  - Track exact per-device and bitmask pointer button state across physical and
+    `zwlr_virtual_pointer_v1` (`wayvnc`) pointers so mid-press disconnects or
+    browser/VNC lost button releases automatically synthesize release events
+    instead of leaving `pointer_buttons_down > 0` and blocking `wl_pointer`
+    focus transfers onto override-redirect `XmMenuShell` menus.
+  - Filter off-screen / helper X11 override-redirect windows (such as Motif's
+    `10x10+-100+-100` `_MOTIF_DRAG_WINDOW` and `1x1` agent windows) in
+    `dismiss_open_client_popups`, emit explicit `wl_pointer.frame` boundaries so
+    `Xwayland` flushes outside-click and stationary-click coordinates before
+    `ButtonPress`, restore `wl_pointer` surface focus in `handle_cursor_button`,
+    and re-evaluate cursor focus when XWayland popups map, resize, or unmap.
+  - Synchronize Xlib's cached `Screen` dimensions on root `ConfigureNotify` in
+    `DtInitialize` / `DtAppInitialize` (`libDtSvc`) and `dtfile` so Motif
+    `ForceMenuPaneOnScreen` / `LocatePulldown` never clamp menus to boot screen
+    bounds after live `wlr-randr` / HiDPI output changes.
 - Enhance `dtfile` **Connect to Server...**, **Connected Mounts & Devices...**,
   and tabbed **Go To...** workflows across both `CDE (Wayland)` and
   `CDE (X11 / XLibre)` (`cde/programs/dtfile/Devices.h`,

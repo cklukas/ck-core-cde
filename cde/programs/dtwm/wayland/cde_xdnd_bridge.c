@@ -376,16 +376,18 @@ bool dtwm_xdnd_handle_xcb_event(DtwmServer *server, xcb_generic_event_t *ev) {
 
 void dtwm_xdnd_on_button_state(DtwmServer *server, uint32_t button, bool pressed) {
     if (!server) return;
+    uint32_t bit = (button >= 0x110u && button < 0x120u)
+                       ? (1u << (button - 0x110u))
+                       : (1u << 16u);
     if (pressed) {
-        server->pointer_buttons_down++;
+        server->pointer_buttons_mask |= bit;
         server->last_pointer_button = button;
     } else {
-        if (server->pointer_buttons_down > 0) {
-            server->pointer_buttons_down--;
-        }
-        if (server->pointer_buttons_down == 0) {
-            g_xdnd.button_session_active = false;
-        }
+        server->pointer_buttons_mask &= ~bit;
+    }
+    server->pointer_buttons_down = __builtin_popcount(server->pointer_buttons_mask);
+    if (server->pointer_buttons_down == 0) {
+        g_xdnd.button_session_active = false;
     }
 }
 

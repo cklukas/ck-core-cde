@@ -331,6 +331,7 @@ struct DtwmServer {
     struct wl_list views;
     struct wl_list popups;
     struct wl_list keyboards;
+    struct wl_list pointers;
 
     DtwmPalette palette;
     DtwmView *focused_view;
@@ -507,12 +508,14 @@ struct DtwmServer {
     struct wl_listener request_start_drag;
     struct wl_listener start_drag;
     int pointer_buttons_down;
+    uint32_t pointer_buttons_mask;
     uint32_t last_pointer_button;
 
     struct wl_event_source *sigint_source;
     struct wl_event_source *sigterm_source;
     struct wl_event_source *status_fallback_timer;
     bool status_written;
+    bool shutting_down;
     const char *wayland_socket;
     const char *status_file;
 };

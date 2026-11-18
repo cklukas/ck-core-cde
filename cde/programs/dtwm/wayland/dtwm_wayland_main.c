@@ -50,6 +50,41 @@ typedef struct {
     struct wl_listener destroy;
 } DtwmLayerSurface;
 
+typedef struct {
+    struct wl_list link;
+    DtwmServer *server;
+    struct wlr_pointer *wlr_pointer;
+    uint32_t held_mask;
+    uint32_t held_since_ms;
+    bool is_virtual;
+    struct wl_listener destroy;
+} DtwmPointer;
+
+static uint32_t pointer_button_bit(uint32_t btn) {
+    if (btn >= BTN_MOUSE && btn < BTN_MOUSE + 16u) {
+        return 1u << (btn - BTN_MOUSE);
+    }
+    return 1u << 16u;
+}
+
+static uint32_t pointer_bit_to_button(unsigned int bit_idx) {
+    if (bit_idx < 16u) {
+        return BTN_MOUSE + bit_idx;
+    }
+    return BTN_LEFT;
+}
+
+static bool any_device_button_held(const DtwmServer *server) {
+    if (!server) return false;
+    const DtwmPointer *ptr;
+    wl_list_for_each(ptr, &server->pointers, link) {
+        if (ptr->held_mask != 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static void close_window_menu(DtwmServer *server);
 static void hide_task_switcher(DtwmServer *server, bool activate_selected);
 static void hide_wireframe_outline(DtwmServer *server);
@@ -738,6 +773,40 @@ static void hide_wireframe_outline(DtwmServer *server) {
     }
 }
 
+static bool view_is_open_xwayland_popup(const DtwmServer *server, const DtwmView *v) {
+    if (!server || !v || v == server->popup_sink_view || !v->mapped ||
+        v->kind != DTWM_VIEW_XWAYLAND || !v->xwayland_surface ||
+        !v->xwayland_surface->override_redirect || !v->xwayland_surface->surface ||
+        v->is_lock_dialog || v->is_desktop_pin || v->is_swallowed) {
+        return false;
+    }
+    /* Ignore permanent off-screen / 1x1 X11 helper windows (e.g. _MOTIF_DRAG_WINDOW 10x10+-100+-100) */
+    if (v->client_w <= 2 || v->client_h <= 2) {
+        return false;
+    }
+    struct wlr_box vbox = {
+        .x = v->x,
+        .y = v->y,
+        .width = v->client_w,
+        .height = v->client_h,
+    };
+    return wlr_output_layout_intersects(server->output_layout, nullptr, &vbox);
+}
+
+static bool has_open_client_popup(const DtwmServer *server) {
+    if (!server) return false;
+    if (!wl_list_empty(&server->popups)) {
+        return true;
+    }
+    const DtwmView *v;
+    wl_list_for_each(v, &server->views, link) {
+        if (view_is_open_xwayland_popup(server, v)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static void dismiss_open_client_popups(DtwmServer *server, uint32_t t_ms) {
     if (!server) {
         return;
@@ -750,14 +819,11 @@ static void dismiss_open_client_popups(DtwmServer *server, uint32_t t_ms) {
         }
     }
 
-    /* Check whether any XWayland override-redirect popup/menu (e.g. Motif XmMenuShell) is open */
+    /* Check whether any visible XWayland override-redirect popup/menu (e.g. Motif XmMenuShell) is open */
     DtwmView *or_view = nullptr;
     DtwmView *v;
     wl_list_for_each(v, &server->views, link) {
-        if (v == server->popup_sink_view || !v->mapped || v->kind != DTWM_VIEW_XWAYLAND ||
-            !v->xwayland_surface || !v->xwayland_surface->override_redirect ||
-            !v->xwayland_surface->surface || v->is_lock_dialog || v->is_desktop_pin ||
-            v->is_swallowed) {
+        if (!view_is_open_xwayland_popup(server, v)) {
             continue;
         }
         or_view = v;
@@ -784,8 +850,7 @@ static void dismiss_open_client_popups(DtwmServer *server, uint32_t t_ms) {
         int py = cand_pts[i][1];
         bool inside_popup = false;
         wl_list_for_each(v, &server->views, link) {
-            if (v == server->popup_sink_view || !v->mapped || v->kind != DTWM_VIEW_XWAYLAND ||
-                !v->xwayland_surface || !v->xwayland_surface->override_redirect) {
+            if (!view_is_open_xwayland_popup(server, v)) {
                 continue;
             }
             if (px >= v->x && px < v->x + v->client_w &&
@@ -819,11 +884,15 @@ static void dismiss_open_client_popups(DtwmServer *server, uint32_t t_ms) {
     double sy = (double)sink_y - (double)or_xs->y;
     uint32_t ts = t_ms ? t_ms : dtwm_now_msec();
     wlr_seat_pointer_notify_enter(server->seat, or_surf, sx, sy);
+    wlr_seat_pointer_notify_frame(server->seat);
     wlr_seat_pointer_notify_motion(server->seat, ts, sx, sy);
-    wlr_seat_pointer_notify_button(server->seat, ts, BTN_LEFT, WL_POINTER_BUTTON_STATE_PRESSED);
-    wlr_seat_pointer_notify_button(server->seat, ts, BTN_LEFT, WL_POINTER_BUTTON_STATE_RELEASED);
+    wlr_seat_pointer_notify_frame(server->seat);
+    wlr_seat_pointer_notify_button(server->seat, ts + 1u, BTN_LEFT, WL_POINTER_BUTTON_STATE_PRESSED);
+    wlr_seat_pointer_notify_frame(server->seat);
+    wlr_seat_pointer_notify_button(server->seat, ts + 2u, BTN_LEFT, WL_POINTER_BUTTON_STATE_RELEASED);
     wlr_seat_pointer_notify_frame(server->seat);
     wlr_seat_pointer_notify_clear_focus(server->seat);
+    wlr_seat_pointer_notify_frame(server->seat);
 }
 
 static void begin_interactive(DtwmView *view, DtwmCursorMode mode, uint32_t edges) {
@@ -1168,6 +1237,10 @@ static void update_snap_preview(DtwmServer *server, DtwmSnapZone zone, const str
 }
 
 static bool view_is_normal_app(const DtwmView *v) {
+    if (v->kind == DTWM_VIEW_XWAYLAND && v->xwayland_surface &&
+        v->xwayland_surface->override_redirect) {
+        return false;
+    }
     return dtwm_view_visible_on_current_ws(v) &&
            !v->is_swallowed && !v->is_desktop_pin && !v->is_panel && !v->is_subpanel &&
            !v->is_lock_dialog;
@@ -1535,12 +1608,20 @@ static void process_cursor_motion(DtwmServer *server, uint32_t time_msec) {
         }
     }
 
+    if (server->pointer_buttons_down != 0 &&
+        !any_device_button_held(server) &&
+        server->seat->pointer_state.button_count == 0) {
+        server->pointer_buttons_mask = 0;
+        server->pointer_buttons_down = 0;
+    }
+
     double sx = 0, sy = 0;
     struct wlr_surface *surface = nullptr;
     DtwmFramePart part = DTWM_PART_NONE;
     DtwmView *view = desktop_view_at(server, server->cursor->x, server->cursor->y, &surface, &sx, &sy, &part);
 
     if (server->focus_follows_mouse && server->pointer_buttons_down == 0 && !server->switcher_visible &&
+        !has_open_client_popup(server) &&
         view && view != server->focused_view && view_is_normal_app(view)) {
         focus_view_ex(server, view, surface, server->focus_auto_raise);
     }
@@ -1616,8 +1697,9 @@ static void process_cursor_motion(DtwmServer *server, uint32_t time_msec) {
 }
 
 void dtwm_recheck_cursor_focus(DtwmServer *server) {
-    if (!server) return;
+    if (!server || server->shutting_down || !server->cursor || !server->seat) return;
     process_cursor_motion(server, dtwm_now_msec());
+    wlr_seat_pointer_notify_frame(server->seat);
 }
 
 static void handle_cursor_motion(struct wl_listener *listener, void *data) {
@@ -1647,6 +1729,44 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
     if (server->left_handed) {
         if (btn == BTN_LEFT) btn = BTN_RIGHT;
         else if (btn == BTN_RIGHT) btn = BTN_LEFT;
+    }
+    if (ev->pointer) {
+        DtwmPointer *ptr;
+        wl_list_for_each(ptr, &server->pointers, link) {
+            if (ptr->wlr_pointer == ev->pointer) {
+                uint32_t bbit = pointer_button_bit(btn);
+                if (ev->state == WL_POINTER_BUTTON_STATE_PRESSED) {
+                    uint32_t other_held = ptr->held_mask & ~bbit;
+                    if (ptr->is_virtual && other_held != 0) {
+                        /* Auto-release any orphaned button left stuck by a VNC/browser
+                         * context-menu steal or client reconnect before handling a new click. */
+                        uint32_t rel_ts = t_ms;
+                        if (ptr->held_since_ms != 0 && (int32_t)(rel_ts - ptr->held_since_ms) < 600) {
+                            rel_ts = ptr->held_since_ms + 600u;
+                        }
+                        ptr->held_mask &= ~other_held;
+                        for (unsigned int b = 0; b <= 16u; ++b) {
+                            if (other_held & (1u << b)) {
+                                uint32_t obtn = pointer_bit_to_button(b);
+                                dtwm_xdnd_on_button_state(server, obtn, false);
+                                wlr_seat_pointer_notify_button(
+                                    server->seat, rel_ts, obtn, WL_POINTER_BUTTON_STATE_RELEASED
+                                );
+                            }
+                        }
+                        wlr_seat_pointer_notify_frame(server->seat);
+                        if ((int32_t)(t_ms - rel_ts) <= 0) {
+                            t_ms = rel_ts + 1u;
+                        }
+                    }
+                    ptr->held_mask |= bbit;
+                    ptr->held_since_ms = t_ms;
+                } else {
+                    ptr->held_mask &= ~bbit;
+                }
+                break;
+            }
+        }
     }
     dtwm_xdnd_on_button_state(server, btn, ev->state == WL_POINTER_BUTTON_STATE_PRESSED);
 
@@ -1889,8 +2009,10 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
         }
     }
 
-    if (!view && surface) {
+    if (surface && server->pointer_buttons_down <= 1) {
         wlr_seat_pointer_notify_enter(server->seat, surface, sx, sy);
+        wlr_seat_pointer_notify_motion(server->seat, t_ms, sx, sy);
+        wlr_seat_pointer_notify_frame(server->seat);
     }
 
     wlr_seat_pointer_notify_button(server->seat, t_ms, btn, ev->state);
@@ -2505,6 +2627,66 @@ static void update_seat_capabilities(DtwmServer *server) {
     wlr_seat_set_capabilities(server->seat, caps);
 }
 
+static void handle_pointer_destroy(struct wl_listener *listener, void *data) {
+    (void)data;
+    DtwmPointer *ptr = wl_container_of(listener, ptr, destroy);
+    DtwmServer *server = ptr->server;
+    uint32_t lost_mask = ptr->held_mask;
+    uint32_t held_since = ptr->held_since_ms;
+    wl_list_remove(&ptr->destroy.link);
+    wl_list_remove(&ptr->link);
+    free(ptr);
+
+    if (!server || server->shutting_down || lost_mask == 0 || !server->seat) {
+        return;
+    }
+    uint32_t remaining = 0;
+    DtwmPointer *other;
+    wl_list_for_each(other, &server->pointers, link) {
+        remaining |= other->held_mask;
+    }
+    uint32_t orphaned = lost_mask & ~remaining;
+    if (orphaned == 0) {
+        return;
+    }
+    uint32_t ts = dtwm_now_msec();
+    if (held_since != 0 && (int32_t)(ts - held_since) < 600) {
+        ts = held_since + 600u;
+    }
+    if (server->seat->pointer_state.focused_surface != nullptr) {
+        wlr_seat_pointer_notify_motion(server->seat, ts, -200.0, -200.0);
+        wlr_seat_pointer_notify_frame(server->seat);
+    }
+    for (unsigned int b = 0; b <= 16u; ++b) {
+        if (orphaned & (1u << b)) {
+            uint32_t btn = pointer_bit_to_button(b);
+            dtwm_xdnd_on_button_state(server, btn, false);
+            wlr_seat_pointer_notify_button(
+                server->seat, ts + 1u, btn, WL_POINTER_BUTTON_STATE_RELEASED
+            );
+        }
+    }
+    wlr_seat_pointer_notify_frame(server->seat);
+    if (server->pointer_buttons_down == 0 && server->seat->drag == nullptr) {
+        dismiss_open_client_popups(server, ts + 2u);
+        dtwm_recheck_cursor_focus(server);
+    }
+}
+
+static void server_add_pointer(
+    DtwmServer *server, struct wlr_pointer *wlr_ptr, bool is_virtual
+) {
+    if (!server || !wlr_ptr) return;
+    DtwmPointer *ptr = calloc(1, sizeof(*ptr));
+    if (!ptr) return;
+    ptr->server = server;
+    ptr->wlr_pointer = wlr_ptr;
+    ptr->is_virtual = is_virtual;
+    ptr->destroy.notify = handle_pointer_destroy;
+    wl_signal_add(&wlr_ptr->base.events.destroy, &ptr->destroy);
+    wl_list_insert(&server->pointers, &ptr->link);
+}
+
 static void handle_new_input(struct wl_listener *listener, void *data) {
     DtwmServer *server = wl_container_of(listener, server, new_input);
     struct wlr_input_device *dev = data;
@@ -2514,6 +2696,7 @@ static void handle_new_input(struct wl_listener *listener, void *data) {
         break;
     case WLR_INPUT_DEVICE_POINTER:
         wlr_cursor_attach_input_device(server->cursor, dev);
+        server_add_pointer(server, wlr_pointer_from_input_device(dev), false);
         dtwm_hw_apply_input_device(server, dev);
         break;
     default:
@@ -2526,6 +2709,7 @@ static void handle_new_virtual_pointer(struct wl_listener *listener, void *data)
     DtwmServer *server = wl_container_of(listener, server, new_virtual_pointer);
     struct wlr_virtual_pointer_v1_new_pointer_event *ev = data;
     wlr_cursor_attach_input_device(server->cursor, &ev->new_pointer->pointer.base);
+    server_add_pointer(server, &ev->new_pointer->pointer, true);
     if (ev->suggested_output) {
         wlr_cursor_map_input_to_output(server->cursor, &ev->new_pointer->pointer.base, ev->suggested_output);
     }
@@ -2894,6 +3078,10 @@ static void xdg_toplevel_destroy(struct wl_listener *listener, void *data) {
         wlr_scene_node_destroy(&view->frame_tree->node);
     }
     free(view);
+    if (server && server->pointer_buttons_down == 0 &&
+        server->seat && server->seat->drag == nullptr) {
+        dtwm_recheck_cursor_focus(server);
+    }
 }
 
 static void handle_new_xdg_toplevel(struct wl_listener *listener, void *data) {
@@ -3291,12 +3479,17 @@ static void xwayland_map(struct wl_listener *listener, void *data) {
         view->y = xs->y;
         view->client_w = xs->width > 0 ? xs->width : 1;
         view->client_h = xs->height > 0 ? xs->height : 1;
+        wl_list_remove(&view->link);
+        wl_list_insert(&view->server->views, &view->link);
         view->frame_tree = wlr_scene_subsurface_tree_create(
             view->server->unmanaged_xwayland_tree, xs->surface
         );
         view->frame_tree->node.data = view;
         wlr_scene_node_set_position(&view->frame_tree->node, xs->x, xs->y);
         wlr_scene_node_raise_to_top(&view->frame_tree->node);
+        if (view->server->pointer_buttons_down == 0 && view->server->seat->drag == nullptr) {
+            dtwm_recheck_cursor_focus(view->server);
+        }
         return;
     }
 
@@ -3466,6 +3659,9 @@ static void xwayland_unmap(struct wl_listener *listener, void *data) {
         view->frame_tree = nullptr;
         view->content_tree = nullptr;
         view->frame_buf = nullptr;
+    }
+    if (view->server->pointer_buttons_down == 0 && view->server->seat->drag == nullptr) {
+        dtwm_recheck_cursor_focus(view->server);
     }
 }
 
@@ -3660,6 +3856,10 @@ static void xwayland_set_geometry(struct wl_listener *listener, void *data) {
             wlr_scene_node_set_position(&view->frame_tree->node, xs->x, xs->y);
             if (xs->override_redirect && !view->is_lock_dialog) {
                 wlr_scene_node_raise_to_top(&view->frame_tree->node);
+                if (view->server->pointer_buttons_down == 0 &&
+                    view->server->seat->drag == nullptr) {
+                    dtwm_recheck_cursor_focus(view->server);
+                }
             }
         }
     }
@@ -3737,6 +3937,10 @@ static void xwayland_destroy(struct wl_listener *listener, void *data) {
         wlr_scene_node_destroy(&view->frame_tree->node);
     }
     free(view);
+    if (server && server->pointer_buttons_down == 0 &&
+        server->seat && server->seat->drag == nullptr) {
+        dtwm_recheck_cursor_focus(server);
+    }
 }
 
 static void handle_new_xwayland_surface(struct wl_listener *listener, void *data) {
@@ -4008,6 +4212,7 @@ int main(int argc, char **argv) {
     wl_list_init(&server.views);
     wl_list_init(&server.popups);
     wl_list_init(&server.keyboards);
+    wl_list_init(&server.pointers);
 
     server.wl_display = wl_display_create();
     if (!server.wl_display) {
@@ -4231,6 +4436,7 @@ int main(int argc, char **argv) {
     wl_display_run(server.wl_display);
 
 cleanup:
+    server.shutting_down = true;
     if (server.osd_timer) wl_event_source_remove(server.osd_timer);
     if (server.anim_timer) wl_event_source_remove(server.anim_timer);
     if (server.resize_flush_timer) wl_event_source_remove(server.resize_flush_timer);
@@ -4276,6 +4482,14 @@ cleanup:
     wl_list_remove(&server.new_xdg_popup.link);
     wl_list_remove(&server.new_xdg_decoration.link);
     wl_list_remove(&server.new_layer_surface.link);
+    {
+        DtwmPointer *ptr, *ptmp;
+        wl_list_for_each_safe(ptr, ptmp, &server.pointers, link) {
+            wl_list_remove(&ptr->destroy.link);
+            wl_list_remove(&ptr->link);
+            free(ptr);
+        }
+    }
     wlr_backend_destroy(server.backend);
     wlr_scene_node_destroy(&server.scene->tree.node);
     wlr_xcursor_manager_destroy(server.cursor_mgr);

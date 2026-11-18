@@ -205,6 +205,43 @@ InitButtonLabels( void )
    _DtCloseString = XtNewString(Dt11GETMESSAGE(28, 5, "Close"));
 }
 
+static XtEventDispatchProc _DtPrevConfigureDispatcher = nullptr;
+
+static Boolean
+_DtRootConfigureDispatcher(
+        XEvent *event )
+{
+   if (event != nullptr &&
+       event->type == ConfigureNotify &&
+       event->xconfigure.display != nullptr &&
+       event->xconfigure.width > 0 &&
+       event->xconfigure.height > 0)
+   {
+      Display *dpy = event->xconfigure.display;
+      int nscreens = ScreenCount(dpy);
+      for (int s = 0; s < nscreens; ++s)
+      {
+         if (RootWindow(dpy, s) == event->xconfigure.window)
+         {
+            Screen *scr = ScreenOfDisplay(dpy, s);
+            if (scr != nullptr)
+            {
+               scr->width = event->xconfigure.width;
+               scr->height = event->xconfigure.height;
+            }
+            break;
+         }
+      }
+   }
+
+   if (_DtPrevConfigureDispatcher != nullptr)
+      return _DtPrevConfigureDispatcher(event);
+
+   return XtDispatchEventToWidget(
+      event != nullptr ? XtWindowToWidget(event->xany.display, event->xany.window) : nullptr,
+      event);
+}
+
 static void 
 DtGlobalsInitialize(
         Display *display,
@@ -224,4 +261,29 @@ DtGlobalsInitialize(
    XtGetApplicationNameAndClass (display,
 				 &_DtApplicationName,
 				 &_DtApplicationClass);
+
+   /*
+    * Keep Xlib's cached Screen dimensions synchronized across live Xwayland /
+    * XRandR output modesets and HiDPI scale changes so Motif popup/pulldown
+    * menu placement (ForceMenuPaneOnScreen) never clamps against stale boot
+    * dimensions when RRScreenChangeNotify was consumed earlier.
+    */
+   if (display != nullptr)
+   {
+      int nscreens = ScreenCount(display);
+      for (int s = 0; s < nscreens; ++s)
+      {
+         Window root_win = RootWindow(display, s);
+         XWindowAttributes wattr;
+         long mask = StructureNotifyMask;
+         if (XGetWindowAttributes(display, root_win, &wattr))
+            mask |= wattr.your_event_mask;
+         XSelectInput(display, root_win, mask);
+      }
+
+      XtEventDispatchProc prev = XtSetEventDispatcher(
+         display, ConfigureNotify, _DtRootConfigureDispatcher);
+      if (prev != nullptr && prev != _DtRootConfigureDispatcher)
+         _DtPrevConfigureDispatcher = prev;
+   }
 }   

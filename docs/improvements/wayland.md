@@ -172,7 +172,18 @@ across native Wayland and XWayland clients simultaneously:
   `--output-dpi INDEX=DPI` or live via `_DT_WM_REQUEST`
   `f.set_output_dpi INDEX DPI`) alongside `wp_fractional_scale_v1` for native
   Wayland clients, triggering crisp live Motif shell reflow when windows move
-  across mixed-DPI monitors (`96`, `144`, `192`, ...).
+  across mixed-DPI monitors (`96`, `144`, `192`, ...);
+- **XWayland Motif menu focus, virtual-pointer button recovery, and post-modeset
+  `Screen` bounds (`dtwm_wayland_main.c`, `cde_xdnd_bridge.c`, `DtUtil.c`):**
+  `dtwm-wayland` tracks per-device and bitmask pointer button state across
+  physical and `zwlr_virtual_pointer_v1` (`wayvnc`) inputs—auto-releasing
+  orphaned buttons on virtual-pointer disconnect or stale cross-button state,
+  filtering off-screen helper windows (`_MOTIF_DRAG_WINDOW`) during outside-click
+  popup dismissal, re-establishing `wl_pointer` surface focus before stationary
+  clicks and override-redirect `XmMenuShell` map/geometry updates—while
+  `DtInitialize` / `DtAppInitialize` (`libDtSvc`) and `dtfile` synchronize Xlib
+  `Screen` dimensions on root `ConfigureNotify` so Motif pulldown and popup menus
+  never clamp to boot dimensions after live `wlr-randr` / HiDPI output changes.
 
 ## `dtsession` Wayland session startup, `ext-session-lock-v1`, and `dtstyle` hardware IPC
 
@@ -435,13 +446,17 @@ atomically once both the Wayland socket and rootless `Xwayland` are ready.
   Wayland + X11 `Xvfb` verification of `ck-polkit-agent` `libXm.so.9` +
   `PR_SET_DUMPABLE=0` password retry/elevation/cancellation, `gnome-keyring-daemon`
   + `secret-tool` auto-unlock round-trip, and `ck-grab --region --clipboard` +
-  `--paste-png` pixel-accurate crop/clipboard transfer), and
+  `--paste-png` pixel-accurate crop/clipboard transfer),
   `check-dtwm-wayland-wp16.py` (`WP-16` parallel dual Wayland + X11 `Xvfb`
   verification of `dtfile` `libXm.so.9` `UDisks2` LUKS unlock/hotplug/eject,
   `GVFS` *Connect to Server* + MTP phone `inotify` discovery, 5-format archive
   round-trips + Zip-Slip rejection, FreeDesktop thumbnail resolution,
   `org.freedesktop.FileManager1` window raise + selection, and live
-  bidirectional `inotify` XDG + `.Trash-$UID` Trash) run automatically under
+  bidirectional `inotify` XDG + `.Trash-$UID` Trash), and
+  `check-dtwm-wayland-menus.py` (XWayland Motif pulldown/popup menu focus,
+  mid-press `zwlr_virtual_pointer_v1` crash cleanup, `wayvnc` stuck-button
+  auto-heal, stationary-click `wl_pointer` focus restoration, and post-modeset
+  HiDPI two-click + press-drag-release menu activation) run automatically under
   `make check`.
 - **Signed Ubuntu LTS `.deb` and APT repository qualification (`WP-08`):**
   `scripts/build-ubuntu-debs.py --verify-install` packages `ck-core-motif9`,

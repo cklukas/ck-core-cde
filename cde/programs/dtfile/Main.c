@@ -1854,9 +1854,34 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
    printf("    Finish, time: %ld.%ld\n\n", update_time_fs.tv_sec - update_time_ss.tv_sec, update_time_fs.tv_usec - update_time_ss .tv_usec);
 #endif
 
+   if (toplevel != nullptr && XtDisplay(toplevel) != nullptr)
+   {
+      Display *root_dpy = XtDisplay(toplevel);
+      Window root_win = DefaultRootWindow(root_dpy);
+      XWindowAttributes wattr;
+      long mask = StructureNotifyMask;
+      if (XGetWindowAttributes(root_dpy, root_win, &wattr))
+         mask |= wattr.your_event_mask;
+      XSelectInput(root_dpy, root_win, mask);
+   }
+
    while (1)
    {
       XtNextEvent(&event);
+
+      if (event.type == ConfigureNotify &&
+          event.xconfigure.display != nullptr &&
+          event.xconfigure.window == DefaultRootWindow(event.xconfigure.display))
+      {
+         Screen *scr = DefaultScreenOfDisplay(event.xconfigure.display);
+         if (scr != nullptr &&
+             event.xconfigure.width > 0 &&
+             event.xconfigure.height > 0)
+         {
+            scr->width = event.xconfigure.width;
+            scr->height = event.xconfigure.height;
+         }
+      }
 
       if (event.type != 0)
          XtDispatchEvent(&event);
