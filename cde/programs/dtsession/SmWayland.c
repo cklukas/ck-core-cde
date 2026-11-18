@@ -438,25 +438,43 @@ static void spawn_compositor_if_needed(void) {
                 g_smwl.status_path[0] = '\0';
                 /* Publish live WAYLAND_DISPLAY / DISPLAY to D-Bus & systemd user activation
                  * so xdg-desktop-portal / xdg-desktop-portal-wlr (WebRTC screen sharing),
+                 * Secret Service (gnome-keyring-daemon), Polkit authentication (ck-polkit-agent),
                  * Wayland/XIM Input Methods (fcitx5 / ibus), and ck-status --daemon connect
                  * to the active Wayland & XWayland sockets. */
-                if (fork() == 0) {
-                    execl(
-                        "/bin/sh", "sh", "-c",
-                        "if command -v dbus-update-activation-environment >/dev/null 2>&1; then "
-                        "dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XMODIFIERS GTK_IM_MODULE QT_IM_MODULE >/dev/null 2>&1 || "
-                        "dbus-update-activation-environment WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XMODIFIERS GTK_IM_MODULE QT_IM_MODULE >/dev/null 2>&1 || true; "
-                        "fi; "
-                        "case \"${CDE_WAYLAND_IMS:-}\" in "
-                        "fcitx5|fcitx) command -v fcitx5 >/dev/null 2>&1 && fcitx5 -d >/dev/null 2>&1 & ;; "
-                        "ibus) command -v ibus-daemon >/dev/null 2>&1 && ibus-daemon -drx >/dev/null 2>&1 & ;; "
-                        "esac; "
-                        "if command -v ck-status >/dev/null 2>&1; then "
-                        "ck-status --daemon >/dev/null 2>&1 & "
-                        "fi",
-                        (char *)nullptr
-                    );
+                pid_t spid = fork();
+                if (spid == 0) {
+                    if (fork() == 0) {
+                        setsid();
+                        execl(
+                            "/bin/sh", "sh", "-c",
+                            "if command -v gnome-keyring-daemon >/dev/null 2>&1; then "
+                            "eval \"$(gnome-keyring-daemon --start --components=secrets,ssh 2>/dev/null)\" || true; "
+                            "export SSH_AUTH_SOCK; "
+                            "fi; "
+                            "if command -v dbus-update-activation-environment >/dev/null 2>&1; then "
+                            "dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XMODIFIERS GTK_IM_MODULE QT_IM_MODULE SSH_AUTH_SOCK >/dev/null 2>&1 || "
+                            "dbus-update-activation-environment WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XMODIFIERS GTK_IM_MODULE QT_IM_MODULE SSH_AUTH_SOCK >/dev/null 2>&1 || true; "
+                            "fi; "
+                            "case \"${CDE_WAYLAND_IMS:-}\" in "
+                            "fcitx5|fcitx) command -v fcitx5 >/dev/null 2>&1 && fcitx5 -d >/dev/null 2>&1 & ;; "
+                            "ibus) command -v ibus-daemon >/dev/null 2>&1 && ibus-daemon -drx >/dev/null 2>&1 & ;; "
+                            "esac; "
+                            "if command -v ck-polkit-agent >/dev/null 2>&1; then "
+                            "ck-polkit-agent >/dev/null 2>&1 & "
+                            "elif [ -x " CDE_INSTALLATION_TOP "/bin/ck-polkit-agent ]; then "
+                            CDE_INSTALLATION_TOP "/bin/ck-polkit-agent >/dev/null 2>&1 & "
+                            "fi; "
+                            "if command -v ck-status >/dev/null 2>&1; then "
+                            "ck-status --daemon >/dev/null 2>&1 & "
+                            "fi",
+                            (char *)nullptr
+                        );
+                        _exit(0);
+                    }
                     _exit(0);
+                } else if (spid > 0) {
+                    int sst = 0;
+                    (void)waitpid(spid, &sst, 0);
                 }
                 break;
             }

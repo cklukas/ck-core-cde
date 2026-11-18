@@ -38,6 +38,10 @@ fi
 if [ -x /usr/dt/bin/cde-color-sync ]; then
     /usr/dt/bin/cde-color-sync --daemon >/dev/null 2>&1 &
 fi
+if command -v gnome-keyring-daemon >/dev/null 2>&1; then
+    eval "$(gnome-keyring-daemon --start --components=secrets,ssh 2>/dev/null)" || true
+    export SSH_AUTH_SOCK
+fi
 export XBMLANGPATH="${XBMLANGPATH:-${HOME:+$HOME/.dt/icons/%B%M.bm:$HOME/.dt/icons/%B:}/usr/dt/appconfig/icons/%L/%B%M.bm:/usr/dt/appconfig/icons/%L/%B:/usr/dt/appconfig/icons/C/%B%M.bm:/usr/dt/appconfig/icons/C/%B}"
 
 # Synchronize CDE IMS selection (~/.dt/ims/*) or installed Wayland IME (fcitx5 / ibus)
@@ -71,7 +75,7 @@ if [ -x /usr/dt/bin/dtwm-wayland ]; then
     if [ -x /usr/dt/bin/dtsession ] && /usr/dt/bin/dtsession --help 2>&1 | grep -q -- '--wayland'; then
         exec /usr/dt/bin/dtsession --wayland
     fi
-    exec /usr/dt/bin/dtwm-wayland --session --startup 'if command -v dbus-update-activation-environment >/dev/null 2>&1; then dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XMODIFIERS GTK_IM_MODULE QT_IM_MODULE >/dev/null 2>&1 || dbus-update-activation-environment WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XMODIFIERS GTK_IM_MODULE QT_IM_MODULE >/dev/null 2>&1 || true; fi; case "${CDE_WAYLAND_IMS:-}" in fcitx5|fcitx) command -v fcitx5 >/dev/null 2>&1 && fcitx5 -d >/dev/null 2>&1 & ;; ibus) command -v ibus-daemon >/dev/null 2>&1 && ibus-daemon -drx >/dev/null 2>&1 & ;; esac; command -v ck-status >/dev/null 2>&1 && ck-status --daemon >/dev/null 2>&1 &'
+    exec /usr/dt/bin/dtwm-wayland --session --startup 'if command -v dbus-update-activation-environment >/dev/null 2>&1; then dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XMODIFIERS GTK_IM_MODULE QT_IM_MODULE SSH_AUTH_SOCK >/dev/null 2>&1 || dbus-update-activation-environment WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XMODIFIERS GTK_IM_MODULE QT_IM_MODULE SSH_AUTH_SOCK >/dev/null 2>&1 || true; fi; case "${CDE_WAYLAND_IMS:-}" in fcitx5|fcitx) command -v fcitx5 >/dev/null 2>&1 && fcitx5 -d >/dev/null 2>&1 & ;; ibus) command -v ibus-daemon >/dev/null 2>&1 && ibus-daemon -drx >/dev/null 2>&1 & ;; esac; command -v ck-polkit-agent >/dev/null 2>&1 && ck-polkit-agent >/dev/null 2>&1 & command -v ck-status >/dev/null 2>&1 && ck-status --daemon >/dev/null 2>&1 &'
 fi
 
 echo "Xsession.wayland: /usr/dt/bin/dtwm-wayland is not yet installed" >&2

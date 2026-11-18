@@ -10,6 +10,7 @@
 auth sufficient PAM_AUTHENTICATION_MODULE
 #endif
 auth required pam_unix.so
+-auth optional pam_gnome_keyring.so
 
 account required pam_unix.so
 

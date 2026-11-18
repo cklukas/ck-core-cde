@@ -1,0 +1,39 @@
+{
+  "work_package": "WP-14",
+  "date": "2026-11-18",
+  "branch": "x11_wayland",
+  "host_vm": "cde-ubuntu2604 (Ubuntu 26.04.1 LTS aarch64, Linux 7.0.0-34-generic, clang 21, wlroots 0.19, polkitd 127-2ubuntu1.1)",
+  "motif_revision": "bd8043040a5257ac02a46c6ecf6cc711e9c099a0",
+  "build_timing": {
+    "apps_elapsed_seconds": 2,
+    "cde_elapsed_seconds": 4,
+    "mode": "incremental (-j4) across ck-core-apps (ck-polkit-agent, ck-grab) and ck-core-cde (programs/dtwm, programs/dtsession, programs/dtlogin/config, programs/localized/C/config)"
+  },
+  "installed_sha256": {
+    "/usr/dt/bin/ck-polkit-agent": "60c18e137a22e13ae310edf9f4ccc9b2ff0b13f40cbf4d2f45d4a1cad25db31f",
+    "/usr/dt/bin/ck-grab": "0c580ce27e0a4681cd6d78d683d74cb1a3e32604fffe831bf644b92d92038b4f",
+    "/usr/dt/bin/dtwm": "45667c2abcf7731f07245f7155481919a3796b8449a41eb253412ac0b75ec3c4",
+    "/usr/dt/bin/dtwm-wayland": "6e84459d68dc267e5f3570d619adbd6890f3e2cfba7261728fc57965cecbd4b2",
+    "/usr/dt/bin/dtsession": "0eeb719e2fc1e45fda2ba9121427d6d8855f78a79d3541cbcd7a84f1aadd5070",
+    "/usr/dt/bin/Xsession.wayland": "bb476f36a487060dc446d41beaf7120b37cf8513c4c922b1cf7ea47faa209371",
+    "/etc/pam.d/dtlogin": "35775e7aca4d904e5b4dc41d9d6b52d8742324ea6b0df253a1ff6ba8c4659a2e",
+    "/etc/pam.d/dtsession": "93089a2af57f9c6715ea570a2156e3931d6700fbe1348958f98b8328dbeff97d"
+  },
+  "features_verified": [
+    "Native Motif ABI 9 Polkit authentication agent (ck-polkit-agent) registering /org/cde/PolicyKit1/AuthenticationAgent with org.freedesktop.PolicyKit1.Authority (unix-session with login1 User.Display resolution under systemd --user and unix-process fallback), PR_SET_DUMPABLE=0 process hardening, volatile secret wiping, workspace-sticky centered CDE padlock modal, and Polkit 124+ /run/polkit/agent-helper.socket + classic helper pipe support",
+    "Live system polkitd (127-2ubuntu1.1) + pkexec --disable-internal-agent elevation dialog verified on CDE (Wayland) alongside automated BeginAuthentication wrong-password retry, right-password elevation, and CancelAuthentication dismissal on both Wayland and X11",
+    "Secret Service PAM auto-unlock wiring in /etc/pam.d/dtlogin (-auth, -session ... auto_start, -password pam_gnome_keyring.so) and /etc/pam.d/dtsession (-auth optional pam_gnome_keyring.so while preserving session/password required pam_deny.so), plus gnome-keyring-daemon --start --components=secrets,ssh and ck-polkit-agent auto-start in Xsession.wayland, dtsession --wayland, and X11 Xsession",
+    "Interactive ck-grab Region (Drag Rectangle) capture (--region / -r, --crop X,Y,WxH; zwlr_layer_shell_v1 LAYER_OVERLAY crosshair selector on Wayland and override_redirect XGrabPointer rubber-band crosshair on X11) and direct Copy to Clipboard (--clipboard / -c and --paste-png, serving image/png via zwlr_data_control_manager_v1 / wl_data_device on Wayland and X11 CLIPBOARD with ICCCM INCR support), bound to Shift+Print in both dtwm-wayland and X11 dtwm"
+  ],
+  "commands": [
+    "make -j4 BUILD_DIR=/var/tmp/ck-wayland-build/wp00/apps-build MOTIF_PREFIX=/var/tmp/ck-wayland-build/wp00/motif-prefix CDE_PREFIX=/usr/dt check (4/4 suites PASS)",
+    "CC=clang python3 cde/programs/dtwm/tests/check-dtwm-wayland-wp14.py --compositor ./dtwm-wayland (parallel Wayland + X11 Xvfb lanes: 3.25s PASS, repeat 3.22s PASS)",
+    "/usr/dt/bin/ck-polkit-agent --check-register (REGISTERED=1 SUBJECT=unix-session PATH=/org/cde/PolicyKit1/AuthenticationAgent)",
+    "make -j4 -C /var/tmp/ck-wayland-build/wp00/cde-build/programs/dtsession check (16/16 PASS)",
+    "ckdocs check --config ckdocs.yml --strict (ck-core-apps 23 pages PASS; ck-core-cde 26 pages PASS)"
+  ],
+  "screenshots": {
+    "live_wayland_ws2_polkit_modal_and_grab": "wp14_live_verified_polkit_and_grab.png"
+  },
+  "result": "pass"
+}

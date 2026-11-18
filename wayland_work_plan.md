@@ -171,7 +171,7 @@ flowchart TD
   - **Cross-Toolkit Dark/Light Mode Synchronization:** Whenever `dtstyle` / `dtsession` switches between `ModernDark.dp` (`modern_dark`) and light/classic palettes on either Wayland or X11, update `gsettings` (`org.gnome.desktop.interface color-scheme` / `gtk-theme`), D-Bus `org.freedesktop.portal.Settings` (`prefer-dark` / `prefer-light`), and X11 `XSETTINGS` (`Net/ThemeName`) so GTK3/4, libadwaita, Firefox, Chromium, and Qt apps switch dark/light appearance live alongside CDE.
 - **Parallel Wayland + X11 Acceptance Gate**: Parallel `dtwm-wayland` and `Xvfb` + X11 `dtwm` tests inject `XF86Audio*` / `XF86MonBrightness*` / `Super+L` keys to verify action + OSD rendering, test `dtstyle` touchpad property updates on both Wayland (`_DT_WAYLAND_INPUT_STATE`) and X11 (`XInput2` mock device), and verify live dark/light theme signals across portals and `XSETTINGS`.
 
-### [ ] WP-14 — Polkit Authentication Agent (`ck-polkit-agent`), PAM Keyring Auto-Unlock & Interactive `ck-grab` Region/Clipboard Capture
+### [x] WP-14 — Polkit Authentication Agent (`ck-polkit-agent`), PAM Keyring Auto-Unlock & Interactive `ck-grab` Region/Clipboard Capture
 - **Closes**: `GAP-SYS-02`, `GAP-SHELL-04`
 - **Repos**: `ck-core-apps` (`src/ck-polkit-agent/`, `src/ck-grab/`), `ck-core-cde` (`cde/debian/`, `cde/programs/dtlogin/`, `cde/programs/dtsession/`)
 - **Dual Wayland + X11 Scope**:

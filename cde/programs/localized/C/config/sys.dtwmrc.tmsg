@@ -179,6 +179,7 @@ $ *
     Mod4<Key>space		root|icon|window	f.exec "ck-launch --toggle"\n\
     Mod4<Key>l			root|icon|window	f.exec "dtaction LockDisplay"\n\
     <Key>Print			root|icon|window	f.exec "ck-grab"\n\
+    Shift<Key>Print		root|icon|window	f.exec "ck-grab --region --clipboard"\n\
     Alt<Key>F6			window			f.next_key transient\n\
     Alt<Key>F10			root|icon|window	f.menu DtRootMenu
 $ *
@@ -204,6 +205,7 @@ $ *
     Mod4<Key>space		root|icon|window	f.exec "ck-launch --toggle"\n\
     Mod4<Key>l			root|icon|window	f.exec "dtaction LockDisplay"\n\
     <Key>Print			root|icon|window	f.exec "ck-grab"\n\
+    Shift<Key>Print		root|icon|window	f.exec "ck-grab --region --clipboard"\n\
     Alt<Key>F6			window			f.next_key transient
 $ *
 $ * #DefaultButtonBindings#
@@ -229,6 +231,7 @@ $ *
     Mod4<Key>space		root|icon|window	f.exec "ck-launch --toggle"\n\
     Mod4<Key>l			root|icon|window	f.exec "dtaction LockDisplay"\n\
     <Key>Print			root|icon|window	f.exec "ck-grab"\n\
+    Shift<Key>Print		root|icon|window	f.exec "ck-grab --region --clipboard"\n\
     Alt<Key>F6  		window			f.next_key transient\n\
     Alt Shift<Key>F6		window			f.prev_key transient\n\
     <Key>SunFront               ifkey|icon|window       f.raise_lower\n\

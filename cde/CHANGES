@@ -1,4 +1,37 @@
 2026-11-18
+- Deliver **WP-14 — Polkit Authentication Agent (`ck-polkit-agent`), PAM Keyring
+  Auto-Unlock & Interactive `ck-grab` Region/Clipboard Capture** across both
+  `CDE (Wayland)` and `CDE (X11 / XLibre)`
+  (`cde/programs/dtwm/wayland/dtwm_wayland.h`,
+  `cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `cde/programs/dtwm/WmEwmh.c`, `cde/programs/dtwm/Makefile.am`,
+  `cde/programs/localized/C/config/sys.dtwmrc.tmsg`,
+  `cde/programs/dtlogin/config/dtlogin.src`,
+  `cde/programs/dtlogin/config/Xsession.src`,
+  `cde/programs/dtsession/config/dtsession.src`,
+  `cde/programs/dtsession/SmWayland.c`,
+  `cde/programs/dtsession/tests/check-lock-authentication.py`,
+  `cde/debian/Xsession.wayland`, `cde/debian/control`,
+  `cde/programs/dtwm/tests/check-dtwm-wayland-wp14.py`,
+  `docs/improvements/wayland.md`):
+  - Auto-start `ck-polkit-agent` (`org.freedesktop.PolicyKit1.AuthenticationAgent`)
+    and `gnome-keyring-daemon --start --components=secrets,ssh` (exporting
+    `SSH_AUTH_SOCK` to D-Bus/systemd user activation) in `Xsession.wayland`,
+    `dtsession --wayland`, and classic X11 `Xsession`, and add `pkexec`,
+    `polkitd`, `gnome-keyring`, and `libpam-gnome-keyring` to `ck-core-cde`
+    package `Recommends`.
+  - Wire optional `pam_gnome_keyring.so` hooks in `/etc/pam.d/dtlogin` (`-auth`,
+    `-session ... auto_start`, `-password`) and `/etc/pam.d/dtsession` (`-auth`,
+    preserving `session required pam_deny.so` and `password required pam_deny.so`)
+    so `org.freedesktop.secrets` unlocks automatically with the login password.
+  - Enable `wlr_data_control_manager_v1` clipboard management, grant interactive
+    keyboard/pointer focus to `zwlr_layer_shell_v1` overlay surfaces, clean up
+    pointer gesture listeners on compositor teardown, and bind `Shift+Print` to
+    `ck-grab --region --clipboard` in both `dtwm-wayland` and X11 `dtwm`.
+  - Add `check-dtwm-wayland-wp14.py` verifying `ck-polkit-agent` retry/elevation/
+    cancellation, Secret Service keyring unlock + `secret-tool` round-trip, and
+    interactive `ck-grab --region --clipboard` + `--paste-png` in parallel under
+    both headless `dtwm-wayland` and `Xvfb` + `dtwm`.
 - Deliver **WP-13 — Hardware Media/Brightness Keys + 3D Bevel OSD, Laptop
   Touchpad Settings (`dtstyle`) & Cross-Toolkit Dark-Mode Sync** across both
   `CDE (Wayland)` and `CDE (X11 / XLibre)`

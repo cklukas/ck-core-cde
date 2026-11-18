@@ -1889,6 +1889,10 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
         }
     }
 
+    if (!view && surface) {
+        wlr_seat_pointer_notify_enter(server->seat, surface, sx, sy);
+    }
+
     wlr_seat_pointer_notify_button(server->seat, t_ms, btn, ev->state);
 }
 
@@ -2147,7 +2151,9 @@ static void invoke_media_ctl_and_osd(DtwmServer *server, const char *action) {
     }
 }
 
-static void spawn_session_helper(DtwmServer *server, const char *prog, const char *arg1) {
+static void spawn_session_helper(
+    DtwmServer *server, const char *prog, const char *arg1, const char *arg2
+) {
     if (!server || server->session_locked || server->greeter_mode) return;
     pid_t pid = fork();
     if (pid == 0) {
@@ -2157,7 +2163,12 @@ static void spawn_session_helper(DtwmServer *server, const char *prog, const cha
             if (server->xwayland && server->xwayland->display_name) {
                 setenv("DISPLAY", server->xwayland->display_name, 1);
             }
-            if (arg1) {
+            if (arg1 && arg2) {
+                execlp(prog, prog, arg1, arg2, (char *)nullptr);
+                char dt_path[256];
+                snprintf(dt_path, sizeof(dt_path), CDE_INSTALLATION_TOP "/bin/%s", prog);
+                execl(dt_path, prog, arg1, arg2, (char *)nullptr);
+            } else if (arg1) {
                 execlp(prog, prog, arg1, (char *)nullptr);
                 char dt_path[256];
                 snprintf(dt_path, sizeof(dt_path), CDE_INSTALLATION_TOP "/bin/%s", prog);
@@ -2244,8 +2255,12 @@ static bool handle_compositor_keybinding(DtwmServer *server, uint32_t mods, xkb_
         return true;
     case XKB_KEY_Print:
     case XKB_KEY_Sys_Req:
-        spawn_session_helper(server, "ck-grab", nullptr);
-        show_hardware_osd(server, "screenshot", 100, false, "Screenshot: ck-grab");
+        if (mods & WLR_MODIFIER_SHIFT) {
+            spawn_session_helper(server, "ck-grab", "--region", "--clipboard");
+        } else {
+            spawn_session_helper(server, "ck-grab", nullptr, nullptr);
+            show_hardware_osd(server, "screenshot", 100, false, "Screenshot: ck-grab");
+        }
         return true;
     default:
         break;
@@ -2253,7 +2268,7 @@ static bool handle_compositor_keybinding(DtwmServer *server, uint32_t mods, xkb_
 
     if ((mods & WLR_MODIFIER_LOGO) && (sym == XKB_KEY_l || sym == XKB_KEY_L)) {
         show_hardware_osd(server, "lock", 100, false, "Session: Lock Screen");
-        spawn_session_helper(server, "dtaction", "LockDisplay");
+        spawn_session_helper(server, "dtaction", "LockDisplay", nullptr);
         return true;
     }
 
@@ -3048,11 +3063,38 @@ static void layer_surface_map(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmLayerSurface *ls = wl_container_of(listener, ls, map);
     arrange_layer_surface(ls);
+    if (!ls->server->session_locked &&
+        ls->layer_surface->current.keyboard_interactive !=
+            ZWLR_LAYER_SURFACE_V1_KEYBOARD_INTERACTIVITY_NONE) {
+        struct wlr_keyboard *kb = wlr_seat_get_keyboard(ls->server->seat);
+        if (kb) {
+            wlr_seat_keyboard_notify_enter(
+                ls->server->seat,
+                ls->layer_surface->surface,
+                kb->keycodes,
+                kb->num_keycodes,
+                &kb->modifiers
+            );
+        } else {
+            wlr_seat_keyboard_notify_enter(
+                ls->server->seat, ls->layer_surface->surface, nullptr, 0, nullptr
+            );
+        }
+    }
+    dtwm_recheck_cursor_focus(ls->server);
 }
 
 static void layer_surface_unmap(struct wl_listener *listener, void *data) {
     (void)data;
-    (void)listener;
+    DtwmLayerSurface *ls = wl_container_of(listener, ls, unmap);
+    if (!ls->server->session_locked &&
+        ls->server->seat->keyboard_state.focused_surface == ls->layer_surface->surface) {
+        wlr_seat_keyboard_notify_clear_focus(ls->server->seat);
+        if (ls->server->focused_view && ls->server->focused_view->mapped) {
+            focus_view_ex(ls->server, ls->server->focused_view, nullptr, false);
+        }
+    }
+    dtwm_recheck_cursor_focus(ls->server);
 }
 
 static void layer_surface_destroy(struct wl_listener *listener, void *data) {
@@ -3998,6 +4040,7 @@ int main(int argc, char **argv) {
     server.compositor = wlr_compositor_create(server.wl_display, 5, server.renderer);
     wlr_subcompositor_create(server.wl_display);
     wlr_data_device_manager_create(server.wl_display);
+    wlr_data_control_manager_v1_create(server.wl_display);
     wlr_primary_selection_v1_device_manager_create(server.wl_display);
     wlr_viewporter_create(server.wl_display);
     wlr_fractional_scale_manager_v1_create(server.wl_display, 1);
@@ -4212,6 +4255,14 @@ cleanup:
     wl_list_remove(&server.cursor_button.link);
     wl_list_remove(&server.cursor_axis.link);
     wl_list_remove(&server.cursor_frame.link);
+    wl_list_remove(&server.cursor_swipe_begin.link);
+    wl_list_remove(&server.cursor_swipe_update.link);
+    wl_list_remove(&server.cursor_swipe_end.link);
+    wl_list_remove(&server.cursor_pinch_begin.link);
+    wl_list_remove(&server.cursor_pinch_update.link);
+    wl_list_remove(&server.cursor_pinch_end.link);
+    wl_list_remove(&server.cursor_hold_begin.link);
+    wl_list_remove(&server.cursor_hold_end.link);
     wl_list_remove(&server.request_cursor.link);
     wl_list_remove(&server.request_set_selection.link);
     wl_list_remove(&server.request_set_primary_selection.link);

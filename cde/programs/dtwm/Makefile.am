@@ -17,6 +17,7 @@ EXTRA_DIST = tests/check-property-readers.py tests/property-client.c \
              tests/check-dtwm-wayland-wp06.py tests/check-dtwm-wayland-wp09.py \
              tests/check-dtwm-wayland-wp10.py tests/check-dtwm-wayland-wp11.py \
              tests/check-dtwm-wayland-wp12.py tests/check-dtwm-wayland-wp13.py \
+             tests/check-dtwm-wayland-wp14.py \
              wayland/protocols/wlr-layer-shell-unstable-v1.xml \
              wayland/protocols/wlr-output-power-management-unstable-v1.xml \
              wayland/protocols/wlr-foreign-toplevel-management-unstable-v1.xml \
@@ -41,6 +42,7 @@ if BUILD_DTWM_WAYLAND
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp11.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp12.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp13.py --compositor ./dtwm-wayland
+	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp14.py --compositor ./dtwm-wayland
 endif
 
 noinst_DATA = sys.dtwmrc Dtwm.defs

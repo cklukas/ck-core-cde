@@ -509,6 +509,15 @@ StartFirst()
     if [ -x "$DT_BINPATH/cde-color-sync" ]; then
         "$DT_BINPATH/cde-color-sync" --daemon >/dev/null 2>&1 &
     fi
+    if command -v gnome-keyring-daemon >/dev/null 2>&1; then
+        eval "$(gnome-keyring-daemon --start --components=secrets,ssh 2>/dev/null)" || true
+        export SSH_AUTH_SOCK
+    fi
+    if [ -x "$DT_BINPATH/ck-polkit-agent" ]; then
+        "$DT_BINPATH/ck-polkit-agent" >/dev/null 2>&1 &
+    elif command -v ck-polkit-agent >/dev/null 2>&1; then
+        ck-polkit-agent >/dev/null 2>&1 &
+    fi
   fi
 
   HASH 

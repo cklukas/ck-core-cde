@@ -115,8 +115,11 @@ for line in (source / "config" / "dtsession.src").read_text().splitlines():
     if skipping or not line:
         continue
     stack.append(tuple(line.split()))
-expected = [("auth", "required", "pam_unix.so"), ("account", "required", "pam_unix.so"),
-            ("session", "required", "pam_deny.so"), ("password", "required", "pam_deny.so")]
+expected = [("auth", "required", "pam_unix.so"),
+            ("-auth", "optional", "pam_gnome_keyring.so"),
+            ("account", "required", "pam_unix.so"),
+            ("session", "required", "pam_deny.so"),
+            ("password", "required", "pam_deny.so")]
 if stack != expected:
     problems.append("the PAM service in config/dtsession.src is %r, not %r" % (stack, expected))
 

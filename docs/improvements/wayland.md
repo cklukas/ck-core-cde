@@ -156,13 +156,15 @@ across native Wayland and XWayland clients simultaneously:
   `UTF8_STRING`, `text/plain;charset=utf-8`) the moment the pointer enters a
   native Wayland surface — preserving native X11-to-X11 Motif drags untouched
   over XWayland surfaces;
-- **`ck-grab` Wayland screencopy (`zwlr_screencopy_manager_v1`):**
+- **`ck-grab` Wayland screencopy, region overlay, and clipboard (`zwlr_screencopy_manager_v1`, `zwlr_layer_shell_v1`, `zwlr_data_control_manager_v1`):**
   `dtwm-wayland` publishes `_DT_ACTIVE_WINDOW_BOX` (`outer_x`, `outer_y`,
   `outer_w`, `outer_h`, `client_x`, `client_y`, `client_w`, `client_h`) on the
-  XWayland root window whenever focus or geometry changes so `ck-grab` captures
-  active native Wayland windows (with or without their server-side CDE 3D bevel
-  frames), arbitrary desktop regions, and stitched multi-output full-screen
-  desktops;
+  XWayland root window, grants keyboard/pointer focus to interactive
+  `zwlr_layer_shell_v1` `LAYER_OVERLAY` surfaces, and advertises
+  `zwlr_data_control_manager_v1` alongside `wl_data_device_manager` so `ck-grab`
+  captures active native Wayland windows, interactive drag-rectangle regions
+  (`--region` / `Shift+Print`), and stitched multi-output desktops and copies
+  `image/png` directly onto the desktop clipboard;
 - **Per-output XLibre RandR `DPI` and `wp_fractional_scale_v1`:**
   `dtwm-wayland` opts rootless `Xwayland` into CK Core Motif's per-output RandR
   observer via `_MOTIF_RANDR_OUTPUT_DPI` (`CARDINAL = 1`) and publishes each
@@ -345,6 +347,35 @@ synchronization:
   `_XSETTINGS_SETTINGS` (`Net/ThemeName`), `gsettings`, and
   `~/.config/gtk-{3,4}.0/settings.ini` live.
 
+## Polkit authentication, Secret Service PAM auto-unlock, and interactive region/clipboard capture (`WP-14`)
+
+Both `CDE (Wayland)` and `CDE (X11 / XLibre)` integrate native administrative
+elevation, automatic Secret Service keyring unlocking, and interactive region
+clipboard screenshots:
+
+- **Native Motif Polkit Authentication Agent (`ck-polkit-agent`):** Auto-started
+  in `Xsession.wayland`, `dtsession --wayland`, and X11 `Xsession`. Registers
+  `/org/cde/PolicyKit1/AuthenticationAgent` with `org.freedesktop.PolicyKit1`
+  (`unix-session` with `systemd --user` `org.freedesktop.login1.User` `Display`
+  discovery and `unix-process` fallback) and authenticates via Polkit 124+
+  `/run/polkit/agent-helper.socket` (`polkit-agent-helper-1 --socket-activated`)
+  or classic `polkit-agent-helper-1` pipes inside a `PR_SET_DUMPABLE=0`
+  hardened, workspace-sticky CDE padlock modal dialog.
+- **Secret Service PAM keyring auto-unlock:** `/etc/pam.d/dtlogin`
+  (`dtlogin.src`) wires optional `-auth` / `-session ... auto_start` /
+  `-password` `pam_gnome_keyring.so` hooks and `/etc/pam.d/dtsession`
+  (`dtsession.src`) wires `-auth optional pam_gnome_keyring.so` (while keeping
+  `session required pam_deny.so` and `password required pam_deny.so`), paired
+  with `gnome-keyring-daemon --start --components=secrets,ssh` in both Wayland
+  and X11 session startups so `org.freedesktop.secrets` unlocks automatically at
+  login without modal prompts.
+- **Interactive `ck-grab` region & clipboard capture (`Shift+Print`):** Bound in
+  both `dtwm-wayland` and X11 `dtwm` (`WmEwmh.c` + `sys.dtwmrc`) to
+  `ck-grab --region --clipboard`, freezing the desktop behind a dimmed crosshair
+  rectangle selector (`zwlr_layer_shell_v1` `LAYER_OVERLAY` on Wayland;
+  `XGrabPointer` rubber-band overlay on X11) and publishing cropped `image/png`
+  directly to `zwlr_data_control_manager_v1` / `CLIPBOARD`.
+
 ## Readiness reporting, Ubuntu LTS APT packaging, and automated qualification
 
 Passing `--status-file PATH` writes `WAYLAND_DISPLAY`, `DISPLAY`, and `PID`
@@ -375,11 +406,16 @@ atomically once both the Wayland socket and rootless `Xwayland` are ready.
   `Super`/`Super+Space` → `ck-launch` `libXm.so.9` activation, Wayland
   `zwlr_foreign_toplevel_manager_v1` and X11 `_NET_CLIENT_LIST` /
   `_NET_ACTIVE_WINDOW` window switching, and `dtopen` / `mimeapps.list`
-  persistence), and `check-dtwm-wayland-wp13.py` (`WP-13` parallel dual Wayland +
+  persistence), `check-dtwm-wayland-wp13.py` (`WP-13` parallel dual Wayland +
   X11 `Xvfb` verification of `XF86Audio*` / `XF86MonBrightness*` 5% floor /
   MPRIS keys + non-focus-stealing 3D bevel OSD, `dtstyle` touchpad settings +
   3-finger workspace swipe, and `cde-color-sync` portal / `XSETTINGS` / GTK3-4
-  dark-light sync) run automatically under `make check`.
+  dark-light sync), and `check-dtwm-wayland-wp14.py` (`WP-14` parallel dual
+  Wayland + X11 `Xvfb` verification of `ck-polkit-agent` `libXm.so.9` +
+  `PR_SET_DUMPABLE=0` password retry/elevation/cancellation, `gnome-keyring-daemon`
+  + `secret-tool` auto-unlock round-trip, and `ck-grab --region --clipboard` +
+  `--paste-png` pixel-accurate crop/clipboard transfer) run automatically under
+  `make check`.
 - **Signed Ubuntu LTS `.deb` and APT repository qualification (`WP-08`):**
   `scripts/build-ubuntu-debs.py --verify-install` packages `ck-core-motif9`,
   `ck-core-fs-lib`, `ck-core-cde`, `ck-core-dtlogin`, and `ck-core-apps` into a

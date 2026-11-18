@@ -2,14 +2,17 @@
 auth sufficient PAM_AUTHENTICATION_MODULE
 #endif
 auth required pam_unix.so
+-auth optional pam_gnome_keyring.so
 
 account required pam_nologin.so
 account required pam_unix.so
 
-XCOMM Not every system ships pam_lastlog or pam_systemd: a missing module is not an error.
+XCOMM Not every system ships pam_lastlog, pam_systemd or pam_gnome_keyring: a missing module is not an error.
 -session optional pam_lastlog.so
 -session optional pam_systemd.so
+-session optional pam_gnome_keyring.so auto_start
 
 XCOMM The password section is used when the account check reports that the
 XCOMM password has expired and the user sets a new one in the login screen.
 password required pam_unix.so obscure
+-password optional pam_gnome_keyring.so

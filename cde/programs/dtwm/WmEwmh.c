@@ -89,6 +89,7 @@ static const WmHwKeyBinding g_hwKeyBindings[] = {
     { "XF86AudioPrev",         "media-prev",     nullptr, 0 },
     { "XF86AudioStop",         "media-stop",     nullptr, 0 },
     { "Print",                 nullptr,          "ck-grab", 0 },
+    { "Print",                 nullptr,          "ck-grab --region --clipboard", ShiftMask },
     { "l",                     nullptr,          "dtaction LockDisplay", Mod4Mask },
 };
 
