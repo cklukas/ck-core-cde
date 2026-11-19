@@ -1,4 +1,9 @@
 2026-11-19
+- Correct the gray values in the front-panel status icons
+  (`cde/programs/icons/Fpbt.{t,m,l}.pm`, `Fpdisp.{t,m,l}.pm`,
+  `Fpnet.{t,m,l}.pm`, `Fppower.{t,m,l}.pm`, `Fpstatus.{t,m,l}.pm`,
+  `DtDisplay.pm`): they were written with ten hexadecimal digits, which is
+  not a color X accepts; they now have twelve, like the stock icons.
 - Add icons for MIDI files and the sound applications
   (`cde/programs/icons/Dtmidi.{t,m,l}.pm`, `Fpsound.{t,m,l}.pm`,
   `Fpmidi.{t,m,l}.pm`, `cde/programs/icons/Makefile.am`): a document sheet
