@@ -217,7 +217,7 @@ flowchart TD
   - **Keyboard Window Tiling (`Super+Arrows`) & CUPS / Admin Panels:** Implement `Super+Left/Right/Up/Down` half/quadrant keyboard window tiling in **both** `dtwm-wayland` and classic X11 `dtwm` (`WmFunction.c`); modernize `dtprintinfo` with driverless CUPS / IPP Everywhere printer enumeration (`libcups`); and provide concise Motif dialogs for *Default Applications* (`mimeapps.list`), *Date, Time & NTP* (`org.freedesktop.timedate1`), and *Firmware Updates* (`fwupd`).
 - **Parallel Wayland + X11 Acceptance Gate**: Parallel Wayland (`dtwm-wayland`) and X11 (`Xvfb`/`Xdummy` + `dtwm`) tests verify gamma LUT Night Light updates, `Super+Arrow` window tiling geometry in both window managers, idle/lid suspend policy decisions, and CUPS/`timedate1` mock round-trips.
 
-### [ ] WP-19 — Everyday Native Companions (`ck-view` Image Viewer, `ck-pdf` Document Viewer), Actionable `ck-tasks` & `dtpad`/`dtcm` Polish
+### [x] WP-19 — Everyday Native Companions (`ck-view` Image Viewer, `ck-pdf` Document Viewer), Actionable `ck-tasks` & `dtpad`/`dtcm` Polish
 - **Closes**: `GAP-APPS-01`, `GAP-APPS-02`
 - **Repos**: `ck-core-apps` (`src/ck-tasks/`, `src/ck-view/`, `src/ck-pdf/`), `ck-core-cde` (`cde/programs/dtpad/`, `cde/programs/dtcm/`)
 - **Dual Wayland + X11 Scope** *(100% shared Motif ABI 9 binaries running natively in both sessions)*:

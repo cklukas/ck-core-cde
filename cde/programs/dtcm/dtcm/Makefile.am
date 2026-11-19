@@ -3,11 +3,13 @@ MAINTAINERCLEANFILES = Makefile.in
 bin_PROGRAMS = dtcm dtcm_delete dtcm_insert dtcm_lookup dtcm_editor
 
 EXTRA_DIST = tests/check-temp-file-create.py tests/check-temp-file-create.c \
-             tests/check-sigint-signal.py tests/check-sigint-signal.c
+             tests/check-sigint-signal.py tests/check-sigint-signal.c \
+             tests/check-ics-io.py tests/ics-io-test.c
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-temp-file-create.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-sigint-signal.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-ics-io.py
 
 AM_CFLAGS = $(DT_INCDIR) $(CSA_INCDIR) -I$(top_srcdir)/lib/csa	\
 -I$(top_srcdir)/programs/dtcm/libDtCmP
@@ -30,7 +32,8 @@ dtcm_SOURCES = MonthPanel.c    RFCMIME.c       about.c \
                find.c          fns.c           font.c \
                format.c        goto.c          graphics.c \
                group_editor.c  help.c          i18nxlate.c \
-               icon.c          md5.c           misc.c \
+               icon.c          ics_csa.c       ics_csa.h \
+               ics_io.c        ics_io.h        md5.c           misc.c \
                monthglance.c   namesvc.c       print.c \
                props.c         props_pu.c      reminders.c \
                rfp.c           select.c        session.c \

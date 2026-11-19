@@ -156,6 +156,25 @@ messages, which did not change. A live `rpc.cmsd` that is sent one request with
 a list of two million nodes crashes in the previous code and refuses the request
 now.
 
+## iCalendar (`.ics`) import and export in `dtcm`
+
+Calendar Manager (`programs/dtcm/dtcm/`) supports RFC 5545 iCalendar (`.ics`)
+exchange via **File → Import iCalendar (.ics)...** and **File → Export
+iCalendar (.ics)...**:
+
+- Parses folded RFC 5545 lines, escaped text (`\n`, `\,`, `\;`, `\\`), UTC and
+  local `DTSTART` / `DTEND` timestamps, `VALUE=DATE` all-day events, ISO 8601
+  `DURATION` values (`PT45M`, `P1D`), `SUMMARY`, `LOCATION`, `DESCRIPTION`, and
+  `RRULE` recurrences (`DAILY`, `WEEKLY`, `MONTHLY`, `YEARLY`, `INTERVAL`,
+  `COUNT`).
+- Maps imported events into CSA (`rpc.cmsd`) appointments (`csa_add_entry` with
+  data-version recurrence rules) and deduplicates expanded CSA recurrence
+  occurrences by `CSA_ENTRY_ATTR_REFERENCE_IDENTIFIER` during `.ics` export,
+  with an automatic in-memory fallback when `dtcm` runs without a local
+  `rpc.cmsd` daemon.
+- `programs/dtcm/dtcm/ics_io.c` is verified standalone under AddressSanitizer
+  and UndefinedBehaviorSanitizer by `programs/dtcm/dtcm/tests/check-ics-io.py`.
+
 ## Limits
 
 - The request-level tests call the handlers directly; the live checks of the

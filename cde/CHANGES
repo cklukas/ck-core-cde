@@ -1,4 +1,30 @@
 2026-11-19
+- Deliver **WP-19 — Everyday Native Companions (`ck-view`, `ck-pdf`), Actionable
+  `ck-tasks` & `dtpad`/`dtcm` Polish** across both `CDE (Wayland)` and
+  `CDE (X11 / XLibre)` (`cde/programs/dtpad/`, `cde/programs/dtcm/dtcm/`,
+  `cde/programs/dtopen/dtopen.src`, `cde/programs/types/datatypes.dt.src`,
+  `cde/debian/control`, `cde/programs/dtwm/Makefile.am`,
+  `cde/programs/dtwm/tests/check-dtwm-wayland-wp19.py`,
+  `wayland_work_plan.md`, `docs/improvements/editor.md`,
+  `docs/improvements/calendar-server.md`, `docs/improvements/wayland.md`):
+  - Extend `dtpad` (`padFeatures.{h,c}`, `padTabs.{h,c}`, `check-pad-features.py`)
+    with optional tabbed documents (**File → New Tab** `Ctrl+T`, **Open in New
+    Tab...**, **Close Tab** `Ctrl+W`, `Ctrl+Tab` cycling, collapsible tab bar),
+    **File → Open Recent** (`~/.dt/dtpad.recent`), **Options → Show Line
+    Numbers** (`48 px` gutter persisted via `Dtpad*showLineNumbers`), and
+    crash-recovery autosave (`~/.dt/dtpad-autosave/` swap files restored after
+    abrupt termination and cleaned on Save/Close).
+  - Extend `dtcm` (`ics_io.{h,c}`, `ics_csa.{h,c}`, `check-ics-io.py`) with
+    RFC 5545 `.ics` **Import iCalendar (.ics)...** and **Export iCalendar
+    (.ics)...** (`VEVENT` `UID`, folded `SUMMARY`, `LOCATION`, `DESCRIPTION`,
+    `DTSTART`/`DTEND`, `VALUE=DATE` all-day events, `DURATION`, and `RRULE`
+    `DAILY`/`WEEKLY`/`MONTHLY`/`YEARLY`/`INTERVAL`/`COUNT` mapped to CSA
+    appointments with reference-identifier deduplication and offline fallback).
+  - Prepend native Motif `ck-view` and `ck-pdf` to `VIMAGE` and `VPDF` in
+    `dtopen`, add `CkView`, `CkPdf`, and `ICALENDAR` (`*.ics`) definitions in
+    `datatypes.dt.src`, recommend `webp-pixbuf-loader` and `cups-client` in
+    `cde/debian/control`, and add parallel Wayland + X11 integration suite
+    `check-dtwm-wayland-wp19.py`.
 - Deliver **WP-15 — PipeWire / PulseAudio Audio & Mic Routing, Native Wi-Fi
   Onboarding & Bluetooth Pairing Wizard** across both `CDE (Wayland)` and
   `CDE (X11 / XLibre)` (`cde/debian/control`, `cde/debian/Xsession.wayland`,

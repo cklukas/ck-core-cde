@@ -118,6 +118,7 @@ static  char sccsid[] = "@(#)calendarA.c 1.196 95/04/12 Copyr 1991 Sun Microsyst
 #include "blist.h"
 #include "alarm.h"
 #include "dayglance.h"
+#include "ics_csa.h"
 #include "yearglance.h"
 #include "monthglance.h"
 #include "weekglance.h"
@@ -1300,6 +1301,8 @@ make_file_menu(Calendar *c)
         XtAddCallback(print, XmNactivateCallback, print_cb, nullptr);
 	XmStringFree(xmstr);
 
+	dtcm_ics_add_menu_items(c, file_menu);
+
 	ac = 0;
 	sep = XmCreateSeparatorGadget(file_menu, "separator1", al, ac);
 
@@ -2084,6 +2087,16 @@ error_open(Calendar *c) {
 			"Error opening Calendar file"), c->calname);
 	set_message(c->message_text, buf);
 
+	if (getenv("DTCM_SUPPRESS_RPC_POPUP") != nullptr) {
+		XtFree(title);
+		XtFree(ident);
+		XtFree(nl_host);
+		XtFree(nl_user);
+		free(name);
+		free(host);
+		return;
+	}
+
 	sprintf(buf, "%s\n%s: %s, %s: %s", CATGETS(c->DT_catd, 1, 91,
 				   		"rpc.cmsd is not responding for your user name.\nMake sure the inetd process is running and the entry\nin inetd.conf for rpc.cmsd is correct for your host."),
 		nl_user, name,
@@ -2756,6 +2769,7 @@ init_calendar(int argc, char **argv)
  * enough rope.  No particular reason for the numbers used for maximums.
  */
 	XtRealizeWidget(calendar->frame);
+	dtcm_ics_init_gui(calendar);
 
         XtVaGetValues(calendar->frame, XmNwidth, &w, XmNheight, &h, nullptr);
 	XtVaSetValues(calendar->frame,
@@ -2867,6 +2881,7 @@ init_calendar(int argc, char **argv)
 
 	setup_new_day_handler(calendar);
 	center_today_button(calendar);
+	dtcm_ics_publish_state(calendar);
 
 	/* Twiddle controls for old versions */
 

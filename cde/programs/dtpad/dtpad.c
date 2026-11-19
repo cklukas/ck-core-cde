@@ -54,6 +54,7 @@
 **************************************************************************
 **********************************<+>*************************************/
 #include "dtpad.h"
+#include "padTabs.h"
 #include "signal.h"
 #include "X11/Xutil.h"
 #include <X11/StringDefs.h>
@@ -532,6 +533,11 @@ CreateFileMenu(
     XtFree(mnemonic);
     XmStringFree(tmpStr);
 
+    /* -----> manage initial File items, then populate Tabs & Recent submenu */
+    XtManageChildren(WidgList, count);
+    count = 0;
+    DtpadPopulateFileMenuExtras(pPad, file_pane);
+
     /* -----> create save/print separator */
     ac = 0;
     WidgList[count++] = XmCreateSeparatorGadget (file_pane, "SvSp", al, ac);
@@ -934,6 +940,10 @@ CreateOptionsMenu(
 		   StatusLineCB, (XtPointer) pPad);
     XtFree(mnemonic);
     XmStringFree(tmpStr);
+
+    XtManageChildren(WidgList, count);
+    count = 0;
+    DtpadPopulateOptionsMenuExtras(pPad, options_pane);
 
     /* -----> create "Dropped Files" submenu */
     WidgList[count++] = XmCreateSeparatorGadget(options_pane, "optionsSep", nullptr, 0);

@@ -11,7 +11,7 @@ DTAPPINT_XDG=CDE_INSTALLATION_TOP/bin/dtappintegrate-xdg
 XCOMM Default helper chains (modern Ubuntu/Linux viewers ahead of legacy X11 viewers)
 if [ -z "$DTOPEN_VIMAGE" ]
 then
-    VIMAGE="loupe eog gthumb feh sxiv display gimp xv"
+    VIMAGE="ck-view loupe eog gthumb feh sxiv display gimp xv"
 else
     VIMAGE="$DTOPEN_VIMAGE"
 fi
@@ -39,7 +39,7 @@ fi
 
 if [ -z "$DTOPEN_VPDF" ]
 then
-    VPDF="papers evince okular zathura qpdfview mupdf ck-browser xpdf"
+    VPDF="ck-pdf papers evince okular zathura qpdfview mupdf ck-browser xpdf"
 else
     VPDF="$DTOPEN_VPDF"
 fi

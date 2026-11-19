@@ -518,7 +518,15 @@ atomically once both the Wayland socket and rootless `Xwayland` are ready.
   `GVFS` *Connect to Server* + MTP phone `inotify` discovery, 5-format archive
   round-trips + Zip-Slip rejection, FreeDesktop thumbnail resolution,
   `org.freedesktop.FileManager1` window raise + selection, and live
-  bidirectional `inotify` XDG + `.Trash-$UID` Trash), and
+  bidirectional `inotify` XDG + `.Trash-$UID` Trash),
+  `check-dtwm-wayland-wp17.py` (`WP-17` `dtfile` tabs, cancellable search,
+  clipboard, undo, and Folder Sync execution),
+  `check-dtwm-wayland-wp19.py` (`WP-19` parallel dual Wayland + X11 `Xvfb`
+  verification of actionable `ck-tasks` process `SIGKILL`/`renice`/live network
+  & per-core charts/`systemd1` D-Bus control, `ck-view` PNG/JPEG/WebP/SVG/TIFF/XPM
+  rendering + rotate/crop + `DtWsmChangeBackdrop` + `-session` restore, `ck-pdf`
+  outline/search/clipboard/CUPS print + `-session` restore, `dtpad` tabs/line
+  numbers/crash-recovery autosave, and `dtcm` RFC 5545 `.ics` round-trips), and
   `check-dtwm-wayland-menus.py` (XWayland Motif pulldown/popup menu focus,
   mid-press `zwlr_virtual_pointer_v1` crash cleanup, `wayvnc` stuck-button
   auto-heal, stationary-click `wl_pointer` focus restoration, and post-modeset

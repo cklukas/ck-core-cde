@@ -1109,4 +1109,57 @@ ACTION Open
 	MAP_ACTION      DisplayOffice
 }
 
+XCOMM #######################################################################
+XCOMM ## Native CK-Core Image Viewer (ck-view), PDF Viewer (ck-pdf) & iCalendar (WP-19)
+
+ACTION CkView
+{
+	LABEL           Image Viewer (ck-view)
+	TYPE            COMMAND
+	ICON            Dtimage
+	WINDOW_TYPE     NO_STDIO
+	EXEC_STRING     ck-view "%(File)Arg_1%"
+	DESCRIPTION     Open an image in the native Motif Image Viewer (ck-view).
+}
+
+ACTION CkPdf
+{
+	LABEL           PDF Viewer (ck-pdf)
+	TYPE            COMMAND
+	ICON            acroread
+	WINDOW_TYPE     NO_STDIO
+	EXEC_STRING     ck-pdf "%(File)Arg_1%"
+	DESCRIPTION     Open a PDF document in the native Motif PDF Viewer (ck-pdf).
+}
+
+DATA_ATTRIBUTES ICALENDAR
+{
+	ACTIONS         Open
+	ICON            Dtcm
+	NAME_TEMPLATE   %s.ics
+	MIME_TYPE       text/calendar
+	DESCRIPTION     RFC 5545 iCalendar (.ics) schedule file.
+	TYPE_LABEL      ICALENDAR
+}
+DATA_CRITERIA ICALENDAR1
+{
+	DATA_ATTRIBUTES_NAME ICALENDAR
+	MODE            f
+	NAME_PATTERN    *.ics
+}
+DATA_CRITERIA ICALENDAR2
+{
+	DATA_ATTRIBUTES_NAME ICALENDAR
+	MODE            f
+	NAME_PATTERN    *.ICS
+}
+ACTION Open
+{
+	LABEL           %|nls-1-Open|
+	ARG_TYPE        ICALENDAR
+	TYPE            COMMAND
+	WINDOW_TYPE     NO_STDIO
+	EXEC_STRING     dtcm
+}
+
 XCOMM ######################## EOF ############################################

@@ -93,6 +93,7 @@
 **************************************************************************
 **********************************<+>*************************************/
 #include "dtpad.h"
+#include "padTabs.h"
 #include "stdlib.h"
 #include "messageParam.h"
 #include "signal.h"
@@ -1095,21 +1096,18 @@ RealizeNewPad(
     CreateMenuBar(pPad);
     XtManageChild (pPad->menu_bar);
 
-    /* Create the DT Editor Widget in the Main Window. */
-    CreateEditorWidget (pPad);
-    XtManageChild (pPad->editor);
+    /* Create the DT Editor Widget and Tab/Gutter container in the Main Window. */
+    Widget workArea = DtpadCreateWorkArea(pPad);
 
 #ifdef POPUP
     /* Create the popup for the editor */
     CreatePopupMenu (pPad);
 #endif
 
-    /* Associate menu bar and editor widgets created above with menu bar and
-     * work area of the main window (the main window command line area and
-     * the horizontal/vertical scroll bars are not used) */
+    /* Associate menu bar and editor work area created above with MainWindow */
     XmMainWindowSetAreas(pPad->mainWindow, pPad->menu_bar,
     		(Widget) nullptr, (Widget) nullptr, (Widget) nullptr,
-		pPad->editor);
+		workArea);
 
     /* Realize toplevel widgets. */
     XtSetMappedWhenManaged(pPad->app_shell, False);

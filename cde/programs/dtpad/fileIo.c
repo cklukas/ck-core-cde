@@ -52,6 +52,7 @@
 **************************************************************************
 **********************************<+>*************************************/
 #include "dtpad.h"
+#include "padTabs.h"
 #include <Xm/TextP.h>
 #include <signal.h>
 #include <stdio.h>
@@ -251,6 +252,7 @@ LoadFile(
 	    }
 	}
     } /* ! fileLoaded */
+    DtpadNotifyFileLoaded(pPad);
 }
 
 

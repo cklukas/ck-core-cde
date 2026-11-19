@@ -63,6 +63,7 @@
 #include <Xm/XmPrivate.h> /* _XmStringUngenerate */
 
 #include "dtpad.h"
+#include "padTabs.h"
 
 extern int numActivePads;  /* declared in main.c */
 
@@ -111,6 +112,7 @@ FileCascadingCB(
 	XtSetArg(al[0], XmNlabelString, pPad->fileStuff.saveBtnLabel);
     }
     XtSetValues(pPad->fileStuff.fileWidgets.saveBtn, al, 1);
+    DtpadRefreshRecentMenu(pPad);
 
 }
 
@@ -254,6 +256,7 @@ FileSaveCB(
 	    TTfailPendingSave(pPad);
 	    return;
 	}
+	DtpadNotifyFileSaved(pPad, pPad->fileStuff.fileName);
 	if (pPad->ttEditReq.contract) {
 	    /* ZZZ -----> Create and send Saved notice */
 	    m = ttdt_file_notice(
@@ -644,6 +647,7 @@ FileExitWP(XtPointer client_data)
     if (pPad->ttEditReq.contract) {
 	TTmediaReply(pPad);	/* reply/close ToolTalk Edit/Display request */
     }
+    DtpadNotifyPadClosing(pPad, True);
 
     if (pPad->xrdb.standAlone) {
         exit(pPad->confirmStuff.confirmationStatus);
@@ -787,6 +791,7 @@ oldFileExitCB(
     if (pPad->ttEditReq.contract) {
 	TTmediaReply(pPad);	/* reply/close ToolTalk Edit/Display request */
     }
+    DtpadNotifyPadClosing(pPad, True);
 
     if (pPad->xrdb.standAlone) {
         exit(pPad->confirmStuff.confirmationStatus);
@@ -1104,6 +1109,7 @@ SaveUnsaved(
 		pPad->fileStuff.pendingFileFunc = nullptr;
 		return True;	/* don't finish calling func */
 	    } else {
+		DtpadNotifyFileSaved(pPad, pPad->fileStuff.fileName);
 		if (pPad->ttEditReq.contract) {
 		    /* ZZZ -----> Create and send Saved notice */
 		    m = ttdt_file_notice(
@@ -1238,6 +1244,7 @@ SaveAsOkCB(
 	pPad->fileStuff.savingName = (char *)nullptr;
 	pPad->fileStuff.pendingFileFunc = nullptr;
     } else {
+	DtpadNotifyFileSaved(pPad, pPad->fileStuff.savingName);
 	if (pPad->ttEditReq.contract) {
 	    /* ZZZ -----> Create and send Saved notice */
 	    m = ttdt_file_notice(
@@ -1321,6 +1328,7 @@ AlrdyExistsOkCB(
     _DtTurnOffHourGlass(pPad->app_shell);
 
     if (errorCode == SUCCESS) {
+	DtpadNotifyFileSaved(pPad, pPad->fileStuff.savingName);
 	if (pPad->ttEditReq.contract) {
 	    /* ZZZ -----> Create and send Saved notice */
 	    m = ttdt_file_notice(
