@@ -47,6 +47,11 @@ program through an unnecessary terminal window.
   windows (`zwlr_foreign_toplevel_manager_v1` on Wayland; `_NET_CLIENT_LIST` /
   `_NET_ACTIVE_WINDOW` on X11), `dtstyle` settings, and inline mathematical
   expressions.
-- **Front Panel *Applications* subpanel:** Clicking the upward arrow above the
+- **Front Panel *Applications* subpanel & native `dtopen` helpers:** Clicking the upward arrow above the
   Front Panel `Applications` control opens `AppsSubpanel` with one-click items
   for *Quick Launch (Super)*, *Software & Updates*, and *Reload XDG Apps*.
+  CDE's `dtopen` helper chains (`dtopen_image`, `dtopen_pdf`, `dtopen_midi`,
+  `dtopen_video`) and curated `Media_Tools` / `Graphics` / `Office` / `Internet`
+  Application Manager groups prioritize native CK Core Motif viewers and players
+  (`ck-view`, `ck-pdf`, `ck-midi`, `ck-video`, `ck-browser`) ahead of external
+  toolkits.

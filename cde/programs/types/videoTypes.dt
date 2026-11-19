@@ -13,14 +13,12 @@
 DATA_ATTRIBUTES MPEG
 {
 	ACTIONS         Open
-	ICON            video
-	NAME_TEMPLATE	%s.mpg
-	MIME_TYPE		video/mpeg
-	DESCRIPTION     This file contains a graphics image movie in MPEG \
-	                Interchange File Format.  Its data type is \
-	                named MPEG. MPEG files have names ending with \
-	                '.MPEG', '.mpg', '.mpeg', or '.MPG'.
-	TYPE_LABEL      MPEG
+	ICON            Dtvideo
+	NAME_TEMPLATE	%s.mp4
+	MIME_TYPE		video/mp4
+	DESCRIPTION     This file contains a digital video stream (MP4, MPEG, \
+	                Matroska MKV, WebM, M4V, OGV, FLV, TS, or WMV).
+	TYPE_LABEL      VIDEO
 }
 DATA_CRITERIA MPEG1
 {
@@ -68,19 +66,79 @@ DATA_CRITERIA MPEG8
 {
         DATA_ATTRIBUTES_NAME MPEG
         MODE            f
-        NAME_PATTERN    *.MP3
+        NAME_PATTERN    *.m4v
 }
 DATA_CRITERIA MPEG9
 {
         DATA_ATTRIBUTES_NAME MPEG
         MODE            f
-        NAME_PATTERN    *.mp3
+        NAME_PATTERN    *.M4V
 }
 DATA_CRITERIA MPEG10
 {
         DATA_ATTRIBUTES_NAME MPEG
         MODE            f
         NAME_PATTERN    *.mkv
+}
+DATA_CRITERIA MPEG11
+{
+        DATA_ATTRIBUTES_NAME MPEG
+        MODE            f
+        NAME_PATTERN    *.MKV
+}
+DATA_CRITERIA MPEG12
+{
+        DATA_ATTRIBUTES_NAME MPEG
+        MODE            f
+        NAME_PATTERN    *.webm
+}
+DATA_CRITERIA MPEG13
+{
+        DATA_ATTRIBUTES_NAME MPEG
+        MODE            f
+        NAME_PATTERN    *.WEBM
+}
+DATA_CRITERIA MPEG14
+{
+        DATA_ATTRIBUTES_NAME MPEG
+        MODE            f
+        NAME_PATTERN    *.ogv
+}
+DATA_CRITERIA MPEG15
+{
+        DATA_ATTRIBUTES_NAME MPEG
+        MODE            f
+        NAME_PATTERN    *.OGV
+}
+DATA_CRITERIA MPEG16
+{
+        DATA_ATTRIBUTES_NAME MPEG
+        MODE            f
+        NAME_PATTERN    *.flv
+}
+DATA_CRITERIA MPEG17
+{
+        DATA_ATTRIBUTES_NAME MPEG
+        MODE            f
+        NAME_PATTERN    *.FLV
+}
+DATA_CRITERIA MPEG18
+{
+        DATA_ATTRIBUTES_NAME MPEG
+        MODE            f
+        NAME_PATTERN    *.ts
+}
+DATA_CRITERIA MPEG19
+{
+        DATA_ATTRIBUTES_NAME MPEG
+        MODE            f
+        NAME_PATTERN    *.wmv
+}
+DATA_CRITERIA MPEG20
+{
+        DATA_ATTRIBUTES_NAME MPEG
+        MODE            f
+        NAME_PATTERN    *.WMV
 }
 ACTION Open
 {
@@ -105,7 +163,7 @@ ACTION Print
 DATA_ATTRIBUTES QTMOV
 {
 	ACTIONS         Open
-	ICON            video
+	ICON            Dtvideo
 	NAME_TEMPLATE	%s.mov
 	MIME_TYPE		video/quicktime
 	DESCRIPTION     This file contains a graphics image movie in QTMOV. \
@@ -288,7 +346,7 @@ ACTION Print
 DATA_ATTRIBUTES AVI
 {
 	ACTIONS         Open
-	ICON            video
+	ICON            Dtvideo
 	NAME_TEMPLATE	%s.avi
 	MIME_TYPE		video/x-microsoft-avi
 	DESCRIPTION     This file contains a graphics image movie in AVI.  \

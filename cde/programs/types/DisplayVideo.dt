@@ -6,9 +6,9 @@
 
 ACTION	DisplayVideo
 {
-	LABEL		Video Viewer
+	LABEL		Video Player
 	TYPE		COMMAND
-	ICON		video
+	ICON		Fpvideo
 	EXEC_HOST	%DatabaseHost%, %LocalHost%
 	ARG_COUNT	0
 	EXEC_STRING	dtopen_video %(File)"Name of video file to display:"%
@@ -19,9 +19,9 @@ ACTION	DisplayVideo
 
 ACTION	DisplayVideo
 {
-	LABEL		Video Editor
+	LABEL		Video Player
 	TYPE		COMMAND
-	ICON		video
+	ICON		Fpvideo
 	EXEC_HOST	%DatabaseHost%, %LocalHost%
 	ARG_COUNT	>0
 	EXEC_STRING	dtopen_video %(File)Args%

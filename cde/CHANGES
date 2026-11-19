@@ -1,4 +1,14 @@
 2026-11-19
+- Wire **`ck-video`** (`CkVideo`, `Video Player`) as the default CDE video
+  helper in `dtopen_video`, register `CkVideo` in Application Manager
+  `Media_Tools`, add symbolic `Fpvideo.{t,m,l}.pm` and `Dtvideo.{t,m,l}.pm`
+  icons, and expand `videoTypes.dt` container matching for `.mkv`/`.MKV`,
+  `.webm`/`.WEBM`, `.m4v`/`.M4V`, `.ogv`/`.OGV`, `.flv`/`.FLV`, `.ts`, and
+  `.wmv`/`.WMV` while keeping `.mp3` owned by `AUDIO_MODERN`
+  (`cde/programs/dtopen/dtopen.src`, `cde/programs/types/DisplayVideo.dt`,
+  `cde/programs/types/videoTypes.dt`, `cde/programs/types/miscActions.dt.src`,
+  `cde/programs/localized/templates/appmgr.am`,
+  `cde/programs/icons/Makefile.am`, `cde/programs/icons/{Fpvideo,Dtvideo}.*.pm`).
 - Enforce ICCCM `WM_NORMAL_HINTS` (`PMinSize` / `PMaxSize`) and `xdg_toplevel`
   minimum/maximum client size limits during interactive window resizing and
   geometry updates in `dtwm-wayland`

@@ -18,7 +18,7 @@ fi
 
 if [ -z "$DTOPEN_VVIDEO" ]
 then
-    VVIDEO="mpv vlc totem celluloid ffplay"
+    VVIDEO="ck-video mpv vlc totem celluloid ffplay"
 else
     VVIDEO="$DTOPEN_VVIDEO"
 fi

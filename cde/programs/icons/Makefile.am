@@ -862,6 +862,9 @@ Fpstatus.t.pm \
 Dtmidi.l.pm                     Dtmidi.m.pm \
 Dtmidi.t.pm                     Fpmidi.l.pm \
 Fpmidi.m.pm                     Fpmidi.t.pm \
+Dtvideo.l.pm                    Dtvideo.m.pm \
+Dtvideo.t.pm                    Fpvideo.l.pm \
+Fpvideo.m.pm                    Fpvideo.t.pm \
 Fpsound.l.pm                    Fpsound.m.pm \
 Fpsound.t.pm                    DtSound.pm
 
