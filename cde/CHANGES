@@ -1,3 +1,41 @@
+2026-11-20
+- Unify **Style Manager - Color & Theme** (`dtstyle`) with CK Core Motif ABI 9
+  appearance profiles (`Classic CDE (3D Bevel)`, `Modern Motif (Flat & Rounded)`,
+  `High Contrast (Accessible)`) and layout spacing (`Comfortable`, `Compact`),
+  add curated dark and modern palettes (`NordicNight`, `ObsidianTeal`,
+  `EspressoDark`, plus updated `ModernDark` and `ModernLight`), embed a live
+  reparented Motif **Sample Dialog** (`dtstyle --preview-helper`) inside the
+  desktop preview canvas, and fix live palette/theme/DPI switching across CDE
+  libraries and clients (`cde/programs/dtstyle/{ColorMain.c,ColorPreviewHelper.c,ColorPreviewHelper.h,Main.c,MainWin.c,Makefile.am,Palettes.src}`,
+  `cde/programs/palettes/{Makefile.am,ModernDark.dp,ModernLight.dp,NordicNight.dp,ObsidianTeal.dp,EspressoDark.dp}`,
+  `cde/programs/dtsession/SrvPalette.c`,
+  `cde/programs/dtwm/{Clock.c,Dtwm.defs.src,cde_color_sync.c}`,
+  `cde/programs/dtwm/wayland/{WmFpWayland.c,cde_bevel.c,cde_workspace.c}`,
+  `cde/lib/DtWidget/{Control.c,Icon.c}`,
+  `cde/lib/DtTerm/{Term/Term.c,TermPrim/TermPrim.c,TermPrim/TermPrimCursor.c}`,
+  `cde/programs/dtterm/Dtterm.ad.src`,
+  `cde/programs/dtfile/ChangeDirP.c`,
+  `cde/lib/DtSvc/DtUtil2/Dt.ad`,
+  `.ckgit/{motif-revision,ci.yml}`,
+  `docs/improvements/toolkit.md`):
+  - Automatically derive Light vs. Dark modern polarity (`modern_light` vs.
+    `modern_dark`) from palette luminance, defer desktop-wide `RESOURCE_MANAGER`
+    and `SDT Pixel Set` publication to **Apply** / **OK** with clean restoration
+    on **Cancel**, synchronize swatch selection borders on dark surfaces, and
+    scale the embedded preview helper dynamically with `Xft.dpi`.
+  - Keep `G__DoUpdate` active after `DtControlGadget` initialization and scope
+    1-bit monochrome stipple text padding (`bMono`) in `DtControlGadget` and
+    `DtClockGadget` to dithered/1-bit backgrounds so `Style Manager` and
+    `dtwm-panel` icon labels recolor cleanly without stale background boxes, and
+    enable `XmNallowShellResize` on `Style Manager` so all icons remain
+    unclipped in `High Contrast` and HiDPI modes.
+  - Refresh cached `cd_normal_gc`, `cd_select_gc`, and `cd_fontlist` in
+    `dtfile` `DrawCurrentDirectory` across live palette, profile, and DPI
+    changes; remove hardcoded `DisplayArea` `White`/`Black` app-defaults so
+    `DtHelp` honors dark and modern palettes; and turn off the `DtTerm` blink
+    cursor before recreating `cursorGC` in `SetValues` (with null-GC guards in
+    `cursorToggle`) to prevent `dtterm` crashes during rapid live theme switches.
+
 2026-11-19
 - Preserve desktop and Icon Box icon ordering across window minimize, restore,
   and focus changes in both `dtwm-wayland` and X11 `dtwm`, and pack remaining

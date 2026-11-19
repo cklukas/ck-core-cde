@@ -161,9 +161,14 @@ static void bootstrap_color_server_if_needed(Display *dpy, unsigned char profile
     int scr_num = DefaultScreen(dpy);
     snprintf(cust_name, sizeof(cust_name), "%s%d", XmSCUSTOMIZE_DATA, scr_num);
     Atom cust_atom = XInternAtom(dpy, cust_name, False);
-    if (XGetSelectionOwner(dpy, cust_atom) != None) {
-        /* dtsession Color Server is already active on this display */
-        return;
+    Window existing = XGetSelectionOwner(dpy, cust_atom);
+    if (existing != None) {
+        XWindowAttributes wa;
+        memset(&wa, 0, sizeof(wa));
+        if (XGetWindowAttributes(dpy, existing, &wa)) {
+            /* Live Color Server is already active on this display */
+            return;
+        }
     }
 
     static const char *const classic_bgs[8] = {
@@ -171,12 +176,12 @@ static void bootstrap_color_server_if_needed(Display *dpy, unsigned char profile
         "#c600b2d2a87e", "#49009200a700", "#b70087008d00", "#938eab73bf00",
     };
     static const char *const modern_light_bgs[8] = {
-        "#5b008400b800", "#9a00a300b000", "#7e008e00a400", "#3d0046005400",
-        "#c800cc00d400", "#52007a009400", "#8c009600a600", "#7c008c00a200",
+        "#4a007900b000", "#9d00a600b500", "#7c009300ad00", "#f400f600fa00",
+        "#d900de00e600", "#66008a00ab00", "#7800a1009300", "#a80088009a00",
     };
     static const char *const modern_dark_bgs[8] = {
-        "#280039005200", "#250027002b00", "#1b0022002c00", "#170018001b00",
-        "#200021002400", "#28002a002d00", "#1f0029003700", "#250027002b00",
+        "#3d007400b800", "#350039004200", "#250031004200", "#160018001d00",
+        "#210024002b00", "#2d003c005200", "#470036005400", "#24004a005000",
     };
     static const char *const high_contrast_bgs[8] = {
         "#ff00ff000000", "#000000000000", "#000000000000", "#000000000000",
@@ -187,6 +192,59 @@ static void bootstrap_color_server_if_needed(Display *dpy, unsigned char profile
     if (profile == XmAPPEARANCE_MODERN_LIGHT) bgs = modern_light_bgs;
     else if (profile == XmAPPEARANCE_MODERN_DARK) bgs = modern_dark_bgs;
     else if (profile == XmAPPEARANCE_HIGH_CONTRAST) bgs = high_contrast_bgs;
+
+    /* Respect *ColorPalette in RESOURCE_MANAGER if already configured */
+    char file_bgs[8][48];
+    const char *file_bg_ptrs[8];
+    {
+        char *rms = XResourceManagerString(dpy);
+        if (rms && *rms) {
+            XrmDatabase rdb = XrmGetStringDatabase(rms);
+            if (rdb) {
+                char qname[64], qclass[64];
+                snprintf(qname, sizeof(qname), "dtwm.%d.colorPalette", scr_num);
+                snprintf(qclass, sizeof(qclass), "Dtwm.%d.ColorPalette", scr_num);
+                char *rtype = nullptr;
+                XrmValue rval = {0, nullptr};
+                if ((XrmGetResource(rdb, qname, qclass, &rtype, &rval) ||
+                     XrmGetResource(rdb, "colorPalette", "ColorPalette", &rtype, &rval)) &&
+                    rval.addr && rval.addr[0]) {
+                    char pname[128];
+                    snprintf(pname, sizeof(pname), "%s", rval.addr);
+                    if (!strstr(pname, ".dp") && strlen(pname) + 4 < sizeof(pname))
+                        strcat(pname, ".dp");
+                    const char *home = getenv("HOME");
+                    char cpaths[3][PATH_MAX];
+                    int ncp = 0;
+                    if (home && home[0])
+                        snprintf(cpaths[ncp++], sizeof(cpaths[0]), "%s/.dt/palettes/%s", home, pname);
+                    snprintf(cpaths[ncp++], sizeof(cpaths[0]), "/etc/dt/palettes/%s", pname);
+                    snprintf(cpaths[ncp++], sizeof(cpaths[0]), CDE_INSTALLATION_TOP "/palettes/%s", pname);
+                    for (int ci = 0; ci < ncp; ++ci) {
+                        FILE *fp = fopen(cpaths[ci], "r");
+                        if (!fp) continue;
+                        int got = 0;
+                        char line[128];
+                        while (got < 8 && fgets(line, sizeof(line), fp)) {
+                            size_t ll = strcspn(line, "\r\n:");
+                            line[ll] = '\0';
+                            if (ll > 0) {
+                                snprintf(file_bgs[got], sizeof(file_bgs[got]), "%s", line);
+                                file_bg_ptrs[got] = file_bgs[got];
+                                ++got;
+                            }
+                        }
+                        fclose(fp);
+                        if (got == 8) {
+                            bgs = file_bg_ptrs;
+                            break;
+                        }
+                    }
+                }
+                XrmDestroyDatabase(rdb);
+            }
+        }
+    }
 
     Screen *screen = ScreenOfDisplay(dpy, scr_num);
     Colormap cmap = DefaultColormapOfScreen(screen);
@@ -251,6 +309,7 @@ static void bootstrap_color_server_if_needed(Display *dpy, unsigned char profile
     buf[pos] = '\0';
 
     g_colorSrvWin = XCreateSimpleWindow(dpy, DefaultRootWindow(dpy), -200, -200, 1, 1, 0, 0, 0);
+    XSelectInput(dpy, g_colorSrvWin, PropertyChangeMask);
     Atom pixel_set_prop = XInternAtom(dpy, XmSPIXEL_SET_PROP, False);
     XChangeProperty(
         dpy, g_colorSrvWin, pixel_set_prop, XA_STRING, 8, PropModeReplace,
@@ -1132,6 +1191,13 @@ static Tt_callback_action wayland_wsm_tt_request_cb(Tt_message m, Tt_pattern p) 
         handled = true;
     } else if (strcmp(op, "GetWsmClients") == 0) {
         handled = true;
+    } else if (strcmp(op, "XSession_Exit") == 0) {
+        /* Fallback when dtsession's TT_HANDLE_PUSH handler is absent */
+        tt_free(op);
+        tt_message_reply(m);
+        tt_message_destroy(m);
+        fallback_exit_without_tt_sm(dpy);
+        return TT_CALLBACK_PROCESSED;
     }
 
     tt_free(op);
@@ -1174,13 +1240,6 @@ static Tt_callback_action wayland_wsm_tt_notice_cb(Tt_message m, Tt_pattern p) {
             XFlush(wmGD.display);
         }
         handled = true;
-    } else if (strcmp(op, "XSession_Exit") == 0) {
-        /* Fallback when dtsession's TT_HANDLE_PUSH handler is absent */
-        tt_free(op);
-        tt_message_reply(m);
-        tt_message_destroy(m);
-        fallback_exit_without_tt_sm(dpy);
-        return TT_CALLBACK_PROCESSED;
     }
 
     tt_free(op);
@@ -1605,6 +1664,31 @@ int main(int argc, char **argv) {
             }
             if (!g_ttWsmRegistered) {
                 register_wayland_wsm_tooltalk_handlers(topShell);
+            }
+        }
+        if (ev.type == PropertyNotify && g_colorSrvWin != None &&
+            ev.xproperty.window == g_colorSrvWin &&
+            ev.xproperty.state == PropertyNewValue) {
+            Atom pset_prop = XInternAtom(dpy, XmSPIXEL_SET_PROP, True);
+            if (pset_prop != None && ev.xproperty.atom == pset_prop) {
+                Atom act_t = None;
+                int act_f = 0;
+                unsigned long nitems = 0, rem = 0;
+                unsigned char *pdata = nullptr;
+                if (XGetWindowProperty(dpy, g_colorSrvWin, pset_prop, 0, 2048, False,
+                                       AnyPropertyType, &act_t, &act_f, &nitems,
+                                       &rem, &pdata) == Success && pdata && nitems > 2) {
+                    size_t slen = (size_t)nitems;
+                    if (pdata[slen - 1] == XmPIXEL_SET_PROP_VERSION)
+                        --slen;
+                    if (slen < sizeof(g_colorSrvPixelSet)) {
+                        memcpy(g_colorSrvPixelSet, pdata, slen);
+                        g_colorSrvPixelSet[slen] = '\0';
+                    }
+                    XFree(pdata);
+                } else if (pdata) {
+                    XFree(pdata);
+                }
             }
         }
         if (ev.type == PropertyNotify && g_watchedTrashWin != None &&

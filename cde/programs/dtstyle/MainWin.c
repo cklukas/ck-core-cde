@@ -203,8 +203,6 @@ build_mainWindow(
    * Note that save.poscnt has been initialized elsewhere.  
    * save.posArgs may contain information from restoreAudio().*/
 
-    XtSetArg(save.posArgs[save.poscnt], XmNnoResize, True); save.poscnt++;
-    XtSetArg(save.posArgs[save.poscnt], XmNresizePolicy, XmRESIZE_NONE); save.poscnt++;
     style.mainWindow= XmCreateMainWindow(shell,"mainWindow",  save.posArgs, save.poscnt);
     XtAddCallback(style.mainWindow, XmNhelpCallback,
         HelpRequestCB, (XtPointer)HELP_MAIN_WINDOW);
@@ -215,6 +213,7 @@ build_mainWindow(
     XtSetArg(args[n], XmNtitle, tmpStr); n++;
     XtSetArg(args[n], XmNiconName, 
         (char *)GETMESSAGE(4, 37, "Style")); n++;
+    XtSetArg(args[n], XmNallowShellResize, True); n++;
     XtSetValues(XtParent(style.mainWindow), args, n);
     XtFree(tmpStr);
 
@@ -364,7 +363,6 @@ build_mainWindow(
 
     /*  create frame and row column for icon gadgets */
     n = 0;
-    XtSetArg(args[n], XmNresizePolicy, XmRESIZE_NONE); n++;
     XtSetArg(args[n], XmNshadowType, XmSHADOW_OUT); n++;
     XtSetArg(args[n], XmNshadowThickness, 1); n++;
     frame = XmCreateFrame(style.mainWindow, "frame", args, n);
@@ -647,7 +645,7 @@ callCancels( void )
      dialogStates[0] = '\0';
 
    if(style.colorDialog != nullptr && XtIsManaged(style.colorDialog)) {
-       CancelBut.button_position = CANCEL_BUTTON;
+       CancelBut.button_position = 3; /* COLOR_BTN_CANCEL (OK, Apply, Cancel, Help) */
        XtCallCallbacks(style.colorDialog, XmNcallback, &CancelBut);
    }
 

@@ -45,22 +45,9 @@
 !#
 !#  Display Area Colors
 !#
-!#     These resources set the colors for the display area (where
-!#     actual help text is displayed).  The resources are complex
-!#     because they have to override the standard color resources
-!#     in all cases.  
+!#     Help display areas inherit the active CDE ColorObj text slot and
+!#     Motif appearance profile unless overridden by an application or user.
 !#
-
-*XmDialogShell.DtHelpDialog*DisplayArea.background: White
-*XmDialogShell*XmDialogShell.DtHelpDialog*DisplayArea.background: White
-*XmDialogShell.DtHelpDialog*DisplayArea.foreground: Black
-*XmDialogShell*XmDialogShell.DtHelpDialog*DisplayArea.foreground: Black
-
-
-*XmDialogShell.DtHelpQuickDialog*DisplayArea.background: White
-*XmDialogShell*XmDialogShell.DtHelpQuickDialog*DisplayArea.background: White
-*XmDialogShell.DtHelpQuickDialog*DisplayArea.foreground: Black
-*XmDialogShell*XmDialogShell.DtHelpQuickDialog*DisplayArea.foreground: Black
 
 
 !########

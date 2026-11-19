@@ -385,6 +385,85 @@ ShowChangeDirDialog(
  *
  ************************************************************************/
 
+static void
+RefreshCurrentDirGCs(
+        Widget w,
+        FileMgrRec *file_mgr_rec,
+        FileMgrData *file_mgr_data )
+{
+   Pixel cur_fg = 0, cur_bg = 0;
+   XmFontList cur_fl = nullptr;
+   XGCValues cur_gcv;
+   Boolean need_gc_refresh = False;
+
+   if (w == nullptr || file_mgr_rec == nullptr || file_mgr_data == nullptr)
+      return;
+
+   XtVaGetValues(w,
+                 XmNforeground, &cur_fg,
+                 XmNbackground, &cur_bg,
+                 XmNfontList, &cur_fl,
+                 nullptr);
+   if (file_mgr_data->cd_normal_gc == 0 ||
+       file_mgr_data->cd_fontlist != cur_fl)
+   {
+      need_gc_refresh = True;
+   }
+   else if (XGetGCValues(XtDisplay(w), file_mgr_data->cd_normal_gc,
+                         GCForeground | GCBackground, &cur_gcv))
+   {
+      if (cur_gcv.foreground != cur_fg || cur_gcv.background != cur_bg)
+         need_gc_refresh = True;
+   }
+   if (need_gc_refresh && cur_fl != nullptr)
+   {
+      XGCValues gcv;
+      XtGCMask gcm = GCForeground | GCBackground;
+      XmFontType ftype = XmFONT_IS_FONT;
+      XtPointer efont = nullptr;
+      XmFontListEntry def_entry = nullptr;
+      XmFontContext fctx;
+
+      if (XmFontListInitFontContext(&fctx, cur_fl))
+      {
+         def_entry = XmFontListNextEntry(fctx);
+         XmFontListFreeFontContext(fctx);
+      }
+      if (def_entry != nullptr)
+         efont = XmFontListEntryGetFont(def_entry, &ftype);
+      file_mgr_data->cd_fontlist = cur_fl;
+      file_mgr_data->cd_fonttype = ftype;
+      file_mgr_data->cd_font = nullptr;
+      if (ftype == XmFONT_IS_FONTSET)
+      {
+         file_mgr_data->cd_fontset = (XFontSet)efont;
+      }
+      else if (ftype == XmFONT_IS_FONT && efont != nullptr)
+      {
+         file_mgr_data->cd_font = (XFontStruct *)efont;
+         gcv.font = file_mgr_data->cd_font->fid;
+         gcm |= GCFont;
+      }
+      if (file_mgr_data->cd_normal_gc != 0)
+         XtReleaseGC(w, file_mgr_data->cd_normal_gc);
+      if (file_mgr_data->cd_select_gc != 0)
+         XtReleaseGC(file_mgr_rec->current_directory_icon
+                         ? file_mgr_rec->current_directory_icon
+                         : w,
+                     file_mgr_data->cd_select_gc);
+      gcv.foreground = cur_fg;
+      gcv.background = cur_bg;
+      file_mgr_data->cd_normal_gc = XtGetGC(w, gcm, &gcv);
+      gcv.foreground = cur_bg;
+      gcv.background = cur_fg;
+      file_mgr_data->cd_select_gc = XtGetGC(
+          file_mgr_rec->current_directory_icon
+              ? file_mgr_rec->current_directory_icon
+              : w,
+          gcm, &gcv);
+   }
+}
+
 void
 CurrentDirSelected(
         Widget w,
@@ -430,6 +509,8 @@ CurrentDirSelected(
 
    dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec);
    file_mgr_data = (FileMgrData *) dialog_data->data;
+
+   RefreshCurrentDirGCs(file_mgr_rec->current_directory, file_mgr_rec, file_mgr_data);
 
    /* Get layout values */
    XtSetArg (args[0], XmNwidth, &width);
@@ -1267,6 +1348,8 @@ DrawCurrentDirectory(
    short columns;
    Boolean msg_drawn;
 
+   RefreshCurrentDirGCs(file_mgr_rec->current_directory, file_mgr_rec, file_mgr_data);
+
    /* Get layout values */
    XtSetArg (args[0], XmNwidth, &width);
    XtSetArg (args[1], XmNheight, &height);
@@ -1642,6 +1725,8 @@ ShowFastChangeDir(
          textString = XtNewString(ptr);
    }
    begin_x = get_textwidth (file_mgr_data, textString, strlen (textString));
+
+   RefreshCurrentDirGCs(file_mgr_rec->current_directory, file_mgr_rec, file_mgr_data);
 
    /* Get layout values */
    XtSetArg (args[0], XmNwidth, &width);

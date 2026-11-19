@@ -347,10 +347,19 @@ InitializeDtcolor(
     _DtCacheProperties(dpy, XtWindow(shell[0])) ;
 
     (void)XmGetAppearanceProfile(dpy, &profile);
-    if (profile == XmAPPEARANCE_CLASSIC &&
-        colorSrv.pCurrentPalette[0] != nullptr)
     {
-        (void)ProfileFromPaletteName(colorSrv.pCurrentPalette[0]->name, &profile);
+        XrmDatabase xrdb = XrmGetDatabase(dpy);
+        char *str_type = nullptr;
+        XrmValue xval = {0};
+        Boolean has_explicit_prof = (xrdb != nullptr &&
+            XrmGetResource(xrdb, "dtsession.appearanceProfile",
+                           "Dtsession.AppearanceProfile", &str_type, &xval) &&
+            xval.addr != nullptr && xval.addr[0] != '\0');
+        if (!has_explicit_prof && profile == XmAPPEARANCE_CLASSIC &&
+            colorSrv.pCurrentPalette[0] != nullptr)
+        {
+            (void)ProfileFromPaletteName(colorSrv.pCurrentPalette[0]->name, &profile);
+        }
     }
 
     if (profile != XmAPPEARANCE_CLASSIC)
@@ -362,9 +371,18 @@ InitializeDtcolor(
     }
 
     {
+        Boolean pal_is_dark = False;
+        if (colorSrv.pCurrentPalette[0] != nullptr) {
+            const palettes *cp = colorSrv.pCurrentPalette[0];
+            double l1 = (0.2126 * cp->color[1].bg.red + 0.7152 * cp->color[1].bg.green + 0.0722 * cp->color[1].bg.blue) / 65535.0;
+            double l4 = (0.2126 * cp->color[4].bg.red + 0.7152 * cp->color[4].bg.green + 0.0722 * cp->color[4].bg.blue) / 65535.0;
+            double l3 = (0.2126 * cp->color[3].bg.red + 0.7152 * cp->color[3].bg.green + 0.0722 * cp->color[3].bg.blue) / 65535.0;
+            if ((0.45 * l1 + 0.35 * l4 + 0.20 * l3) < 0.30)
+                pal_is_dark = True;
+        }
         const char *sync_arg =
-            (profile == XmAPPEARANCE_MODERN_DARK) ? "dark" :
-            (profile == XmAPPEARANCE_HIGH_CONTRAST) ? "high_contrast" : "light";
+            (profile == XmAPPEARANCE_HIGH_CONTRAST) ? "high_contrast" :
+            (profile == XmAPPEARANCE_MODERN_DARK || pal_is_dark) ? "dark" : "light";
         pid_t spid = fork();
         if (spid == 0) {
             if (fork() == 0) {

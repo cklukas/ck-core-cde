@@ -544,6 +544,11 @@ malloc_check(1);
 malloc_trace(0);
 #endif
 
+    if (argc >= 3 && strcmp(argv[1], "--preview-helper") == 0) {
+        extern int DtstyleRunPreviewHelper(int, char **);
+        return DtstyleRunPreviewHelper(argc, argv);
+    }
+
     XtSetLanguageProc(nullptr, nullptr, nullptr);
     _DtEnvControl(DT_ENV_SET); 
 

@@ -177,49 +177,49 @@ void dtwm_palette_init_profile(DtwmPalette *pal, DtwmAppearanceProfile profile) 
     pal->profile = profile;
     switch (profile) {
     case DTWM_PROFILE_MODERN_LIGHT:
-        /* Matches cde/programs/palettes/ModernLight.dp (#5b84b8 / #9aa3b0 / #c8ccd4) */
+        /* Matches cde/programs/palettes/ModernLight.dp (#4a79b0 / #9da6b5 / #d9dee6) */
         pal->active = (DtwmColorSet){
-            .bg = {0.357, 0.518, 0.722, 1.0},            /* #5B84B8 */
+            .bg = {0.290, 0.475, 0.690, 1.0},            /* #4A79B0 */
             .fg = {1.000, 1.000, 1.000, 1.0},
-            .top_shadow = {0.612, 0.729, 0.875, 1.0},
-            .bottom_shadow = {0.188, 0.286, 0.420, 1.0},
+            .top_shadow = {0.569, 0.698, 0.855, 1.0},
+            .bottom_shadow = {0.153, 0.259, 0.388, 1.0},
         };
         pal->inactive = (DtwmColorSet){
-            .bg = {0.604, 0.639, 0.690, 1.0},            /* #9AA3B0 */
+            .bg = {0.616, 0.651, 0.710, 1.0},            /* #9DA6B5 */
             .fg = {0.106, 0.133, 0.173, 1.0},
-            .top_shadow = {0.824, 0.847, 0.882, 1.0},
-            .bottom_shadow = {0.337, 0.373, 0.424, 1.0},
+            .top_shadow = {0.831, 0.855, 0.890, 1.0},
+            .bottom_shadow = {0.345, 0.380, 0.435, 1.0},
         };
         pal->menu = (DtwmColorSet){
-            .bg = {0.784, 0.800, 0.831, 1.0},            /* #C8CCD4 */
+            .bg = {0.851, 0.871, 0.902, 1.0},            /* #D9DEE6 */
             .fg = {0.090, 0.114, 0.149, 1.0},
-            .top_shadow = {0.925, 0.937, 0.957, 1.0},
-            .bottom_shadow = {0.435, 0.463, 0.514, 1.0},
+            .top_shadow = {0.949, 0.957, 0.973, 1.0},
+            .bottom_shadow = {0.490, 0.514, 0.557, 1.0},
         };
-        pal->desktop_bg = (DtwmRgba){0.494, 0.557, 0.643, 1.0}; /* #7E8EA4 */
+        pal->desktop_bg = (DtwmRgba){0.486, 0.576, 0.678, 1.0}; /* #7C93AD */
         return;
 
     case DTWM_PROFILE_MODERN_DARK:
-        /* Matches cde/programs/palettes/ModernDark.dp (#283952 / #25272b / #1b222c) */
+        /* Matches cde/programs/palettes/ModernDark.dp (#3d74b8 / #353942 / #253142) */
         pal->active = (DtwmColorSet){
-            .bg = {0.157, 0.224, 0.322, 1.0},            /* #283952 */
-            .fg = {0.949, 0.965, 0.988, 1.0},
-            .top_shadow = {0.310, 0.404, 0.537, 1.0},
-            .bottom_shadow = {0.075, 0.110, 0.165, 1.0},
+            .bg = {0.239, 0.455, 0.722, 1.0},            /* #3D74B8 */
+            .fg = {0.969, 0.980, 0.996, 1.0},
+            .top_shadow = {0.431, 0.620, 0.847, 1.0},
+            .bottom_shadow = {0.118, 0.235, 0.384, 1.0},
         };
         pal->inactive = (DtwmColorSet){
-            .bg = {0.145, 0.153, 0.169, 1.0},            /* #25272B */
-            .fg = {0.847, 0.867, 0.898, 1.0},
-            .top_shadow = {0.278, 0.294, 0.325, 1.0},
-            .bottom_shadow = {0.067, 0.071, 0.082, 1.0},
+            .bg = {0.208, 0.224, 0.259, 1.0},            /* #353942 */
+            .fg = {0.867, 0.886, 0.918, 1.0},
+            .top_shadow = {0.345, 0.369, 0.416, 1.0},
+            .bottom_shadow = {0.098, 0.106, 0.125, 1.0},
         };
         pal->menu = (DtwmColorSet){
-            .bg = {0.125, 0.129, 0.141, 1.0},            /* #202124 */
-            .fg = {0.910, 0.925, 0.949, 1.0},
-            .top_shadow = {0.267, 0.278, 0.306, 1.0},
-            .bottom_shadow = {0.055, 0.059, 0.067, 1.0},
+            .bg = {0.176, 0.235, 0.322, 1.0},            /* #2D3C52 */
+            .fg = {0.933, 0.949, 0.969, 1.0},
+            .top_shadow = {0.314, 0.392, 0.506, 1.0},
+            .bottom_shadow = {0.086, 0.118, 0.165, 1.0},
         };
-        pal->desktop_bg = (DtwmRgba){0.106, 0.133, 0.173, 1.0}; /* #1B222C */
+        pal->desktop_bg = (DtwmRgba){0.145, 0.192, 0.259, 1.0}; /* #253142 */
         return;
 
     case DTWM_PROFILE_HIGH_CONTRAST:
@@ -391,41 +391,56 @@ void dtwm_view_update_frame(DtwmView *view) {
                  : &view->server->palette.inactive;
     }
 
+    bool is_modern = (view->server->palette.profile == DTWM_PROFILE_MODERN_LIGHT ||
+                      view->server->palette.profile == DTWM_PROFILE_MODERN_DARK);
+    bool is_hc = (view->server->palette.profile == DTWM_PROFILE_HIGH_CONTRAST);
+
     /* 1. Fill frame background */
     set_rgba(cr, cs->bg);
     cairo_rectangle(cr, 0, 0, outer_w, outer_h);
     cairo_fill(cr);
 
-    /* 2. Outer raised 2px bevel */
-    draw_bevel(cr, 0, 0, outer_w, outer_h, 2.0, cs->top_shadow, cs->bottom_shadow);
+    if (is_modern) {
+        /* Modern Motif flat 1px outer & inner frame borders (matches mwm WP-48) */
+        set_rgba(cr, cs->bottom_shadow);
+        cairo_set_line_width(cr, 1.0);
+        cairo_rectangle(cr, 0.5, 0.5, outer_w - 1.0, outer_h - 1.0);
+        cairo_stroke(cr);
+        int b_in = left > 1 ? (left - 1) : 1;
+        cairo_rectangle(cr, b_in + 0.5, b_in + 0.5, outer_w - 2 * b_in - 1.0, outer_h - 2 * b_in - 1.0);
+        cairo_stroke(cr);
+    } else {
+        /* 2. Outer raised 2px bevel */
+        draw_bevel(cr, 0, 0, outer_w, outer_h, 2.0, cs->top_shadow, cs->bottom_shadow);
 
-    /* 3. Inner sunken 1px bevel framing the titlebar + client area */
-    int b_in = left > 1 ? (left - 1) : 1;
-    draw_bevel(
-        cr,
-        b_in,
-        b_in,
-        outer_w - 2 * b_in,
-        outer_h - 2 * b_in,
-        1.0,
-        cs->bottom_shadow,
-        cs->top_shadow
-    );
+        /* 3. Inner sunken 1px bevel framing the titlebar + client area */
+        int b_in = left > 1 ? (left - 1) : 1;
+        draw_bevel(
+            cr,
+            b_in,
+            b_in,
+            outer_w - 2 * b_in,
+            outer_h - 2 * b_in,
+            1.0,
+            cs->bottom_shadow,
+            cs->top_shadow
+        );
 
-    /* 4. Iconic CDE/MWM corner resize handle notches */
-    if (view->has_resize_handles) {
-        int c = DTWM_CORNER_HANDLE_LEN;
-        if (outer_w > 2 * c + 16) {
-            draw_groove_line_v(cr, c, 1, DTWM_BORDER_WIDTH - 1, cs->bottom_shadow, cs->top_shadow);
-            draw_groove_line_v(cr, outer_w - c - 2, 1, DTWM_BORDER_WIDTH - 1, cs->bottom_shadow, cs->top_shadow);
-            draw_groove_line_v(cr, c, outer_h - DTWM_BORDER_WIDTH + 1, outer_h - 1, cs->bottom_shadow, cs->top_shadow);
-            draw_groove_line_v(cr, outer_w - c - 2, outer_h - DTWM_BORDER_WIDTH + 1, outer_h - 1, cs->bottom_shadow, cs->top_shadow);
-        }
-        if (outer_h > 2 * c + 16) {
-            draw_groove_line_h(cr, 1, DTWM_BORDER_WIDTH - 1, c, cs->bottom_shadow, cs->top_shadow);
-            draw_groove_line_h(cr, outer_w - DTWM_BORDER_WIDTH + 1, outer_w - 1, c, cs->bottom_shadow, cs->top_shadow);
-            draw_groove_line_h(cr, 1, DTWM_BORDER_WIDTH - 1, outer_h - c - 2, cs->bottom_shadow, cs->top_shadow);
-            draw_groove_line_h(cr, outer_w - DTWM_BORDER_WIDTH + 1, outer_w - 1, outer_h - c - 2, cs->bottom_shadow, cs->top_shadow);
+        /* 4. Iconic CDE/MWM corner resize handle notches */
+        if (view->has_resize_handles && !is_hc) {
+            int c = DTWM_CORNER_HANDLE_LEN;
+            if (outer_w > 2 * c + 16) {
+                draw_groove_line_v(cr, c, 1, DTWM_BORDER_WIDTH - 1, cs->bottom_shadow, cs->top_shadow);
+                draw_groove_line_v(cr, outer_w - c - 2, 1, DTWM_BORDER_WIDTH - 1, cs->bottom_shadow, cs->top_shadow);
+                draw_groove_line_v(cr, c, outer_h - DTWM_BORDER_WIDTH + 1, outer_h - 1, cs->bottom_shadow, cs->top_shadow);
+                draw_groove_line_v(cr, outer_w - c - 2, outer_h - DTWM_BORDER_WIDTH + 1, outer_h - 1, cs->bottom_shadow, cs->top_shadow);
+            }
+            if (outer_h > 2 * c + 16) {
+                draw_groove_line_h(cr, 1, DTWM_BORDER_WIDTH - 1, c, cs->bottom_shadow, cs->top_shadow);
+                draw_groove_line_h(cr, outer_w - DTWM_BORDER_WIDTH + 1, outer_w - 1, c, cs->bottom_shadow, cs->top_shadow);
+                draw_groove_line_h(cr, 1, DTWM_BORDER_WIDTH - 1, outer_h - c - 2, cs->bottom_shadow, cs->top_shadow);
+                draw_groove_line_h(cr, outer_w - DTWM_BORDER_WIDTH + 1, outer_w - 1, outer_h - c - 2, cs->bottom_shadow, cs->top_shadow);
+            }
         }
     }
 
@@ -440,48 +455,92 @@ void dtwm_view_update_frame(DtwmView *view) {
         double title_x = tx;
         double title_w = tw;
 
-        /* Left Window Menu Button [ - ] (matches WmCDecor.c BevelSystemButton) */
+        /* Left Window Menu Button [ - ] */
         if (view->has_menu_btn && title_w >= btn_w * 2) {
-            draw_bevel(cr, tx, ty, btn_w, th, 1.0, cs->top_shadow, cs->bottom_shadow);
-            double gx = tx + 4.0;
-            double gy = ty + floor((th - 4.0) * 0.5);
-            double gw = btn_w - 8.0;
-            draw_bevel(cr, gx, gy, gw, 4.0, 1.0, cs->top_shadow, cs->bottom_shadow);
+            if (is_modern) {
+                set_rgba(cr, cs->bottom_shadow);
+                cairo_set_line_width(cr, 1.0);
+                cairo_move_to(cr, tx + btn_w - 0.5, ty);
+                cairo_line_to(cr, tx + btn_w - 0.5, ty + th);
+                cairo_stroke(cr);
+                set_rgba(cr, cs->fg);
+                cairo_rectangle(cr, tx + 6.0, ty + floor(th * 0.5) - 1.0, btn_w - 12.0, 2.0);
+                cairo_fill(cr);
+            } else {
+                draw_bevel(cr, tx, ty, btn_w, th, 1.0, cs->top_shadow, cs->bottom_shadow);
+                double gx = tx + 4.0;
+                double gy = ty + floor((th - 4.0) * 0.5);
+                double gw = btn_w - 8.0;
+                draw_bevel(cr, gx, gy, gw, 4.0, 1.0, cs->top_shadow, cs->bottom_shadow);
+            }
             title_x += btn_w;
             title_w -= btn_w;
         }
 
-        /* Right Maximize Button [ □ ] (matches WmCDecor.c BevelMaximizeButton:
-         * 4px inset from button edges -> (th - 8) inner square, inverted when maximized) */
+        /* Right Maximize Button [ □ ] */
         double right_edge = tx + tw;
         if (view->has_max_btn && title_w >= btn_w * 2) {
             right_edge -= btn_w;
             title_w -= btn_w;
-            draw_bevel(cr, right_edge, ty, btn_w, th, 1.0, cs->top_shadow, cs->bottom_shadow);
-            double sq = (th > 12.0) ? (th - 8.0) : 4.0;
-            double sx = right_edge + floor((btn_w - sq) * 0.5);
-            double sy = ty + floor((th - sq) * 0.5);
-            if (view->maximized) {
-                draw_bevel(cr, sx, sy, sq, sq, 1.0, cs->bottom_shadow, cs->top_shadow);
+            if (is_modern) {
+                set_rgba(cr, cs->bottom_shadow);
+                cairo_set_line_width(cr, 1.0);
+                cairo_move_to(cr, right_edge + 0.5, ty);
+                cairo_line_to(cr, right_edge + 0.5, ty + th);
+                cairo_stroke(cr);
+                double sq = 10.0;
+                double sx = right_edge + floor((btn_w - sq) * 0.5) + 0.5;
+                double sy = ty + floor((th - sq) * 0.5) + 0.5;
+                set_rgba(cr, cs->fg);
+                cairo_set_line_width(cr, 1.5);
+                cairo_rectangle(cr, sx, sy, sq - 1.0, sq - 1.0);
+                cairo_stroke(cr);
             } else {
+                draw_bevel(cr, right_edge, ty, btn_w, th, 1.0, cs->top_shadow, cs->bottom_shadow);
+                double sq = (th > 12.0) ? (th - 8.0) : 4.0;
+                double sx = right_edge + floor((btn_w - sq) * 0.5);
+                double sy = ty + floor((th - sq) * 0.5);
+                if (view->maximized) {
+                    draw_bevel(cr, sx, sy, sq, sq, 1.0, cs->bottom_shadow, cs->top_shadow);
+                } else {
+                    draw_bevel(cr, sx, sy, sq, sq, 1.0, cs->top_shadow, cs->bottom_shadow);
+                }
+            }
+        }
+
+        /* Minimize Button [ . / _ ] */
+        if (view->has_min_btn && title_w >= btn_w * 1.5) {
+            right_edge -= btn_w;
+            title_w -= btn_w;
+            if (is_modern) {
+                set_rgba(cr, cs->bottom_shadow);
+                cairo_set_line_width(cr, 1.0);
+                cairo_move_to(cr, right_edge + 0.5, ty);
+                cairo_line_to(cr, right_edge + 0.5, ty + th);
+                cairo_stroke(cr);
+                set_rgba(cr, cs->fg);
+                cairo_rectangle(cr, right_edge + 7.0, ty + th - 8.0, btn_w - 14.0, 2.0);
+                cairo_fill(cr);
+            } else {
+                draw_bevel(cr, right_edge, ty, btn_w, th, 1.0, cs->top_shadow, cs->bottom_shadow);
+                double sq = 4.0;
+                double sx = right_edge + floor((btn_w - sq) * 0.5);
+                double sy = ty + floor((th - sq) * 0.5);
                 draw_bevel(cr, sx, sy, sq, sq, 1.0, cs->top_shadow, cs->bottom_shadow);
             }
         }
 
-        /* Minimize Button [ . ] (matches WmCDecor.c BevelMinimizeButton: 4x4 centered) */
-        if (view->has_min_btn && title_w >= btn_w * 1.5) {
-            right_edge -= btn_w;
-            title_w -= btn_w;
-            draw_bevel(cr, right_edge, ty, btn_w, th, 1.0, cs->top_shadow, cs->bottom_shadow);
-            double sq = 4.0;
-            double sx = right_edge + floor((btn_w - sq) * 0.5);
-            double sy = ty + floor((th - sq) * 0.5);
-            draw_bevel(cr, sx, sy, sq, sq, 1.0, cs->top_shadow, cs->bottom_shadow);
-        }
-
-        /* Titlebar slab + centered window title (normal-weight Serif in Classic CDE matching X11 dtwm) */
+        /* Titlebar slab + centered window title */
         if (title_w > 4.0) {
-            draw_bevel(cr, title_x, ty, title_w, th, 1.0, cs->top_shadow, cs->bottom_shadow);
+            if (is_modern) {
+                set_rgba(cr, cs->bottom_shadow);
+                cairo_set_line_width(cr, 1.0);
+                cairo_move_to(cr, tx, ty + th - 0.5);
+                cairo_line_to(cr, tx + tw, ty + th - 0.5);
+                cairo_stroke(cr);
+            } else {
+                draw_bevel(cr, title_x, ty, title_w, th, 1.0, cs->top_shadow, cs->bottom_shadow);
+            }
             const char *tfont =
                 (view->server->palette.profile == DTWM_PROFILE_CLASSIC) ? "Serif 10" : "Sans Bold 9.5";
             draw_pango_label_with_font(cr, tfont, dtwm_view_title(view), title_x, ty, title_w, th, cs->fg, true);

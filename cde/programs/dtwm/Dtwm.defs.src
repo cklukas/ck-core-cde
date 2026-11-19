@@ -169,8 +169,6 @@ Dtwm*ws3*backdrop*image: %|nls-15-#Pebbles#|
 !#
 !####
 !#
-Dtwm*XmDialogShell*DisplayArea.background:  White
-Dtwm*XmDialogShell*DisplayArea.foreground:  Black
 Dtwm*VersionDialog_popup*rows:		20
 Dtwm*VersionDialog_popup*columns:	%|nls-6-40^columns|
 

@@ -138,10 +138,6 @@ XCOMM include "Dt"
 !#     in all cases.  
 !#
 !#####
-*XmDialogShell.XvhHelpDialogWidget*DisplayArea.background:		 White
-*XmDialogShell*XmDialogShell.XvhHelpDialogWidget*DisplayArea.background: White
-*XmDialogShell.XvhHelpDialogWidget*DisplayArea.foreground: 		 Black
-*XmDialogShell*XmDialogShell.XvhHelpDialogWidget*DisplayArea.foreground: Black
 
 !########
 !#

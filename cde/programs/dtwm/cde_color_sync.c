@@ -38,6 +38,10 @@ static CdeScheme parse_scheme(const char *s) {
     if (!s || !s[0]) return CDE_SCHEME_LIGHT;
     if (strcasecmp(s, "dark") == 0 || strcasecmp(s, "modern_dark") == 0 ||
         strcasecmp(s, "ModernDark") == 0 || strcasecmp(s, "ModernDark.dp") == 0 ||
+        strcasecmp(s, "NordicNight") == 0 || strcasecmp(s, "NordicNight.dp") == 0 ||
+        strcasecmp(s, "ObsidianTeal") == 0 || strcasecmp(s, "ObsidianTeal.dp") == 0 ||
+        strcasecmp(s, "EspressoDark") == 0 || strcasecmp(s, "EspressoDark.dp") == 0 ||
+        strcasecmp(s, "Black") == 0 || strcasecmp(s, "Black.dp") == 0 ||
         strcasecmp(s, "prefer-dark") == 0) {
         return CDE_SCHEME_DARK;
     }

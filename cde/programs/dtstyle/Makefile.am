@@ -35,7 +35,8 @@ endif
 
 dtstyle_SOURCES = Main.c MainWin.c Font.c FontParser.c FontCatalog.c FontFaceCatalog.c Audio.c Startup.c Mouse.c	\
 		  SaveRestore.c Backdrop.c Screen.c Display.c Keyboard.c		\
-		  ColorMain.c ColorPalette.c ColorFile.c ColorEdit.c	\
+		  ColorMain.c ColorPreviewHelper.c ColorPreviewHelper.h	\
+		  ColorPalette.c ColorFile.c ColorEdit.c	\
 		  Resource.c Protocol.c Dtwm.c Help.c HelpCB.c		\
 		  Accessibility.c Accessibility.h			\
 		  I18nMain.c I18nEnv.c I18nUtil.c Audio.h ColorMain.h	\

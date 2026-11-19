@@ -870,6 +870,16 @@ SetValues(Widget cur_w, Widget ref_w, Widget w, ArgList args,
 	flag = True;
     }
 
+    if (tw->vt.td &&
+	(cur_tw->core.background_pixel != tw->core.background_pixel ||
+	 cur_tw->primitive.foreground != tw->primitive.foreground)) {
+	tw->vt.td->colorPairs[0].fg.pixel = tw->primitive.foreground;
+	tw->vt.td->colorPairs[0].bg.pixel = tw->core.background_pixel;
+	tw->vt.td->colorPairs[0].initialized = False;
+	(void) _DtTermColorInitializeColorPair(w, &tw->vt.td->colorPairs[0]);
+	flag = True;
+    }
+
     return(flag);
 }
 

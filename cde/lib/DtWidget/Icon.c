@@ -2877,6 +2877,9 @@ VisualChange(
 	M_Background (current) != M_Background (new))
       {
 	  local_cache.background = M_Background (new);
+	  if (G_ArmColor (g) == current->manager.bottom_shadow_color ||
+	      G_ArmColor (g) == M_Background (current))
+	      local_cache.arm_color = new->manager.bottom_shadow_color;
 	  update = True;
       }
     
@@ -2913,10 +2916,8 @@ VisualChange(
 			       G_PixmapBackground (g));
 		if (G_Pixmap (g) != XmUNSPECIFIED_PIXMAP)
 		  G_Mask(g) = (Pixmap)_DtGetMask(XtScreen(g), G_ImageName(g));
-		return (True);
 	    }
-	  else
-	    return (False);
+	  return (True);
       }
       return (False);
 }

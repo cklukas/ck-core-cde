@@ -153,7 +153,11 @@ cursorToggle(Widget w)
     int cursorRow;
 
     /* if the cursor is not visible or is off... */
-    if (!tpd->cursorVisible || (CURSORoff == tpd->cursorState)) {
+    if (!tpd->cursorVisible || (CURSORoff == tpd->cursorState) ||
+	!tpd->cursorGC.gc) {
+	if (!tpd->cursorGC.gc) {
+	    tpd->cursorState = CURSORoff;
+	}
 	/* do nothing... */
 	return;
     }

@@ -1006,7 +1006,6 @@ Initialize(
   update_gcs = C_UpdateGCs(XtClass(new));
   _DtProcessUnlock();
   (*update_gcs) ((DtIconGadget) new);
-  G__DoUpdate (new) = False;
 }
 
 
@@ -1388,10 +1387,12 @@ Draw(
   Boolean		bMono;
   GetPositionProc	get_positions;
   
-  bMono = (((G_Foreground (g) == BlackPixelOfScreen (XtScreen (g))) ||
-	    (G_Foreground (g) == WhitePixelOfScreen (XtScreen (g)))) &&
-	   ((G_Background (g) == BlackPixelOfScreen (XtScreen (g))) ||
-	    (G_Background (g) == WhitePixelOfScreen (XtScreen (g)))) );
+  bMono = (DefaultDepthOfScreen (XtScreen (g)) == 1) ||
+	  ((mgr->core.background_pixmap != XmUNSPECIFIED_PIXMAP) &&
+	   (((G_Foreground (g) == BlackPixelOfScreen (XtScreen (g))) ||
+	     (G_Foreground (g) == WhitePixelOfScreen (XtScreen (g)))) &&
+	    ((G_Background (g) == BlackPixelOfScreen (XtScreen (g))) ||
+	     (G_Background (g) == WhitePixelOfScreen (XtScreen (g))))));
   
   /*	Select gc to fill background.
    */
@@ -1563,7 +1564,9 @@ Draw(
 	  else
 	    {
 	      if (G_UseEmbossedText (g) &&
-		  G_Foreground (g) == WhitePixelOfScreen (XtScreen (g)))
+		  G_Foreground (g) == WhitePixelOfScreen (XtScreen (g)) &&
+		  G_Background (g) != BlackPixelOfScreen (XtScreen (g)) &&
+		  mgr->manager.bottom_shadow_color != G_Foreground (g))
 		XmStringDraw (d, drawable, G_FontList (g), G_String (g),
 			      G_BottomShadowGC (g), x + s_x + 1, y + s_y + 1,
 			      clip.width, XmALIGNMENT_BEGINNING,
@@ -1625,7 +1628,9 @@ Draw(
 	  else
 	    {
 	      if (G_UseEmbossedText (g) &&
-		  G_Foreground (g) == WhitePixelOfScreen (XtScreen (g)))
+		  G_Foreground (g) == WhitePixelOfScreen (XtScreen (g)) &&
+		  G_Background (g) != BlackPixelOfScreen (XtScreen (g)) &&
+		  mgr->manager.bottom_shadow_color != G_Foreground (g))
 		XmStringDraw (d, drawable, G_FontList (g), G_String (g),
 			      G_BottomShadowGC (g), x + s_x + 1, y + s_y + 1,
 			      clip.width, XmALIGNMENT_BEGINNING,

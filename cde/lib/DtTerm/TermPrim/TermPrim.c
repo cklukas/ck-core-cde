@@ -1013,13 +1013,23 @@ AdjustWindowUnits
 
 	tw->term.tpd->cellWidth = tw->term.widthInc;
 	tw->term.tpd->cellHeight = tw->term.heightInc;
-    } else {
+    } else if (tw->term.font) {
 	tw->term.widthInc = MeasureFontStructCellWidth(tw->term.font);
 	tw->term.heightInc = tw->term.font->ascent + tw->term.font->descent;
         /* why are there two "ascents"? TMH   */
 	tw->term.ascent = tw->term.font->ascent;
 	tw->term.tpd->ascent = tw->term.font->ascent;
 
+	tw->term.tpd->cellWidth = tw->term.widthInc;
+	tw->term.tpd->cellHeight = tw->term.heightInc;
+    } else {
+	if (tw->term.widthInc <= 0)
+	    tw->term.widthInc = 8;
+	if (tw->term.heightInc <= 0)
+	    tw->term.heightInc = 16;
+	if (tw->term.ascent <= 0)
+	    tw->term.ascent = 12;
+	tw->term.tpd->ascent = tw->term.ascent;
 	tw->term.tpd->cellWidth = tw->term.widthInc;
 	tw->term.tpd->cellHeight = tw->term.heightInc;
     }
@@ -2356,11 +2366,11 @@ SetValues(Widget cur_w, Widget ref_w, Widget w, ArgList args,
     if (cur_tw->term.fontList != tw->term.fontList) {
 	XtWidgetGeometry request;
 	XtWidgetGeometry reply;
-
-	/* reset the font in the GC's... */
-	tw->term.tpd->renderGC.fid = (Font) 0;
-	tw->term.tpd->renderReverseGC.fid = (Font) 0;
-	tw->term.tpd->clearGC.fid = (Font) 0;
+	TermFont prevTermFont = cur_tw->term.tpd->termFont;
+	XFontSet prevFontSet = cur_tw->term.fontSet;
+	XFontStruct *prevFont = cur_tw->term.font;
+	Boolean prevFsOwned = cur_tw->term.fontSetIsOwned;
+	Boolean prevFOwned = cur_tw->term.fontIsOwned;
 
 	/* Our font list changed on us.  We need to resize ourself and
 	 * recompute our width and height increment values...
@@ -2368,29 +2378,43 @@ SetValues(Widget cur_w, Widget ref_w, Widget w, ArgList args,
 	tw->term.tpd->termFont = CreateRenderFont(w, tw->term.fontList,
 		&tw->term.fontSet, &tw->term.font,
 		&tw->term.fontSetIsOwned, &tw->term.fontIsOwned);
+	if (!tw->term.fontSet && !tw->term.font &&
+	    (prevFontSet || prevFont)) {
+	    tw->term.tpd->termFont = prevTermFont;
+	    tw->term.fontSet = prevFontSet;
+	    tw->term.font = prevFont;
+	    tw->term.fontSetIsOwned = prevFsOwned;
+	    tw->term.fontIsOwned = prevFOwned;
+	    tw->term.fontList = cur_tw->term.fontList;
+	} else {
+	    /* reset the font in the GC's... */
+	    tw->term.tpd->renderGC.fid = (Font) 0;
+	    tw->term.tpd->renderReverseGC.fid = (Font) 0;
+	    tw->term.tpd->clearGC.fid = (Font) 0;
 
-	/* look through our XFontSet or XFontStruct and adjust our
-	 * width and height increments...
-	 */
-	(void) AdjustWindowUnits(w);
-	request.height = tw->term.rows * tw->term.heightInc +
-		2 * (tw->primitive.shadow_thickness +
-		tw->primitive.highlight_thickness + tw->term.marginWidth);
-	request.width = tw->term.columns  * tw->term.widthInc +
-		2 * (tw->primitive.shadow_thickness +
-		tw->primitive.highlight_thickness + tw->term.marginHeight);
-	request.request_mode = CWWidth | CWHeight;
+	    /* look through our XFontSet or XFontStruct and adjust our
+	     * width and height increments...
+	     */
+	    (void) AdjustWindowUnits(w);
+	    request.height = tw->term.rows * tw->term.heightInc +
+		    2 * (tw->primitive.shadow_thickness +
+		    tw->primitive.highlight_thickness + tw->term.marginWidth);
+	    request.width = tw->term.columns  * tw->term.widthInc +
+		    2 * (tw->primitive.shadow_thickness +
+		    tw->primitive.highlight_thickness + tw->term.marginHeight);
+	    request.request_mode = CWWidth | CWHeight;
 
-	/* ignore the return result... */
-	(void) XtMakeGeometryRequest(w, &request, &reply);
-        (void) XmImVaSetValues(w,
-            XmNfontList, tw->term.fontList,
-            nullptr);
-	/* clear the cursor position so that we will recalculate the
-	 * im spotLocation with the new font metrics...
-	 */
-	tw->term.tpd->IMCursorRow = -1;
-	tw->term.tpd->IMCursorColumn = -1;
+	    /* ignore the return result... */
+	    (void) XtMakeGeometryRequest(w, &request, &reply);
+	    (void) XmImVaSetValues(w,
+		XmNfontList, tw->term.fontList,
+		nullptr);
+	    /* clear the cursor position so that we will recalculate the
+	     * im spotLocation with the new font metrics...
+	     */
+	    tw->term.tpd->IMCursorRow = -1;
+	    tw->term.tpd->IMCursorColumn = -1;
+	}
     }
 
     if (cur_tw->term.boldFontList != tw->term.boldFontList) {
@@ -2410,6 +2434,37 @@ SetValues(Widget cur_w, Widget ref_w, Widget w, ArgList args,
 	/* we need to refresh so that we will turn on or turn off
 	 * reverse video...
 	 */
+	flag = True;
+    }
+
+    if (tw->term.tpd &&
+	(cur_tw->core.background_pixel != tw->core.background_pixel ||
+	 cur_tw->primitive.foreground != tw->primitive.foreground)) {
+	if (XtIsRealized(w)) {
+	    _DtTermPrimCursorOff(w);
+	}
+	if (tw->term.tpd->renderGC.gc) {
+	    (void) XFreeGC(XtDisplay(w), tw->term.tpd->renderGC.gc);
+	    tw->term.tpd->renderGC.gc = (GC) 0;
+	}
+	if (tw->term.tpd->renderReverseGC.gc) {
+	    (void) XFreeGC(XtDisplay(w), tw->term.tpd->renderReverseGC.gc);
+	    tw->term.tpd->renderReverseGC.gc = (GC) 0;
+	}
+	if (tw->term.tpd->clearGC.gc) {
+	    (void) XFreeGC(XtDisplay(w), tw->term.tpd->clearGC.gc);
+	    tw->term.tpd->clearGC.gc = (GC) 0;
+	}
+	if (tw->term.tpd->cursorGC.gc) {
+	    (void) XFreeGC(XtDisplay(w), tw->term.tpd->cursorGC.gc);
+	    tw->term.tpd->cursorGC.gc = (GC) 0;
+	    tw->term.tpd->cursorGC.foreground = 0;
+	    tw->term.tpd->cursorGC.background = 0;
+	}
+	if (XtIsRealized(w)) {
+	    XSetWindowBackground(XtDisplay(w), XtWindow(w),
+		    tw->core.background_pixel);
+	}
 	flag = True;
     }
 

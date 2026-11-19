@@ -8,7 +8,8 @@ dist_palette_DATA = Alpine.dp Chocolate.dp Grass.dp PBNJ.dp Tundra.dp	\
 	Default.dp NorthernSky.dp SkyRed.dp Cabernet.dp Delphinium.dp	\
 	Nutmeg.dp SoftBlue.dp Camouflage.dp Desert.dp Olive.dp		\
 	SouthWest.dp Charcoal.dp Golden.dp Orchid.dp Summer.dp		\
-	HighContrast.dp ModernDark.dp ModernLight.dp
+	HighContrast.dp ModernDark.dp ModernLight.dp			\
+	NordicNight.dp ObsidianTeal.dp EspressoDark.dp
 
 install-data-hook:
 	$(RM) $(DESTDIR)$(CDE_INSTALLATION_TOP)/palettes

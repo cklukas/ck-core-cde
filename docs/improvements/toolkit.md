@@ -29,29 +29,30 @@ CK Core Motif ABI 9 provides four built-in appearance profiles (`classic`,
 session manager, window manager, and Style Manager while keeping `classic` as the
 default:
 
-- **Built-in palettes (`ModernLight.dp`, `ModernDark.dp`, `HighContrast.dp`)**:
-  `cde/programs/palettes/` ships three 8-colorset desktop palettes aligned with
+- **Built-in palettes (`ModernLight.dp`, `ModernDark.dp`, `NordicNight.dp`, `ObsidianTeal.dp`, `EspressoDark.dp`, `HighContrast.dp`)**:
+  `cde/programs/palettes/` ships curated 8-colorset desktop palettes aligned with
   the Motif appearance profiles so the CDE Front Panel, workspace switch buttons,
-  workspace backdrops, and terminal canvas match the active widget theme.
+  workspace backdrops, and terminal canvas match the active widget theme with
+  distinct, non-monotone surface and workspace slots.
 - **`dtsession` Color Server (`SrvPalette.c`, `SrvFile_io.c`)**:
   When `*appearanceProfile` is set to `modern_light`, `modern_dark`, or
-  `high_contrast` (or when `ModernLight.dp`, `ModernDark.dp`, or
-  `HighContrast.dp` is selected as the screen's `ColorPalette`), `dtsession`
-  automatically synchronizes `ColorPalette` and `*appearanceProfile` in
-  `RESOURCE_MANAGER`. To preserve `libXm`'s per-widget modern surface and accent
-  colors, `dtsession` scopes its Xrdb text colors to `*DtTerm*background` and
-  `*DtTerm*foreground` instead of emitting wildcard `*background` and
-  `*foreground` strings when a modern profile is active.
-- **`dtwm` window frames and Front Panel (`WmCDecor.c`, `WmResource.c`, `UI.c`)**:
-  When a modern appearance profile is active, `dtwm` preserves CDE's classic 3D
-  beveled window frames and titlebar controls while applying the active Color
-  Server palette and anti-aliased Xft render tables to window titlebars, desktop
-  icon labels, and the Front Panel workspace switcher.
-- **`dtstyle` live preview and persistence (`ColorMain.c`, `ColorFile.c`)**:
-  Selecting `ModernLight`, `ModernDark`, `HighContrast`, or any classic palette
-  in the Style Manager Color dialog previews the corresponding Motif appearance
-  profile immediately via `XmApplyAppearanceProfile()` and persists both the
-  palette and `*appearanceProfile` when confirmed.
+  `high_contrast`, `dtsession` synchronizes `ColorPalette`, `*appearanceProfile`,
+  and `*appearanceDensity` in `RESOURCE_MANAGER` while `libXm` harmonizes
+  `XmColorObj` dialog, menu, Front Panel, and canvas-well surfaces and preserves
+  raw `XmColorObj` pixels for drift-free restoration to `classic`.
+- **`dtwm` window frames and Front Panel (`WmCDecor.c`, `WmResource.c`, `UI.c`, `Control.c`, `Clock.c`)**:
+  When a modern or high-contrast appearance profile is active, `dtwm` and
+  `dtwm-panel` update window frames, workspace backdrops, `DtControlGadget` /
+  `DtClockGadget` Front Panel icons, and workspace switch buttons live from the
+  Color Server palette and active Motif appearance profile.
+- **`dtstyle` Color & Theme dialog and embedded preview (`ColorMain.c`, `ColorPreviewHelper.c`, `ColorFile.c`)**:
+  **Style Manager - Color & Theme** combines palette selection with **Widget
+  Style** (`Classic CDE (3D Bevel)`, `Modern Motif (Flat & Rounded)`, `High
+  Contrast (Accessible)`) and **Layout Spacing** (`Comfortable`, `Compact`),
+  automatically choosing `modern_light` vs. `modern_dark` from palette luminance,
+  embedding a live Motif **Sample Dialog** (`dtstyle --preview-helper`) inside
+  authentic window decorations in the preview canvas, applying desktop-wide
+  updates on **Apply** / **OK**, and reverting cleanly on **Cancel**.
 - **`DtHelp` live palette and profile redraw (`Callbacks.c`, `SetList.c`, `PathArea.c`)**:
   `DtHelpDialog` and `DtHelpQuickDialog` synchronize `dispWid` foreground,
   background, highlight color, GCs, and border thickness across live palette and

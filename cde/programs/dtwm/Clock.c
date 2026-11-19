@@ -876,10 +876,12 @@ Draw(
    Pixmap mask;
    Boolean bMono;
 
-   bMono = ( ((G_Foreground (g) == BlackPixelOfScreen (XtScreen (g))) ||
+   bMono = (DefaultDepthOfScreen (XtScreen (g)) == 1) ||
+	   ((mgr->core.background_pixmap != XmUNSPECIFIED_PIXMAP) &&
+	    (((G_Foreground (g) == BlackPixelOfScreen (XtScreen (g))) ||
 	      (G_Foreground (g) == WhitePixelOfScreen (XtScreen (g)))) &&
 	     ((G_Background (g) == BlackPixelOfScreen (XtScreen (g))) ||
-	      (G_Background (g) == WhitePixelOfScreen (XtScreen (g)))) );
+	      (G_Background (g) == WhitePixelOfScreen (XtScreen (g))))));
 
    if ((G_Armed (g)) && (fill_mode != XmFILL_PARENT))
        gc = G_ArmedBackgroundGC (g);
