@@ -75,6 +75,8 @@
 #include "Protocol.h"
 
 #include <ctype.h>
+#include <stdarg.h>
+#include <stdint.h>
 
 /*+++++++++++++++++++++++++++++++++++++++*/
 /* include extern functions              */
@@ -128,6 +130,12 @@ static void ReadIconImageMaximum(XrmDatabase db, const char *name,
 /* Internal Variables                    */
 /*+++++++++++++++++++++++++++++++++++++++*/
 
+#define DTWM_UI_ANIM_NONE      0
+#define DTWM_UI_ANIM_BEVEL     1
+#define DTWM_UI_ANIM_TITLEBAR  2
+#define DTWM_UI_ANIM_WIREFRAME 3
+#define DTWM_UI_ANIM_COUNT     4
+
 typedef struct {
     Widget      pictLabel;
     Widget      systemDefault;
@@ -137,7 +145,12 @@ typedef struct {
     Widget      autoRaiseTG;
     Widget      secStackTG;
     Widget      moveOpaqueTG;
-    Widget      animateMinimizeTG;
+    Widget      minAnimPD;
+    Widget      minAnimOM;
+    Widget      minAnimBtns[DTWM_UI_ANIM_COUNT];
+    Widget      maxAnimPD;
+    Widget      maxAnimOM;
+    Widget      maxAnimBtns[DTWM_UI_ANIM_COUNT];
     Widget      showTaskSwitcherTG;
     Widget      iconPlacementTB;
     Widget      useIconBoxRC;
@@ -150,11 +163,15 @@ typedef struct {
     Widget      iconGapLabel;
     Widget      iconGapText;
     Boolean     systemDefaultFlag;
+    Boolean     waylandMode;
     int         origKeyboardFocusPolicy;
     int         origFocusAutoRaise;
     int         origSecStack;
     int         origMoveOpaque;
-    int         origAnimateMinimize;
+    int         origMinAnimStyle;
+    int         origMaxAnimStyle;
+    int         curMinAnimStyle;
+    int         curMaxAnimStyle;
     int         origShowTaskSwitcher;
     int         origUseIconBox;
     Boolean     origIncreaseIconSize;
@@ -168,7 +185,101 @@ typedef struct {
 static Dtwm dtwm;
 static saveRestore save = {FALSE, 0, };
 
-static char dtwmRes[1024]="";
+static char dtwmRes[2048]="";
+
+static const char *
+anim_style_to_token(int style_idx)
+{
+    switch (style_idx)
+    {
+        case DTWM_UI_ANIM_NONE:      return "none";
+        case DTWM_UI_ANIM_BEVEL:     return "bevel";
+        case DTWM_UI_ANIM_TITLEBAR:  return "titlebar";
+        case DTWM_UI_ANIM_WIREFRAME: return "wireframe";
+        default:                     return "auto";
+    }
+}
+
+static int
+DtstyleResolveWindowAnimStyle(const char *raw_style,
+                              Boolean is_wayland,
+                              Boolean is_maximize,
+                              Boolean has_legacy_min,
+                              Boolean legacy_min_enabled)
+{
+    char buf[32];
+    size_t i = 0;
+
+    if (raw_style != nullptr)
+    {
+        while (*raw_style && isspace((unsigned char)*raw_style))
+            raw_style++;
+        while (raw_style[i] != '\0' && !isspace((unsigned char)raw_style[i]) &&
+               i + 1 < sizeof(buf))
+        {
+            buf[i] = (char)tolower((unsigned char)raw_style[i]);
+            i++;
+        }
+    }
+    buf[i] = '\0';
+
+    if (strcmp(buf, "none") == 0 || strcmp(buf, "false") == 0 ||
+        strcmp(buf, "off") == 0 || strcmp(buf, "0") == 0)
+    {
+        return DTWM_UI_ANIM_NONE;
+    }
+    if (strcmp(buf, "bevel") == 0 || strcmp(buf, "bevel_morph") == 0 ||
+        strcmp(buf, "bevel_glide") == 0 || strcmp(buf, "bevelmorph") == 0 ||
+        strcmp(buf, "bevelglide") == 0)
+    {
+        if (is_wayland)
+            return DTWM_UI_ANIM_BEVEL;
+        /* Graceful fallback when roaming a Wayland session's home directory into X11 */
+        if (is_maximize)
+            return DTWM_UI_ANIM_NONE;
+        return (has_legacy_min && !legacy_min_enabled)
+                   ? DTWM_UI_ANIM_NONE
+                   : DTWM_UI_ANIM_WIREFRAME;
+    }
+    if (strcmp(buf, "titlebar") == 0 || strcmp(buf, "titlebar_shuttle") == 0 ||
+        strcmp(buf, "titlebarshuttle") == 0)
+    {
+        return DTWM_UI_ANIM_TITLEBAR;
+    }
+    if (strcmp(buf, "wireframe") == 0)
+    {
+        return DTWM_UI_ANIM_WIREFRAME;
+    }
+
+    /* "auto", unset, or unrecognized: apply backend-native defaults */
+    if (is_wayland)
+    {
+        if (!is_maximize && has_legacy_min && !legacy_min_enabled)
+            return DTWM_UI_ANIM_NONE;
+        return DTWM_UI_ANIM_BEVEL;
+    }
+    if (is_maximize)
+        return DTWM_UI_ANIM_NONE;
+    return (has_legacy_min && !legacy_min_enabled)
+               ? DTWM_UI_ANIM_NONE
+               : DTWM_UI_ANIM_WIREFRAME;
+}
+
+static void
+append_dtwm_res(char *dst, size_t dst_sz, const char *fmt, ...)
+{
+    size_t used;
+    va_list ap;
+
+    if (!dst || dst_sz == 0 || !fmt)
+        return;
+    used = strnlen(dst, dst_sz);
+    if (used + 1 >= dst_sz)
+        return;
+    va_start(ap, fmt);
+    vsnprintf(dst + used, dst_sz - used, fmt, ap);
+    va_end(ap);
+}
 
 static Boolean
 is_wayland_dtwm_session(void)
@@ -194,6 +305,100 @@ is_wayland_dtwm_session(void)
 }
 
 static void
+set_widget_label_str(Widget w, const char *text)
+{
+    XmString xs;
+    if (!w || !text)
+        return;
+    xs = CMPSTR((char *)text);
+    XtVaSetValues(w, XmNlabelString, xs, NULL);
+    XmStringFree(xs);
+}
+
+static void
+set_anim_menu_selection(Boolean is_max, int style_idx)
+{
+    if (style_idx < 0 || style_idx >= DTWM_UI_ANIM_COUNT)
+        style_idx = DTWM_UI_ANIM_NONE;
+    if (!dtwm.waylandMode && style_idx == DTWM_UI_ANIM_BEVEL)
+        style_idx = is_max ? DTWM_UI_ANIM_NONE : DTWM_UI_ANIM_WIREFRAME;
+
+    if (is_max)
+    {
+        dtwm.curMaxAnimStyle = style_idx;
+        if (dtwm.maxAnimOM && dtwm.maxAnimBtns[style_idx])
+            XtVaSetValues(dtwm.maxAnimOM, XmNmenuHistory, dtwm.maxAnimBtns[style_idx], NULL);
+    }
+    else
+    {
+        dtwm.curMinAnimStyle = style_idx;
+        if (dtwm.minAnimOM && dtwm.minAnimBtns[style_idx])
+            XtVaSetValues(dtwm.minAnimOM, XmNmenuHistory, dtwm.minAnimBtns[style_idx], NULL);
+    }
+}
+
+static void
+refresh_anim_menus_for_backend(Boolean wayland_mode)
+{
+    const char *lbl_none = (char *)GETMESSAGE(18, 24, "None");
+    const char *lbl_bevel_min = (char *)GETMESSAGE(18, 25, "Bevel Morph");
+    const char *lbl_bevel_max = (char *)GETMESSAGE(18, 26, "Bevel Glide");
+    const char *lbl_title = wayland_mode
+                                ? (char *)GETMESSAGE(18, 27, "Titlebar Shuttle")
+                                : (char *)GETMESSAGE(18, 28, "Titlebar");
+    const char *lbl_wire = (char *)GETMESSAGE(18, 29, "Wireframe");
+
+    dtwm.waylandMode = wayland_mode;
+
+    set_widget_label_str(dtwm.minAnimBtns[DTWM_UI_ANIM_NONE], lbl_none);
+    set_widget_label_str(dtwm.minAnimBtns[DTWM_UI_ANIM_BEVEL], lbl_bevel_min);
+    set_widget_label_str(dtwm.minAnimBtns[DTWM_UI_ANIM_TITLEBAR], lbl_title);
+    set_widget_label_str(dtwm.minAnimBtns[DTWM_UI_ANIM_WIREFRAME], lbl_wire);
+
+    set_widget_label_str(dtwm.maxAnimBtns[DTWM_UI_ANIM_NONE], lbl_none);
+    set_widget_label_str(dtwm.maxAnimBtns[DTWM_UI_ANIM_BEVEL], lbl_bevel_max);
+    set_widget_label_str(dtwm.maxAnimBtns[DTWM_UI_ANIM_TITLEBAR], lbl_title);
+    set_widget_label_str(dtwm.maxAnimBtns[DTWM_UI_ANIM_WIREFRAME], lbl_wire);
+
+    if (wayland_mode)
+    {
+        if (dtwm.minAnimBtns[DTWM_UI_ANIM_BEVEL])
+            XtManageChild(dtwm.minAnimBtns[DTWM_UI_ANIM_BEVEL]);
+        if (dtwm.maxAnimBtns[DTWM_UI_ANIM_BEVEL])
+            XtManageChild(dtwm.maxAnimBtns[DTWM_UI_ANIM_BEVEL]);
+    }
+    else
+    {
+        /* Ensure XmNmenuHistory never points to the Wayland-only Bevel item before unmanaging */
+        if (dtwm.minAnimOM && dtwm.minAnimBtns[DTWM_UI_ANIM_WIREFRAME])
+            XtVaSetValues(dtwm.minAnimOM, XmNmenuHistory, dtwm.minAnimBtns[DTWM_UI_ANIM_WIREFRAME], NULL);
+        if (dtwm.maxAnimOM && dtwm.maxAnimBtns[DTWM_UI_ANIM_NONE])
+            XtVaSetValues(dtwm.maxAnimOM, XmNmenuHistory, dtwm.maxAnimBtns[DTWM_UI_ANIM_NONE], NULL);
+
+        if (dtwm.minAnimBtns[DTWM_UI_ANIM_BEVEL])
+            XtUnmanageChild(dtwm.minAnimBtns[DTWM_UI_ANIM_BEVEL]);
+        if (dtwm.maxAnimBtns[DTWM_UI_ANIM_BEVEL])
+            XtUnmanageChild(dtwm.maxAnimBtns[DTWM_UI_ANIM_BEVEL]);
+    }
+}
+
+static void
+minAnimSelectCB(Widget w, XtPointer client_data, XtPointer call_data)
+{
+    (void)w;
+    (void)call_data;
+    dtwm.curMinAnimStyle = (int)(intptr_t)client_data;
+}
+
+static void
+maxAnimSelectCB(Widget w, XtPointer client_data, XtPointer call_data)
+{
+    (void)w;
+    (void)call_data;
+    dtwm.curMaxAnimStyle = (int)(intptr_t)client_data;
+}
+
+static void
 commit_orig_dtwm_values(void)
 {
     char *gapStr = XmTextFieldGetString(dtwm.iconGapText);
@@ -201,7 +406,8 @@ commit_orig_dtwm_values(void)
     dtwm.origFocusAutoRaise = XmToggleButtonGadgetGetState(dtwm.autoRaiseTG);
     dtwm.origSecStack = !XmToggleButtonGadgetGetState(dtwm.secStackTG);
     dtwm.origMoveOpaque = XmToggleButtonGadgetGetState(dtwm.moveOpaqueTG);
-    dtwm.origAnimateMinimize = XmToggleButtonGadgetGetState(dtwm.animateMinimizeTG);
+    dtwm.origMinAnimStyle = dtwm.curMinAnimStyle;
+    dtwm.origMaxAnimStyle = dtwm.curMaxAnimStyle;
     dtwm.origShowTaskSwitcher = XmToggleButtonGadgetGetState(dtwm.showTaskSwitcherTG);
     dtwm.origUseIconBox = XmToggleButtonGadgetGetState(dtwm.iconBoxTG);
     dtwm.origIncreaseIconSize = XmToggleButtonGadgetGetState(dtwm.increaseIconSizeTG);
@@ -485,17 +691,35 @@ getDtwmValues(void)
     }
     XmToggleButtonGadgetSetState(dtwm.moveOpaqueTG, dtwm.origMoveOpaque, False);
 
-    /* Get AnimateMinimizeRestore value */
-    if (query_dtwm_string_lower(live_db, db, "animateMinimizeRestore",
-                                "AnimateMinimizeRestore", sbuf, sizeof(sbuf)))
+    /* Get Backend-Aware Minimize & Maximize Animation Styles */
     {
-        dtwm.origAnimateMinimize = (strcmp(sbuf, "true") == 0) ? True : False;
+        Boolean wayland_mode = is_wayland_dtwm_session();
+        Boolean has_legacy_min = False;
+        Boolean legacy_min_enabled = True;
+        char min_style_buf[64] = "";
+        char max_style_buf[64] = "";
+
+        refresh_anim_menus_for_backend(wayland_mode);
+
+        if (query_dtwm_string_lower(live_db, db, "animateMinimizeRestore",
+                                    "AnimateMinimizeRestore", sbuf, sizeof(sbuf)))
+        {
+            has_legacy_min = True;
+            legacy_min_enabled = (strcmp(sbuf, "true") == 0) ? True : False;
+        }
+        query_dtwm_string_lower(live_db, db, "minimizeAnimation",
+                                "MinimizeAnimation", min_style_buf, sizeof(min_style_buf));
+        query_dtwm_string_lower(live_db, db, "maximizeAnimation",
+                                "MaximizeAnimation", max_style_buf, sizeof(max_style_buf));
+
+        dtwm.origMinAnimStyle = DtstyleResolveWindowAnimStyle(
+            min_style_buf, wayland_mode, False, has_legacy_min, legacy_min_enabled);
+        dtwm.origMaxAnimStyle = DtstyleResolveWindowAnimStyle(
+            max_style_buf, wayland_mode, True, has_legacy_min, legacy_min_enabled);
+
+        set_anim_menu_selection(False, dtwm.origMinAnimStyle);
+        set_anim_menu_selection(True, dtwm.origMaxAnimStyle);
     }
-    else
-    {
-        dtwm.origAnimateMinimize = True;
-    }
-    XmToggleButtonGadgetSetState(dtwm.animateMinimizeTG, dtwm.origAnimateMinimize, False);
 
     /* Get ShowTaskSwitcher value */
     if (query_dtwm_string_lower(live_db, db, "showTaskSwitcher",
@@ -752,13 +976,48 @@ build_dtwmDlg(
         XmCreateToggleButtonGadget(windowFocusForm, "moveOpaqueTG", args, n);
     XmStringFree(string);
 
+    dtwm.minAnimPD = XmCreatePulldownMenu(windowFocusForm, "minAnimPD", nullptr, 0);
+    for (i = 0; i < DTWM_UI_ANIM_COUNT; i++)
+    {
+        string = CMPSTR("Wireframe");
+        dtwm.minAnimBtns[i] = XtVaCreateManagedWidget(
+            "minAnimItem", xmPushButtonGadgetClass, dtwm.minAnimPD,
+            XmNlabelString, string,
+            NULL);
+        XmStringFree(string);
+        XtAddCallback(dtwm.minAnimBtns[i], XmNactivateCallback,
+                      minAnimSelectCB, (XtPointer)(intptr_t)i);
+    }
     n = 0;
-    string = CMPSTR((char *)GETMESSAGE(18, 20, "Animate Minimize / Restore"));
-    XtSetArg(args[n], XmNnavigationType, XmTAB_GROUP); n++;  
-    XtSetArg(args[n], XmNlabelString, string);  n++;
-    XtSetArg(args[n], XmNalignment, XmALIGNMENT_BEGINNING);  n++;
-    dtwm.animateMinimizeTG =
-        XmCreateToggleButtonGadget(windowFocusForm, "animateMinimizeTG", args, n);
+    string = CMPSTR((char *)GETMESSAGE(18, 22, "Minimize / Restore Animation:"));
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    XtSetArg(args[n], XmNsubMenuId, dtwm.minAnimPD); n++;
+    XtSetArg(args[n], XmNnavigationType, XmTAB_GROUP); n++;
+    XtSetArg(args[n], XmNmarginWidth, 0); n++;
+    XtSetArg(args[n], XmNmarginHeight, 0); n++;
+    dtwm.minAnimOM = XmCreateOptionMenu(windowFocusForm, "minAnimOM", args, n);
+    XmStringFree(string);
+
+    dtwm.maxAnimPD = XmCreatePulldownMenu(windowFocusForm, "maxAnimPD", nullptr, 0);
+    for (i = 0; i < DTWM_UI_ANIM_COUNT; i++)
+    {
+        string = CMPSTR("Wireframe");
+        dtwm.maxAnimBtns[i] = XtVaCreateManagedWidget(
+            "maxAnimItem", xmPushButtonGadgetClass, dtwm.maxAnimPD,
+            XmNlabelString, string,
+            NULL);
+        XmStringFree(string);
+        XtAddCallback(dtwm.maxAnimBtns[i], XmNactivateCallback,
+                      maxAnimSelectCB, (XtPointer)(intptr_t)i);
+    }
+    n = 0;
+    string = CMPSTR((char *)GETMESSAGE(18, 23, "Maximize / Restore Animation:"));
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    XtSetArg(args[n], XmNsubMenuId, dtwm.maxAnimPD); n++;
+    XtSetArg(args[n], XmNnavigationType, XmTAB_GROUP); n++;
+    XtSetArg(args[n], XmNmarginWidth, 0); n++;
+    XtSetArg(args[n], XmNmarginHeight, 0); n++;
+    dtwm.maxAnimOM = XmCreateOptionMenu(windowFocusForm, "maxAnimOM", args, n);
     XmStringFree(string);
 
     n = 0;
@@ -844,7 +1103,8 @@ build_dtwmDlg(
     XtManageChild(dtwm.autoRaiseTG);
     XtManageChild(dtwm.secStackTG);
     XtManageChild(dtwm.moveOpaqueTG);
-    XtManageChild(dtwm.animateMinimizeTG);
+    XtManageChild(dtwm.minAnimOM);
+    XtManageChild(dtwm.maxAnimOM);
     XtManageChild(dtwm.showTaskSwitcherTG);
 
     XtManageChild(dtwm.useIconBoxRC);
@@ -982,23 +1242,34 @@ formLayoutCB(
     XtSetArg(args[n], XmNrightOffset,        0);  n++;
     XtSetValues (dtwm.moveOpaqueTG, args, n);
 
-    /* Animate minimize TG */
+    /* Minimize / Restore Animation OM */
     n=0;
     XtSetArg(args[n], XmNtopAttachment,      XmATTACH_WIDGET);       n++;
     XtSetArg(args[n], XmNtopWidget,          dtwm.moveOpaqueTG);     n++;
-    XtSetArg(args[n], XmNtopOffset,          style.verticalSpacing-3); n++;
+    XtSetArg(args[n], XmNtopOffset,          style.verticalSpacing-2); n++;
     XtSetArg(args[n], XmNbottomAttachment,   XmATTACH_NONE);         n++;
-    XtSetArg(args[n], XmNbottomOffset,       style.verticalSpacing); n++;
     XtSetArg(args[n], XmNleftAttachment,     XmATTACH_FORM);         n++;
     XtSetArg(args[n], XmNleftOffset,         0);  n++;
     XtSetArg(args[n], XmNrightAttachment,    XmATTACH_FORM);         n++;
     XtSetArg(args[n], XmNrightOffset,        0);  n++;
-    XtSetValues (dtwm.animateMinimizeTG, args, n);
+    XtSetValues (dtwm.minAnimOM, args, n);
+
+    /* Maximize / Restore Animation OM */
+    n=0;
+    XtSetArg(args[n], XmNtopAttachment,      XmATTACH_WIDGET);       n++;
+    XtSetArg(args[n], XmNtopWidget,          dtwm.minAnimOM);        n++;
+    XtSetArg(args[n], XmNtopOffset,          style.verticalSpacing-3); n++;
+    XtSetArg(args[n], XmNbottomAttachment,   XmATTACH_NONE);         n++;
+    XtSetArg(args[n], XmNleftAttachment,     XmATTACH_FORM);         n++;
+    XtSetArg(args[n], XmNleftOffset,         0);  n++;
+    XtSetArg(args[n], XmNrightAttachment,    XmATTACH_FORM);         n++;
+    XtSetArg(args[n], XmNrightOffset,        0);  n++;
+    XtSetValues (dtwm.maxAnimOM, args, n);
 
     /* Show Task Switcher TG */
     n=0;
     XtSetArg(args[n], XmNtopAttachment,      XmATTACH_WIDGET);       n++;
-    XtSetArg(args[n], XmNtopWidget,          dtwm.animateMinimizeTG); n++;
+    XtSetArg(args[n], XmNtopWidget,          dtwm.maxAnimOM);        n++;
     XtSetArg(args[n], XmNtopOffset,          style.verticalSpacing-3); n++;
     XtSetArg(args[n], XmNbottomAttachment,   XmATTACH_FORM);         n++;
     XtSetArg(args[n], XmNbottomOffset,       style.verticalSpacing); n++;
@@ -1106,10 +1377,13 @@ systemDefaultCB(
 #endif
 
     /* OpaqueMove: True on Wayland, False on classic X11 */
-    XmToggleButtonGadgetSetState (dtwm.moveOpaqueTG, is_wayland_dtwm_session() ? True : False, True); 
-
-    /* AnimateMinimizeRestore:  True */
-    XmToggleButtonGadgetSetState (dtwm.animateMinimizeTG, True, True);
+    {
+        Boolean wayland_mode = is_wayland_dtwm_session();
+        XmToggleButtonGadgetSetState (dtwm.moveOpaqueTG, wayland_mode ? True : False, True); 
+        refresh_anim_menus_for_backend(wayland_mode);
+        set_anim_menu_selection(False, wayland_mode ? DTWM_UI_ANIM_BEVEL : DTWM_UI_ANIM_WIREFRAME);
+        set_anim_menu_selection(True, wayland_mode ? DTWM_UI_ANIM_BEVEL : DTWM_UI_ANIM_NONE);
+    }
 
     /* ShowTaskSwitcher: True */
     XmToggleButtonGadgetSetState (dtwm.showTaskSwitcherTG, True, True);
@@ -1152,9 +1426,9 @@ ButtonCB(
       state = XmToggleButtonGadgetGetState (dtwm.explicitTG);
       if ( state != dtwm.origKeyboardFocusPolicy)
 	{
-	  sprintf(dtwmRes, "Dtwm.keyboardFocusPolicy: %s\n",
-		  XmToggleButtonGadgetGetState (dtwm.pointerTG)
-		  ? POINTER_STR : EXPLICIT_STR);
+	  append_dtwm_res(dtwmRes, sizeof(dtwmRes), "Dtwm.keyboardFocusPolicy: %s\n",
+			  XmToggleButtonGadgetGetState (dtwm.pointerTG)
+			  ? POINTER_STR : EXPLICIT_STR);
 	  changeFlag = 1;
 	}
       
@@ -1165,54 +1439,63 @@ ButtonCB(
       state = XmToggleButtonGadgetGetState (dtwm.autoRaiseTG);
       if (state !=  dtwm.origFocusAutoRaise || changeFlag)
 	{
-	  sprintf(dtwmRes+strlen(dtwmRes), "Dtwm*focusAutoRaise: %s\n",
-		  XmToggleButtonGadgetGetState (dtwm.autoRaiseTG)
-		  ? "True" : "False");
+	  append_dtwm_res(dtwmRes, sizeof(dtwmRes), "Dtwm*focusAutoRaise: %s\n",
+			  XmToggleButtonGadgetGetState (dtwm.autoRaiseTG)
+			  ? "True" : "False");
 	  changeFlag = 1;
 	}
       
       state = !XmToggleButtonGadgetGetState (dtwm.secStackTG);
       if ( state != dtwm.origSecStack)
 	{
-	  sprintf(dtwmRes+strlen(dtwmRes), "Dtwm*secondariesOnTop: %s\n",
-		  XmToggleButtonGadgetGetState (dtwm.secStackTG)
-		  ? "False" : "True");
+	  append_dtwm_res(dtwmRes, sizeof(dtwmRes), "Dtwm*secondariesOnTop: %s\n",
+			  XmToggleButtonGadgetGetState (dtwm.secStackTG)
+			  ? "False" : "True");
 	  changeFlag = 1;
 	}
       
       state = XmToggleButtonGadgetGetState (dtwm.moveOpaqueTG);
       if ( state != dtwm.origMoveOpaque)
 	{
-	  sprintf(dtwmRes+strlen(dtwmRes), "Dtwm*moveOpaque: %s\n",
-		  XmToggleButtonGadgetGetState (dtwm.moveOpaqueTG)
-		  ? "True" : "False");
+	  append_dtwm_res(dtwmRes, sizeof(dtwmRes), "Dtwm*moveOpaque: %s\n",
+			  XmToggleButtonGadgetGetState (dtwm.moveOpaqueTG)
+			  ? "True" : "False");
 	  changeFlag = 1;
 	}
 
-      state = XmToggleButtonGadgetGetState (dtwm.animateMinimizeTG);
-      if ( state != dtwm.origAnimateMinimize)
+      if (dtwm.curMinAnimStyle != dtwm.origMinAnimStyle)
 	{
-	  sprintf(dtwmRes+strlen(dtwmRes), "Dtwm*animateMinimizeRestore: %s\n",
-		  XmToggleButtonGadgetGetState (dtwm.animateMinimizeTG)
-		  ? "True" : "False");
+	  append_dtwm_res(dtwmRes, sizeof(dtwmRes),
+			  "Dtwm*minimizeAnimation: %s\n"
+			  "Dtwm*animateMinimizeRestore: %s\n",
+			  anim_style_to_token(dtwm.curMinAnimStyle),
+			  (dtwm.curMinAnimStyle != DTWM_UI_ANIM_NONE) ? "True" : "False");
+	  changeFlag = 1;
+	}
+
+      if (dtwm.curMaxAnimStyle != dtwm.origMaxAnimStyle)
+	{
+	  append_dtwm_res(dtwmRes, sizeof(dtwmRes),
+			  "Dtwm*maximizeAnimation: %s\n",
+			  anim_style_to_token(dtwm.curMaxAnimStyle));
 	  changeFlag = 1;
 	}
 
       state = XmToggleButtonGadgetGetState (dtwm.showTaskSwitcherTG);
       if ( state != dtwm.origShowTaskSwitcher)
 	{
-	  sprintf(dtwmRes+strlen(dtwmRes), "Dtwm*showTaskSwitcher: %s\n",
-		  XmToggleButtonGadgetGetState (dtwm.showTaskSwitcherTG)
-		  ? "True" : "False");
+	  append_dtwm_res(dtwmRes, sizeof(dtwmRes), "Dtwm*showTaskSwitcher: %s\n",
+			  XmToggleButtonGadgetGetState (dtwm.showTaskSwitcherTG)
+			  ? "True" : "False");
 	  changeFlag = 1;
 	}
       
       state = XmToggleButtonGadgetGetState (dtwm.iconBoxTG);
       if (state != dtwm.origUseIconBox)
 	{
-	  sprintf(dtwmRes+strlen(dtwmRes), "Dtwm*useIconBox: %s\n",
-		  XmToggleButtonGadgetGetState (dtwm.iconBoxTG)
-		  ? "True" : "False");
+	  append_dtwm_res(dtwmRes, sizeof(dtwmRes), "Dtwm*useIconBox: %s\n",
+			  XmToggleButtonGadgetGetState (dtwm.iconBoxTG)
+			  ? "True" : "False");
 	  changeFlag = 1;
 	}
 
@@ -1229,18 +1512,18 @@ ButtonCB(
 	  if (height <= 0)
 	    height = baseHeight;
 
-	  sprintf(dtwmRes+strlen(dtwmRes), "Dtwm*iconImageMaximum: %dx%d\n",
-		  width, height);
-	  sprintf(dtwmRes+strlen(dtwmRes), "Dtwm*doubleIconSize: %s\n",
-		  state ? "True" : "False");
+	  append_dtwm_res(dtwmRes, sizeof(dtwmRes),
+			  "Dtwm*iconImageMaximum: %dx%d\n"
+			  "Dtwm*doubleIconSize: %s\n",
+			  width, height, state ? "True" : "False");
 	  changeFlag = 1;
 	}
 
       state = XmToggleButtonGadgetGetState (dtwm.showOpenIconsTG);
       if (state != dtwm.origShowOpenIcons)
 	{
-	  sprintf(dtwmRes+strlen(dtwmRes), "Dtwm*showOpenWindowIcons: %s\n",
-		  state ? "True" : "False");
+	  append_dtwm_res(dtwmRes, sizeof(dtwmRes), "Dtwm*showOpenWindowIcons: %s\n",
+			  state ? "True" : "False");
 	  changeFlag = 1;
 	}
 
@@ -1250,7 +1533,7 @@ ButtonCB(
         if (gapStr) XtFree(gapStr);
         if (gap != dtwm.origIconPlacementMargin)
 	  {
-	    sprintf(dtwmRes+strlen(dtwmRes), "Dtwm*iconPlacementMargin: %d\n", gap);
+	    append_dtwm_res(dtwmRes, sizeof(dtwmRes), "Dtwm*iconPlacementMargin: %d\n", gap);
 	    changeFlag = 1;
 	  }
       }
@@ -1311,8 +1594,8 @@ ButtonCB(
       XmToggleButtonGadgetSetState (dtwm.moveOpaqueTG, 
 				    dtwm.origMoveOpaque ? True : False , True); 
 
-      XmToggleButtonGadgetSetState (dtwm.animateMinimizeTG,
-				    dtwm.origAnimateMinimize ? True : False , True);
+      set_anim_menu_selection(False, dtwm.origMinAnimStyle);
+      set_anim_menu_selection(True, dtwm.origMaxAnimStyle);
 
       XmToggleButtonGadgetSetState (dtwm.showTaskSwitcherTG,
 				    dtwm.origShowTaskSwitcher ? True : False , True);
@@ -1526,8 +1809,8 @@ cancelWarnCB(
   XmToggleButtonGadgetSetState (dtwm.moveOpaqueTG, 
 				dtwm.origMoveOpaque ? True : False , True); 
 
-  XmToggleButtonGadgetSetState (dtwm.animateMinimizeTG,
-				dtwm.origAnimateMinimize ? True : False , True);
+  set_anim_menu_selection(False, dtwm.origMinAnimStyle);
+  set_anim_menu_selection(True, dtwm.origMaxAnimStyle);
 
   XmToggleButtonGadgetSetState (dtwm.showTaskSwitcherTG,
 				dtwm.origShowTaskSwitcher ? True : False , True);

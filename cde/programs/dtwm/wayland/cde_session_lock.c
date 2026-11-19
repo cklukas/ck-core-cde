@@ -58,6 +58,9 @@ static xcb_atom_t intern_lock_atom(xcb_connection_t *conn, const char *name) {
 
 static void set_desktop_trees_enabled(DtwmServer *server, bool enabled) {
     if (!server) return;
+    if (!enabled) {
+        dtwm_anim_cancel_all(server);
+    }
     if (server->bg_tree) wlr_scene_node_set_enabled(&server->bg_tree->node, enabled);
     if (server->layer_bg_tree) wlr_scene_node_set_enabled(&server->layer_bg_tree->node, enabled);
     if (server->layer_bottom_tree) wlr_scene_node_set_enabled(&server->layer_bottom_tree->node, enabled);

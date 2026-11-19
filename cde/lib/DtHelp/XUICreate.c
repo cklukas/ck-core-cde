@@ -940,7 +940,7 @@ HelpCreateDA(
     gcValues.clip_x_origin = 0;
     gcValues.clip_y_origin = 0;
     gcValues.clip_mask     = None;
-    if (tile)
+    if (tile != None && tile != XmUNSPECIFIED_PIXMAP)
       {
 	gcMask |= GCTile;
 	gcValues.tile = tile;

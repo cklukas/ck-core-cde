@@ -339,6 +339,9 @@ openStartupDialogByName(Widget shell, const char *name)
     } else if (strncmp(name, "Beep", 4) == 0 || strncmp(name, "Audio", 5) == 0) {
         extern void popup_audioBB(Widget);
         popup_audioBB(shell);
+    } else if (strncmp(name, "Window", 6) == 0) {
+        extern void popup_dtwmBB(Widget);
+        popup_dtwmBB(shell);
     }
 }
 
@@ -606,6 +609,12 @@ malloc_trace(0);
                 for (int ti = 0; ti < 5; ++ti)
                     cliTp[ti] = atoi(argv[ai + 1 + ti]) ? 1 : 0;
                 ai += 5;
+                continue;
+            }
+            if (strcmp(argv[ai], "-window") == 0 ||
+                strcmp(argv[ai], "--window") == 0) {
+                openDisplayDialogOnStart = True;
+                s_startupDialogName = "Window";
                 continue;
             }
             argv[out_argc++] = argv[ai];

@@ -37,6 +37,7 @@ extern void GetAppearanceGCs (WmScreenData *pSD, Pixel fg, Pixel bg, XFontStruct
 extern GC   GetHighlightGC (WmScreenData *pSD, Pixel fg, Pixel bg, Pixmap pixmap);
 extern void MakeAppearanceResources (WmScreenData *pSD, AppearanceData *pAData, Boolean makeActiveResources);
 extern Boolean Monochrome (Screen *screen);
+extern unsigned char WmResolveX11AnimMode (const char *style, Boolean isMaximize, Boolean animateMinimizeRestore);
 extern void ProcessWmColors (WmScreenData *pSD);
 extern void ProcessWmResources (void);
 extern void SetStdGlobalResourceValues (void);

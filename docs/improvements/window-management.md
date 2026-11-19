@@ -26,8 +26,14 @@ selection visible and supports pointer hover and pinning. It is enabled by the
   usable workarea (honoring the Front Panel strut), maximizes on repeated
   `Super+Up`, and restores the saved pre-tile geometry on `Super+Down`;
 - holding Shift aligns movement and resize to the desktop grid;
-- double-clicking a title bar maximizes or restores the window; and
-- clicking the desktop clears the active-window focus.
+- double-clicking a title bar maximizes or restores the window;
+- clicking the desktop clears the active-window focus; and
+- **Style Manager → Window** configures **Minimize / Restore Animation**
+  (`Dtwm*minimizeAnimation`) and **Maximize / Restore Animation**
+  (`Dtwm*maximizeAnimation`) dynamically for the active backend — offering
+  `None`, `Wireframe` (minimize default), and `Titlebar` on X11 `dtwm` (maximize
+  default `None`), and `None`, `Bevel Morph` / `Bevel Glide` (default),
+  `Titlebar Shuttle`, and `Wireframe` on [Wayland (`dtwm-wayland`)](wayland.md).
 
 Open-window desktop icons complement these controls by keeping running
 applications represented on their workspace.

@@ -632,6 +632,14 @@ $ Messages 13-16 are replacements for messages 5-8
 19 Icon Grid Margin
 20 Animate Minimize / Restore
 21 Show Task Switcher on Alt+Tab
+22 Minimize / Restore Animation:
+23 Maximize / Restore Animation:
+24 None
+25 Bevel Morph
+26 Bevel Glide
+27 Titlebar Shuttle
+28 Titlebar
+29 Wireframe
 
 $set 19
 $ The set 19 contains messages for the I18N dialog

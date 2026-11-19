@@ -1597,24 +1597,9 @@ static void draw_default_cde_app_emblem(
     );
 }
 
-void dtwm_icons_update_view(DtwmView *view) {
-    if (!view || !view->server) return;
+struct wlr_buffer *dtwm_icons_render_tile_buffer(DtwmView *view, int *out_w, int *out_h) {
+    if (!view || !view->server) return nullptr;
     DtwmServer *server = view->server;
-
-    if (!should_show_desktop_icon(view)) {
-        if (view->desktop_icon_buf) {
-            wlr_scene_buffer_set_buffer(view->desktop_icon_buf, nullptr);
-            wlr_scene_node_set_enabled(&view->desktop_icon_buf->node, false);
-        }
-        view->icon_w = 0;
-        view->icon_h = 0;
-        publish_client_icon_geometry(view);
-        return;
-    }
-
-    if (!view->desktop_icon_buf) {
-        view->desktop_icon_buf = wlr_scene_buffer_create(server->desktop_icon_tree, nullptr);
-    }
 
     /* Exact X11 dtwm WmIDecor.c GetIconDimensions (WmRECESSED) metrics:
      * frame_w = img_dim + 2*pad(2) + 2*ext_shadow(2) + 4*int_shadow(1) = img_dim + 12 (60 for 48px)
@@ -1642,11 +1627,13 @@ void dtwm_icons_update_view(DtwmView *view) {
     view->icon_box_h = total_h;
     view->icon_w = frame_w;
     view->icon_h = frame_h;
+    if (out_w) *out_w = total_w;
+    if (out_h) *out_h = total_h;
 
     cairo_t *cr = nullptr;
     cairo_surface_t *surf = nullptr;
     struct wlr_buffer *buf = dtwm_cairo_buffer_begin(total_w, total_h, &cr, &surf);
-    if (!buf) return;
+    if (!buf) return nullptr;
 
     /* Clear full buffer so the 7px gap between icon frame and open-window indicator bar is transparent */
     cairo_save(cr);
@@ -1747,6 +1734,30 @@ void dtwm_icons_update_view(DtwmView *view) {
     }
 
     dtwm_cairo_buffer_finish(cr, surf);
+    return buf;
+}
+
+void dtwm_icons_update_view(DtwmView *view) {
+    if (!view || !view->server) return;
+    DtwmServer *server = view->server;
+
+    if (!should_show_desktop_icon(view)) {
+        if (view->desktop_icon_buf) {
+            wlr_scene_buffer_set_buffer(view->desktop_icon_buf, nullptr);
+            wlr_scene_node_set_enabled(&view->desktop_icon_buf->node, false);
+        }
+        view->icon_w = 0;
+        view->icon_h = 0;
+        publish_client_icon_geometry(view);
+        return;
+    }
+
+    if (!view->desktop_icon_buf) {
+        view->desktop_icon_buf = wlr_scene_buffer_create(server->desktop_icon_tree, nullptr);
+    }
+
+    struct wlr_buffer *buf = dtwm_icons_render_tile_buffer(view, nullptr, nullptr);
+    if (!buf) return;
     wlr_scene_buffer_set_buffer(view->desktop_icon_buf, buf);
     wlr_scene_node_set_enabled(&view->desktop_icon_buf->node, !view->icon_clipped_out);
     wlr_buffer_drop(buf);
@@ -2413,6 +2424,7 @@ void dtwm_icons_on_view_map(DtwmView *view) {
 void dtwm_icons_on_view_unmap_or_destroy(DtwmView *view, bool destroying) {
     if (!view || !view->server) return;
     DtwmServer *server = view->server;
+    dtwm_anim_cancel_for_view(server, view);
     if (server->swallowed_clock_view == view) {
         server->swallowed_clock_view = nullptr;
         dtwm_update_front_panel(server);

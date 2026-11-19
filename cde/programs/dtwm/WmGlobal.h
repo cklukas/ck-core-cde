@@ -1228,8 +1228,16 @@ typedef struct _WmScreenData
     int		iconDecoration;			/* resource */
     WHSize	iconImageMaximum;		/* resource */
     WHSize	iconImageMinimum;		/* resource */
+#define WM_ANIM_NONE		0u
+#define WM_ANIM_WIREFRAME	1u
+#define WM_ANIM_TITLEBAR	2u
+
     Boolean	doubleIconSize;		/* resource */
     Boolean	animateMinimizeRestore;	/* resource */
+    String	minimizeAnimation;	/* resource */
+    String	maximizeAnimation;	/* resource */
+    unsigned char minAnimMode;
+    unsigned char maxAnimMode;
     Boolean	showTaskSwitcher;	/* resource */
     Pixmap	builtinIconPixmap;
     int		iconWidth;

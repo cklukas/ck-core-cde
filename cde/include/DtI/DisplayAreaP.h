@@ -76,6 +76,7 @@ enum	_DtHelpSelectState
  * Whether the display area has the focus or not
  */
 #define _DT_HELP_FOCUS_FLAG           0x04
+#define _DT_HELP_IN_SET_SCROLLBARS    (1 << 8)
 
 typedef struct {
 	int		 used;

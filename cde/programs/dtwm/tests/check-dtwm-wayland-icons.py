@@ -94,6 +94,14 @@ int main(int argc, char **argv) {
         return 0;
     }
 
+    if (strcmp(cmd, "xrdb") == 0 && argc > 2) {
+        XChangeProperty(dpy, root, XA_RESOURCE_MANAGER, XA_STRING, 8, PropModeReplace,
+                        (const unsigned char *)argv[2], (int)strlen(argv[2]));
+        XSync(dpy, False);
+        XCloseDisplay(dpy);
+        return 0;
+    }
+
     if (strcmp(cmd, "pin") == 0) {
         /* Emulate dtfile Desktop.c MakeDesktopWindow (popup_name0 undecorated USPosition desktop object) */
         int s = DefaultScreen(dpy);
@@ -131,7 +139,14 @@ static struct wl_compositor *g_comp;
 static struct wl_shm *g_shm;
 static struct xdg_wm_base *g_wm;
 static struct xdg_toplevel_icon_manager_v1 *g_icon_mgr;
+static struct wl_surface *g_surf;
 static int g_configured = 0;
+static int g_pend_w = 240;
+static int g_pend_h = 160;
+static int g_cur_w = 0;
+static int g_cur_h = 0;
+
+static struct wl_buffer *make_shm_buf(int w, int h, uint32_t argb);
 
 static void wm_ping(void *d, struct xdg_wm_base *w, uint32_t s) { (void)d; xdg_wm_base_pong(w, s); }
 static const struct xdg_wm_base_listener wm_l = { .ping = wm_ping };
@@ -140,11 +155,27 @@ static void surf_conf(void *d, struct xdg_surface *s, uint32_t ser) {
     (void)d;
     xdg_surface_ack_configure(s, ser);
     g_configured = 1;
+    if (g_surf && (g_pend_w != g_cur_w || g_pend_h != g_cur_h)) {
+        int bw = g_pend_w > 32 ? g_pend_w : 240;
+        int bh = g_pend_h > 32 ? g_pend_h : 160;
+        struct wl_buffer *nbuf = make_shm_buf(bw, bh, 0xFF243448u);
+        if (nbuf) {
+            wl_surface_attach(g_surf, nbuf, 0, 0);
+            wl_surface_damage_buffer(g_surf, 0, 0, bw, bh);
+            wl_surface_commit(g_surf);
+            g_cur_w = bw;
+            g_cur_h = bh;
+        }
+    }
 }
 static const struct xdg_surface_listener surf_l = { .configure = surf_conf };
 
 static void top_conf(void *d, struct xdg_toplevel *t, int32_t w, int32_t h, struct wl_array *st) {
-    (void)d; (void)t; (void)w; (void)h; (void)st;
+    (void)d; (void)t; (void)st;
+    if (w > 0 && h > 0) {
+        g_pend_w = w;
+        g_pend_h = h;
+    }
 }
 static void top_close(void *d, struct xdg_toplevel *t) { (void)d; (void)t; exit(0); }
 static void top_bounds(void *d, struct xdg_toplevel *t, int32_t w, int32_t h) { (void)d; (void)t; (void)w; (void)h; }
@@ -188,7 +219,8 @@ static struct wl_buffer *make_shm_buf(int w, int h, uint32_t argb) {
     return b;
 }
 
-int main(void) {
+static int main_unused_anchor(void);
+int main(int argc, char **argv) {
     struct wl_display *dpy = wl_display_connect(NULL);
     if (!dpy) return 1;
     struct wl_registry *reg = wl_display_get_registry(dpy);
@@ -196,12 +228,14 @@ int main(void) {
     wl_display_roundtrip(dpy);
     if (!g_comp || !g_shm || !g_wm || !g_icon_mgr) return 2;
 
+    int main_argc_title_set = (argc > 1 && argv[1][0] != '\0');
     struct wl_surface *surf = wl_compositor_create_surface(g_comp);
+    g_surf = surf;
     struct xdg_surface *xsurf = xdg_wm_base_get_xdg_surface(g_wm, surf);
     xdg_surface_add_listener(xsurf, &surf_l, NULL);
     struct xdg_toplevel *top = xdg_surface_get_toplevel(xsurf);
     xdg_toplevel_add_listener(top, &top_l, NULL);
-    xdg_toplevel_set_title(top, "WaylandIconApp");
+    xdg_toplevel_set_title(top, main_argc_title_set ? argv[1] : "WaylandIconApp");
 
     /* Assign bright emerald #10D860 48x48 icon via xdg-toplevel-icon-v1 */
     struct wl_buffer *ibuf = make_shm_buf(48, 48, 0xFF10D860u);
@@ -498,6 +532,70 @@ def main() -> int:
                 subprocess.run(["grim", str(shot_large)], env=c_env, check=True)
                 shots_to_save.extend([shot_a, shot_b, shot_large])
                 apps_summary = f"live dynamic icons animated ({ha[:10]} -> {hb[:10]}), swallowed fpclock + 48->96px verified"
+
+            # 4. Verify Wayland window minimize/restore & maximize/unmaximize animation styles
+            # (bevel default, titlebar, wireframe, none), mid-flight reversal, and unmap safety!
+            for style in ("bevel", "titlebar", "wireframe", "none"):
+                xrdb_payload = (
+                    f"Dtwm*minimizeAnimation: {style}\n"
+                    f"Dtwm*maximizeAnimation: {style}\n"
+                    f"Dtwm*animateMinimizeRestore: {'False' if style == 'none' else 'True'}\n"
+                )
+                subprocess.run([str(x11_bin), "xrdb", xrdb_payload], env=c_env, check=True)
+                time.sleep(0.08)
+
+                subprocess.run(["wlrctl", "toplevel", "minimize", "title:WaylandIconApp"], env=c_env, check=True)
+                time.sleep(0.22 if style != "none" else 0.05)
+                subprocess.run(["wlrctl", "toplevel", "focus", "title:WaylandIconApp"], env=c_env, check=True)
+                time.sleep(0.20 if style != "none" else 0.05)
+
+                subprocess.run(["wlrctl", "toplevel", "maximize", "title:WaylandIconApp"], env=c_env, check=True)
+                time.sleep(0.18 if style != "none" else 0.05)
+                # Unmaximize via titlebar double-click at (180, 18) on Output 1
+                subprocess.run(["wlrctl", "pointer", "move", "-10000", "-10000"], env=c_env, check=True)
+                subprocess.run(["wlrctl", "pointer", "move", "180", "18"], env=c_env, check=True)
+                subprocess.run(["wlrctl", "pointer", "click", "left"], env=c_env, check=True)
+                subprocess.run(["wlrctl", "pointer", "click", "left"], env=c_env, check=True)
+                time.sleep(0.18 if style != "none" else 0.05)
+
+            # Mid-flight reversal & mid-flight client unmap/destroy under default Bevel Morph
+            subprocess.run(
+                [
+                    str(x11_bin),
+                    "xrdb",
+                    "Dtwm*minimizeAnimation: bevel\nDtwm*maximizeAnimation: bevel\nDtwm*animateMinimizeRestore: True\n",
+                ],
+                env=c_env,
+                check=True,
+            )
+            time.sleep(0.06)
+            subprocess.run(["wlrctl", "toplevel", "minimize", "title:WaylandIconApp"], env=c_env, check=True)
+            time.sleep(0.03)
+            subprocess.run(["wlrctl", "toplevel", "focus", "title:WaylandIconApp"], env=c_env, check=True)
+            time.sleep(0.20)
+
+            p_ephemeral = subprocess.Popen(
+                [str(wl_ic_bin), "EphemeralAnimWin"],
+                env=c_env,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True,
+            )
+            time.sleep(0.35)
+            subprocess.run(["wlrctl", "toplevel", "minimize", "title:EphemeralAnimWin"], env=c_env, check=True)
+            time.sleep(0.025)
+            p_ephemeral.kill()
+            p_ephemeral.wait(timeout=3)
+            time.sleep(0.22)
+            if comp.poll() is not None:
+                raise SystemExit(f"dtwm-wayland crashed during mid-flight animation cancel (rc={comp.returncode})")
+
+            shot_settled = work / "wp04-anim-settled.png"
+            subprocess.run(["grim", str(shot_settled)], env=c_env, check=True)
+            with Image.open(shot_settled) as im_s:
+                settled_px = count_near_rgb_in_crop(im_s, (0, 0, out1_w, out_h), (0x24, 0x34, 0x48), tol=12)
+                if settled_px < 10000:
+                    raise SystemExit(f"expected restored WaylandIconApp surface pixels after animation suite, got {settled_px}")
 
             if args.save_dir:
                 sdir = Path(args.save_dir)
