@@ -24,7 +24,10 @@
     (`Audio.c`) with a live **Test** button, **Classic Beep (Tone)** vs. **MIDI
     Note** mode + GM **Instrument** selector (`~/.dt/beep.conf`), and audible
     `XkbBellNotify` / `xdg_system_bell_v1` synthesis in both `dtwm-wayland` and
-    `dtwm`; and auto-start `ck-midi --daemon` at session login when
+    `dtwm`; enable `audio.device: "vz"` (`virtio-snd` -> macOS CoreAudio) plus
+    `pipewire-pulse`, `pipewire-alsa`, `wireplumber`, `alsa-utils`,
+    `libpulse-dev`, and `libfluidsynth-dev` in `scripts/lima/cde-ubuntu-26.04.yaml`;
+    and auto-start `ck-midi --daemon` at session login when
     `virtual_port=1` is enabled in `~/.config/ck-core/midi.conf`.
 - Correct the gray values in the front-panel status icons
   (`cde/programs/icons/Fpbt.{t,m,l}.pm`, `Fpdisp.{t,m,l}.pm`,
