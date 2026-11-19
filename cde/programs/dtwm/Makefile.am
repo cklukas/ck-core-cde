@@ -20,6 +20,7 @@ EXTRA_DIST = tests/check-property-readers.py tests/property-client.c \
              tests/check-dtwm-wayland-wp14.py tests/check-dtwm-wayland-wp15.py \
              tests/check-dtwm-wayland-wp16.py tests/check-dtwm-wayland-wp17.py \
              tests/check-dtwm-wayland-wp18.py tests/check-dtwm-wayland-wp19.py \
+             tests/check-dtwm-wayland-wp20.py \
              tests/check-dtwm-wayland-menus.py \
              wayland/protocols/wlr-layer-shell-unstable-v1.xml \
              wayland/protocols/wlr-output-power-management-unstable-v1.xml \
@@ -51,6 +52,7 @@ if BUILD_DTWM_WAYLAND
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp17.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp18.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp19.py --compositor ./dtwm-wayland
+	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp20.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-menus.py --compositor ./dtwm-wayland
 endif
 
@@ -65,10 +67,12 @@ WAYLAND_GEN_HDRS = wayland/xdg-shell-protocol.h \
                    wayland/wlr-output-power-management-unstable-v1-protocol.h \
                    wayland/ext-image-copy-capture-v1-protocol.h \
                    wayland/ext-workspace-v1-protocol.h \
-                   wayland/xdg-toplevel-icon-v1-protocol.h
+                   wayland/xdg-toplevel-icon-v1-protocol.h \
+                   wayland/xdg-system-bell-v1-protocol.h
 WAYLAND_GEN_SRCS = wayland/xdg-shell-protocol.c \
                    wayland/ext-workspace-v1-protocol.c \
-                   wayland/xdg-toplevel-icon-v1-protocol.c
+                   wayland/xdg-toplevel-icon-v1-protocol.c \
+                   wayland/xdg-system-bell-v1-protocol.c
 BUILT_SOURCES += $(WAYLAND_GEN_HDRS) $(WAYLAND_GEN_SRCS)
 CLEANFILES += $(WAYLAND_GEN_HDRS) $(WAYLAND_GEN_SRCS)
 
@@ -108,6 +112,14 @@ wayland/xdg-toplevel-icon-v1-protocol.c: $(WAYLAND_PROTOCOLS_DATADIR)/staging/xd
 	@$(MKDIR_P) wayland
 	$(WAYLAND_SCANNER) private-code $< $@
 
+wayland/xdg-system-bell-v1-protocol.h: $(WAYLAND_PROTOCOLS_DATADIR)/staging/xdg-system-bell/xdg-system-bell-v1.xml
+	@$(MKDIR_P) wayland
+	$(WAYLAND_SCANNER) server-header $< $@
+
+wayland/xdg-system-bell-v1-protocol.c: $(WAYLAND_PROTOCOLS_DATADIR)/staging/xdg-system-bell/xdg-system-bell-v1.xml
+	@$(MKDIR_P) wayland
+	$(WAYLAND_SCANNER) private-code $< $@
+
 dtwm_wayland_SOURCES = wayland/dtwm_wayland.h \
                        wayland/cde_bevel.c \
                        wayland/cde_workspace.c \
@@ -117,6 +129,7 @@ dtwm_wayland_SOURCES = wayland/dtwm_wayland.h \
                        wayland/cde_output_mgmt.c \
                        wayland/cde_ime.c \
                        wayland/cde_power_display.c \
+                       wayland/cde_accessibility.c \
                        wayland/dtwm_wayland_main.c
 nodist_dtwm_wayland_SOURCES = $(WAYLAND_GEN_HDRS) $(WAYLAND_GEN_SRCS)
 dtwm_wayland_CPPFLAGS = -I$(builddir)/wayland -I$(srcdir)/wayland -DWLR_USE_UNSTABLE=1 \

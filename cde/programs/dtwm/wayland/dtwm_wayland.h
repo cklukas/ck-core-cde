@@ -150,6 +150,7 @@ typedef struct DtwmView DtwmView;
 typedef struct DtwmForeignToplevel DtwmForeignToplevel;
 typedef struct DtwmImeState DtwmImeState;
 typedef struct DtwmPowerDisplayState DtwmPowerDisplayState;
+typedef struct DtwmA11yState DtwmA11yState;
 
 struct DtwmView {
     struct wl_list link; /* DtwmServer.views */
@@ -257,6 +258,8 @@ typedef struct {
     struct wlr_scene_rect *lock_bg_rect;
     struct wlr_scene_buffer *backdrop_buf;
     struct wlr_scene_buffer *night_light_buf;
+    struct wlr_swapchain *mag_swapchain;
+    struct wlr_buffer *mag_unmag_buf;
     struct wl_listener frame;
     struct wl_listener request_state;
     struct wl_listener destroy;
@@ -331,6 +334,9 @@ struct DtwmServer {
     xcb_atom_t atom_wayland_input_state;
     xcb_atom_t atom_wayland_outputs;
     xcb_atom_t atom_osd_state;
+    xcb_atom_t atom_accessibility_state;
+    DtwmA11yState *a11y;
+    bool reduced_motion;
 
     /* Output management, portals, foreign-toplevel & CJK IME globals (WP-10 / WP-11) */
     struct wlr_output_manager_v1 *output_mgr;
@@ -704,5 +710,38 @@ void dtwm_power_display_on_new_input(DtwmServer *server, struct wlr_input_device
 void dtwm_power_display_notify_activity(DtwmServer *server);
 bool dtwm_power_display_handle_wm_request(DtwmServer *server, const char *cmd);
 bool dtwm_power_display_handle_keybinding(DtwmServer *server, uint32_t mods, uint32_t keysym);
+
+/* cde_accessibility.c */
+void dtwm_a11y_init(DtwmServer *server);
+void dtwm_a11y_finish(DtwmServer *server);
+void dtwm_a11y_on_xwayland_ready(DtwmServer *server);
+bool dtwm_a11y_handle_xcb_event(DtwmServer *server, xcb_generic_event_t *ev);
+bool dtwm_a11y_handle_wm_request(DtwmServer *server, const char *cmd);
+void dtwm_a11y_publish_state(DtwmServer *server);
+void dtwm_a11y_trigger_visual_bell(DtwmServer *server);
+bool dtwm_a11y_sticky_keys_enabled(const DtwmServer *server);
+uint32_t dtwm_a11y_effective_modifiers(const DtwmServer *server, struct wlr_keyboard *wlr_kbd);
+void dtwm_a11y_notify_seat_modifiers(DtwmServer *server, struct wlr_keyboard *wlr_kbd);
+void dtwm_a11y_notify_keyboard_enter(
+    DtwmServer *server, struct wlr_surface *surface, struct wlr_keyboard *wlr_kbd
+);
+bool dtwm_a11y_filter_key(
+    DtwmServer *server,
+    struct wlr_keyboard *wlr_kbd,
+    const struct wlr_keyboard_key_event *ev,
+    uint32_t time_msec
+);
+bool dtwm_a11y_handle_shortcut(DtwmServer *server, uint32_t mods, xkb_keysym_t sym);
+bool dtwm_a11y_handle_axis(
+    DtwmServer *server,
+    uint32_t orientation,
+    double delta,
+    int32_t discrete
+);
+int dtwm_a11y_get_zoom_pct(const DtwmServer *server);
+void dtwm_a11y_on_cursor_motion(DtwmServer *server);
+void dtwm_a11y_on_output_destroy(DtwmOutput *output);
+bool dtwm_a11y_render_output_frame(DtwmOutput *output, struct wlr_scene_output *scene_output);
+bool dtwm_server_dispatch_keybinding(DtwmServer *server, uint32_t mods, xkb_keysym_t sym);
 
 #endif /* DTWM_WAYLAND_H */

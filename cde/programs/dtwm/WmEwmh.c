@@ -23,11 +23,13 @@
  * Floor, Boston, MA 02110-1301 USA
  */
 
+#include <ctype.h>
 #include <dlfcn.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <unistd.h>
 
 #include "WmGlobal.h"
@@ -67,6 +69,29 @@ static int g_xiSwipeFingers = 0;
 static double g_xiSwipeDx = 0.0;
 static double g_xiSwipeDy = 0.0;
 
+/* WP-20: X11 AccessX (XKB), Visual Bell, Reduced Motion & Magnifier state */
+static int g_xkbEventBase = -1;
+static Atom g_xaDtA11yState = None;
+static Atom g_xaCkMagnifierZoom = None;
+static Boolean g_x11StickyKeys = False;
+static Boolean g_x11StickyTwoKeysOff = True;
+static unsigned int g_x11LatchedMods = 0;
+static unsigned int g_x11LockedMods = 0;
+static Boolean g_x11SlowKeys = False;
+static int g_x11SlowKeysMs = 300;
+static Boolean g_x11BounceKeys = False;
+static int g_x11BounceKeysMs = 300;
+static int g_x11VbellMode = 0; /* 0=off, 1=window, 2=screen */
+static unsigned int g_x11VbellCount = 0;
+static Boolean g_x11ReducedMotion = False;
+static Boolean g_savedAnimateMinValid = False;
+static Boolean g_savedAnimateMin = False;
+static int g_x11ConfiguredZoomPct = 200;
+static int g_x11ZoomPct = 100;
+static Window g_vbellWin = None;
+static WmScreenData *g_vbellSD = nullptr;
+static XtIntervalId g_vbellTimer = 0;
+
 typedef struct {
     const char *keysym_name;
     const char *media_action;
@@ -96,6 +121,14 @@ static const WmHwKeyBinding g_hwKeyBindings[] = {
     { "Right",                 nullptr,          nullptr, "right", Mod4Mask },
     { "Up",                    nullptr,          nullptr, "up",    Mod4Mask },
     { "Down",                  nullptr,          nullptr, "down",  Mod4Mask },
+    { "equal",                 nullptr,          "ck-magnifier --in", nullptr, Mod4Mask },
+    { "equal",                 nullptr,          "ck-magnifier --in", nullptr, Mod4Mask | ShiftMask },
+    { "KP_Add",                nullptr,          "ck-magnifier --in", nullptr, Mod4Mask },
+    { "minus",                 nullptr,          "ck-magnifier --out", nullptr, Mod4Mask },
+    { "minus",                 nullptr,          "ck-magnifier --out", nullptr, Mod4Mask | ShiftMask },
+    { "KP_Subtract",           nullptr,          "ck-magnifier --out", nullptr, Mod4Mask },
+    { "0",                     nullptr,          "ck-magnifier --reset", nullptr, Mod4Mask },
+    { "KP_0",                  nullptr,          "ck-magnifier --reset", nullptr, Mod4Mask },
 };
 
 static int
@@ -893,7 +926,7 @@ Boolean HandleEwmhSuperKey (XKeyEvent *keyEvent, Boolean isPress)
 	    Time elapsed = keyEvent->time >= g_superTapPressTime
 		? (keyEvent->time - g_superTapPressTime) : 0;
 	    g_superTapPending = False;
-	    if (elapsed <= 600)
+	    if (elapsed <= 600 && !g_x11StickyKeys)
 	    {
 		XEvent ev;
 		memset (&ev, 0, sizeof(ev));
@@ -997,6 +1030,589 @@ void HandleEwmhGenericEvent (XEvent *event)
 	}
     }
     XFreeEventData (DISPLAY, cookie);
+}
+
+/* --- WP-20: X11 AccessX (XKB), Visual Bell, Reduced Motion & Magnifier --- */
+
+static const char *
+X11VbellModeStr (int mode)
+{
+    if (mode == 1) return "window";
+    if (mode == 2) return "screen";
+    return "off";
+}
+
+static int
+ParseX11VbellMode (const char *s)
+{
+    if (!s) return 0;
+    if (strcasecmp (s, "window") == 0 || strcasecmp (s, "active") == 0 || strcmp (s, "1") == 0)
+	return 1;
+    if (strcasecmp (s, "screen") == 0 || strcasecmp (s, "fullscreen") == 0 || strcmp (s, "2") == 0)
+	return 2;
+    return 0;
+}
+
+static Boolean
+ParseX11BoolStr (const char *s, Boolean fallback)
+{
+    if (!s || !*s) return fallback;
+    if (strcmp (s, "1") == 0 || strcasecmp (s, "true") == 0 ||
+	strcasecmp (s, "yes") == 0 || strcasecmp (s, "on") == 0)
+	return True;
+    if (strcmp (s, "0") == 0 || strcasecmp (s, "false") == 0 ||
+	strcasecmp (s, "no") == 0 || strcasecmp (s, "off") == 0)
+	return False;
+    return fallback;
+}
+
+static void
+SyncX11XkbModifierMasks (void)
+{
+    XkbStateRec st;
+    if (g_xkbEventBase < 0)
+	return;
+    memset (&st, 0, sizeof(st));
+    if (XkbGetState (DISPLAY, XkbUseCoreKbd, &st) == Success)
+    {
+	g_x11LatchedMods = (unsigned int)st.latched_mods;
+	g_x11LockedMods = (unsigned int)(st.locked_mods & ~LockMask);
+    }
+}
+
+static void
+PublishX11AccessibilityState (WmScreenData *pSD)
+{
+    char state[512];
+    int n;
+
+    if (!pSD)
+	pSD = ACTIVE_PSD ? ACTIVE_PSD : &wmGD.Screens[0];
+    if (!pSD || !pSD->managed)
+	return;
+    if (g_xaDtA11yState == None)
+	g_xaDtA11yState = XInternAtom (DISPLAY, "_DT_ACCESSIBILITY_STATE", False);
+    if (g_xaDtA11yState == None)
+	return;
+
+    SyncX11XkbModifierMasks ();
+    n = snprintf (
+	state, sizeof(state),
+	"sticky=%d latched=%u locked=%u slow=%d slow_ms=%d bounce=%d bounce_ms=%d "
+	"vbell=%s vbell_count=%u reduced_motion=%d zoom_pct=%d",
+	g_x11StickyKeys ? 1 : 0,
+	g_x11LatchedMods,
+	g_x11LockedMods,
+	g_x11SlowKeys ? 1 : 0,
+	g_x11SlowKeysMs,
+	g_x11BounceKeys ? 1 : 0,
+	g_x11BounceKeysMs,
+	X11VbellModeStr (g_x11VbellMode),
+	g_x11VbellCount,
+	g_x11ReducedMotion ? 1 : 0,
+	g_x11ZoomPct);
+    if (n > 0)
+    {
+	XChangeProperty (DISPLAY, pSD->rootWindow, g_xaDtA11yState, XA_STRING, 8,
+			 PropModeReplace, (unsigned char *)state, n);
+	XFlush (DISPLAY);
+    }
+}
+
+static void
+ApplyX11ReducedMotion (WmScreenData *pSD, Boolean reduced)
+{
+    int scr;
+    (void)pSD;
+    if (!g_savedAnimateMinValid && wmGD.numScreens > 0)
+    {
+	g_savedAnimateMin = wmGD.Screens[0].animateMinimizeRestore;
+	g_savedAnimateMinValid = True;
+    }
+    g_x11ReducedMotion = reduced;
+    for (scr = 0; scr < wmGD.numScreens; ++scr)
+    {
+	if (!wmGD.Screens[scr].managed)
+	    continue;
+	wmGD.Screens[scr].animateMinimizeRestore =
+	    reduced ? False : g_savedAnimateMin;
+    }
+}
+
+static void
+ApplyX11XkbControls (void)
+{
+    XkbDescPtr xkb;
+    if (g_xkbEventBase < 0)
+	return;
+    xkb = XkbGetMap (DISPLAY, 0, XkbUseCoreKbd);
+    if (!xkb)
+	return;
+    if (XkbGetControls (DISPLAY, XkbAllControlsMask, xkb) == Success && xkb->ctrls)
+    {
+	unsigned long mask =
+	    XkbStickyKeysMask | XkbSlowKeysMask | XkbBounceKeysMask |
+	    XkbControlsEnabledMask | XkbAccessXFeedbackMask;
+	if (g_x11StickyKeys)
+	    xkb->ctrls->enabled_ctrls |= XkbStickyKeysMask;
+	else
+	    xkb->ctrls->enabled_ctrls &= ~XkbStickyKeysMask;
+
+	if (g_x11SlowKeys)
+	    xkb->ctrls->enabled_ctrls |= XkbSlowKeysMask;
+	else
+	    xkb->ctrls->enabled_ctrls &= ~XkbSlowKeysMask;
+
+	if (g_x11BounceKeys)
+	    xkb->ctrls->enabled_ctrls |= XkbBounceKeysMask;
+	else
+	    xkb->ctrls->enabled_ctrls &= ~XkbBounceKeysMask;
+
+	if (g_x11SlowKeysMs < 50) g_x11SlowKeysMs = 50;
+	if (g_x11SlowKeysMs > 2000) g_x11SlowKeysMs = 2000;
+	if (g_x11BounceKeysMs < 50) g_x11BounceKeysMs = 50;
+	if (g_x11BounceKeysMs > 2000) g_x11BounceKeysMs = 2000;
+
+	xkb->ctrls->slow_keys_delay = (unsigned short)g_x11SlowKeysMs;
+	xkb->ctrls->debounce_delay = (unsigned short)g_x11BounceKeysMs;
+	if (g_x11StickyTwoKeysOff)
+	    xkb->ctrls->ax_options |= XkbAX_TwoKeysMask;
+	else
+	    xkb->ctrls->ax_options &= ~XkbAX_TwoKeysMask;
+	xkb->ctrls->ax_options |= XkbAX_LatchToLockMask;
+	xkb->ctrls->ax_options &= ~XkbAX_FBOptionsMask;
+
+	XkbSetControls (DISPLAY, mask, xkb);
+	if (!g_x11StickyKeys)
+	{
+	    XkbLatchModifiers (DISPLAY, XkbUseCoreKbd, 0xff, 0);
+	    XkbLockModifiers (DISPLAY, XkbUseCoreKbd,
+			      ShiftMask | ControlMask | Mod1Mask | Mod4Mask, 0);
+	}
+	XSync (DISPLAY, False);
+    }
+    XkbFreeKeyboard (xkb, XkbAllComponentsMask, True);
+}
+
+static void
+VbellHideTimeoutCB (XtPointer client_data, XtIntervalId *id)
+{
+    (void)client_data;
+    (void)id;
+    g_vbellTimer = 0;
+    if (g_vbellWin != None)
+    {
+	XUnmapWindow (DISPLAY, g_vbellWin);
+	XFlush (DISPLAY);
+    }
+}
+
+static void
+TriggerX11VisualBell (WmScreenData *pSD)
+{
+    int fx = 0, fy = 0, fw = 0, fh = 0;
+    unsigned long flashPixel;
+    XColor exact, warm;
+
+    if (!pSD)
+	pSD = ACTIVE_PSD ? ACTIVE_PSD : &wmGD.Screens[0];
+    if (!pSD || !pSD->managed || g_x11VbellMode == 0)
+	return;
+
+    if (g_x11VbellMode == 1 && wmGD.keyboardFocus &&
+	!(wmGD.keyboardFocus->clientFlags & CLIENT_DESTROYED))
+    {
+	ClientData *pCD = wmGD.keyboardFocus;
+	Window target = pCD->clientFrameWin ? pCD->clientFrameWin : pCD->client;
+	Window rootRet = None, childRet = None;
+	int rx = 0, ry = 0;
+	unsigned int uw = 0, uh = 0, bw = 0, dep = 0;
+	if (target != None &&
+	    XGetGeometry (DISPLAY, target, &rootRet, &rx, &ry, &uw, &uh, &bw, &dep) &&
+	    uw > 0 && uh > 0)
+	{
+	    int tx = rx, ty = ry;
+	    if (XTranslateCoordinates (DISPLAY, target, pSD->rootWindow, 0, 0, &tx, &ty, &childRet))
+	    {
+		fx = tx;
+		fy = ty;
+	    }
+	    else
+	    {
+		fx = rx;
+		fy = ry;
+	    }
+	    fw = (int)uw;
+	    fh = (int)uh;
+	}
+    }
+    if (fw <= 0 || fh <= 0)
+    {
+	fx = 0;
+	fy = 0;
+	fw = DisplayWidth (DISPLAY, pSD->screen);
+	fh = DisplayHeight (DISPLAY, pSD->screen);
+    }
+
+    flashPixel = WhitePixel (DISPLAY, pSD->screen);
+    if (XAllocNamedColor (DISPLAY, DefaultColormap (DISPLAY, pSD->screen),
+			  "#fff5c8", &warm, &exact))
+    {
+	flashPixel = warm.pixel;
+    }
+
+    if (g_vbellWin != None && g_vbellSD != pSD)
+    {
+	XDestroyWindow (DISPLAY, g_vbellWin);
+	g_vbellWin = None;
+    }
+    g_vbellSD = pSD;
+
+    if (g_vbellWin == None)
+    {
+	XSetWindowAttributes xswa;
+	memset (&xswa, 0, sizeof(xswa));
+	xswa.override_redirect = True;
+	xswa.save_under = True;
+	xswa.background_pixel = flashPixel;
+	g_vbellWin = XCreateWindow (
+	    DISPLAY, pSD->rootWindow, fx, fy, (unsigned int)fw, (unsigned int)fh, 0,
+	    DefaultDepth (DISPLAY, pSD->screen), InputOutput,
+	    DefaultVisual (DISPLAY, pSD->screen),
+	    CWOverrideRedirect | CWSaveUnder | CWBackPixel, &xswa);
+    }
+    else
+    {
+	XSetWindowBackground (DISPLAY, g_vbellWin, flashPixel);
+	XMoveResizeWindow (DISPLAY, g_vbellWin, fx, fy, (unsigned int)fw, (unsigned int)fh);
+    }
+
+    g_x11VbellCount++;
+    XMapRaised (DISPLAY, g_vbellWin);
+    XClearWindow (DISPLAY, g_vbellWin);
+    PublishX11AccessibilityState (pSD);
+    XFlush (DISPLAY);
+
+    if (g_vbellTimer)
+	XtRemoveTimeOut (g_vbellTimer);
+    g_vbellTimer = XtAppAddTimeOut (wmGD.mwmAppContext, 120, VbellHideTimeoutCB, pSD);
+}
+
+static void
+SpawnCkMagnifierCmd (WmScreenData *pSD, const char *args)
+{
+    char cmd[256];
+    XEvent ev;
+    (void)pSD;
+    snprintf (cmd, sizeof(cmd), "ck-magnifier %s", args);
+    memset (&ev, 0, sizeof(ev));
+    F_Exec (cmd, nullptr, &ev);
+}
+
+static int
+ReadCkMagnifierRootZoom (WmScreenData *pSD)
+{
+    Atom actualType = None;
+    int actualFormat = 0;
+    unsigned long nitems = 0, bytesAfter = 0;
+    unsigned char *prop = nullptr;
+    int val = -1;
+
+    if (!pSD)
+	return -1;
+    if (g_xaCkMagnifierZoom == None)
+	g_xaCkMagnifierZoom = XInternAtom (DISPLAY, "_CK_MAGNIFIER_ZOOM", False);
+    if (g_xaCkMagnifierZoom == None)
+	return -1;
+    if (XGetWindowProperty (DISPLAY, pSD->rootWindow, g_xaCkMagnifierZoom,
+			    0, 1, False, XA_CARDINAL,
+			    &actualType, &actualFormat, &nitems, &bytesAfter, &prop) == Success &&
+	prop)
+    {
+	if (actualType == XA_CARDINAL && actualFormat == 32 && nitems >= 1)
+	    val = (int)(*(unsigned long *)prop);
+	XFree (prop);
+    }
+    return val;
+}
+
+static void
+LoadX11AccessibilityConf (WmScreenData *pSD)
+{
+    const char *home = getenv ("HOME");
+    char path[1024];
+    char line[512];
+    FILE *fp;
+    Boolean magEnabled = False;
+    int cfgZoom = g_x11ConfiguredZoomPct;
+
+    if (!home || !home[0])
+	return;
+    snprintf (path, sizeof(path), "%s/.dt/accessibility.conf", home);
+    fp = fopen (path, "r");
+    if (!fp)
+	return;
+
+    while (fgets (line, sizeof(line), fp))
+    {
+	char *p = line;
+	char *nl, *eq, *key, *val;
+	size_t klen;
+
+	while (*p && isspace ((unsigned char)*p)) p++;
+	if (*p == '\0' || *p == '#' || *p == '!') continue;
+	nl = strpbrk (p, "\r\n");
+	if (nl) *nl = '\0';
+	eq = strchr (p, '=');
+	if (!eq) continue;
+	*eq = '\0';
+	key = p;
+	val = eq + 1;
+	while (*val && isspace ((unsigned char)*val)) val++;
+	klen = strlen (key);
+	while (klen > 0 && isspace ((unsigned char)key[klen - 1]))
+	    key[--klen] = '\0';
+
+	if (strcasecmp (key, "sticky_keys") == 0 || strcasecmp (key, "sticky") == 0)
+	    g_x11StickyKeys = ParseX11BoolStr (val, g_x11StickyKeys);
+	else if (strcasecmp (key, "sticky_two_keys_off") == 0 || strcasecmp (key, "two_keys_off") == 0)
+	    g_x11StickyTwoKeysOff = ParseX11BoolStr (val, g_x11StickyTwoKeysOff);
+	else if (strcasecmp (key, "slow_keys") == 0 || strcasecmp (key, "slow") == 0)
+	    g_x11SlowKeys = ParseX11BoolStr (val, g_x11SlowKeys);
+	else if (strcasecmp (key, "slow_keys_ms") == 0 || strcasecmp (key, "slow_ms") == 0)
+	    g_x11SlowKeysMs = atoi (val);
+	else if (strcasecmp (key, "bounce_keys") == 0 || strcasecmp (key, "bounce") == 0)
+	    g_x11BounceKeys = ParseX11BoolStr (val, g_x11BounceKeys);
+	else if (strcasecmp (key, "bounce_keys_ms") == 0 || strcasecmp (key, "bounce_ms") == 0)
+	    g_x11BounceKeysMs = atoi (val);
+	else if (strcasecmp (key, "visual_bell") == 0 || strcasecmp (key, "vbell") == 0)
+	    g_x11VbellMode = ParseX11VbellMode (val);
+	else if (strcasecmp (key, "reduced_motion") == 0)
+	    ApplyX11ReducedMotion (pSD, ParseX11BoolStr (val, g_x11ReducedMotion));
+	else if (strcasecmp (key, "magnifier") == 0)
+	    magEnabled = ParseX11BoolStr (val, False);
+	else if (strcasecmp (key, "zoom_pct") == 0)
+	{
+	    int z = atoi (val);
+	    if (z >= 125 && z <= 400)
+		cfgZoom = z;
+	}
+    }
+    fclose (fp);
+
+    g_x11ConfiguredZoomPct = cfgZoom;
+    g_x11ZoomPct = magEnabled ? cfgZoom : 100;
+    ApplyX11XkbControls ();
+    if (magEnabled && g_x11ZoomPct > 100)
+    {
+	char zarg[64];
+	snprintf (zarg, sizeof(zarg), "--zoom %d", g_x11ZoomPct);
+	SpawnCkMagnifierCmd (pSD, zarg);
+    }
+}
+
+Boolean
+HandleEwmhXkbEvent (XEvent *event)
+{
+    XkbEvent *xkbev;
+    WmScreenData *pSD;
+
+    if (!event || g_xkbEventBase < 0 || event->type != g_xkbEventBase)
+	return False;
+
+    xkbev = (XkbEvent *)event;
+    pSD = ACTIVE_PSD ? ACTIVE_PSD : &wmGD.Screens[0];
+
+    if (xkbev->any.xkb_type == XkbMapNotify ||
+	xkbev->any.xkb_type == XkbNewKeyboardNotify)
+    {
+	XkbRefreshKeyboardMapping ((XkbMapNotifyEvent *)xkbev);
+	GrabEwmhHardwareKeys (pSD);
+	return True;
+    }
+    if (xkbev->any.xkb_type == XkbBellNotify)
+    {
+	TriggerX11VisualBell (pSD);
+	return True;
+    }
+    if (xkbev->any.xkb_type == XkbStateNotify)
+    {
+	g_x11LatchedMods = (unsigned int)xkbev->state.latched_mods;
+	g_x11LockedMods = (unsigned int)(xkbev->state.locked_mods & ~LockMask);
+	PublishX11AccessibilityState (pSD);
+	return True;
+    }
+    if (xkbev->any.xkb_type == XkbControlsNotify)
+    {
+	g_x11StickyKeys = (xkbev->ctrls.enabled_ctrls & XkbStickyKeysMask) ? True : False;
+	g_x11SlowKeys = (xkbev->ctrls.enabled_ctrls & XkbSlowKeysMask) ? True : False;
+	g_x11BounceKeys = (xkbev->ctrls.enabled_ctrls & XkbBounceKeysMask) ? True : False;
+	PublishX11AccessibilityState (pSD);
+	return True;
+    }
+    return True;
+}
+
+Boolean
+HandleEwmhAccessibilityRequest (WmScreenData *pSD, const char *req)
+{
+    const char *cmd = req;
+    if (!cmd)
+	return False;
+    while (*cmd && isspace ((unsigned char)*cmd))
+	cmd++;
+
+    if (strncmp (cmd, "f.visual_bell", 13) == 0 &&
+	(cmd[13] == '\0' || isspace ((unsigned char)cmd[13])))
+    {
+	TriggerX11VisualBell (pSD);
+	return True;
+    }
+
+    if (strncmp (cmd, "f.reload_accessibility", 22) == 0 &&
+	(cmd[22] == '\0' || isspace ((unsigned char)cmd[22])))
+    {
+	LoadX11AccessibilityConf (pSD);
+	PublishX11AccessibilityState (pSD);
+	return True;
+    }
+
+    if (strncmp (cmd, "f.magnifier_zoom", 16) == 0 &&
+	(cmd[16] == '\0' || isspace ((unsigned char)cmd[16])))
+    {
+	const char *arg = cmd + 16;
+	while (*arg && isspace ((unsigned char)*arg)) arg++;
+	if (strcasecmp (arg, "in") == 0)
+	    SpawnCkMagnifierCmd (pSD, "--in");
+	else if (strcasecmp (arg, "out") == 0)
+	    SpawnCkMagnifierCmd (pSD, "--out");
+	else if (strcasecmp (arg, "reset") == 0)
+	    SpawnCkMagnifierCmd (pSD, "--reset");
+	else if (*arg)
+	{
+	    int z = atoi (arg);
+	    char zarg[64];
+	    if (z < 125) z = 100;
+	    if (z > 400) z = 400;
+	    snprintf (zarg, sizeof(zarg), "--zoom %d", z);
+	    SpawnCkMagnifierCmd (pSD, zarg);
+	}
+	return True;
+    }
+
+    if (strncmp (cmd, "f.set_accessibility", 19) == 0 &&
+	(cmd[19] == '\0' || isspace ((unsigned char)cmd[19])))
+    {
+	char copy[512];
+	char *saveptr = nullptr;
+	char *tok;
+	Boolean touchXkb = False;
+	Boolean sawMagFlag = False;
+	Boolean magFlagVal = False;
+	Boolean sawZoom = False;
+	int zoomVal = g_x11ZoomPct;
+
+	snprintf (copy, sizeof(copy), "%s", cmd + 19);
+	for (tok = strtok_r (copy, " \t\r\n", &saveptr); tok;
+	     tok = strtok_r (nullptr, " \t\r\n", &saveptr))
+	{
+	    char *eq = strchr (tok, '=');
+	    const char *k, *v;
+	    if (!eq) continue;
+	    *eq = '\0';
+	    k = tok;
+	    v = eq + 1;
+
+	    if (strcasecmp (k, "sticky") == 0 || strcasecmp (k, "sticky_keys") == 0)
+	    {
+		g_x11StickyKeys = ParseX11BoolStr (v, g_x11StickyKeys);
+		touchXkb = True;
+	    }
+	    else if (strcasecmp (k, "two_keys_off") == 0 || strcasecmp (k, "sticky_two_keys_off") == 0)
+	    {
+		g_x11StickyTwoKeysOff = ParseX11BoolStr (v, g_x11StickyTwoKeysOff);
+		touchXkb = True;
+	    }
+	    else if (strcasecmp (k, "clear_latches") == 0 && ParseX11BoolStr (v, False))
+	    {
+		XkbLatchModifiers (DISPLAY, XkbUseCoreKbd, 0xff, 0);
+		XkbLockModifiers (DISPLAY, XkbUseCoreKbd,
+				  ShiftMask | ControlMask | Mod1Mask | Mod4Mask, 0);
+	    }
+	    else if (strcasecmp (k, "slow") == 0 || strcasecmp (k, "slow_keys") == 0)
+	    {
+		g_x11SlowKeys = ParseX11BoolStr (v, g_x11SlowKeys);
+		touchXkb = True;
+	    }
+	    else if (strcasecmp (k, "slow_ms") == 0 || strcasecmp (k, "slow_keys_ms") == 0)
+	    {
+		g_x11SlowKeysMs = atoi (v);
+		touchXkb = True;
+	    }
+	    else if (strcasecmp (k, "bounce") == 0 || strcasecmp (k, "bounce_keys") == 0)
+	    {
+		g_x11BounceKeys = ParseX11BoolStr (v, g_x11BounceKeys);
+		touchXkb = True;
+	    }
+	    else if (strcasecmp (k, "bounce_ms") == 0 || strcasecmp (k, "bounce_keys_ms") == 0)
+	    {
+		g_x11BounceKeysMs = atoi (v);
+		touchXkb = True;
+	    }
+	    else if (strcasecmp (k, "vbell") == 0 || strcasecmp (k, "visual_bell") == 0)
+	    {
+		g_x11VbellMode = ParseX11VbellMode (v);
+	    }
+	    else if (strcasecmp (k, "reduced_motion") == 0)
+	    {
+		ApplyX11ReducedMotion (pSD, ParseX11BoolStr (v, g_x11ReducedMotion));
+	    }
+	    else if (strcasecmp (k, "magnifier") == 0)
+	    {
+		sawMagFlag = True;
+		magFlagVal = ParseX11BoolStr (v, False);
+	    }
+	    else if (strcasecmp (k, "zoom_pct") == 0)
+	    {
+		sawZoom = True;
+		zoomVal = atoi (v);
+	    }
+	}
+
+	if (touchXkb)
+	    ApplyX11XkbControls ();
+
+	if (sawMagFlag)
+	{
+	    int targetZoom;
+	    if (sawZoom && zoomVal >= 125 && zoomVal <= 400)
+		g_x11ConfiguredZoomPct = zoomVal;
+	    targetZoom = magFlagVal ? g_x11ConfiguredZoomPct : 100;
+	    g_x11ZoomPct = targetZoom;
+	    if (ReadCkMagnifierRootZoom (pSD) != targetZoom)
+	    {
+		if (targetZoom <= 100)
+		    SpawnCkMagnifierCmd (pSD, "--reset");
+		else
+		{
+		    char zarg[64];
+		    snprintf (zarg, sizeof(zarg), "--zoom %d", targetZoom);
+		    SpawnCkMagnifierCmd (pSD, zarg);
+		}
+	    }
+	}
+	else if (sawZoom)
+	{
+	    if (zoomVal < 125) zoomVal = 100;
+	    if (zoomVal > 400) zoomVal = 400;
+	    g_x11ZoomPct = zoomVal;
+	}
+
+	PublishX11AccessibilityState (pSD);
+	return True;
+    }
+
+    return False;
 }
 
 /**
@@ -1132,8 +1748,27 @@ void SetupWmEwmh (void)
 	g_xaDtOsdState = XInternAtom (DISPLAY, "_DT_OSD_STATE", False);
 	g_xaDtWmSwipe = XInternAtom (DISPLAY, "_DT_WM_SWIPE", False);
 	g_xaDtWmRegrabKeys = XInternAtom (DISPLAY, "_DT_WM_REGRAB_KEYS", False);
+	g_xaDtA11yState = XInternAtom (DISPLAY, "_DT_ACCESSIBILITY_STATE", False);
+	g_xaCkMagnifierZoom = XInternAtom (DISPLAY, "_CK_MAGNIFIER_ZOOM", False);
+	if (scr == 0)
+	{
+	    int xkbOp = 0, xkbErr = 0, xkbMaj = XkbMajorVersion, xkbMin = XkbMinorVersion;
+	    if (XkbQueryExtension (DISPLAY, &xkbOp, &g_xkbEventBase, &xkbErr, &xkbMaj, &xkbMin))
+	    {
+		unsigned long xkbMask =
+		    XkbNewKeyboardNotifyMask | XkbMapNotifyMask |
+		    XkbBellNotifyMask | XkbStateNotifyMask | XkbControlsNotifyMask;
+		XkbSelectEvents (DISPLAY, XkbUseCoreKbd, xkbMask, xkbMask);
+	    }
+	    else
+	    {
+		g_xkbEventBase = -1;
+	    }
+	    LoadX11AccessibilityConf (pSD);
+	}
 	GrabEwmhHardwareKeys (pSD);
 	SetupXInput2TouchpadGestures (pSD);
 	PublishX11OsdState (pSD, 0);
+	PublishX11AccessibilityState (pSD);
     }
 }

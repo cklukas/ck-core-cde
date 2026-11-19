@@ -2160,6 +2160,10 @@ HandleDtWmRequest (WmScreenData *pSD, XEvent *pev)
 		    Warning (((char *)GETMESSAGE(32, 2, "Insufficient memory to handle backdrop change.")));
 		}
 	    }
+	    else if (HandleEwmhAccessibilityRequest (pSD, pchReq))
+	    {
+		/* Handled by WP-20 X11 Accessibility / Visual Bell / Magnifier */
+	    }
 	    if (sRequest)
 	    {
 		XtFree ((char *) sRequest);

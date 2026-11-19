@@ -45,6 +45,7 @@
 
 #include "WmCEvent.h"
 #include "WmEvent.h"
+#include "WmEwmh.h"
 #include "WmInitWs.h"
 #include "WmError.h"
 #include "WmIPC.h"
@@ -187,7 +188,11 @@ main (int argc, char *argv [], char *environ [])
 
 	if (dispatchEvent)
 	{
-	    if (ManagedRoot(event.xany.window))
+	    if (HandleEwmhXkbEvent (&event))
+	    {
+		dispatchEvent = False;
+	    }
+	    else if (ManagedRoot(event.xany.window))
 	    {
 	        dispatchEvent = WmDispatchWsEvent (&event);
 	    }

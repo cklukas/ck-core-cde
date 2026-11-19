@@ -354,13 +354,7 @@ static void focus_view_ex(
     dtwm_publish_active_window_box(server);
 
     struct wlr_keyboard *kbd = wlr_seat_get_keyboard(server->seat);
-    if (kbd) {
-        wlr_seat_keyboard_notify_enter(
-            server->seat, surface, kbd->keycodes, kbd->num_keycodes, &kbd->modifiers
-        );
-    } else {
-        wlr_seat_keyboard_notify_enter(server->seat, surface, nullptr, 0, nullptr);
-    }
+    dtwm_a11y_notify_keyboard_enter(server, surface, kbd);
     dtwm_ime_set_focus(server, surface);
 }
 
@@ -442,8 +436,8 @@ static int handle_anim_timer(void *data) {
 static void start_minimize_restore_anim(
     DtwmServer *server, struct wlr_box from_box, struct wlr_box to_box
 ) {
-    if (!server || !server->animate_minimize || server->greeter_mode || !server->anim_timer ||
-        !server->anim_buf) {
+    if (!server || !server->animate_minimize || server->reduced_motion || server->greeter_mode ||
+        !server->anim_timer || !server->anim_buf) {
         return;
     }
     server->anim_from_box = from_box;
@@ -1543,6 +1537,7 @@ static const char *cursor_name_for_part(DtwmFramePart part) {
 
 static void process_cursor_motion(DtwmServer *server, uint32_t time_msec) {
     dtwm_lock_notify_activity(server);
+    dtwm_a11y_on_cursor_motion(server);
     if (server->session_locked) {
         double lsx = 0, lsy = 0;
         struct wlr_surface *lsurf =
@@ -2034,6 +2029,9 @@ static void handle_cursor_axis(struct wl_listener *listener, void *data) {
     struct wlr_pointer_axis_event *ev = data;
     uint32_t t_ms = ev->time_msec ? ev->time_msec : dtwm_now_msec();
     dtwm_lock_notify_activity(server);
+    if (dtwm_a11y_handle_axis(server, ev->orientation, ev->delta, ev->delta_discrete)) {
+        return;
+    }
     if (ev->orientation == WL_POINTER_AXIS_VERTICAL_SCROLL &&
         dtwm_icon_box_handle_axis(server, ev->delta, ev->delta_discrete)) {
         return;
@@ -2150,12 +2148,10 @@ static void handle_keyboard_modifiers(struct wl_listener *listener, void *data) 
     DtwmKeyboard *kb = wl_container_of(listener, kb, modifiers);
     dtwm_lock_notify_activity(kb->server);
     wlr_seat_set_keyboard(kb->server->seat, kb->wlr_keyboard);
-    if (!dtwm_ime_forward_modifiers(kb->server, kb->wlr_keyboard)) {
-        wlr_seat_keyboard_notify_modifiers(kb->server->seat, &kb->wlr_keyboard->modifiers);
-    }
+    dtwm_a11y_notify_seat_modifiers(kb->server, kb->wlr_keyboard);
 
     if (!kb->server->session_locked && kb->server->switcher_visible) {
-        uint32_t mods = wlr_keyboard_get_modifiers(kb->wlr_keyboard);
+        uint32_t mods = dtwm_a11y_effective_modifiers(kb->server, kb->wlr_keyboard);
         if (!(mods & WLR_MODIFIER_ALT)) {
             hide_task_switcher(kb->server, true);
         }
@@ -2345,6 +2341,9 @@ static void spawn_quick_launcher(DtwmServer *server) {
 }
 
 static bool handle_compositor_keybinding(DtwmServer *server, uint32_t mods, xkb_keysym_t sym) {
+    if (dtwm_a11y_handle_shortcut(server, mods, sym)) {
+        return true;
+    }
     /* Hardware Multimedia, Backlight, Screenshot & Lock Keys (WP-13) */
     switch (sym) {
     case XKB_KEY_XF86AudioRaiseVolume:
@@ -2512,6 +2511,10 @@ static bool handle_compositor_keybinding(DtwmServer *server, uint32_t mods, xkb_
     return false;
 }
 
+bool dtwm_server_dispatch_keybinding(DtwmServer *server, uint32_t mods, xkb_keysym_t sym) {
+    return handle_compositor_keybinding(server, mods, sym);
+}
+
 static void handle_keyboard_key(struct wl_listener *listener, void *data) {
     DtwmKeyboard *kb = wl_container_of(listener, kb, key);
     DtwmServer *server = kb->server;
@@ -2522,6 +2525,10 @@ static void handle_keyboard_key(struct wl_listener *listener, void *data) {
     if (server->session_locked || server->greeter_mode) {
         wlr_seat_set_keyboard(server->seat, kb->wlr_keyboard);
         wlr_seat_keyboard_notify_key(server->seat, t_ms, ev->keycode, ev->state);
+        return;
+    }
+
+    if (dtwm_a11y_filter_key(server, kb->wlr_keyboard, ev, t_ms)) {
         return;
     }
 
@@ -2581,13 +2588,7 @@ static void handle_keyboard_keymap(struct wl_listener *listener, void *data) {
     if (!server->session_locked && server->focused_view) {
         struct wlr_surface *fs = view_wlr_surface(server->focused_view);
         if (fs) {
-            wlr_seat_keyboard_notify_enter(
-                server->seat,
-                fs,
-                kb->wlr_keyboard->keycodes,
-                kb->wlr_keyboard->num_keycodes,
-                &kb->wlr_keyboard->modifiers
-            );
+            dtwm_a11y_notify_keyboard_enter(server, fs, kb->wlr_keyboard);
         }
     }
 }
@@ -2610,12 +2611,7 @@ static void handle_keyboard_destroy(struct wl_listener *listener, void *data) {
             if (!server->session_locked && server->focused_view) {
                 struct wlr_surface *fs = view_wlr_surface(server->focused_view);
                 if (fs) {
-                    wlr_seat_keyboard_notify_enter(
-                        server->seat, fs,
-                        fallback->wlr_keyboard->keycodes,
-                        fallback->wlr_keyboard->num_keycodes,
-                        &fallback->wlr_keyboard->modifiers
-                    );
+                    dtwm_a11y_notify_keyboard_enter(server, fs, fallback->wlr_keyboard);
                 }
             }
         }
@@ -2648,9 +2644,7 @@ static void server_add_keyboard(DtwmServer *server, struct wlr_keyboard *wlr_kbd
     if (!server->session_locked && server->focused_view && wlr_kbd->keymap) {
         struct wlr_surface *fs = view_wlr_surface(server->focused_view);
         if (fs) {
-            wlr_seat_keyboard_notify_enter(
-                server->seat, fs, wlr_kbd->keycodes, wlr_kbd->num_keycodes, &wlr_kbd->modifiers
-            );
+            dtwm_a11y_notify_keyboard_enter(server, fs, wlr_kbd);
         }
     }
 }
@@ -2824,12 +2818,14 @@ static void handle_output_frame(struct wl_listener *listener, void *data) {
     struct wlr_scene_output *scene_output = wlr_scene_get_scene_output(output->server->scene, output->wlr_output);
     if (!scene_output) return;
 
-    struct wlr_output_state state;
-    wlr_output_state_init(&state);
-    if (wlr_scene_output_build_state(scene_output, &state, nullptr)) {
-        wlr_output_commit_state(output->wlr_output, &state);
+    if (!dtwm_a11y_render_output_frame(output, scene_output)) {
+        struct wlr_output_state state;
+        wlr_output_state_init(&state);
+        if (wlr_scene_output_build_state(scene_output, &state, nullptr)) {
+            wlr_output_commit_state(output->wlr_output, &state);
+        }
+        wlr_output_state_finish(&state);
     }
-    wlr_output_state_finish(&state);
 
     struct timespec now;
     clock_gettime(CLOCK_MONOTONIC, &now);
@@ -2851,6 +2847,7 @@ static void handle_output_destroy(struct wl_listener *listener, void *data) {
     wl_list_remove(&output->destroy.link);
     wl_list_remove(&output->link);
     dtwm_power_display_on_output_destroy(server, output);
+    dtwm_a11y_on_output_destroy(output);
     if (output->backdrop_buf) {
         wlr_scene_node_destroy(&output->backdrop_buf->node);
     }
@@ -4179,6 +4176,7 @@ static void handle_xwayland_ready(struct wl_listener *listener, void *data) {
     dtwm_lock_on_xwayland_ready(server);
     dtwm_output_mgmt_publish_x11(server);
     dtwm_power_display_on_xwayland_ready(server);
+    dtwm_a11y_on_xwayland_ready(server);
     if (server->greeter_mode && server->xcb_conn) {
         /* Grant local root (dtlogin session manager, xrdb, dtgreet) access via
          * ServerInterpreted SI:localuser:root without opening XWayland to other users. */
@@ -4378,6 +4376,7 @@ int main(int argc, char **argv) {
     dtwm_output_mgmt_init(&server);
     dtwm_ime_init(&server);
     dtwm_power_display_init(&server);
+    dtwm_a11y_init(&server);
     server.greeter_mode = greeter_mode;
     if (greeter_mode || no_panel) {
         server.show_front_panel = false;
@@ -4528,6 +4527,7 @@ cleanup:
         server.xwayland = nullptr;
     }
     wl_display_destroy_clients(server.wl_display);
+    dtwm_a11y_finish(&server);
     dtwm_power_display_finish(&server);
     dtwm_ime_finish(&server);
     dtwm_output_mgmt_finish(&server);

@@ -65,6 +65,39 @@
     `System_Admin` actions and `dtstyle` *Startup* launch buttons for
     `ck-admin`, and verify both sessions concurrently in
     `check-dtwm-wayland-wp18.py`.
+- Deliver **WP-20 — Desktop & Toolkit Accessibility (`AccessX`, Screen Magnifier,
+  Reduced Motion & Motif AT-SPI2 Bridge)** across both `CDE (Wayland)` and
+  `CDE (X11 / XLibre)` (`cde/programs/dtwm/wayland/cde_accessibility.c`,
+  `cde/programs/dtwm/wayland/dtwm_wayland.{h,main.c}`,
+  `cde/programs/dtwm/wayland/cde_workspace.c`,
+  `cde/programs/dtwm/WmEwmh.{h,c}`, `cde/programs/dtwm/WmEvent.c`,
+  `cde/programs/dtwm/WmMain.c`, `cde/programs/dtwm/Makefile.am`,
+  `cde/programs/dtwm/tests/check-dtwm-wayland-wp20.py`,
+  `cde/programs/dtstyle/Accessibility.{h,c}`,
+  `cde/programs/dtstyle/{Main.h,Main.c,MainWin.c,Resource.c,SaveRestore.h,SaveRestore.c,Dtstyle.src,Makefile.am}`,
+  `cde/programs/dtsession/SmMain.c`, `cde/debian/Xsession.wayland`,
+  `wayland_work_plan.md`, `docs/improvements/accessibility.md`,
+  `docs/improvements.md`, `ckdocs.yml`, `.ckgit/motif-revision` pinned to
+  `3f941e1b6d6647bc49b1d960cb05b9ed11223a2d`):
+  - Add **Style Manager → Accessibility** (`dtstyle -accessibility` and
+    `-apply-accessibility`) persisting `~/.dt/accessibility.conf` and live-syncing
+    Sticky Keys (with optional *two-keys-off*), Slow Keys (`100`–`1000 ms`),
+    Bounce Keys (`100`–`1000 ms`), Visual Bell (*Off*, *Flash Active Window*,
+    *Flash Screen*), Reduced Motion, Full-Screen Magnifier (`125%`–`400%`), and
+    the opt-in Motif AT-SPI2 Screen Reader Bridge (`XM_ACCESSIBILITY=1`),
+    restored automatically at login by `Xsession.wayland` and `dtsession`.
+  - Implement Wayland compositor `AccessX` keyboard filters, XCB `XkbBellNotify`
+    + `xdg_system_bell_v1` Visual Bell overlay, Reduced Motion, and non-recursive
+    off-screen swapchain `Super+=` / `Super+-` / `Super+0` / `Super+Scroll`
+    cursor-tracking magnification in `dtwm-wayland`, paired with XKB
+    `XkbSetControls`, `XkbBellNotify` Visual Bell window, Reduced Motion, and
+    `ck-magnifier` shortcuts in X11 `dtwm`, publishing `_DT_ACCESSIBILITY_STATE`
+    across both sessions.
+  - Add parallel Wayland + X11 automated verification
+    (`check-dtwm-wayland-wp20.py`) covering `/proc/<pid>/maps` `libXm.so.9`
+    provenance, Sticky/Slow/Bounce key filtering, Visual Bell pixel flashes,
+    `100% -> 200% -> 100%` magnified pixel geometry, and `org.a11y.atspi` D-Bus
+    inspection and action/selection invocation on `dtstyle` and `ck-tasks`.
 - Fix multi-window `dtfile` menu activation (press-drag-release and click) and
   flush Wayland pointer button-release frames before focus re-entry, bumping
   `.ckgit/motif-revision` to `8678b6f184cffe87b80f7578270179f96de61759`

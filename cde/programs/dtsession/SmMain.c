@@ -206,8 +206,38 @@ main (int argc, char **argv)
      * This must be done before XtToolkitInitialize
      * to set up the local environment
      */
-    _DtEnvControl(DT_ENV_SET);
-    _DtEnvControl(DT_ENV_SET_BIN);
+     _DtEnvControl(DT_ENV_SET);
+     _DtEnvControl(DT_ENV_SET_BIN);
+
+     /* Restore opt-in Motif AT-SPI2 bridge environment from ~/.dt/accessibility.conf */
+     {
+         const char *home = getenv("HOME");
+         const char *cur_xm = getenv("XM_ACCESSIBILITY");
+         if (home && home[0] && (!cur_xm || !cur_xm[0])) {
+             char apath[1024];
+             FILE *afp;
+             snprintf(apath, sizeof(apath), "%s/.dt/accessibility.conf", home);
+             afp = fopen(apath, "r");
+             if (afp) {
+                 char line[256];
+                 while (fgets(line, sizeof(line), afp)) {
+                     char *eq = strchr(line, '=');
+                     if (!eq) continue;
+                     *eq = '\0';
+                     char *k = line;
+                     char *v = eq + 1;
+                     while (*k == ' ' || *k == '\t') k++;
+                     while (*v == ' ' || *v == '\t') v++;
+                     if (strncmp(k, "atspi_bridge", 12) == 0 &&
+                         (v[0] == '1' || strncasecmp(v, "true", 4) == 0)) {
+                         setenv("XM_ACCESSIBILITY", "1", 0);
+                         break;
+                     }
+                 }
+                 fclose(afp);
+             }
+         }
+     }
 
     /*
      * Set up NLS error messages first

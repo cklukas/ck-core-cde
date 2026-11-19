@@ -92,6 +92,7 @@
 #include "ColorPalette.h"
 #include "Backdrop.h"
 #include "Mouse.h"
+#include "Accessibility.h"
 
 void loadDatabase(void); // ColorMain.c
 void ListenForWorkspaceChange(void); // Protocol.c
@@ -333,6 +334,8 @@ openStartupDialogByName(Widget shell, const char *name)
         popup_mouseBB(shell);
     } else if (strncmp(name, "Color", 5) == 0) {
         Customize(shell);
+    } else if (strncmp(name, "Accessibility", 13) == 0) {
+        popup_accessibilityBB(shell);
     }
 }
 
@@ -540,10 +543,25 @@ malloc_trace(0);
 
     Boolean openDisplayDialogOnStart = False;
     Boolean applyTouchpadCli = False;
+    Boolean applyAccessibilityCli = False;
+    const char *cliAccessibilitySpec = nullptr;
     int cliTp[5] = { 1, 0, 1, 1, 0 };
     {
         int out_argc = 1;
         for (int ai = 1; ai < argc; ++ai) {
+            if (strcmp(argv[ai], "-accessibility") == 0 ||
+                strcmp(argv[ai], "--accessibility") == 0) {
+                openDisplayDialogOnStart = True;
+                s_startupDialogName = "Accessibility";
+                continue;
+            }
+            if ((strcmp(argv[ai], "-apply-accessibility") == 0 ||
+                 strcmp(argv[ai], "--apply-accessibility") == 0) &&
+                ai + 1 < argc) {
+                applyAccessibilityCli = True;
+                cliAccessibilitySpec = argv[++ai];
+                continue;
+            }
             if (strcmp(argv[ai], "-display_dialog") == 0 ||
                 strcmp(argv[ai], "--display-dialog") == 0 ||
                 strcmp(argv[ai], "-monitors") == 0 ||
@@ -632,6 +650,7 @@ malloc_trace(0);
     style.displayDialog = nullptr;
     style.startupDialog = nullptr;
     style.dtwmDialog = nullptr;
+    style.accessibilityDialog = nullptr;
     style.i18nDialog = nullptr;
 	visual = XDefaultVisual(style.display,style.screenNum);
 	style.visualClass = visual->class;
@@ -643,6 +662,14 @@ malloc_trace(0);
     {
         InitDtstyleProtocol();
         ApplyAndPersistTouchpadCLI(cliTp[0], cliTp[1], cliTp[2], cliTp[3], cliTp[4]);
+        XSync(style.display, False);
+        return 0;
+    }
+
+    if (applyAccessibilityCli)
+    {
+        InitDtstyleProtocol();
+        ApplyAccessibilitySpecCLI(cliAccessibilitySpec);
         XSync(style.display, False);
         return 0;
     }

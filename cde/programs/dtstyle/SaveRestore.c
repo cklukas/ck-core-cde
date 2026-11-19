@@ -147,6 +147,7 @@ saveSessionCB(
   saveScreen(fd);
   saveDtwm(fd);
   saveStartup(fd);
+  saveAccessibility(fd);
   saveI18n(fd);
 
   close (fd);
@@ -214,6 +215,7 @@ restoreSession(
   restoreScreen(shell, db);
   restoreDtwm(shell, db);
   restoreStartup(shell, db);
+  restoreAccessibility(shell, db);
   restoreI18n(shell, db);
 
   XrmDestroyDatabase(db);

@@ -1038,6 +1038,7 @@ static void handle_dt_wm_request_item(DtwmServer *server, const char *cmd) {
     if (dtwm_hw_handle_wm_request(server, cmd)) return;
     if (dtwm_output_mgmt_handle_wm_request(server, cmd)) return;
     if (dtwm_power_display_handle_wm_request(server, cmd)) return;
+    if (dtwm_a11y_handle_wm_request(server, cmd)) return;
 
     if (strncmp(cmd, "f.change_backdrop", 17) == 0 && isspace((unsigned char)cmd[17])) {
         char path[512] = {0};
@@ -1801,6 +1802,10 @@ static int handle_xcb_event_fd(int fd, uint32_t mask, void *data) {
     xcb_generic_event_t *ev;
     while ((ev = xcb_poll_for_event(server->xcb_conn)) != nullptr) {
         if (dtwm_xdnd_handle_xcb_event(server, ev)) {
+            free(ev);
+            continue;
+        }
+        if (dtwm_a11y_handle_xcb_event(server, ev)) {
             free(ev);
             continue;
         }

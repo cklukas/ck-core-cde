@@ -226,7 +226,7 @@ flowchart TD
   - **Practical `dtpad` & `.ics` Calendar Improvements:** Add optional tabbed documents, recent-files list, line numbers, and crash-recovery autosave to `dtpad`, plus `.ics` (iCalendar) import/export in `dtcm`.
 - **Parallel Wayland + X11 Acceptance Gate**: Parallel Wayland and X11 smoke + sanitizer tests verify `ck-tasks` process termination and live network metrics, `ck-view` / `ck-pdf` rendering + session restore + `/proc/<pid>/maps` `libXm.so.9` verification, and `dtpad` crash-recovery restore in both desktops.
 
-### [ ] WP-20 — Desktop & Toolkit Accessibility (`AccessX`, Screen Magnifier, Reduced Motion & Motif AT-SPI2 Bridge)
+### [x] WP-20 — Desktop & Toolkit Accessibility (`AccessX`, Screen Magnifier, Reduced Motion & Motif AT-SPI2 Bridge)
 - **Closes**: `GAP-APPS-03`
 - **Repos**: `ck-core-cde` (`cde/programs/dtwm/`, `cde/programs/dtwm/wayland/`, `cde/programs/dtstyle/`), `ck-core-motif` (`lib/Xm/`)
 - **Dual Wayland + X11 Scope**:

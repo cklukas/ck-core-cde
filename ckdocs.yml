@@ -36,6 +36,7 @@ nav:
           - docs/improvements/window-state.md
           - docs/improvements/window-management.md
           - docs/improvements/wayland.md
+          - docs/improvements/accessibility.md
           - docs/improvements/terminal.md
           - docs/improvements/editor.md
           - docs/improvements/file-manager.md

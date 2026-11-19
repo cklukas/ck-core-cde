@@ -37,6 +37,8 @@ Boolean HandleEwmhSuperKey (XKeyEvent *keyEvent, Boolean isPress);
 void CancelEwmhSuperTap (void);
 void HandleEwmhRootClientMessage (XClientMessageEvent *clientEvent);
 void HandleEwmhGenericEvent (XEvent *event);
+Boolean HandleEwmhXkbEvent (XEvent *event);
+Boolean HandleEwmhAccessibilityRequest (WmScreenData *pSD, const char *req);
 void SetupWmEwmh (void);
 
 #endif

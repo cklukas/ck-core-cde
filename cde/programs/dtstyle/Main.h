@@ -91,6 +91,7 @@ extern XmWidgetExtData _XmGetWidgetExtData(
 #define DISPLAY_COMP "Display"
 #define DTWM     "Dtwm"
 #define STARTUP  "Startup"
+#define ACCESSIBILITY "Accessibility"
 #define I18N     "I18N"
 
 #define COLOR_ICON    "DtColor"
@@ -103,6 +104,7 @@ extern XmWidgetExtData _XmGetWidgetExtData(
 #define DISPLAY_ICON  "DtDisplay"
 #define DTWM_ICON     "DtDtwm"
 #define STARTUP_ICON  "DtStart"
+#define ACCESSIBILITY_ICON "DtKeybd"
 #define I18N_ICON     "DtI18N"
 
 
@@ -194,6 +196,7 @@ typedef struct {
                      displayDialog,
                      startupDialog,
                      dtwmDialog,
+                     accessibilityDialog,
                      i18nDialog,
                      buttonsForm;
     XmString         tmpXmStr;

@@ -83,6 +83,7 @@
 #include "Display.h"
 #include "Dtwm.h"
 #include "Startup.h"
+#include "Accessibility.h"
 #include "I18nMain.h"
 
 #include "Help.h"
@@ -463,7 +464,19 @@ ProcessComponentList(
    XtSetArg(args[n], XmNshadowType, XmSHADOW_OUT); n++;
    n2 = 3;    /* number of preset args for creating Icons */
 
-   resString = XtNewString (style.xrdb.componentList);
+   if (strstr(style.xrdb.componentList, ACCESSIBILITY) == nullptr &&
+       strstr(style.xrdb.componentList, KEYBOARD) != nullptr &&
+       strstr(style.xrdb.componentList, STARTUP) != nullptr)
+   {
+       size_t baseLen = strlen(style.xrdb.componentList);
+       size_t addLen = strlen(ACCESSIBILITY);
+       resString = XtMalloc(baseLen + addLen + 2);
+       sprintf(resString, "%s %s", style.xrdb.componentList, ACCESSIBILITY);
+   }
+   else
+   {
+       resString = XtNewString (style.xrdb.componentList);
+   }
    resString2 = resString;
    len = strlen(resString);
    string = strtok(resString, " ");
@@ -550,6 +563,12 @@ ProcessComponentList(
           cmp_string = CMPSTR(GETMESSAGE(4, 35, "Startup"));
 	  dtIcon = _DtGetIconFileName(style.screen, STARTUP_ICON, nullptr, nullptr, 0);	  
           helpTag = HELP_STARTUP_BUTTON;
+      }
+      else if (strcmp(string, ACCESSIBILITY) == 0)
+      {
+          cmp_string = CMPSTR("Accessibility");
+          dtIcon = _DtGetIconFileName(style.screen, ACCESSIBILITY_ICON, nullptr, nullptr, 0);
+          helpTag = HELP_KEYBOARD_BUTTON;
       }
       else if (strcmp(string, I18N) == 0)
       {
@@ -639,6 +658,11 @@ callCancels( void )
 	 XtCallCallbacks(style.startupDialog, XmNcallback, &CancelBut);
      }
 
+     if(style.accessibilityDialog != nullptr && XtIsManaged(style.accessibilityDialog)) {
+	 CancelBut.button_position = 3; /* A11Y_BTN_CANCEL (OK, Apply, Cancel, Help) */
+	 XtCallCallbacks(style.accessibilityDialog, XmNcallback, &CancelBut);
+     }
+
      if (dialogStates[0])
        _DtAddToResource(style.display, dialogStates);
 
@@ -719,6 +743,9 @@ activateCB(
   
   else if (strcmp(cd, STARTUP) == 0)
     popup_startupBB(style.shell);
+
+  else if (strcmp(cd, ACCESSIBILITY) == 0)
+    popup_accessibilityBB(style.shell);
 
   else if (strcmp(cd, I18N) == 0)
     popup_i18nBB(style.shell);

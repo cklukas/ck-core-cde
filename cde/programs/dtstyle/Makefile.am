@@ -35,6 +35,7 @@ dtstyle_SOURCES = Main.c MainWin.c Font.c FontParser.c FontCatalog.c FontFaceCat
 		  SaveRestore.c Backdrop.c Screen.c Display.c Keyboard.c		\
 		  ColorMain.c ColorPalette.c ColorFile.c ColorEdit.c	\
 		  Resource.c Protocol.c Dtwm.c Help.c HelpCB.c		\
+		  Accessibility.c Accessibility.h			\
 		  I18nMain.c I18nEnv.c I18nUtil.c Audio.h ColorMain.h	\
 		  Help.h Keyboard.h OWsync.h Screen.h Display.h Backdrop.h	\
 		  ColorPalette.h I18nEnv.h Main.h Protocol.h		\

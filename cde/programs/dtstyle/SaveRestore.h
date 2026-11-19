@@ -80,6 +80,8 @@ extern void restoreBackdrop( Widget shell, XrmDatabase db) ;
 extern void saveBackdrop( int fd) ;
 extern void restoreI18n( Widget shell, XrmDatabase db) ;
 extern void saveI18n( int fd) ;
+extern void restoreAccessibility( Widget shell, XrmDatabase db) ;
+extern void saveAccessibility( int fd) ;
 
 
 #endif /* _saverestore_h */
