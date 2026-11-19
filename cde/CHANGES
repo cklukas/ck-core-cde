@@ -1,4 +1,16 @@
 2026-11-19
+- Fix multi-window `dtfile` menu activation (press-drag-release and click) and
+  flush Wayland pointer button-release frames before focus re-entry, bumping
+  `.ckgit/motif-revision` to `8678b6f184cffe87b80f7578270179f96de61759`
+  (`cde/programs/dtwm/wayland/dtwm_wayland_main.c`, `.ckgit/motif-revision`):
+  - Pick up CK Core Motif's `VendorS.c` shared `XmMenuShell` grab ancestry fix
+    so `dtfile` windows opened after background `dtfile -noview` startup keep
+    shared `File` / `Selected` / `View` / `Help` pulldown panes ahead of the
+    menu bar's exclusive Xt grab, restoring press-drag-release and click
+    activation for all menu items (including **Connect to Server...**).
+  - Emit `wlr_seat_pointer_notify_frame()` immediately after forwarding button
+    release in `dtwm-wayland` before `dtwm_recheck_cursor_focus()` so Xwayland
+    flushes `ButtonRelease` cleanly in its own frame.
 - Keep the docked CDE Front Panel (`dtwm-panel`) and subpanels anchored to the
   active Wayland output's logical geometry across HiDPI output scale/mode
   changes (`cde/programs/dtwm/wayland/dtwm_wayland_main.c`,

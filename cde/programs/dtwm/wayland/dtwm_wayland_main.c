@@ -1851,6 +1851,7 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
             return;
         }
         wlr_seat_pointer_notify_button(server->seat, t_ms, btn, ev->state);
+        wlr_seat_pointer_notify_frame(server->seat);
         if (server->pointer_buttons_down == 0 && server->seat->drag == nullptr) {
             dtwm_recheck_cursor_focus(server);
         }
