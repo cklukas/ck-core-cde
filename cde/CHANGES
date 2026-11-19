@@ -1,4 +1,7 @@
 2026-11-19
+- Keep `dtpad`'s line-number gutter synchronized during scrollbar arrow, trough,
+  thumb-drag, and mouse-wheel scrolling without requiring a click back into the
+  text pane, using double-buffered pixmap rendering (`cde/programs/dtpad/padTabs.c`).
 - Wire General MIDI file associations (`AUDIO_MIDI`), `dtopen_midi`, Front Panel
   `Sound & MIDI` controls, Application Manager `Media_Tools` entries, `dtstyle`
   Beep shortcut, and conditional virtual MIDI port startup across Wayland and X11

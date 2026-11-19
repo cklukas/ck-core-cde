@@ -75,6 +75,8 @@ typedef struct _DtpadUiExt {
     Pixel syntax_pixels[2][DTPAD_TOK_COUNT];
     Boolean syntax_pixels_init[2];
     XtIntervalId syntax_timer;
+    XtIntervalId gutter_timer;
+    XmTextPosition last_gutter_top_pos;
     Boolean recovered_last_load;
 
     XtIntervalId autosave_timer;
@@ -379,22 +381,32 @@ static void draw_line_gutter(DtpadUiExt *ext)
     XmRenderTable rt = NULL;
     XtVaGetValues(ext->text_widget, XmNrenderTable, &rt, NULL);
 
-    XSetWindowBackground(dpy, win, bg);
-    XClearWindow(dpy, win);
+    int depth = DefaultDepthOfScreen(XtScreen(ext->gutter_canvas));
+    Pixmap back_pm = XCreatePixmap(dpy, win, gw, gh, (unsigned int)depth);
+    Drawable target = (back_pm != None) ? (Drawable)back_pm : (Drawable)win;
 
-    GC gc = XCreateGC(dpy, win, 0, NULL);
+    GC gc = XCreateGC(dpy, target, 0, NULL);
+    if (back_pm != None) {
+        XSetForeground(dpy, gc, bg);
+        XFillRectangle(dpy, back_pm, gc, 0, 0, gw, gh);
+    } else {
+        XSetWindowBackground(dpy, win, bg);
+        XClearWindow(dpy, win);
+    }
 
     /* Divider line on right edge */
     XSetForeground(dpy, gc, bs);
-    XDrawLine(dpy, win, gc, (int)gw - 1, 0, (int)gw - 1, (int)gh);
+    XDrawLine(dpy, target, gc, (int)gw - 1, 0, (int)gw - 1, (int)gh);
     XSetForeground(dpy, gc, fg);
     XSetBackground(dpy, gc, bg);
+
+    XmTextPosition top_pos = XmTextGetTopCharacter(ext->text_widget);
+    if (top_pos < 0) top_pos = 0;
+    ext->last_gutter_top_pos = top_pos;
 
     char *full = XmTextGetString(ext->text_widget);
     if (full) {
         size_t total_bytes = strlen(full);
-        XmTextPosition top_pos = XmTextGetTopCharacter(ext->text_widget);
-        if (top_pos < 0) top_pos = 0;
 
         /* Advance through UTF-8 scalars up to top_pos and find the 1-based line number
          * and starting scalar position of the line containing top_pos. */
@@ -445,7 +457,7 @@ static void draw_line_gutter(DtpadUiExt *ext)
                         XmString num_xms = XmStringCreateLocalized(num_buf);
                         Dimension str_bs = XmStringBaseline(rt, num_xms);
                         int top_y = baseline_y - (int)str_bs;
-                        XmStringDraw(dpy, win, rt, num_xms, gc,
+                        XmStringDraw(dpy, target, rt, num_xms, gc,
                                      2, (Position)top_y,
                                      (Dimension)(gw > 8 ? gw - 7 : gw),
                                      XmALIGNMENT_END,
@@ -453,7 +465,7 @@ static void draw_line_gutter(DtpadUiExt *ext)
                                      NULL);
                         XmStringFree(num_xms);
                     } else {
-                        XDrawString(dpy, win, gc, 4, baseline_y, num_buf, (int)strlen(num_buf));
+                        XDrawString(dpy, target, gc, 4, baseline_y, num_buf, (int)strlen(num_buf));
                     }
                     prev_baseline_y = baseline_y;
                 }
@@ -481,7 +493,33 @@ static void draw_line_gutter(DtpadUiExt *ext)
         XtFree(full);
     }
 
+    if (back_pm != None) {
+        XCopyArea(dpy, back_pm, win, gc, 0, 0, gw, gh, 0, 0);
+        XFreePixmap(dpy, back_pm);
+    }
     XFreeGC(dpy, gc);
+    XFlush(dpy);
+}
+
+static void on_gutter_sync_timeout(XtPointer client, XtIntervalId *id)
+{
+    (void)id;
+    DtpadUiExt *ext = (DtpadUiExt *)client;
+    if (!ext) return;
+    ext->gutter_timer = 0;
+    if (!ext->switching_tabs && ext->show_line_numbers) {
+        draw_line_gutter(ext);
+    }
+}
+
+static void schedule_gutter_sync(DtpadUiExt *ext)
+{
+    if (!ext || !ext->show_line_numbers || !ext->pad || !ext->pad->app_context)
+        return;
+    if (ext->gutter_timer != 0)
+        return;
+    ext->gutter_timer = XtAppAddTimeOut(ext->pad->app_context, 0,
+                                        on_gutter_sync_timeout, ext);
 }
 
 static void on_gutter_expose(Widget w, XtPointer client, XtPointer call)
@@ -509,15 +547,35 @@ static void on_text_scrolled(Widget w, XtPointer client, XtPointer call)
     DtpadUiExt *ext = (DtpadUiExt *)client;
     if (!ext || ext->switching_tabs) return;
     draw_line_gutter(ext);
+    schedule_gutter_sync(ext);
 }
 
-static void on_text_structure_notify(Widget w, XtPointer client, XEvent *ev, Boolean *cont)
+static void on_text_viewport_event(Widget w, XtPointer client, XEvent *ev, Boolean *cont)
 {
     (void)w;
     (void)cont;
-    if (!ev || (ev->type != ConfigureNotify && ev->type != MapNotify))
+    DtpadUiExt *ext = (DtpadUiExt *)client;
+    if (!ext || ext->switching_tabs || !ext->show_line_numbers || !ev)
         return;
-    draw_line_gutter((DtpadUiExt *)client);
+
+    if (ev->type == ConfigureNotify || ev->type == MapNotify) {
+        draw_line_gutter(ext);
+        schedule_gutter_sync(ext);
+        return;
+    }
+
+    if (ev->type == Expose || ev->type == GraphicsExpose ||
+        ev->type == ButtonPress || ev->type == ButtonRelease ||
+        ev->type == MotionNotify || ev->type == KeyRelease) {
+        if (ext->text_widget) {
+            XmTextPosition cur_top = XmTextGetTopCharacter(ext->text_widget);
+            if (cur_top < 0) cur_top = 0;
+            if (cur_top != ext->last_gutter_top_pos) {
+                draw_line_gutter(ext);
+            }
+        }
+        schedule_gutter_sync(ext);
+    }
 }
 
 static void snapshot_active_tab(DtpadUiExt *ext)
@@ -881,6 +939,14 @@ void DtpadNotifyPadClosing(Editor *pPad, Boolean discard_autosave)
 {
     DtpadUiExt *ext = find_ext(pPad);
     if (!ext) return;
+    if (ext->gutter_timer != 0) {
+        XtRemoveTimeOut(ext->gutter_timer);
+        ext->gutter_timer = 0;
+    }
+    if (ext->syntax_timer != 0) {
+        XtRemoveTimeOut(ext->syntax_timer);
+        ext->syntax_timer = 0;
+    }
     if (discard_autosave) {
         for (int i = 0; i < ext->tab_count; ++i) {
             if (ext->tabs[i].autosave_path[0]) {
@@ -1403,14 +1469,31 @@ Widget DtpadCreateWorkArea(Editor *pPad)
         XtAddCallback(ext->text_widget, XmNvalueChangedCallback, on_text_changed, ext);
         XtAddCallback(ext->text_widget, XmNmotionVerifyCallback, on_text_scrolled, ext);
         XtAddEventHandler(ext->text_widget, KeyPressMask, False, on_key_shortcuts, ext);
-        XtAddEventHandler(ext->text_widget, StructureNotifyMask, False, on_text_structure_notify, ext);
+        XtAddEventHandler(ext->text_widget,
+                          StructureNotifyMask | ExposureMask | ButtonPressMask |
+                              ButtonReleaseMask | KeyReleaseMask,
+                          True, on_text_viewport_event, ext);
 
         Widget sw = XtParent(ext->text_widget);
         if (sw) {
             XtVaGetValues(sw, XmNverticalScrollBar, &ext->vscroll_widget, NULL);
             if (ext->vscroll_widget) {
-                XtAddCallback(ext->vscroll_widget, XmNvalueChangedCallback, on_text_scrolled, ext);
-                XtAddCallback(ext->vscroll_widget, XmNdragCallback, on_text_scrolled, ext);
+                static const char *const sb_cbs[] = {
+                    XmNvalueChangedCallback,
+                    XmNdragCallback,
+                    XmNincrementCallback,
+                    XmNdecrementCallback,
+                    XmNpageIncrementCallback,
+                    XmNpageDecrementCallback,
+                    XmNtoTopCallback,
+                    XmNtoBottomCallback,
+                };
+                for (size_t i = 0; i < sizeof(sb_cbs) / sizeof(sb_cbs[0]); ++i) {
+                    XtAddCallback(ext->vscroll_widget, (String)sb_cbs[i], on_text_scrolled, ext);
+                }
+                XtAddEventHandler(ext->vscroll_widget,
+                                  ButtonPressMask | ButtonReleaseMask | ButtonMotionMask,
+                                  False, on_text_viewport_event, ext);
             }
         }
     }
