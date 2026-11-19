@@ -37,8 +37,9 @@
     Note** mode + GM **Instrument** selector (`~/.dt/beep.conf`), and audible
     `XkbBellNotify` / `xdg_system_bell_v1` synthesis in both `dtwm-wayland` and
     `dtwm`; enable `audio.device: "vz"` (`virtio-snd` -> macOS CoreAudio) plus
-    `pipewire-pulse`, `pipewire-alsa`, `wireplumber`, `alsa-utils`,
-    `libpulse-dev`, and `libfluidsynth-dev` in `scripts/lima/cde-ubuntu-26.04.yaml`;
+    `pipewire-pulse`, `pipewire-alsa`, `wireplumber`, `rtkit`, `alsa-utils`,
+    `libpulse-dev`, `libfluidsynth-dev`, and non-mmap `virtio_snd` / 48 kHz
+    VM quantum PipeWire/WirePlumber rules in `scripts/lima/cde-ubuntu-26.04.yaml`;
     and auto-start `ck-midi --daemon` at session login when
     `virtual_port=1` is enabled in `~/.config/ck-core/midi.conf`.
 - Correct the gray values in the front-panel status icons

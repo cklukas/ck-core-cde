@@ -63,10 +63,39 @@ provision:
       libwayland-dev libwayland-bin wayland-protocols libwlroots-0.19-dev \
       xwayland libseat-dev libinput-dev libxkbcommon-dev libdrm-dev \
       libgbm-dev libegl-dev libgles-dev libpixman-1-dev \
-      dbus-x11 libnotify-bin wlr-randr pipewire pipewire-pulse pipewire-alsa wireplumber alsa-utils pulseaudio-utils xdg-desktop-portal xdg-desktop-portal-wlr \
+      dbus-x11 libnotify-bin wlr-randr pipewire pipewire-pulse pipewire-alsa wireplumber rtkit alsa-utils pulseaudio-utils xdg-desktop-portal xdg-desktop-portal-wlr \
       fonts-noto-cjk labwc grim wlrctl wayvnc foot
     # Ensure hostname resolves via IPv4 loopback so ToolTalk (libtt / ttsession)
     # TI-RPC loopback binds cleanly instead of hitting nss-myhostname link-local IPv6.
     if ! grep -Eq "^[[:space:]]*127\\.0\\.1\\.1[[:space:]]+$(hostname)(\$|[[:space:]])" /etc/hosts; then
       sed -i "1a 127.0.1.1\t$(hostname)" /etc/hosts
     fi
+    # Configure WirePlumber for virtio_snd on Apple Virtualization.framework (vz),
+    # where cpu.vm.name is unset so stock alsa-vm.conf misses virtio_snd and
+    # leaves mmap=true / period-size=120 / headroom=0 (causing virtqueue stalls).
+    mkdir -p /etc/pipewire/pipewire.conf.d /etc/wireplumber/wireplumber.conf.d
+    cat > /etc/pipewire/pipewire.conf.d/50-vm-quantum.conf <<'PWEOF'
+    context.properties = {
+        default.clock.rate          = 48000
+        default.clock.quantum       = 2048
+        default.clock.min-quantum   = 1024
+        default.clock.max-quantum   = 8192
+    }
+    PWEOF
+    cat > /etc/wireplumber/wireplumber.conf.d/50-virtio-snd.conf <<'WPEOF'
+    monitor.alsa.rules = [
+      {
+        matches = [ { alsa.driver_name = "virtio_snd" } ]
+        actions = {
+          update-props = {
+            api.alsa.disable-mmap           = true
+            api.alsa.disable-batch          = true
+            api.alsa.period-size            = 2048
+            api.alsa.period-num             = 8
+            api.alsa.headroom               = 4096
+            session.suspend-timeout-seconds = 0
+          }
+        }
+      }
+    ]
+    WPEOF
