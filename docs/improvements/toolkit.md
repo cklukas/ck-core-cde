@@ -52,6 +52,12 @@ default:
   in the Style Manager Color dialog previews the corresponding Motif appearance
   profile immediately via `XmApplyAppearanceProfile()` and persists both the
   palette and `*appearanceProfile` when confirmed.
+- **`DtHelp` live palette and profile redraw (`Callbacks.c`, `SetList.c`, `PathArea.c`)**:
+  `DtHelpDialog` and `DtHelpQuickDialog` synchronize `dispWid` foreground,
+  background, highlight color, GCs, and border thickness across live palette and
+  appearance-profile updates and reconcile child display-area resizes when
+  scrollbar or shadow metrics change inside an unchanged parent form, keeping
+  both the TOC pane and help canvas rendered without manual window resizing.
 
 You can activate a profile either from **Style Manager -> Color** (by selecting
 `ModernLight`, `ModernDark`, or `HighContrast`) or in `~/.Xdefaults`:

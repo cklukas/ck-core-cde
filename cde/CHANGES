@@ -1,4 +1,23 @@
 2026-11-19
+- Redraw `DtHelp` TOC and topic display areas cleanly across live Style Manager
+  color palette and appearance-profile changes without requiring a manual window
+  resize (`cde/include/DtI/DisplayAreaP.h`, `cde/lib/DtHelp/Callbacks.c`,
+  `cde/lib/DtHelp/SetList.c`, `cde/lib/DtHelp/XUICreate.c`,
+  `cde/lib/DtHelp/PathArea.c`, `cde/lib/DtHelp/Makefile.am`,
+  `cde/lib/DtHelp/tests/check-display-area-theme-sync.py`,
+  `cde/lib/DtHelp/tests/check-display-area-theme-sync.c`,
+  `docs/improvements/toolkit.md`):
+  - Synchronize `DtHelpDispAreaStruct` foreground, background, traversal
+    highlight color, normal/pixmap/invert GCs, `50_foreground` tile, and
+    `decorThickness` (`shadowThickness + highlightThickness`) from `dispWid` on
+    expose, resize, and traversal updates.
+  - Handle child `dispWid` geometry changes inside an unchanged `DisplayAreaForm`
+    (such as scrollbar thickness or border metric updates during live theme
+    switches) with a per-area `_DT_HELP_IN_SET_SCROLLBARS` re-entrancy guard so
+    `_DtHelpExposeCB` never drops exposures against stale `dispWidth`/`dispHeight`.
+  - Attach `tocFrame` to `BtnBox` dynamically in `_DtHelpBuildPathArea` so
+    navigation buttons (`Backtrack`, `History...`, `Index...`, `Top Level`) do
+    not clip when button font or margin metrics change.
 - Add backend-aware minimize/restore and maximize/unmaximize window animations across
   `dtwm-wayland`, X11 `dtwm`, and `Style Manager - Window` (`cde/programs/dtstyle/Dtwm.c`,
   `cde/programs/dtstyle/dtstyle.msg`, `cde/programs/dtwm/WmResNames.h`,

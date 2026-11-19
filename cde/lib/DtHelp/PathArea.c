@@ -109,9 +109,6 @@ void _DtHelpBuildPathArea(
   XmFontList  defaultList;
   DtHelpDialogWidget hw = (DtHelpDialogWidget) nw ;
 
-  Dimension button1, button2, button3, button4;
-  Dimension maxBtnWidth;
-
  
   /* Create a form to  hold the topic map stuff */
   n = 0;
@@ -178,9 +175,6 @@ void _DtHelpBuildPathArea(
 
   /* Build our button box rowcol widget container */
   n = 0;
-  XtSetArg (args[n], XmNleftAttachment, XmATTACH_WIDGET);        	n++;
-  XtSetArg (args[n], XmNleftOffset,3);		                        n++;
-  XtSetArg (args[n], XmNleftWidget, tocFrame);                          n++;
   XtSetArg (args[n], XmNbottomAttachment, XmATTACH_FORM); 		n++;
   XtSetArg (args[n], XmNbottomOffset, 2);		                n++;
   XtSetArg (args[n], XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET);	n++;
@@ -281,49 +275,13 @@ void _DtHelpBuildPathArea(
   XtManageChild(_pathForm);
   XtManageChild(pathForm);
 
-
-  /* Perform some sizing stuff here to ensure that we layout our UI 
-   * per the current fonts.
-   */
-
-   /* Get the size of each button */
-   n = 0;
-   XtSetArg(args[n], XmNwidth, &button1);   ++n;
-   XtGetValues(hw->help_dialog.browser.btnBoxBackBtn, args, n);
-   n = 0;
-   XtSetArg(args[n], XmNwidth, &button2);   ++n;
-   XtGetValues(hw->help_dialog.browser.btnBoxHistoryBtn, args, n);
- 
-   n = 0;
-   XtSetArg(args[n], XmNwidth, &button3);   ++n;
-   XtGetValues(hw->help_dialog.browser.btnBoxIndexBtn, args, n);
-
-   if (hw->help_dialog.browser.showTopLevelBtn == True)
-    {
-      n = 0;
-      XtSetArg(args[n], XmNwidth, &button4);   ++n;
-      XtGetValues(hw->help_dialog.browser.btnBoxTopLevelBtn, args, n);
-    }
-   else
-     button4 = 0;
-
-   if (button1 >= button2)
-     maxBtnWidth = button1;
-   else
-     maxBtnWidth = button2;
-
-   if (button3 >= maxBtnWidth)
-     maxBtnWidth = button3;
-   
-   if (hw->help_dialog.browser.showTopLevelBtn == True)
-     if (button4 >= maxBtnWidth)
-       maxBtnWidth = button4;
-
-   /* Set our toc right hand attachments */
-   n = 0;
-   XtSetArg (args[n], XmNrightAttachment, XmATTACH_FORM); 		n++;
-   XtSetArg (args[n], XmNrightOffset, maxBtnWidth +10);	                n++;
-   XtSetValues (tocFrame, args, n);
+  /* Attach tocFrame to btnBox so button width changes (e.g. font/profile
+   * updates) resize the button column and TOC area dynamically. */
+  n = 0;
+  XtSetArg (args[n], XmNrightAttachment, XmATTACH_WIDGET); 		n++;
+  XtSetArg (args[n], XmNrightWidget, btnBox);				n++;
+  XtSetArg (args[n], XmNrightOffset, 6);	                        n++;
+  XtSetValues (tocFrame, args, n);
 
 
 }

@@ -156,6 +156,10 @@ _DtHelpSetScrollBars (
     enum DoSomething doVert = DoNothing;
     enum DoSomething doHorz = DoNothing;
     DtHelpDispAreaStruct *pDAS = (DtHelpDispAreaStruct *) client_data;
+    Boolean wasInSetScrollBars =
+	(pDAS->neededFlags & _DT_HELP_IN_SET_SCROLLBARS) ? True : False;
+
+    pDAS->neededFlags |= _DT_HELP_IN_SET_SCROLLBARS;
 
     /*
      * remember the old first line.
@@ -676,6 +680,43 @@ _DtHelpSetScrollBars (
 	    XtUnmapWidget (pDAS->vertScrollWid);
 	pDAS->vertIsMapped = False;
       }
+
+    if (dispN && pDAS->dispWid != nullptr)
+      {
+	Dimension actualW = pDAS->dispWidth;
+	Dimension actualH = pDAS->dispHeight;
+
+	XtSetArg (args[0], XmNwidth, &actualW);
+	XtSetArg (args[1], XmNheight, &actualH);
+	XtGetValues (pDAS->dispWid, args, 2);
+
+	if (actualW != pDAS->dispWidth || actualH != pDAS->dispHeight)
+	  {
+	    pDAS->dispWidth = actualW;
+	    pDAS->dispHeight = actualH;
+	    pDAS->dispUseWidth =
+		((int)actualW > 2 * (int)pDAS->decorThickness)
+		    ? (Dimension)(actualW - 2 * pDAS->decorThickness)
+		    : 0;
+	    pDAS->dispUseHeight =
+		((int)actualH > 2 * (int)pDAS->decorThickness)
+		    ? (Dimension)(actualH - 2 * pDAS->decorThickness)
+		    : 0;
+
+	    rectangle[0].x      = pDAS->decorThickness;
+	    rectangle[0].y      = pDAS->decorThickness;
+	    rectangle[0].width  = pDAS->dispUseWidth;
+	    rectangle[0].height = pDAS->dispUseHeight;
+
+	    XSetClipRectangles(XtDisplay(pDAS->dispWid), pDAS->normalGC, 0, 0,
+					rectangle, 1, Unsorted);
+	    XSetClipRectangles(XtDisplay(pDAS->dispWid), pDAS->invertGC, 0, 0,
+					rectangle, 1, Unsorted);
+	  }
+      }
+
+    if (!wasInSetScrollBars)
+	pDAS->neededFlags &= ~(_DT_HELP_IN_SET_SCROLLBARS);
 
     /*
      * return whether or not we generated a resize (and hence an expose

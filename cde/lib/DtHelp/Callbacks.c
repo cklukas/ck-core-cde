@@ -477,6 +477,90 @@ ScrollTimerCB (
 } /* End ScrollTimerCB */
 
 /******************************************************************************
+ * Function: SyncDisplayAreaVisuals
+ *
+ *    Keep cached colors, GCs, and border thickness synchronized with dispWid
+ *    after live palette/appearance SetValues updates.
+ *
+ *****************************************************************************/
+static Boolean
+SyncDisplayAreaVisuals(
+    DtHelpDispAreaStruct  *pDAS)
+{
+    Arg       args[6];
+    int       n = 0;
+    Dimension shadowThick = 0;
+    Dimension highThick = 0;
+    Pixel     fg;
+    Pixel     bg;
+    Pixel     hl;
+    short     newDecor;
+    Boolean   decorChanged = False;
+
+    if (pDAS == nullptr || pDAS->dispWid == nullptr)
+	return False;
+
+    fg = pDAS->foregroundColor;
+    bg = pDAS->backgroundColor;
+    hl = pDAS->traversalColor;
+
+    XtSetArg(args[n], XmNshadowThickness   , &shadowThick); ++n;
+    XtSetArg(args[n], XmNhighlightThickness, &highThick);   ++n;
+    XtSetArg(args[n], XmNforeground        , &fg);          ++n;
+    XtSetArg(args[n], XmNbackground        , &bg);          ++n;
+    XtSetArg(args[n], XmNhighlightColor    , &hl);          ++n;
+    XtGetValues(pDAS->dispWid, args, n);
+
+    if (fg != pDAS->foregroundColor || bg != pDAS->backgroundColor)
+      {
+	Display       *dpy = XtDisplay(pDAS->dispWid);
+	Screen        *scr = XtScreen(pDAS->dispWid);
+	Pixmap         tile;
+	XGCValues      gcValues;
+	unsigned long  gcMask = GCForeground | GCBackground;
+
+	pDAS->foregroundColor = fg;
+	pDAS->backgroundColor = bg;
+
+	tile = XmGetPixmap(scr, "50_foreground", fg, bg);
+	gcValues.foreground = fg;
+	gcValues.background = bg;
+	if (tile != None && tile != XmUNSPECIFIED_PIXMAP)
+	  {
+	    gcValues.tile = tile;
+	    gcMask |= GCTile;
+	  }
+	XChangeGC(dpy, pDAS->normalGC, gcMask, &gcValues);
+
+	gcValues.foreground = fg;
+	gcValues.background = bg;
+	XChangeGC(dpy, pDAS->pixmapGC, GCForeground | GCBackground, &gcValues);
+
+	gcValues.foreground = bg;
+	gcValues.background = fg;
+	XChangeGC(dpy, pDAS->invertGC, GCForeground | GCBackground, &gcValues);
+
+	if (pDAS->def_pix != 0)
+	  {
+	    if (XmDestroyPixmap(scr, pDAS->def_pix) == False)
+		XFreePixmap(dpy, pDAS->def_pix);
+	    pDAS->def_pix = 0;
+	  }
+      }
+
+    pDAS->traversalColor = hl;
+
+    newDecor = (short)(shadowThick + highThick);
+    if (newDecor != pDAS->decorThickness)
+      {
+	pDAS->decorThickness = newDecor;
+	decorChanged = True;
+      }
+
+    return decorChanged;
+}
+
+/******************************************************************************
  * Function: DrawWholeCanvas
  *
  *****************************************************************************/
@@ -488,6 +572,8 @@ DrawWholeCanvas(
     _DtCvUnit    bottom;
     _DtCvUnit    right;
     _DtCvUnit    next_y;
+
+    (void) SyncDisplayAreaVisuals(pDAS);
 
     _DtCanvasMoveTraversal(pDAS->canvas,_DtCvTRAVERSAL_OFF, False,
 				(XtIsRealized(pDAS->dispWid) ? True : False),
@@ -529,6 +615,8 @@ _DtHelpCleanAndDrawWholeCanvas(
     XtPointer  client_data)
 {
     DtHelpDispAreaStruct  *pDAS = (DtHelpDispAreaStruct *) client_data;
+
+    (void) SyncDisplayAreaVisuals(pDAS);
 
     XClearArea (XtDisplay(pDAS->dispWid), XtWindow(pDAS->dispWid),
 				pDAS->decorThickness, pDAS->decorThickness,
@@ -642,6 +730,7 @@ _DtHelpExposeCB(
 
     Dimension  height;
     Dimension  width;
+    Boolean    decorChanged;
 
     DtHelpDispAreaStruct *pDAS = (DtHelpDispAreaStruct *) client_data;
 
@@ -652,6 +741,15 @@ _DtHelpExposeCB(
 		(pDAS->neededFlags & (1 << (VisibilityFullyObscured + 3))))
 	return;
 
+    if (callback->event && callback->event->type == Expose &&
+		callback->event->xexpose.count)
+	return;
+
+    if (pDAS->neededFlags & _DT_HELP_IN_SET_SCROLLBARS)
+	return;
+
+    decorChanged = SyncDisplayAreaVisuals(pDAS);
+
     /*
      * get the width and height.
      */
@@ -660,14 +758,21 @@ _DtHelpExposeCB(
     XtGetValues(widget, args, 2);
 
     /*
-     * if this exposure is a result of a resize,
-     * wait for the resize to handle it.
+     * Reconcile geometry/decor changes if dispWid resized or changed border
+     * thickness without a parent-form resize.
      */
-    if (width != pDAS->dispWidth || height != pDAS->dispHeight)
+    if (decorChanged || width != pDAS->dispWidth || height != pDAS->dispHeight)
+      {
+	if (decorChanged)
+	  {
+	    pDAS->dispWidth  = 0;
+	    pDAS->dispHeight = 0;
+	  }
+	(void) _DtHelpSetScrollBars (client_data, width, height);
+	if (XtIsRealized (pDAS->dispWid))
+	    _DtHelpCleanAndDrawWholeCanvas (client_data);
 	return;
-
-    if (!(callback->event) || callback->event->xexpose.count)
-	return;
+      }
 
     /*
      * re-draw the information in the display area
@@ -680,7 +785,7 @@ _DtHelpExposeCB(
 /*********************************************************************
  * Function: _DtHelpResizeCB
  *
- *    _DtHelpResizeCB handles the exposure events for a Text Graphic Area.
+ *    _DtHelpResizeCB handles the resize events for a Text Graphic Area.
  *
  *********************************************************************/
 void
@@ -690,8 +795,11 @@ _DtHelpResizeCB(
 	XtPointer call_data )
 {
     Arg  args[4];
+    Dimension formWidth = 0;
+    Dimension formHeight = 0;
     Dimension width;
     Dimension height;
+    Boolean decorChanged;
 
     DtHelpDispAreaStruct *pDAS = (DtHelpDispAreaStruct *) client_data;
     XmDrawnButtonCallbackStruct *callback =
@@ -700,17 +808,23 @@ _DtHelpResizeCB(
     if (callback->reason != XmCR_RESIZE)
 	return;
 
-    /*
-     * get the width and height of the form.
-     */
-    XtSetArg(args[0], XmNwidth, &width);
-    XtSetArg(args[1], XmNheight, &height);
-    XtGetValues(XtParent(widget), args, 2);
-    if (width == pDAS->formWidth && height == pDAS->formHeight)
+    if (pDAS->neededFlags & _DT_HELP_IN_SET_SCROLLBARS)
 	return;
 
-    pDAS->formWidth  = width;
-    pDAS->formHeight = height;
+    decorChanged = SyncDisplayAreaVisuals(pDAS);
+
+    /*
+     * Track parent form size without ignoring dispWid resizes caused by
+     * sibling scrollbar or appearance metric changes inside the same form.
+     */
+    if (XtParent(widget) != nullptr)
+      {
+	XtSetArg(args[0], XmNwidth, &formWidth);
+	XtSetArg(args[1], XmNheight, &formHeight);
+	XtGetValues(XtParent(widget), args, 2);
+	pDAS->formWidth  = formWidth;
+	pDAS->formHeight = formHeight;
+      }
 
     /*
      * get the width and height.
@@ -719,8 +833,14 @@ _DtHelpResizeCB(
     XtSetArg(args[1], XmNheight, &height);
     XtGetValues(widget, args, 2);
 
-    if (width == pDAS->dispWidth && height == pDAS->dispHeight)
+    if (!decorChanged && width == pDAS->dispWidth && height == pDAS->dispHeight)
 	return;
+
+    if (decorChanged)
+      {
+	pDAS->dispWidth  = 0;
+	pDAS->dispHeight = 0;
+      }
 
     /*
 
@@ -1464,6 +1584,7 @@ _DtHelpFocusCB(
 
     if (oldFlag != newFlag)
       {
+	(void) SyncDisplayAreaVisuals(pDAS);
 	if (newFlag == False)
 	  {
             _DtCanvasMoveTraversal (pDAS->canvas, _DtCvTRAVERSAL_OFF, False,
@@ -1519,6 +1640,7 @@ _DtHelpEnterLeaveCB(
 
     if (oldFlag != newFlag)
       {
+	(void) SyncDisplayAreaVisuals(pDAS);
 	if (oldFlag == True)
 	  {
             _DtCanvasMoveTraversal (pDAS->canvas, _DtCvTRAVERSAL_OFF, False,
