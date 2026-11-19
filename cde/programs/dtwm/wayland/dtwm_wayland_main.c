@@ -164,9 +164,60 @@ static void sync_xwayland_client_pos(DtwmView *view) {
     );
 }
 
+static void view_size_limits(
+    const DtwmView *v,
+    int *out_min_w,
+    int *out_min_h,
+    int *out_max_w,
+    int *out_max_h
+) {
+    int min_w = 64;
+    int min_h = 48;
+    int max_w = 0;
+    int max_h = 0;
+    if (v && !v->is_panel && !v->is_subpanel && !v->is_swallowed && !v->is_desktop_pin) {
+        if (v->kind == DTWM_VIEW_XWAYLAND && v->xwayland_surface && v->xwayland_surface->size_hints) {
+            const xcb_size_hints_t *sh = v->xwayland_surface->size_hints;
+            if ((sh->flags & XCB_ICCCM_SIZE_HINT_P_MIN_SIZE) != 0) {
+                if (sh->min_width > min_w) min_w = sh->min_width;
+                if (sh->min_height > min_h) min_h = sh->min_height;
+            }
+            if ((sh->flags & XCB_ICCCM_SIZE_HINT_P_MAX_SIZE) != 0) {
+                if (sh->max_width > 0) max_w = sh->max_width;
+                if (sh->max_height > 0) max_h = sh->max_height;
+            }
+        } else if (v->kind == DTWM_VIEW_XDG && v->xdg_toplevel) {
+            if (v->xdg_toplevel->current.min_width > min_w) {
+                min_w = v->xdg_toplevel->current.min_width;
+            }
+            if (v->xdg_toplevel->current.min_height > min_h) {
+                min_h = v->xdg_toplevel->current.min_height;
+            }
+            if (v->xdg_toplevel->current.max_width > 0) {
+                max_w = v->xdg_toplevel->current.max_width;
+            }
+            if (v->xdg_toplevel->current.max_height > 0) {
+                max_h = v->xdg_toplevel->current.max_height;
+            }
+        }
+    }
+    if (max_w > 0 && max_w < min_w) max_w = min_w;
+    if (max_h > 0 && max_h < min_h) max_h = min_h;
+    *out_min_w = min_w;
+    *out_min_h = min_h;
+    *out_max_w = max_w;
+    *out_max_h = max_h;
+}
+
 static void view_apply_geometry(DtwmView *view, int x, int y, int client_w, int client_h) {
-    if (client_w < 64) client_w = 64;
-    if (client_h < 48) client_h = 48;
+    int min_w = 64, min_h = 48, max_w = 0, max_h = 0;
+    view_size_limits(view, &min_w, &min_h, &max_w, &max_h);
+    if (client_w < min_w) client_w = min_w;
+    if (client_h < min_h) client_h = min_h;
+    if (!view || !view->maximized) {
+        if (max_w > 0 && client_w > max_w) client_w = max_w;
+        if (max_h > 0 && client_h > max_h) client_h = max_h;
+    }
     if (x == view->x && y == view->y &&
         client_w == view->client_w && client_h == view->client_h) {
         return;
@@ -1455,6 +1506,9 @@ static void process_cursor_resize(DtwmServer *server) {
     double dx = server->cursor->x - server->grab_x;
     double dy = server->cursor->y - server->grab_y;
 
+    int min_w = 64, min_h = 48, max_w = 0, max_h = 0;
+    view_size_limits(v, &min_w, &min_h, &max_w, &max_h);
+
     int new_x = server->grab_orig_box.x;
     int new_y = server->grab_orig_box.y;
     int new_w = server->grab_orig_box.width;
@@ -1463,31 +1517,43 @@ static void process_cursor_resize(DtwmServer *server) {
     if (server->resize_edges & WLR_EDGE_TOP) {
         new_y += (int)dy;
         new_h -= (int)dy;
-        if (new_h < 48) {
-            new_y = server->grab_orig_box.y + server->grab_orig_box.height - 48;
-            new_h = 48;
+        if (new_h < min_h) {
+            new_y = server->grab_orig_box.y + server->grab_orig_box.height - min_h;
+            new_h = min_h;
+        }
+        if (max_h > 0 && new_h > max_h) {
+            new_y = server->grab_orig_box.y + server->grab_orig_box.height - max_h;
+            new_h = max_h;
         }
     } else if (server->resize_edges & WLR_EDGE_BOTTOM) {
         new_h += (int)dy;
-        if (new_h < 48) new_h = 48;
+        if (new_h < min_h) new_h = min_h;
+        if (max_h > 0 && new_h > max_h) new_h = max_h;
     }
     if (server->resize_edges & WLR_EDGE_LEFT) {
         new_x += (int)dx;
         new_w -= (int)dx;
-        if (new_w < 64) {
-            new_x = server->grab_orig_box.x + server->grab_orig_box.width - 64;
-            new_w = 64;
+        if (new_w < min_w) {
+            new_x = server->grab_orig_box.x + server->grab_orig_box.width - min_w;
+            new_w = min_w;
+        }
+        if (max_w > 0 && new_w > max_w) {
+            new_x = server->grab_orig_box.x + server->grab_orig_box.width - max_w;
+            new_w = max_w;
         }
     } else if (server->resize_edges & WLR_EDGE_RIGHT) {
         new_w += (int)dx;
-        if (new_w < 64) new_w = 64;
+        if (new_w < min_w) new_w = min_w;
+        if (max_w > 0 && new_w > max_w) new_w = max_w;
     }
 
     if (shift_is_held(server)) {
         new_w = align_to_grid(new_w);
         new_h = align_to_grid(new_h);
-        if (new_w < 64) new_w = 64;
-        if (new_h < 48) new_h = 48;
+        if (new_w < min_w) new_w = min_w;
+        if (new_h < min_h) new_h = min_h;
+        if (max_w > 0 && new_w > max_w) new_w = max_w;
+        if (max_h > 0 && new_h > max_h) new_h = max_h;
     }
 
     if (!server->move_opaque) {

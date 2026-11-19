@@ -1,4 +1,8 @@
 2026-11-19
+- Enforce ICCCM `WM_NORMAL_HINTS` (`PMinSize` / `PMaxSize`) and `xdg_toplevel`
+  minimum/maximum client size limits during interactive window resizing and
+  geometry updates in `dtwm-wayland`
+  (`cde/programs/dtwm/wayland/dtwm_wayland_main.c`).
 - Show semi-transparent corner screen-identification numbers (`1`, `2`, `3`, ...)
   on every active display while **Style Manager - Display & Monitors** is open,
   across both Wayland and X11 / XLibre (`cde/programs/dtwm/wayland/cde_output_mgmt.c`,
