@@ -2026,6 +2026,37 @@ ShellStructureHandler(Widget w, XtPointer client_data, XEvent *event, Boolean *c
 
 /* --- UI Construction --- */
 
+static int
+dtfile_select_toolbar_px(Display *dpy, int screen)
+{
+    const char *env = getenv("CK_TOOLBAR_ICON_SCALE");
+    double scale = 1.0;
+    if (env && env[0])
+    {
+        double v = atof(env);
+        if (v >= 0.75 && v <= 3.0)
+            scale = v;
+    }
+    else if (dpy)
+    {
+        int w_px = DisplayWidth(dpy, screen);
+        int w_mm = DisplayWidthMM(dpy, screen);
+        if (w_px > 0 && w_mm > 10)
+        {
+            double dpi = ((double)w_px * 25.4) / (double)w_mm;
+            if (dpi >= 168.0)
+                scale = 2.0;
+            else if (dpi >= 120.0)
+                scale = 1.5;
+        }
+    }
+    if (scale >= 1.75)
+        return 32;
+    if (scale >= 1.25)
+        return 24;
+    return 16;
+}
+
 static void
 dtfile_try_apply_icon(Widget btn, const char *icon_name, const char *tooltip)
 {
@@ -2034,6 +2065,10 @@ dtfile_try_apply_icon(Widget btn, const char *icon_name, const char *tooltip)
     Widget host = XmIsGadget(btn) ? XtParent(btn) : btn;
     if (!host)
         return;
+
+    Display *dpy = XtDisplay(host);
+    int screen = dpy ? DefaultScreen(dpy) : 0;
+    int target_px = dtfile_select_toolbar_px(dpy, screen);
 
     const char *env_dir = getenv("CK_TOOLBAR_ICON_DIR");
     const char *roots[4];
@@ -2044,11 +2079,21 @@ dtfile_try_apply_icon(Widget btn, const char *icon_name, const char *tooltip)
     roots[nroots++] = "/usr/local/share/ck-core/icons/toolbar";
     roots[nroots++] = "/usr/share/ck-core/icons/toolbar";
 
-    const int sizes[] = { 16, 24, 32, 48 };
+    int sizes[5];
+    int nsizes = 0;
+    sizes[nsizes++] = target_px;
+    const int std_sizes[] = { 16, 24, 32, 48 };
+    for (size_t i = 0; i < sizeof(std_sizes) / sizeof(std_sizes[0]); ++i)
+    {
+        if (std_sizes[i] != target_px)
+            sizes[nsizes++] = std_sizes[i];
+    }
+
     char found[PATH_MAX] = "";
+    int picked_px = target_px;
     for (int r = 0; r < nroots && !found[0]; ++r)
     {
-        for (size_t s = 0; s < sizeof(sizes) / sizeof(sizes[0]); ++s)
+        for (int s = 0; s < nsizes; ++s)
         {
             char cand[PATH_MAX];
             snprintf(cand, sizeof(cand), "%s/%dx%d/%s.png",
@@ -2056,6 +2101,7 @@ dtfile_try_apply_icon(Widget btn, const char *icon_name, const char *tooltip)
             if (access(cand, R_OK) == 0)
             {
                 snprintf(found, sizeof(found), "%s", cand);
+                picked_px = sizes[s];
                 break;
             }
         }
@@ -2070,11 +2116,13 @@ dtfile_try_apply_icon(Widget btn, const char *icon_name, const char *tooltip)
         XtVaGetValues(btn, XmNarmColor, &arm, nullptr);
 
     int depth = DefaultDepthOfScreen(XtScreen(host));
-    Pixmap p_norm = XmGetScaledPixmap(host, (String)found, fg, bg, depth, 0.0);
+    double ratio = picked_px > 0 ? ((double)target_px / (double)picked_px) : 1.0;
+    Pixmap p_norm = XmGetScaledPixmap(host, (String)found, fg, bg, depth, ratio);
     if (p_norm != XmUNSPECIFIED_PIXMAP)
     {
-        XtVaSetValues(btn, XmNlabelType, XmPIXMAP, XmNlabelPixmap, p_norm, nullptr);
-        Pixmap p_arm = XmGetScaledPixmap(host, (String)found, fg, arm, depth, 0.0);
+        XtVaSetValues(btn, XmNlabelType, XmPIXMAP, XmNlabelPixmap, p_norm,
+                      XmNmarginWidth, 2, XmNmarginHeight, 2, nullptr);
+        Pixmap p_arm = XmGetScaledPixmap(host, (String)found, fg, arm, depth, ratio);
         if (p_arm != XmUNSPECIFIED_PIXMAP)
             XtVaSetValues(btn, XmNarmPixmap, p_arm, nullptr);
         if (tooltip && tooltip[0] && !XmIsGadget(btn))
@@ -2226,7 +2274,8 @@ DtfileErgonomicsAttachWindow(FileMgrRec *rec, Boolean is_trash_view)
     XtVaSetValues(row1,
                   XmNorientation, XmHORIZONTAL,
                   XmNpacking, XmPACK_TIGHT,
-                  XmNspacing, 4,
+                  XmNadjustLast, False,
+                  XmNspacing, 2,
                   XmNmarginHeight, 1,
                   XmNtopAttachment, XmATTACH_WIDGET,
                   XmNtopWidget, erg->search_sep,
@@ -2242,7 +2291,7 @@ DtfileErgonomicsAttachWindow(FileMgrRec *rec, Boolean is_trash_view)
     XtManageChild(l_name);
 
     erg->name_tf = XmCreateTextField(row1, "search_name_tf", nullptr, 0);
-    XtVaSetValues(erg->name_tf, XmNcolumns, 16, nullptr);
+    XtVaSetValues(erg->name_tf, XmNcolumns, 10, nullptr);
     XtAddCallback(erg->name_tf, XmNactivateCallback, SearchStartBtnCB, (XtPointer)erg);
     XtManageChild(erg->name_tf);
 
@@ -2253,7 +2302,7 @@ DtfileErgonomicsAttachWindow(FileMgrRec *rec, Boolean is_trash_view)
     XtManageChild(l_text);
 
     erg->content_tf = XmCreateTextField(row1, "search_content_tf", nullptr, 0);
-    XtVaSetValues(erg->content_tf, XmNcolumns, 14, nullptr);
+    XtVaSetValues(erg->content_tf, XmNcolumns, 8, nullptr);
     XtAddCallback(erg->content_tf, XmNactivateCallback, SearchStartBtnCB, (XtPointer)erg);
     XtManageChild(erg->content_tf);
 
@@ -2279,11 +2328,12 @@ DtfileErgonomicsAttachWindow(FileMgrRec *rec, Boolean is_trash_view)
 
     xs = XmStringCreateLocalized("Stop");
     erg->search_stop_btn = XmCreatePushButtonGadget(row1, "search_stop", nullptr, 0);
-    XtVaSetValues(erg->search_stop_btn, XmNlabelString, xs, XmNsensitive, False, nullptr);
+    XtVaSetValues(erg->search_stop_btn, XmNlabelString, xs, nullptr);
     XmStringFree(xs);
     dtfile_try_apply_icon(erg->search_stop_btn, "process-stop", "Stop Search");
     XtAddCallback(erg->search_stop_btn, XmNactivateCallback, SearchStopBtnCB, (XtPointer)erg);
     XtManageChild(erg->search_stop_btn);
+    XtSetSensitive(erg->search_stop_btn, False);
 
     xs = XmStringCreateLocalized("Close");
     erg->search_close_btn = XmCreatePushButtonGadget(row1, "search_close", nullptr, 0);

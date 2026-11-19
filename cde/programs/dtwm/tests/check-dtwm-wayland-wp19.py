@@ -506,13 +506,7 @@ def run_lane(
 
     pdf_path = lane_root / "manual.pdf"
     subprocess.run([str(asset_gen_bin), str(img_dir), str(pdf_path)], env=env, check=True)
-
-    # Populate a test 24x24 toolbar icon directory to exercise ck_toolbar_apply_icon + dtpad icon loader
-    tb_icon_dir = lane_root / "toolbar_icons" / "24x24"
-    tb_icon_dir.mkdir(parents=True, exist_ok=True)
-    for icon_nm in ("document-open", "document-save", "document-print", "sidebar-outline", "tab-new"):
-        shutil.copyfile(img_dir / "01_sample.png", tb_icon_dir / f"{icon_nm}.png")
-    env["CK_TOOLBAR_ICON_DIR"] = str(lane_root / "toolbar_icons")
+    env.pop("CK_TOOLBAR_ICON_DIR", None)
 
     procs: list[subprocess.Popen] = []
     try:
@@ -932,6 +926,14 @@ def main() -> int:
         if not b.is_file():
             print(f"SKIP/FAIL: required binary not found: {b}", file=sys.stderr)
             return 1
+
+    apps_tb_root = (args.apps_src_dir / "data/icons/toolbar").resolve()
+    cde_tb_root = (Path(__file__).resolve().parents[2] / "icons/toolbar").resolve()
+    for sz in ("16x16", "24x24", "32x32", "48x48"):
+        apps_pngs = sorted((apps_tb_root / sz).glob("*.png"))
+        assert len(apps_pngs) == 25, f"expected 25 toolbar PNGs in {apps_tb_root / sz}, got {len(apps_pngs)}"
+        cde_pngs = sorted((cde_tb_root / sz).glob("*.png"))
+        assert len(cde_pngs) == 7, f"expected 7 CDE toolbar PNGs in {cde_tb_root / sz}, got {len(cde_pngs)}"
 
     cc = shlex.split(os.environ.get("CC", "cc"))
     pkg_cflags = subprocess.run(

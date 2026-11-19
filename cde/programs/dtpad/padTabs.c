@@ -1229,9 +1229,34 @@ void DtpadPopulateOptionsMenuExtras(Editor *pPad, Widget options_pane)
                   on_syntax_toggled, pPad);
 }
 
+static int dtpad_select_toolbar_px(Display *dpy, int screen)
+{
+    const char *env = getenv("CK_TOOLBAR_ICON_SCALE");
+    double scale = 1.0;
+    if (env && env[0]) {
+        double v = atof(env);
+        if (v >= 0.75 && v <= 3.0) scale = v;
+    } else if (dpy) {
+        int w_px = DisplayWidth(dpy, screen);
+        int w_mm = DisplayWidthMM(dpy, screen);
+        if (w_px > 0 && w_mm > 10) {
+            double dpi = ((double)w_px * 25.4) / (double)w_mm;
+            if (dpi >= 168.0) scale = 2.0;
+            else if (dpi >= 120.0) scale = 1.5;
+        }
+    }
+    if (scale >= 1.75) return 32;
+    if (scale >= 1.25) return 24;
+    return 16;
+}
+
 static void dtpad_try_apply_icon(Widget btn, const char *icon_name, const char *tooltip)
 {
     if (!btn || !icon_name || !icon_name[0]) return;
+    Display *dpy = XtDisplay(btn);
+    int screen = dpy ? DefaultScreen(dpy) : 0;
+    int target_px = dtpad_select_toolbar_px(dpy, screen);
+
     const char *env_dir = getenv("CK_TOOLBAR_ICON_DIR");
     const char *roots[4];
     int nroots = 0;
@@ -1240,15 +1265,24 @@ static void dtpad_try_apply_icon(Widget btn, const char *icon_name, const char *
     roots[nroots++] = "/usr/local/share/ck-core/icons/toolbar";
     roots[nroots++] = "/usr/share/ck-core/icons/toolbar";
 
-    const int sizes[] = { 16, 24, 32, 48 };
+    int sizes[5];
+    int nsizes = 0;
+    sizes[nsizes++] = target_px;
+    const int std_sizes[] = { 16, 24, 32, 48 };
+    for (size_t i = 0; i < sizeof(std_sizes) / sizeof(std_sizes[0]); ++i) {
+        if (std_sizes[i] != target_px) sizes[nsizes++] = std_sizes[i];
+    }
+
     char found[PATH_MAX] = "";
+    int picked_px = target_px;
     for (int r = 0; r < nroots && !found[0]; ++r) {
-        for (size_t s = 0; s < sizeof(sizes) / sizeof(sizes[0]); ++s) {
+        for (int s = 0; s < nsizes; ++s) {
             char cand[PATH_MAX];
             snprintf(cand, sizeof(cand), "%s/%dx%d/%s.png",
                      roots[r], sizes[s], sizes[s], icon_name);
             if (access(cand, R_OK) == 0) {
                 snprintf(found, sizeof(found), "%s", cand);
+                picked_px = sizes[s];
                 break;
             }
         }
@@ -1258,10 +1292,12 @@ static void dtpad_try_apply_icon(Widget btn, const char *icon_name, const char *
     Pixel fg = 0, bg = 0, arm = 0;
     XtVaGetValues(btn, XmNforeground, &fg, XmNbackground, &bg, XmNarmColor, &arm, NULL);
     int depth = DefaultDepthOfScreen(XtScreen(btn));
-    Pixmap p_norm = XmGetScaledPixmap(btn, found, fg, bg, depth, 0.0);
+    double ratio = picked_px > 0 ? ((double)target_px / (double)picked_px) : 1.0;
+    Pixmap p_norm = XmGetScaledPixmap(btn, found, fg, bg, depth, ratio);
     if (p_norm != XmUNSPECIFIED_PIXMAP) {
-        XtVaSetValues(btn, XmNlabelType, XmPIXMAP, XmNlabelPixmap, p_norm, NULL);
-        Pixmap p_arm = XmGetScaledPixmap(btn, found, fg, arm, depth, 0.0);
+        XtVaSetValues(btn, XmNlabelType, XmPIXMAP, XmNlabelPixmap, p_norm,
+                      XmNmarginWidth, 3, XmNmarginHeight, 2, NULL);
+        Pixmap p_arm = XmGetScaledPixmap(btn, found, fg, arm, depth, ratio);
         if (p_arm != XmUNSPECIFIED_PIXMAP) {
             XtVaSetValues(btn, XmNarmPixmap, p_arm, NULL);
         }

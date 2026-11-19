@@ -1,4 +1,17 @@
 2026-11-19
+- Integrate and verify the 16-color CDE toolbar icon assets (`16x16`–`48x48`)
+  in **`dtpad`** and **`dtfile`**, and bump `.ckgit/motif-revision` to
+  `4aece8f9daecbbb6b1fc847026a036e2dcc383f3` (`cde/programs/icons/Makefile.am`,
+  `cde/programs/icons/toolbar/`, `cde/programs/dtpad/padTabs.c`,
+  `cde/programs/dtfile/BrowserErgonomics.c`,
+  `cde/programs/dtwm/tests/check-dtwm-wayland-wp19.py`):
+  - Select DPI-matched compact toolbar grids (`16`, `24`, `32` px) with explicit
+    `1:1` `XmGetScaledPixmap` ratios so HiDPI assets are not double-scaled,
+    apply `process-stop` before `XtSetSensitive(..., False)` so disabled
+    `XmPushButtonGadget` search controls compute full icon geometry and embossed
+    insensitive stipples, compact `dtfile` search entry widths, and verify all
+    installed `/usr/dt/appconfig/icons/C/toolbar/<size>/` assets across Wayland
+    and X11.
 - Add multi-language syntax highlighting, exact Xft line-number baseline
   alignment, and toolbar icon auto-loading to **`dtpad`** and **`dtfile`**, and
   bump `.ckgit/motif-revision` to `dda5b8fcb906cf9ef80ebf27416528d29922492e`
