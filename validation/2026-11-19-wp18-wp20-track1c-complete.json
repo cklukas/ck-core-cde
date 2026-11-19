@@ -1,0 +1,49 @@
+{
+  "work_package": "WP-18 + WP-20 (Track 1C Complete)",
+  "date": "2026-11-19",
+  "branch": "x11_wayland",
+  "host_vm": "cde-ubuntu2604 (Ubuntu 26.04.1 LTS aarch64, Linux 7.0.0-34-generic, clang 21, wlroots 0.19)",
+  "motif_revision": "3f941e1b6d6647bc49b1d960cb05b9ed11223a2d",
+  "apps_revision": "295307b",
+  "build_timing": {
+    "motif_elapsed_seconds": 38,
+    "cde_elapsed_seconds": 14,
+    "apps_elapsed_seconds": 8,
+    "mode": "incremental (-j6) in /var/tmp/ck-wayland-build/wp00 across ck-core-motif (libXm.so.9.0.0), ck-core-cde (dtwm, dtstyle, dtsession, dtprintinfo, dtopen, types, icons, appmanager), and ck-core-apps (22 programs + 12 unit/integration test suites)"
+  },
+  "installed_sha256": {
+    "/usr/dt/lib/libXm.so.9.0.0": "ba8f0e8c10c322fbb5a02d1b852c0fe9ce3ae8b9168b24fa7d5f075445c7735e",
+    "/usr/dt/bin/dtwm": "6573baf2a17d4b20049d997378c652ba941b8228a9ae99b89ba73d4f391e5d58",
+    "/usr/dt/bin/dtwm-wayland": "bddb66decff788f147ddd424de7a672b8ffb58016f4088c8cf8e8e65bdf2960c",
+    "/usr/dt/bin/dtwm-panel": "72d9d3804cfc51897794313808e75f0339c716304f0ff656f23d4812fb2a59a4",
+    "/usr/dt/bin/dtwm-media-ctl": "dd478714d4bee417554cc7f803938212393e0dec33ba94afc445c9d759699cfb",
+    "/usr/dt/bin/dtstyle": "a7de1725f821ece6d0c3fed5afaf8db3415264f737279445d55087cd1522346c",
+    "/usr/dt/bin/dtsession": "6d92e4db03464b1831574400aa8616a520fa676e08d271e25ba53d358b22c9b2",
+    "/usr/dt/bin/dtprintinfo": "b526920856634eff0d2b4f051f30620e0bcff4e172268f4d283ed2ce43f621b7",
+    "/usr/dt/bin/ck-status": "e22d1d41d7c2c4fd52dc76a97487b152b4bda131aaa93866fd2166b0e557b72c",
+    "/usr/dt/bin/ck-admin": "2807b2249f2f111e37f12da19b357b662a9f6981fd0707c395e1bd0870180b03",
+    "/usr/dt/bin/ck-magnifier": "e1ba1ef522e5ea83fbe657750499d04463b00bd3d6fd7d24e44ffdf7bf296952",
+    "/usr/dt/bin/ck-tasks": "5d0da906de9c6e151a14eac7c106f25175c22c6e063c251749be242afd6374fb"
+  },
+  "features_verified": [
+    "WP-18: Night Light (2700K-6500K Planckian ramps via wlr_gamma_control_v1 + headless warm tint on Wayland and XRRSetCrtcGamma on X11), per-monitor Variable Refresh Rate (VRR / adaptive sync), and persistent display brightness (~/.dt/backlight.conf) via dtstyle Monitors and dtwm-media-ctl",
+    "WP-18: Power Saver / Balanced / Performance profile switching (UPower.PowerProfiles + net.hadess.PowerProfiles + platform_profile), AC/battery idle auto-suspend, and docked clamshell internal-panel disable vs. login1.Manager.Suspend lid policy in dtwm-wayland and ck-status",
+    "WP-18: Super+Left/Right/Up/Down half/quadrant/maximize/restore keyboard window tiling honoring Front Panel struts in dtwm-wayland and X11 dtwm, dynamic libcups.so.2 IPP Everywhere discovery in dtprintinfo, and ck-admin XmTabStack console (Default Applications, Date/Time & NTP, Firmware Updates)",
+    "WP-20: Style Manager -> Accessibility (~/.dt/accessibility.conf) controlling Sticky Keys (latch/lock/two-keys-off), Slow Keys, Bounce Keys, Visual Bell (window/screen flash), Reduced Motion, Screen Magnifier, and Motif AT-SPI2 Screen Reader Bridge (XM_ACCESSIBILITY=1) across Wayland and X11",
+    "WP-20: Non-recursive cursor-tracking off-screen swapchain magnification (Super+=/Super+-/Super+0/Super+Scroll) in dtwm-wayland paired with XComposite/XFixes click-through ck-magnifier on X11",
+    "WP-20: Opt-in automatic Motif ABI 9 AT-SPI2 session bridge (XmAccessibilityGetDefault / _XmAutoAccessibilityBootstrap in libXm.so.9) + CkTable semantic Table/Selection/Action/Text AT-SPI2 exposure verified in dtstyle and ck-tasks"
+  ],
+  "commands": [
+    "make -C /var/tmp/ck-wayland-build/wp00/apps-src BUILD_DIR=/var/tmp/ck-wayland-build/wp00/apps-build MOTIF_PREFIX=/var/tmp/ck-wayland-build/wp00/motif-prefix CDE_PREFIX=/usr/dt -j6 check (12/12 suites PASS)",
+    "CC=clang python3 cde/programs/dtwm/tests/check-dtwm-wayland-wp18.py --compositor /var/tmp/ck-wayland-build/wp00/cde-build/programs/dtwm/dtwm-wayland --apps-bin-dir /var/tmp/ck-wayland-build/wp00/apps-build/bin (3/3 consecutive parallel Wayland + X11 runs PASS)",
+    "CC=clang python3 cde/programs/dtwm/tests/check-dtwm-wayland-wp20.py --compositor /var/tmp/ck-wayland-build/wp00/cde-build/programs/dtwm/dtwm-wayland (parallel Wayland + X11 runs: 6.58s PASS, repeat 7.77s PASS)",
+    "CC=clang python3 cde/programs/dtwm/tests/check-dtwm-wayland-menus.py --compositor /var/tmp/ck-wayland-build/wp00/cde-build/programs/dtwm/dtwm-wayland (PASS)",
+    "ckdocs check --config ckdocs.yml (ck-core-cde 27 pages PASS; ck-core-apps 29 pages PASS) + ckdocs build --strict rendered HTML inspection"
+  ],
+  "screenshots": {
+    "live_wayland_accessibility_and_ck_admin": "wp18_wp20_live_verified.png",
+    "live_wayland_monitors_nightlight_vrr_and_power_policy": "wp18_monitors_power_live_verified.png",
+    "live_wayland_ck_admin_unclipped_comboboxes": "ck_admin_comboboxes_fixed.png"
+  },
+  "result": "pass"
+}

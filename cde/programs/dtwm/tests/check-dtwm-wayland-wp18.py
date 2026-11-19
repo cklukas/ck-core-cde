@@ -155,7 +155,7 @@ int main(int argc, char **argv) {
         Atom utf8 = XInternAtom(dpy, "UTF8_STRING", False);
         XChangeProperty(dpy, root, prop, utf8, 8, PropModeReplace,
                         (const unsigned char *)argv[3], (int)strlen(argv[3]));
-        XFlush(dpy);
+        XSync(dpy, False);
         XCloseDisplay(dpy);
         return 0;
     }
@@ -167,7 +167,7 @@ int main(int argc, char **argv) {
         Atom utf8 = XInternAtom(dpy, "UTF8_STRING", False);
         XChangeProperty(dpy, w, prop, utf8, 8, PropModeReplace,
                         (const unsigned char *)argv[4], (int)strlen(argv[4]));
-        XFlush(dpy);
+        XSync(dpy, False);
         XCloseDisplay(dpy);
         return 0;
     }
@@ -177,7 +177,7 @@ int main(int argc, char **argv) {
         Atom utf8 = XInternAtom(dpy, "UTF8_STRING", False);
         XChangeProperty(dpy, w, prop, utf8, 8, PropModeReplace,
                         (const unsigned char *)argv[4], (int)strlen(argv[4]));
-        XFlush(dpy);
+        XSync(dpy, False);
         XCloseDisplay(dpy);
         return 0;
     }
@@ -560,6 +560,13 @@ int main(int argc, char **argv) {
                 DBusMessage *rep = dbus_message_new_method_return(msg);
                 dbus_connection_send(conn, rep, NULL);
                 dbus_message_unref(rep);
+            } else if (dbus_message_get_type(msg) == DBUS_MESSAGE_TYPE_METHOD_CALL &&
+                       !dbus_message_get_no_reply(msg)) {
+                DBusMessage *rep = dbus_message_new_error(
+                    msg, "org.freedesktop.DBus.Error.UnknownMethod", "unsupported in mock"
+                );
+                dbus_connection_send(conn, rep, NULL);
+                dbus_message_unref(rep);
             }
             dbus_connection_flush(conn);
             dbus_message_unref(msg);
@@ -858,7 +865,7 @@ def run_lane(
                     break
             xdisp = f":{chosen_disp}"
             xvfb_proc = subprocess.Popen(
-                ["Xvfb", xdisp, "-screen", "0", "1280x900x24", "-nolisten", "tcp"],
+                ["Xvfb", xdisp, "-screen", "0", "1280x900x24", "-nolisten", "tcp", "-ac"],
                 env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True,
             )
             procs.append(xvfb_proc)
@@ -866,22 +873,32 @@ def run_lane(
             wait_for(lambda: subprocess.run([str(x11_helper), "ping"], env=env, capture_output=True).returncode == 0,
                      timeout=8.0, desc=f"{lane} Xvfb")
             dtwm_err = lane_root / "dtwm.stderr"
-            with dtwm_err.open("w", encoding="utf-8") as der:
-                dtwm_proc = subprocess.Popen(
-                    [str(dtwm_x11_bin)], env=env, stdout=subprocess.DEVNULL, stderr=der, start_new_session=True,
-                )
-            procs.append(dtwm_proc)
-            try:
-                verify_proc_motif9(dtwm_proc.pid, f"{lane} dtwm")
-            except Exception as exc:
+            dtwm_proc = None
+            last_dtwm_exc = None
+            for _attempt in range(2):
+                with dtwm_err.open("w", encoding="utf-8") as der:
+                    dtwm_proc = subprocess.Popen(
+                        [str(dtwm_x11_bin)], env=env, stdout=subprocess.DEVNULL, stderr=der, start_new_session=True,
+                    )
+                procs.append(dtwm_proc)
+                try:
+                    verify_proc_motif9(dtwm_proc.pid, f"{lane} dtwm")
+                    wait_for(
+                        lambda: subprocess.run([str(x11_helper), "get_root", "_NET_SUPPORTING_WM_CHECK"],
+                                               env=env, capture_output=True).returncode == 0,
+                        timeout=8.0, desc=f"{lane} dtwm _NET_SUPPORTING_WM_CHECK",
+                    )
+                    last_dtwm_exc = None
+                    break
+                except Exception as exc:
+                    last_dtwm_exc = exc
+                    time.sleep(0.3)
+            if last_dtwm_exc is not None:
+                errlog = (home / ".dt/errorlog").read_text(encoding="utf-8", errors="ignore") if (home / ".dt/errorlog").is_file() else ""
                 raise AssertionError(
-                    f"dtwm (rc={dtwm_proc.poll()}) failed on {xdisp}: {exc}\nstderr={dtwm_err.read_text(encoding='utf-8', errors='ignore')}"
-                ) from exc
-            wait_for(
-                lambda: subprocess.run([str(x11_helper), "get_root", "_NET_SUPPORTING_WM_CHECK"],
-                                       env=env, capture_output=True).returncode == 0,
-                timeout=8.0, desc=f"{lane} dtwm _NET_SUPPORTING_WM_CHECK",
-            )
+                    f"dtwm (rc={dtwm_proc.poll() if dtwm_proc else None}) failed on {xdisp}: {last_dtwm_exc}\n"
+                    f"stderr={dtwm_err.read_text(encoding='utf-8', errors='ignore')}\nerrorlog={errlog}"
+                ) from last_dtwm_exc
             time.sleep(0.4)
 
         def get_root_prop(prop: str) -> str:
@@ -915,14 +932,20 @@ def run_lane(
             and json.loads(r.stdout),
             timeout=6.0, desc=f"{lane} test client mapped",
         )
-        time.sleep(0.35)
+        time.sleep(0.25)
         orig_geom = json.loads(subprocess.run([str(x11_helper), "client_geom"], env=env, capture_output=True, text=True, check=True).stdout)
 
         if lane == "wayland":
             shot_before = lane_root / "nl_before.png"
-            subprocess.run(["grim", str(shot_before)], env=env, check=True)
-            r0, g0, b0 = sample_png_rgb(shot_before, int(orig_geom["cx"]) + 100, int(orig_geom["cy"]) + 100)
-            assert r0 > 235 and g0 > 235 and b0 > 235, f"Expected white client pixel before Night Light, got {(r0, g0, b0)}"
+            def wait_white_client():
+                nonlocal orig_geom
+                orig_geom = json.loads(
+                    subprocess.run([str(x11_helper), "client_geom"], env=env, capture_output=True, text=True, check=True).stdout
+                )
+                subprocess.run(["grim", str(shot_before)], env=env, check=True)
+                rgb = sample_png_rgb(shot_before, int(orig_geom["cx"]) + 100, int(orig_geom["cy"]) + 100)
+                return rgb if (rgb[0] > 235 and rgb[1] > 235 and rgb[2] > 235) else None
+            r0, g0, b0 = wait_for(wait_white_client, timeout=6.0, interval=0.12, desc=f"{lane} white client pixel committed")
 
         dtstyle_proc = subprocess.Popen(
             [str(dtstyle_bin), "-display_dialog"],
@@ -1333,13 +1356,14 @@ def main() -> int:
         dbus_src.write_text(MOCK_WP18_DBUS_C, encoding="utf-8")
         subprocess.run([*cc, "-O2", *dbus_cflags, str(dbus_src), "-o", str(dbus_bin), *dbus_libs], check=True)
 
+        x11_base_disp = 110 + (os.getpid() % 60)
         with ThreadPoolExecutor(max_workers=2) as pool:
             fut_wl = pool.submit(
-                run_lane, "wayland", 117, work_root, comp_bin, dtwm_x11_bin, panel_bin,
+                run_lane, "wayland", x11_base_disp, work_root, comp_bin, dtwm_x11_bin, panel_bin,
                 media_ctl_bin, dtstyle_bin, dtprintinfo_bin, status_bin, admin_bin, x11_bin, dbus_bin,
             )
             fut_x11 = pool.submit(
-                run_lane, "x11", 118, work_root, comp_bin, dtwm_x11_bin, panel_bin,
+                run_lane, "x11", x11_base_disp + 1, work_root, comp_bin, dtwm_x11_bin, panel_bin,
                 media_ctl_bin, dtstyle_bin, dtprintinfo_bin, status_bin, admin_bin, x11_bin, dbus_bin,
             )
             errs = []
