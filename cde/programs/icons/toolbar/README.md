@@ -14,4 +14,14 @@ Larger color areas are not filled with one flat primary. As in the stock icons, 
 
 ## Keylines
 
-The keyline of a shape is the border of its own hard-edged silhouette: exactly one pixel wide at 16 and 24 px and two at 32 and 48 px, unbroken all the way round, with no highlight laid along it. Slanted edges run at 45 degrees or at 1:2 or 1:3 through pixel centres, so they step in a regular staircase. An arrow's shaft and head are one silhouette, so no line separates them.
+The keyline of a shape is the border of its own hard-edged silhouette: exactly one pixel wide at 16 and 24 px and two at 32 and 48 px, unbroken all the way round. Slanted edges run at 45 degrees or at 1:2 or 1:3 through pixel centres, so they step in a regular staircase. An arrow's shaft and head are one silhouette, so no line separates them.
+
+## Depth
+
+Depth is drawn the way the stock icons draw it, inside the same palette:
+
+- A raised shape (arrows, the plus, the stop sign, cases and folders) has a light inner edge at the top left and a darker, usually dithered, inner edge at the bottom right. White paper only gets the darker edge.
+- A sunken area (a screen, a picture, a selection) has the two edges reversed.
+- A part lying on top of another (paper in the folder, the roof over the wall, the cross on the stop sign) casts a dithered gray shadow one pixel down and to the right onto what lies below. Shadows never fall outside the icon, so the transparent margin stays empty.
+
+Edges and shadows are one pixel wide at 16 and 24 px and two at 32 and 48 px. Parts too thin to carry both edges stay plain. These effects are added by the generator and do not appear in the SVG sources.
