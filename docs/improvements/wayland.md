@@ -336,6 +336,40 @@ panel instrumentation:
   synchronize `XMODIFIERS`, `GTK_IM_MODULE`, and `QT_IM_MODULE` so native Wayland
   and Motif XWayland (`XmIm`) applications share the same IME daemon.
 
+## Application Manager catalog curation, on-demand package installer, and XDG app discovery (`WP-12`)
+
+`dtappintegrate --xdg` (`dtappintegrate-xdg`), `ck-pkg-install`, `ck-browser`,
+and `ck-launch` keep Application Manager folders accurate and actionable across
+both `CDE (Wayland)` and `CDE (X11 / XLibre)`:
+
+- **Curated catalog detection, auto-gray download badges & `ck-pkg-install`:**
+  Across curated Application Manager groups (`Internet`, `Graphics`,
+  `Media_Tools`, `Office`, `Games`, `Education`, `System`, `Tex`),
+  `dtappintegrate-xdg` checks installed executables and batch-queries the
+  system package registry (`apt`, `dnf`, `yum`, `pacman`, `zypper`, `apk`,
+  FreeBSD `pkg`):
+  - **Installed applications** (including **Web Browser** / `CkBrowser` →
+    `ck-browser` in `Internet`, `CkView` in `Graphics`, `CkPdf` in `Office`,
+    `CkMines`/`CkNibbles` in `Games`, and `CkAdmin`/`CkTasks` in `System`) keep
+    their full-color CDE icons and launch directly.
+  - **Available in system package registry** (e.g. `firefox`, `chromium`,
+    `thunderbird`): automatically generates desaturated grayscale
+    `48×48` / `32×32` / `16×16` XPM icons (`~/.dt/icons/ckavail_<slug>.{l,m,t}.pm`)
+    stamped at the bottom-right with a royal-blue downward arrow (`↓`) and
+    wires double-click to the native Motif `ck-pkg-install` dialog, which
+    displays package metadata, elevates via `pkexec` + `ck-polkit-agent`,
+    streams live package-manager output, refreshes Application Manager back to
+    full-color icons on completion, and optionally launches the newly installed
+    app.
+  - **Absent from both `PATH` and package registry** (discontinued legacy stubs
+    such as `skype` or `nxclient`): automatically hidden from the user's
+    Application Manager folder.
+- **Live XDG `.desktop` indexing & `Super` launcher (`ck-launch`):** Indexes
+  `/usr/share/applications` and `~/.local/share/applications` (`inotify` live
+  reload via `dtappintegrate --xdg --watch`) into `XDG_*` Application Manager
+  groups and binds `Super` / `Super+Space` to `ck-launch` for instant fuzzy
+  application search, window switching, and inline calculator evaluation.
+
 ## Hardware media/brightness OSD, touchpad configuration, and cross-toolkit dark-mode sync (`WP-13`)
 
 `CDE (Wayland)` and `CDE (X11 / XLibre)` provide unified laptop/workstation
@@ -593,8 +627,12 @@ atomically once both the Wayland socket and rootless `Xwayland` are ready.
   `check-dtwm-wayland-menus.py` (XWayland Motif pulldown/popup menu focus,
   mid-press `zwlr_virtual_pointer_v1` crash cleanup, `wayvnc` stuck-button
   auto-heal, stationary-click `wl_pointer` focus restoration, and post-modeset
-  HiDPI two-click + press-drag-release menu activation) run automatically under
-  `make check`.
+  HiDPI two-click + press-drag-release menu activation),
+  `check-dtwm-wayland-busy-light.py` (Front Panel `CONTROL Busy` `Fplite` /
+  `FpliteY` blink activation and automatic clear on client map), and
+  `check-dtappintegrate-curated.py` (Application Manager installed vs.
+  auto-gray + blue download arrow badge vs. hidden stub curation) run
+  automatically under `make check`.
 - **Signed Ubuntu LTS `.deb` and APT repository qualification (`WP-08`):**
   `scripts/build-ubuntu-debs.py --verify-install` packages `ck-core-motif9`,
   `ck-core-fs-lib`, `ck-core-cde`, `ck-core-dtlogin`, and `ck-core-apps` into a

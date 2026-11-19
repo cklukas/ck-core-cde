@@ -13,33 +13,33 @@ desktop_apps_SCRIPTS = Desktop_Apps/Dtmanpageview			\
 	Desktop_Apps/Dtcalc
 
 graphicsdir = $(CDE_INSTALLATION_TOP)/appconfig/appmanager/$(LANG)/Graphics
-graphics_SCRIPTS = Graphics/xv Graphics/fontforge Graphics/gimp	\
-	Graphics/inkscape Graphics/okular
+graphics_SCRIPTS = Graphics/CkView Graphics/xv Graphics/fontforge	\
+	Graphics/gimp Graphics/inkscape Graphics/okular
 
 internetdir = $(CDE_INSTALLATION_TOP)/appconfig/appmanager/$(LANG)/Internet
-internet_SCRIPTS = Internet/firefox Internet/nxclient		\
+internet_SCRIPTS = Internet/CkBrowser Internet/firefox Internet/nxclient \
 	Internet/thunderbird Internet/skype Internet/chromium
 
 gamesdir = $(CDE_INSTALLATION_TOP)/appconfig/appmanager/$(LANG)/Games
-games_SCRIPTS = Games/pychess Games/powermanga Games/eboard	\
-	Games/supertux Games/dreamchess Games/lbreakout2	\
-	Games/gcompris Games/xboard Games/ktuberling
+games_SCRIPTS = Games/CkMines Games/CkNibbles Games/pychess		\
+	Games/powermanga Games/eboard Games/supertux Games/dreamchess	\
+	Games/lbreakout2 Games/gcompris Games/xboard Games/ktuberling
 
 texdir = $(CDE_INSTALLATION_TOP)/appconfig/appmanager/$(LANG)/Tex
 tex_SCRIPTS = TeX/xdvi TeX/acroread TeX/xpdf TeX/TeX TeX/mgv	\
 	TeX/emacs TeX/gv TeX/kile TeX/xournal
 
 officedir = $(CDE_INSTALLATION_TOP)/appconfig/appmanager/$(LANG)/Office
-office_SCRIPTS = Office/nedit Office/libreoffice-calc		\
+office_SCRIPTS = Office/CkPdf Office/nedit Office/libreoffice-calc	\
 	Office/libreoffice-writer Office/acroread Office/xpdf	\
 	Office/libreoffice-draw Office/libreoffice-base		\
 	Office/libreoffice-main Office/libreoffice-math		\
 	Office/libreoffice-impress Office/xournal
 
 systemdir = $(CDE_INSTALLATION_TOP)/appconfig/appmanager/$(LANG)/System
-system_SCRIPTS = System/caja System/firestarter System/virtualbox	\
-	System/engrampa System/wicd System/synaptic			\
-	System/file-roller System/pgadmin
+system_SCRIPTS = System/CkAdmin System/CkTasks System/caja		\
+	System/firestarter System/virtualbox System/engrampa		\
+	System/wicd System/synaptic System/file-roller System/pgadmin
 
 desktop_toolsdir = $(CDE_INSTALLATION_TOP)/appconfig/appmanager/$(LANG)/Desktop_Tools
 desktop_tools_SCRIPTS = Desktop_Tools/Rm Desktop_Tools/DttermRlogin	\

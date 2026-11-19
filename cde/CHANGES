@@ -1,4 +1,24 @@
 2026-11-19
+- Add `CkBrowser` (`Web Browser`, `ck-browser`) and CK Core application actions
+  to curated Application Manager folders, auto-gray uninstalled package-registry
+  icons with a bottom-right royal-blue download arrow badge (`↓`) wired to
+  `ck-pkg-install` (`pkexec` + `ck-polkit-agent`), and hide discontinued /
+  unavailable catalog stubs (`cde/programs/dtappintegrate/dtappintegrate-xdg`,
+  `cde/programs/types/miscActions.dt.src`,
+  `cde/programs/localized/templates/appmgr.am`,
+  `cde/programs/dtwm/tests/check-dtappintegrate-curated.py`):
+  - Register `CkBrowser` (`ICON SDtwebbr`, `EXEC_STRING ck-browser`) in
+    `Internet`, plus `CkView` (`Graphics`), `CkPdf` (`Office`),
+    `CkMines`/`CkNibbles` (`Games`), and `CkAdmin`/`CkTasks` (`System`).
+  - Inspect curated Application Manager groups (`Internet`, `Graphics`,
+    `Media_Tools`, `Office`, `Games`, `Education`, `System`, `Tex`) in
+    `dtappintegrate-xdg`: keep installed binaries full-color, render
+    desaturated grayscale `.l.pm`/`.m.pm`/`.t.pm` icons stamped with a 3D
+    royal-blue downward arrow (`~/.dt/icons/ckavail_<slug>.{l,m,t}.pm`) for
+    uninstalled apps available in the system package manager (`apt`, `dnf`,
+    `yum`, `pacman`, `zypper`, `apk`, FreeBSD `pkg`) with double-click routed
+    to `ck-pkg-install`, and omit entries that are neither installed nor
+    present in the package registry (such as `skype` and `nxclient`).
 - Align full-screen magnifier viewport panning 1:1 with hardware and VM host
   pointer coordinates across `125%`–`400%` zoom (`src_x = u * (bw - src_w)`,
   `src_y = v * (bh - src_h)`) so clicks hit magnified dialog controls accurately,

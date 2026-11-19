@@ -23,6 +23,7 @@ EXTRA_DIST = tests/check-property-readers.py tests/property-client.c \
              tests/check-dtwm-wayland-wp20.py \
              tests/check-dtwm-wayland-menus.py \
              tests/check-dtwm-wayland-busy-light.py \
+             tests/check-dtappintegrate-curated.py \
              wayland/protocols/wlr-layer-shell-unstable-v1.xml \
              wayland/protocols/wlr-output-power-management-unstable-v1.xml \
              wayland/protocols/wlr-foreign-toplevel-management-unstable-v1.xml \
@@ -36,6 +37,7 @@ check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-config-temp-file.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-quit-signal.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-hardening.py
+	python3 $(srcdir)/tests/check-dtappintegrate-curated.py
 if BUILD_DTWM_WAYLAND
 	python3 $(srcdir)/tests/check-dtwm-wayland.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-workspaces.py --compositor ./dtwm-wayland

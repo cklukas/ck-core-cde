@@ -5,6 +5,8 @@ dtappintegrate-xdg - Automatic XDG .desktop -> CDE Application Manager indexer,
                      for CK-Core CDE (Wayland & X11/XLibre).
 """
 
+from __future__ import annotations
+
 import configparser
 import ctypes
 import ctypes.util
@@ -346,7 +348,573 @@ def discover_software_store_cmd() -> tuple[str, str]:
     )
 
 
-def sync_appmanager_session_links(home: Path, managed_folders: list[str]) -> None:
+CURATED_APPMAN_GROUPS = (
+    "Internet",
+    "Graphics",
+    "Media_Tools",
+    "Office",
+    "Games",
+    "Education",
+    "System",
+    "Tex",
+)
+
+PKG_CANDIDATE_ALIASES: dict[str, tuple[str, ...]] = {
+    "chromium": ("chromium", "chromium-browser"),
+    "chromium-browser": ("chromium-browser", "chromium"),
+    "firefox": ("firefox", "firefox-esr"),
+    "libreoffice-main": ("libreoffice",),
+    "TeX": ("texlive-base", "texlive"),
+    "xdvi": ("texlive-binaries", "xdvik-ja"),
+    "pgadmin": ("pgadmin4", "pgadmin3"),
+}
+
+EXEC_BINARY_ALIASES: dict[str, tuple[str, ...]] = {
+    "CkBrowser": ("ck-browser",),
+    "CkView": ("ck-view",),
+    "CkPdf": ("ck-pdf",),
+    "CkTasks": ("ck-tasks",),
+    "CkAdmin": ("ck-admin",),
+    "CkMines": ("ck-mines",),
+    "CkNibbles": ("ck-nibbles",),
+    "chromium": ("chromium-browser", "chromium"),
+    "firefox": ("firefox", "firefox-esr"),
+    "TeX": ("tex", "pdftex", "latex"),
+    "pgadmin": ("pgadmin4", "pgadmin3"),
+}
+
+NAMED_X11_COLORS: dict[str, tuple[int, int, int]] = {
+    "black": (0, 0, 0),
+    "white": (255, 255, 255),
+    "red": (220, 40, 40),
+    "green": (40, 180, 40),
+    "blue": (40, 80, 220),
+    "yellow": (240, 220, 40),
+    "cyan": (40, 200, 220),
+    "magenta": (200, 50, 200),
+    "gray": (148, 148, 148),
+    "grey": (148, 148, 148),
+}
+
+BADGE_48 = (
+    ".....WWWWWWWW.....",
+    "....WNNNNNNNNW....",
+    "....WNBBBBBBNNW...",
+    "....WNBHHHHBNNW...",
+    "....WNBHHHHBNNW...",
+    "....WNBHHHHBNNW...",
+    ".WWWWNBHHHHBNNWWWW",
+    "WNNNNNBHHHHBNNNNNW",
+    "WNBBBBBBBBBBBBBBNW",
+    ".WNBHHHHHHHHHHBNNW",
+    "..WNBBBBBBBBBBNNW.",
+    "...WNBBBBBBBBNNW..",
+    "....WNBBBBBBNNW...",
+    ".....WNBBBBNNW....",
+    "......WNBBNNW.....",
+    ".......WNNNW......",
+    "........WWW.......",
+)
+
+BADGE_32 = (
+    "....WWWWW....",
+    "...WNNNNNW...",
+    "...WNBHBNW...",
+    "...WNBHBNW...",
+    "...WNBHBNW...",
+    "WWWWNBHBNWWWW",
+    "WNNNNBHNNNNNW",
+    ".WNBBBBBBBNNW",
+    "..WNBBBBBNNW.",
+    "...WNBBBNNW..",
+    "....WNBNNW...",
+    ".....WNNW....",
+    "......WW.....",
+)
+
+BADGE_16 = (
+    "..WWWW..",
+    "..WBBW..",
+    "..WBBW..",
+    "WWWWWWWW",
+    "WNBBBBNW",
+    ".WNBBNW.",
+    "..WNNW..",
+    "...WW...",
+)
+
+
+def is_valid_pkg_token(name: str) -> bool:
+    return bool(re.match(r"^[A-Za-z0-9][A-Za-z0-9.+_-]{0,126}$", name or ""))
+
+
+def parse_xpm_color_spec(spec: str) -> tuple[int, int, int] | None:
+    if re.search(r"\b(?:c|s|m)\s+none\b", spec, flags=re.IGNORECASE):
+        return None
+    m_hex = re.search(r"#([0-9A-Fa-f]{12}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})\b", spec)
+    if m_hex:
+        hx = m_hex.group(1)
+        if len(hx) == 12:
+            return (int(hx[0:2], 16), int(hx[4:6], 16), int(hx[8:10], 16))
+        if len(hx) == 6:
+            return (int(hx[0:2], 16), int(hx[2:4], 16), int(hx[4:6], 16))
+        if len(hx) == 3:
+            return (int(hx[0] * 2, 16), int(hx[1] * 2, 16), int(hx[2] * 2, 16))
+    m_col = re.search(r"\bc\s+([A-Za-z0-9_]+)", spec)
+    if m_col:
+        cname = m_col.group(1).lower()
+        if cname == "none":
+            return None
+        if cname in NAMED_X11_COLORS:
+            return NAMED_X11_COLORS[cname]
+        m_g = re.match(r"^gr[ae]y(\d+)$", cname)
+        if m_g:
+            gv = max(0, min(255, int(int(m_g.group(1)) * 255 / 100)))
+            return (gv, gv, gv)
+    return (148, 148, 148)
+
+
+def render_gray_install_badge_xpm(src_pm: Path | None, dst_pm: Path, fallback_size: int) -> bool:
+    width = fallback_size
+    height = fallback_size
+    grid: list[list[tuple[int, int, int] | None]] = []
+
+    if src_pm and src_pm.is_file():
+        try:
+            raw = src_pm.read_text(encoding="latin-1", errors="replace")
+            # Strip C block comments before extracting XPM string literals
+            no_comments = re.sub(r"/\*.*?\*/", "", raw, flags=re.DOTALL)
+            strs = [m.group(1) for m in re.finditer(r'"((?:[^"\\]|\\.)*)"', no_comments)]
+            if strs:
+                hdr = strs[0].split()
+                w, h, ncolors, cpp = int(hdr[0]), int(hdr[1]), int(hdr[2]), int(hdr[3])
+                if 8 <= w <= 128 and 8 <= h <= 128 and 1 <= ncolors <= 4096 and 1 <= cpp <= 4:
+                    cmap: dict[str, tuple[int, int, int] | None] = {}
+                    for ci in range(ncolors):
+                        entry = strs[1 + ci]
+                        key = entry[:cpp]
+                        cmap[key] = parse_xpm_color_spec(entry[cpp:])
+                    rows = strs[1 + ncolors : 1 + ncolors + h]
+                    if len(rows) == h:
+                        width, height = w, h
+                        for row_s in rows:
+                            prow: list[tuple[int, int, int] | None] = []
+                            for x in range(w):
+                                k = row_s[x * cpp : (x + 1) * cpp]
+                                rgb = cmap.get(k)
+                                if rgb is None:
+                                    prow.append(None)
+                                else:
+                                    r, g, b = rgb
+                                    lum = 0.299 * r + 0.587 * g + 0.114 * b
+                                    # Softened grayscale quantized to 24 clean steps
+                                    gray = int(round((lum * 0.62 + 154.0 * 0.38) / 10.0) * 10)
+                                    gray = max(36, min(236, gray))
+                                    prow.append((gray, gray, gray))
+                            grid.append(prow)
+        except Exception:
+            grid = []
+
+    if not grid:
+        width = height = fallback_size
+        for y in range(height):
+            prow = []
+            for x in range(width):
+                margin = max(2, width // 8)
+                if margin <= x < width - margin and margin <= y < height - margin:
+                    prow.append((168, 168, 168))
+                else:
+                    prow.append(None)
+            grid.append(prow)
+
+    # Overlay downward-facing royal-blue download arrow badge at bottom-right
+    badge = BADGE_48 if width >= 40 else (BADGE_32 if width >= 24 else BADGE_16)
+    badge_colors: dict[str, tuple[int, int, int]] = {
+        "W": (255, 255, 255),
+        "N": (8, 32, 84),
+        "H": (107, 182, 255),
+        "B": (24, 100, 216),
+    }
+    bh = len(badge)
+    bw = len(badge[0])
+    ox = max(0, width - bw)
+    oy = max(0, height - bh)
+    for by, brow in enumerate(badge):
+        ty = oy + by
+        if ty >= height:
+            break
+        for bx, ch in enumerate(brow):
+            tx = ox + bx
+            if tx >= width or ch == ".":
+                continue
+            grid[ty][tx] = badge_colors[ch]
+
+    # Encode compact 1-char XPM (<= 36 total colors)
+    palette_chars = " .+@#$%&*=-;>,')!~{]^/(_:<[}|1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    used_colors: list[tuple[int, int, int] | None] = [None]
+    color_to_char: dict[tuple[int, int, int] | None, str] = {None: " "}
+    for prow in grid:
+        for px in prow:
+            if px not in color_to_char:
+                idx = len(used_colors)
+                ch = palette_chars[min(idx, len(palette_chars) - 1)]
+                used_colors.append(px)
+                color_to_char[px] = ch
+
+    lines = [
+        "/* XPM */",
+        f"static char * {re.sub(r'[^A-Za-z0-9_]', '_', dst_pm.stem)}_xpm[] = {{",
+        f'"{width} {height} {len(used_colors)} 1",',
+    ]
+    for col in used_colors:
+        ch = color_to_char[col]
+        if col is None:
+            lines.append(f'"{ch}\tc None",')
+        else:
+            lines.append(f'"{ch}\tc #{col[0]:02x}{col[1]:02x}{col[2]:02x}",')
+    for ri, prow in enumerate(grid):
+        row_chars = "".join(color_to_char[px] for px in prow)
+        comma = "," if ri + 1 < height else "};"
+        lines.append(f'"{row_chars}"{comma}')
+
+    dst_pm.parent.mkdir(parents=True, exist_ok=True)
+    tmp_pm = dst_pm.parent / f".{dst_pm.name}.{os.getpid()}.tmp"
+    tmp_pm.write_text("\n".join(lines) + "\n", encoding="ascii")
+    os.replace(tmp_pm, dst_pm)
+    return True
+
+
+def find_system_cde_icon_pm(icon_name: str, sz: str) -> Path | None:
+    search_dirs = [
+        Path("/usr/dt/appconfig/icons/C"),
+        Path("/etc/dt/appconfig/icons/C"),
+    ]
+    for cand_icon in (icon_name, "Dtadskt"):
+        if not cand_icon:
+            continue
+        for sdir in search_dirs:
+            pm = sdir / f"{cand_icon}.{sz}.pm"
+            if pm.is_file():
+                return pm
+            # Fallback across sizes if an app only ships .m.pm or .l.pm
+            for alt_sz in ("l", "m", "t"):
+                alt_pm = sdir / f"{cand_icon}.{alt_sz}.pm"
+                if alt_pm.is_file():
+                    return alt_pm
+    return None
+
+
+def ensure_gray_badge_icon_set(orig_icon: str, icons_dir: Path, slug: str) -> str:
+    badge_base = f"ckavail_{slug}"
+    size_px = {"l": 48, "m": 32, "t": 16}
+    for sz, px in size_px.items():
+        dst = icons_dir / f"{badge_base}.{sz}.pm"
+        src = find_system_cde_icon_pm(orig_icon, sz)
+        need_regen = not dst.is_file()
+        if not need_regen and src and src.is_file():
+            try:
+                need_regen = dst.stat().st_mtime < src.stat().st_mtime
+            except OSError:
+                need_regen = True
+        if need_regen:
+            render_gray_install_badge_xpm(src, dst, px)
+    return badge_base
+
+
+def parse_system_dt_actions() -> dict[str, dict[str, str]]:
+    actions: dict[str, dict[str, str]] = {}
+    override_types = os.environ.get("CK_SYS_TYPES_DIR", "").strip()
+    types_dirs = (
+        [Path(override_types)]
+        if override_types
+        else [Path("/etc/dt/appconfig/types/C"), Path("/usr/dt/appconfig/types/C")]
+    )
+    for tdir in types_dirs:
+        if not tdir.is_dir():
+            continue
+        for dt_file in sorted(tdir.glob("*.dt")):
+            try:
+                text = dt_file.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            cur_name = ""
+            brace_depth = 0
+            fields: dict[str, str] = {}
+            for raw in text.splitlines():
+                line = raw.strip()
+                if not line or line.startswith(("#", "!")):
+                    continue
+                if not cur_name:
+                    m_act = re.match(r"^ACTION\s+([^\s{]+)\s*(\{)?", line)
+                    if m_act:
+                        cur_name = m_act.group(1)
+                        brace_depth = 1 if m_act.group(2) else 0
+                        fields = {}
+                    continue
+                brace_depth += line.count("{") - line.count("}")
+                m_kv = re.match(r"^([A-Z0-9_]+)\s+(.*)$", line)
+                if m_kv and m_kv.group(1) not in fields:
+                    fields[m_kv.group(1)] = m_kv.group(2).strip()
+                if brace_depth <= 0 and "}" in line:
+                    if cur_name not in actions and fields.get("EXEC_STRING"):
+                        actions[cur_name] = fields
+                    cur_name = ""
+                    brace_depth = 0
+    return actions
+
+
+def extract_primary_exec_prog(exec_str: str) -> str:
+    if not exec_str:
+        return ""
+    cleaned = re.sub(r'"?%\([^)]*\)[^%]*%"?|%[A-Za-z0-9_]+%', "", exec_str).strip()
+    try:
+        toks = shlex.split(cleaned)
+    except ValueError:
+        toks = cleaned.split()
+    idx = 0
+    while idx < len(toks) and (toks[idx] == "env" or "=" in toks[idx]):
+        idx += 1
+    if idx >= len(toks):
+        return ""
+    return toks[idx]
+
+
+def detect_pkg_backend() -> str:
+    override = os.environ.get("CK_PKG_BACKEND", "").strip().lower()
+    if override in ("apt", "dnf", "yum", "pacman", "zypper", "apk", "pkg", "none"):
+        return override
+    if which_prog("apt-cache") and which_prog("apt-get"):
+        return "apt"
+    for tool in ("dnf", "yum", "zypper", "pacman", "apk", "pkg"):
+        if which_prog(tool):
+            return tool
+    return "none"
+
+
+def batch_query_available_packages(candidates: set[str]) -> set[str]:
+    valid = sorted(c for c in candidates if is_valid_pkg_token(c))
+    if not valid:
+        return set()
+
+    mock_dir = os.environ.get("CK_PKG_MOCK_DIR", "").strip()
+    if mock_dir:
+        mdir = Path(mock_dir)
+        return {c for c in valid if (mdir / c).is_file()}
+
+    backend = detect_pkg_backend()
+    if backend == "none":
+        return set()
+
+    env = {**os.environ, "LC_ALL": "C"}
+    available: set[str] = set()
+
+    if backend == "apt":
+        try:
+            cp = subprocess.run(
+                ["apt-cache", "policy", "--", *valid],
+                capture_output=True, text=True, env=env, timeout=8.0, check=False,
+            )
+            cur_pkg = ""
+            for raw in cp.stdout.splitlines():
+                if raw and not raw[0].isspace() and raw.endswith(":"):
+                    cur_pkg = raw[:-1].strip()
+                elif cur_pkg:
+                    s = raw.strip()
+                    if s.startswith("Candidate:"):
+                        cand = s.split(":", 1)[1].strip()
+                        if cand and cand != "(none)":
+                            available.add(cur_pkg)
+        except Exception:
+            pass
+        return available
+
+    if backend in ("dnf", "yum"):
+        try:
+            cp = subprocess.run(
+                [backend, "list", "-q", "--", *valid],
+                capture_output=True, text=True, env=env, timeout=12.0, check=False,
+            )
+            valid_set = set(valid)
+            for raw in cp.stdout.splitlines():
+                tok = raw.strip().split()[0] if raw.strip() else ""
+                base = tok.rsplit(".", 1)[0]
+                if tok in valid_set:
+                    available.add(tok)
+                elif base in valid_set:
+                    available.add(base)
+        except Exception:
+            pass
+        return available
+
+    for pkg in valid:
+        cmd: list[str] = []
+        if backend == "pacman":
+            cmd = ["pacman", "-Si", "--", pkg]
+        elif backend == "zypper":
+            cmd = ["zypper", "--non-interactive", "info", "--", pkg]
+        elif backend == "apk":
+            cmd = ["apk", "search", "-e", pkg]
+        elif backend == "pkg":
+            cmd = ["pkg", "rquery", "%n", pkg]
+        if not cmd:
+            continue
+        try:
+            cp = subprocess.run(cmd, capture_output=True, text=True, env=env, timeout=4.0, check=False)
+            if cp.returncode == 0 and cp.stdout.strip() and "not found" not in cp.stdout.lower():
+                available.add(pkg)
+        except Exception:
+            pass
+    return available
+
+
+def sync_curated_appmanager_groups(
+    appman_dir: Path,
+    icons_dir: Path,
+    dt_lines: list[str],
+) -> tuple[list[str], list[str]]:
+    sys_actions = parse_system_dt_actions()
+    sys_appman_root = Path(os.environ.get("CK_SYS_APPMANAGER_DIR") or "/usr/dt/appconfig/appmanager/C")
+    if not sys_appman_root.is_dir():
+        return [], []
+
+    # First pass: inspect all curated entries and collect uninstalled package candidates
+    group_items: dict[str, list[tuple[str, dict[str, str], str]]] = {}
+    needed_pkgs: set[str] = set()
+
+    for group in CURATED_APPMAN_GROUPS:
+        src_group = sys_appman_root / group
+        if not src_group.is_dir():
+            continue
+        items: list[tuple[str, dict[str, str], str]] = []
+        for entry in sorted(src_group.iterdir()):
+            if entry.name.startswith(".") or entry.is_dir():
+                continue
+            act_name = entry.name
+            meta = sys_actions.get(act_name, {})
+            exec_prog = extract_primary_exec_prog(meta.get("EXEC_STRING", "")) or act_name
+
+            installed_bin = which_prog(exec_prog)
+            if not installed_bin and act_name in EXEC_BINARY_ALIASES:
+                for alt_bin in EXEC_BINARY_ALIASES[act_name]:
+                    installed_bin = which_prog(alt_bin)
+                    if installed_bin:
+                        exec_prog = alt_bin
+                        break
+
+            if installed_bin:
+                items.append((act_name, meta, f"INSTALLED:{exec_prog}"))
+            else:
+                cands = list(PKG_CANDIDATE_ALIASES.get(act_name, ()))
+                for fallback in (act_name, act_name.lower(), Path(exec_prog).name, Path(exec_prog).name.lower()):
+                    if is_valid_pkg_token(fallback) and fallback not in cands:
+                        cands.append(fallback)
+                needed_pkgs.update(cands)
+                items.append((act_name, meta, "CHECK:" + ",".join(cands)))
+        group_items[group] = items
+
+    avail_pkgs = batch_query_available_packages(needed_pkgs)
+
+    populated_groups: list[str] = []
+    empty_groups: list[str] = []
+
+    for group in CURATED_APPMAN_GROUPS:
+        items = group_items.get(group, [])
+        dst_group = appman_dir / group
+        keep_names: set[str] = set()
+
+        for act_name, meta, status in items:
+            if status.startswith("INSTALLED:"):
+                resolved_prog = status.split(":", 1)[1]
+                orig_prog = extract_primary_exec_prog(meta.get("EXEC_STRING", ""))
+                # If an alternate binary name matched (e.g. 'chromium' vs 'chromium-browser'), emit an override
+                if orig_prog and resolved_prog != orig_prog:
+                    label = sanitize_dt_str(meta.get("LABEL", act_name))
+                    icon = sanitize_dt_str(meta.get("ICON", "Dtadskt"))
+                    desc = sanitize_dt_str(meta.get("DESCRIPTION", label))
+                    dt_lines.extend([
+                        f"ACTION {act_name}",
+                        "{",
+                        f"    LABEL       {label}",
+                        "    TYPE        COMMAND",
+                        f"    ICON        {icon}",
+                        "    WINDOW_TYPE NO_STDIO",
+                        f"    EXEC_STRING {resolved_prog}",
+                        f"    DESCRIPTION {desc}",
+                        "}",
+                        "",
+                    ])
+                dst_group.mkdir(parents=True, exist_ok=True)
+                stub = dst_group / act_name
+                if not stub.exists():
+                    stub.write_text("", encoding="utf-8")
+                os.chmod(stub, 0o755)
+                keep_names.add(act_name)
+                continue
+
+            cands = [c for c in status.split(":", 1)[1].split(",") if c]
+            matched_pkg = next((c for c in cands if c in avail_pkgs), "")
+            if not matched_pkg:
+                # Neither installed nor available in package registry (e.g. skype, nxclient) -> hide!
+                continue
+
+            slug = re.sub(r"[^A-Za-z0-9_]+", "_", act_name).strip("_").lower() or "app"
+            orig_icon = sanitize_dt_str(meta.get("ICON", "Dtadskt"))
+            badge_icon = ensure_gray_badge_icon_set(orig_icon, icons_dir, slug)
+            label = sanitize_dt_str(meta.get("LABEL", act_name))
+            exec_prog = extract_primary_exec_prog(meta.get("EXEC_STRING", "")) or matched_pkg
+            pkg_spec = ",".join(cands)
+            install_cmd = (
+                f"ck-pkg-install --pkg {shlex.quote(pkg_spec)} "
+                f"--label {shlex.quote(label)} --exec {shlex.quote(exec_prog)}"
+            )
+            desc = sanitize_dt_str(
+                f"{label} (Not installed - double-click to download and install '{matched_pkg}')"
+            )
+            dt_lines.extend([
+                f"ACTION {act_name}",
+                "{",
+                f"    LABEL       {label}",
+                "    TYPE        COMMAND",
+                f"    ICON        {badge_icon}",
+                "    WINDOW_TYPE NO_STDIO",
+                f"    EXEC_STRING {install_cmd}",
+                f"    DESCRIPTION {desc}",
+                "}",
+                "",
+            ])
+            dst_group.mkdir(parents=True, exist_ok=True)
+            stub = dst_group / act_name
+            if not stub.exists():
+                stub.write_text("", encoding="utf-8")
+            os.chmod(stub, 0o755)
+            keep_names.add(act_name)
+
+        if dst_group.is_dir():
+            for child in list(dst_group.iterdir()):
+                if child.name not in keep_names:
+                    try:
+                        child.unlink()
+                    except OSError:
+                        pass
+            if not any(dst_group.iterdir()):
+                try:
+                    dst_group.rmdir()
+                except OSError:
+                    pass
+
+        if dst_group.is_dir() and keep_names:
+            populated_groups.append(group)
+        else:
+            empty_groups.append(group)
+
+    return populated_groups, empty_groups
+
+
+def sync_appmanager_session_links(
+    home: Path,
+    managed_folders: list[str],
+    prune_folders: list[str] | None = None,
+) -> None:
     appman_root = Path("/var/dt/appconfig/appmanager")
     if not appman_root.is_dir():
         return
@@ -389,6 +957,13 @@ def sync_appmanager_session_links(home: Path, managed_folders: list[str]) -> Non
                             link.symlink_to(target)
                     elif not link.exists():
                         link.symlink_to(target)
+            except OSError:
+                pass
+        for folder in (prune_folders or []):
+            link = sdir / folder
+            try:
+                if link.is_symlink():
+                    link.unlink()
             except OSError:
                 pass
         if orig_mode is not None:
@@ -567,6 +1142,10 @@ def run_index_once(trigger_reload: bool = True) -> int:
             except OSError:
                 pass
 
+    populated_curated, empty_curated = sync_curated_appmanager_groups(
+        appman_dir, icons_dir, dt_lines
+    )
+
     dt_out = types_dir / "ck-xdg-apps.dt"
     dt_tmp = types_dir / f".ck-xdg-apps.dt.{os.getpid()}.tmp"
     new_content = "\n".join(dt_lines) + "\n"
@@ -580,12 +1159,10 @@ def run_index_once(trigger_reload: bool = True) -> int:
     dt_tmp.write_text(new_content, encoding="utf-8")
     os.replace(dt_tmp, dt_out)
 
-    managed_folders = [f for f, _, _, _ in CATEGORIES if (appman_dir / f).is_dir()]
-    sync_appmanager_session_links(home, managed_folders)
+    managed_folders = [f for f, _, _, _ in CATEGORIES if (appman_dir / f).is_dir()] + populated_curated
+    sync_appmanager_session_links(home, managed_folders, prune_folders=empty_curated)
 
-    if trigger_reload and changed and os.environ.get("DISPLAY") and (
-        os.environ.get("TT_SESSION") or os.environ.get("_SUN_TT_SESSION")
-    ):
+    if trigger_reload and changed and os.environ.get("DISPLAY"):
         dtaction = Path("/usr/dt/bin/dtaction")
         if dtaction.is_file() and os.access(dtaction, os.X_OK):
             try:

@@ -411,4 +411,81 @@ ACTION CkAdminFirmware
         DESCRIPTION     Inspect hardware firmware versions and available updates via fwupd.
 }
 
+ACTION CkBrowser
+{
+        LABEL           Web Browser
+        ICON            SDtwebbr
+        ARG_COUNT       0
+        TYPE            COMMAND
+        WINDOW_TYPE     NO_STDIO
+        EXEC_STRING     ck-browser
+        DESCRIPTION     Open the CK Core multi-tab Web Browser (ck-browser).
+}
+
+ACTION CkBrowser
+{
+        LABEL           Web Browser
+        ICON            SDtwebbr
+        ARG_COUNT       >0
+        TYPE            COMMAND
+        WINDOW_TYPE     NO_STDIO
+        EXEC_STRING     ck-browser --ck-open-url="%(File)Arg_1%"
+        DESCRIPTION     Open a URL or HTML file in CK Core Web Browser (ck-browser).
+}
+
+ACTION CkView
+{
+        LABEL           Image Viewer
+        ICON            Dtpaint
+        ARG_COUNT       0
+        TYPE            COMMAND
+        WINDOW_TYPE     NO_STDIO
+        EXEC_STRING     ck-view
+        DESCRIPTION     Open the CK Core Image Viewer (ck-view).
+}
+
+ACTION CkPdf
+{
+        LABEL           PDF Viewer
+        ICON            Dtps
+        ARG_COUNT       0
+        TYPE            COMMAND
+        WINDOW_TYPE     NO_STDIO
+        EXEC_STRING     ck-pdf
+        DESCRIPTION     Open the CK Core PDF Document Viewer (ck-pdf).
+}
+
+ACTION CkTasks
+{
+        LABEL           Task Manager
+        ICON            Dtasys
+        ARG_COUNT       0
+        TYPE            COMMAND
+        WINDOW_TYPE     NO_STDIO
+        EXEC_STRING     ck-tasks
+        DESCRIPTION     Open the CK Core System Task and Service Manager (ck-tasks).
+}
+
+ACTION CkMines
+{
+        LABEL           Minesweeper
+        ICON            Dtadskt
+        ARG_COUNT       0
+        TYPE            COMMAND
+        WINDOW_TYPE     NO_STDIO
+        EXEC_STRING     ck-mines
+        DESCRIPTION     Play CK Core Minesweeper (ck-mines).
+}
+
+ACTION CkNibbles
+{
+        LABEL           Nibbles
+        ICON            Dtadskt
+        ARG_COUNT       0
+        TYPE            COMMAND
+        WINDOW_TYPE     NO_STDIO
+        EXEC_STRING     ck-nibbles
+        DESCRIPTION     Play CK Core Nibbles (ck-nibbles).
+}
+
 XCOMM ######################## EOF ############################################
