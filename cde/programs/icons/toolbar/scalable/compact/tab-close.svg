@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <title>tab-close</title>
+  <path d="M5 5 L11 11" fill="none" stroke="#1e242b" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M11 5 L5 11" fill="none" stroke="#1e242b" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M5 5 L11 11" fill="none" stroke="#f2ede4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M11 5 L5 11" fill="none" stroke="#f2ede4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -859,3 +859,50 @@ FpnotifA.t.pm                   Fppower.l.pm \
 Fppower.m.pm                    Fppower.t.pm \
 Fpstatus.l.pm                   Fpstatus.m.pm \
 Fpstatus.t.pm
+
+# Toolbar icons, installed as $(icondir)/toolbar/<size>/<icon-name>.png
+nobase_dist_icon_DATA = \
+toolbar/16x16/edit-find.png \
+toolbar/16x16/go-next.png \
+toolbar/16x16/go-previous.png \
+toolbar/16x16/process-stop.png \
+toolbar/16x16/tab-close.png \
+toolbar/16x16/tab-new.png \
+toolbar/16x16/window-close.png \
+toolbar/24x24/edit-find.png \
+toolbar/24x24/go-next.png \
+toolbar/24x24/go-previous.png \
+toolbar/24x24/process-stop.png \
+toolbar/24x24/tab-close.png \
+toolbar/24x24/tab-new.png \
+toolbar/24x24/window-close.png \
+toolbar/32x32/edit-find.png \
+toolbar/32x32/go-next.png \
+toolbar/32x32/go-previous.png \
+toolbar/32x32/process-stop.png \
+toolbar/32x32/tab-close.png \
+toolbar/32x32/tab-new.png \
+toolbar/32x32/window-close.png \
+toolbar/48x48/edit-find.png \
+toolbar/48x48/go-next.png \
+toolbar/48x48/go-previous.png \
+toolbar/48x48/process-stop.png \
+toolbar/48x48/tab-close.png \
+toolbar/48x48/tab-new.png \
+toolbar/48x48/window-close.png
+
+EXTRA_DIST = toolbar/README.md \
+toolbar/scalable/edit-find.svg \
+toolbar/scalable/compact/edit-find.svg \
+toolbar/scalable/go-next.svg \
+toolbar/scalable/compact/go-next.svg \
+toolbar/scalable/go-previous.svg \
+toolbar/scalable/compact/go-previous.svg \
+toolbar/scalable/process-stop.svg \
+toolbar/scalable/compact/process-stop.svg \
+toolbar/scalable/tab-close.svg \
+toolbar/scalable/compact/tab-close.svg \
+toolbar/scalable/tab-new.svg \
+toolbar/scalable/compact/tab-new.svg \
+toolbar/scalable/window-close.svg \
+toolbar/scalable/compact/window-close.svg
