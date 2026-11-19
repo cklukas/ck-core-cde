@@ -25,6 +25,7 @@
 #include <Dt/FileM.h>
 #include <Xm/Form.h>
 #include <Xm/Frame.h>
+#include <Xm/Gadget.h>
 #include <Xm/LabelG.h>
 #include <Xm/List.h>
 #include <Xm/PushB.h>
@@ -2025,6 +2026,66 @@ ShellStructureHandler(Widget w, XtPointer client_data, XEvent *event, Boolean *c
 
 /* --- UI Construction --- */
 
+static void
+dtfile_try_apply_icon(Widget btn, const char *icon_name, const char *tooltip)
+{
+    if (!btn || !icon_name || !icon_name[0])
+        return;
+    Widget host = XmIsGadget(btn) ? XtParent(btn) : btn;
+    if (!host)
+        return;
+
+    const char *env_dir = getenv("CK_TOOLBAR_ICON_DIR");
+    const char *roots[4];
+    int nroots = 0;
+    if (env_dir && env_dir[0])
+        roots[nroots++] = env_dir;
+    roots[nroots++] = "/usr/dt/appconfig/icons/C/toolbar";
+    roots[nroots++] = "/usr/local/share/ck-core/icons/toolbar";
+    roots[nroots++] = "/usr/share/ck-core/icons/toolbar";
+
+    const int sizes[] = { 16, 24, 32, 48 };
+    char found[PATH_MAX] = "";
+    for (int r = 0; r < nroots && !found[0]; ++r)
+    {
+        for (size_t s = 0; s < sizeof(sizes) / sizeof(sizes[0]); ++s)
+        {
+            char cand[PATH_MAX];
+            snprintf(cand, sizeof(cand), "%s/%dx%d/%s.png",
+                     roots[r], sizes[s], sizes[s], icon_name);
+            if (access(cand, R_OK) == 0)
+            {
+                snprintf(found, sizeof(found), "%s", cand);
+                break;
+            }
+        }
+    }
+    if (!found[0])
+        return;
+
+    Pixel fg = 0, bg = 0, arm = 0;
+    XtVaGetValues(host, XmNforeground, &fg, XmNbackground, &bg, nullptr);
+    arm = bg;
+    if (!XmIsGadget(btn))
+        XtVaGetValues(btn, XmNarmColor, &arm, nullptr);
+
+    int depth = DefaultDepthOfScreen(XtScreen(host));
+    Pixmap p_norm = XmGetScaledPixmap(host, (String)found, fg, bg, depth, 0.0);
+    if (p_norm != XmUNSPECIFIED_PIXMAP)
+    {
+        XtVaSetValues(btn, XmNlabelType, XmPIXMAP, XmNlabelPixmap, p_norm, nullptr);
+        Pixmap p_arm = XmGetScaledPixmap(host, (String)found, fg, arm, depth, 0.0);
+        if (p_arm != XmUNSPECIFIED_PIXMAP)
+            XtVaSetValues(btn, XmNarmPixmap, p_arm, nullptr);
+        if (tooltip && tooltip[0] && !XmIsGadget(btn))
+        {
+            XmString tip = XmStringCreateLocalized((String)tooltip);
+            XtVaSetValues(btn, XmNtoolTipString, tip, nullptr);
+            XmStringFree(tip);
+        }
+    }
+}
+
 void
 DtfileErgonomicsAttachWindow(FileMgrRec *rec, Boolean is_trash_view)
 {
@@ -2071,6 +2132,7 @@ DtfileErgonomicsAttachWindow(FileMgrRec *rec, Boolean is_trash_view)
                   XmNleftOffset, 2,
                   nullptr);
     XmStringFree(xs_back);
+    dtfile_try_apply_icon(erg->back_btn, "go-previous", "Back (Alt+Left)");
     XtAddCallback(erg->back_btn, XmNactivateCallback, TabBackBtnCB, (XtPointer)erg);
     XtManageChild(erg->back_btn);
 
@@ -2087,6 +2149,7 @@ DtfileErgonomicsAttachWindow(FileMgrRec *rec, Boolean is_trash_view)
                   XmNleftOffset, 2,
                   nullptr);
     XmStringFree(xs_fwd);
+    dtfile_try_apply_icon(erg->fwd_btn, "go-next", "Forward (Alt+Right)");
     XtAddCallback(erg->fwd_btn, XmNactivateCallback, TabFwdBtnCB, (XtPointer)erg);
     XtManageChild(erg->fwd_btn);
 
@@ -2102,6 +2165,7 @@ DtfileErgonomicsAttachWindow(FileMgrRec *rec, Boolean is_trash_view)
                   XmNrightOffset, 2,
                   nullptr);
     XmStringFree(xs_new);
+    dtfile_try_apply_icon(erg->new_tab_btn, "tab-new", "New Tab (Ctrl+T)");
     XtAddCallback(erg->new_tab_btn, XmNactivateCallback, TabNewBtnCB, (XtPointer)erg);
     XtManageChild(erg->new_tab_btn);
 
@@ -2135,6 +2199,7 @@ DtfileErgonomicsAttachWindow(FileMgrRec *rec, Boolean is_trash_view)
 
         erg->tab_close_btns[i] = XmCreatePushButtonGadget(erg->tab_strip_rc, cname, nullptr, 0);
         XtVaSetValues(erg->tab_close_btns[i], XmNlabelString, xs_x, nullptr);
+        dtfile_try_apply_icon(erg->tab_close_btns[i], "tab-close", "Close Tab (Ctrl+W)");
         XtAddCallback(erg->tab_close_btns[i], XmNactivateCallback, TabCloseBtnCB, (XtPointer)erg);
     }
     XmStringFree(xs_x);
@@ -2208,6 +2273,7 @@ DtfileErgonomicsAttachWindow(FileMgrRec *rec, Boolean is_trash_view)
     erg->search_go_btn = XmCreatePushButtonGadget(row1, "search_go", nullptr, 0);
     XtVaSetValues(erg->search_go_btn, XmNlabelString, xs, nullptr);
     XmStringFree(xs);
+    dtfile_try_apply_icon(erg->search_go_btn, "edit-find", "Start Search");
     XtAddCallback(erg->search_go_btn, XmNactivateCallback, SearchStartBtnCB, (XtPointer)erg);
     XtManageChild(erg->search_go_btn);
 
@@ -2215,6 +2281,7 @@ DtfileErgonomicsAttachWindow(FileMgrRec *rec, Boolean is_trash_view)
     erg->search_stop_btn = XmCreatePushButtonGadget(row1, "search_stop", nullptr, 0);
     XtVaSetValues(erg->search_stop_btn, XmNlabelString, xs, XmNsensitive, False, nullptr);
     XmStringFree(xs);
+    dtfile_try_apply_icon(erg->search_stop_btn, "process-stop", "Stop Search");
     XtAddCallback(erg->search_stop_btn, XmNactivateCallback, SearchStopBtnCB, (XtPointer)erg);
     XtManageChild(erg->search_stop_btn);
 
@@ -2222,6 +2289,7 @@ DtfileErgonomicsAttachWindow(FileMgrRec *rec, Boolean is_trash_view)
     erg->search_close_btn = XmCreatePushButtonGadget(row1, "search_close", nullptr, 0);
     XtVaSetValues(erg->search_close_btn, XmNlabelString, xs, nullptr);
     XmStringFree(xs);
+    dtfile_try_apply_icon(erg->search_close_btn, "window-close", "Close Search Bar");
     XtAddCallback(erg->search_close_btn, XmNactivateCallback, SearchCloseBtnCB, (XtPointer)erg);
     XtManageChild(erg->search_close_btn);
 

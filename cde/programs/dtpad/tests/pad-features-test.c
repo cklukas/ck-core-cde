@@ -1,5 +1,6 @@
 #define _DEFAULT_SOURCE
 #include "padFeatures.h"
+#include "padSyntax.h"
 
 #include <assert.h>
 #include <signal.h>
@@ -93,6 +94,58 @@ int main(void)
     assert(strcmp(rec_body, "Unsaved scratch notes before SIGKILL") == 0);
     free(rec_body);
     assert(dtpad_autosave_remove_file(rec_swap) == 0);
+
+    /* 4. Multi-language syntax detection and UTF-8 scalar lexing */
+    assert(dtpad_syntax_detect("/tmp/demo.c", NULL) == DTPAD_SYNTAX_C);
+    assert(dtpad_syntax_detect("/tmp/config.json", NULL) == DTPAD_SYNTAX_JSON);
+    assert(dtpad_syntax_detect("/tmp/app.ts", NULL) == DTPAD_SYNTAX_JS);
+    assert(dtpad_syntax_detect("/tmp/script", "#!/usr/bin/env bash\necho hi\n") == DTPAD_SYNTAX_SHELL);
+    assert(dtpad_syntax_detect("/tmp/tool", "#!/usr/bin/env python3\nx = 1\n") == DTPAD_SYNTAX_PYTHON);
+    assert(dtpad_syntax_detect("/tmp/Makefile.am", NULL) == DTPAD_SYNTAX_MAKEFILE);
+    assert(dtpad_syntax_detect("/tmp/notes.md", NULL) == DTPAD_SYNTAX_MARKDOWN);
+    assert(dtpad_syntax_detect("/tmp/query.sql", NULL) == DTPAD_SYNTAX_SQL);
+    assert(dtpad_syntax_detect("/tmp/fix.patch", NULL) == DTPAD_SYNTAX_DIFF);
+
+    /* C lexing with UTF-8 comment before keyword */
+    {
+        const char *c_src = "/* café */\nint main(void) {\n    return 42;\n}\n";
+        DtpadSyntaxSpan *spans = NULL;
+        size_t n = dtpad_syntax_lex(DTPAD_SYNTAX_C, c_src, strlen(c_src), &spans);
+        assert(n >= 5 && spans != NULL);
+        // The leading block comment has 10 Unicode scalars (even though 'é' is 2 UTF-8 bytes)
+        assert(spans[0].kind == DTPAD_TOK_COMMENT && spans[0].start_pos == 0 && spans[0].end_pos == 10);
+        /* Next line starts at scalar 11: "int" is [11, 14) */
+        assert(spans[1].kind == DTPAD_TOK_TYPE && spans[1].start_pos == 11 && spans[1].end_pos == 14);
+        assert(spans[2].kind == DTPAD_TOK_FUNCTION && spans[2].start_pos == 15 && spans[2].end_pos == 19);
+        free(spans);
+    }
+
+    /* JSON lexing distinguishes keys from string values, numbers, and booleans */
+    {
+        const char *j_src = "{\"name\": \"cde\", \"port\": 8080, \"ok\": true}\n";
+        DtpadSyntaxSpan *spans = NULL;
+        size_t n = dtpad_syntax_lex(DTPAD_SYNTAX_JSON, j_src, strlen(j_src), &spans);
+        assert(n == 6 && spans != NULL);
+        assert(spans[0].kind == DTPAD_TOK_KEY);
+        assert(spans[1].kind == DTPAD_TOK_STRING);
+        assert(spans[2].kind == DTPAD_TOK_KEY);
+        assert(spans[3].kind == DTPAD_TOK_NUMBER);
+        assert(spans[4].kind == DTPAD_TOK_KEY);
+        assert(spans[5].kind == DTPAD_TOK_KEYWORD);
+        free(spans);
+    }
+
+    /* Shell lexing handles shebang, variables, keywords, and strings */
+    {
+        const char *sh_src = "#!/bin/sh\nFOO=\"bar\"\nif [ -n \"$FOO\" ]; then\n  exit 0\nfi\n";
+        DtpadSyntaxSpan *spans = NULL;
+        size_t n = dtpad_syntax_lex(DTPAD_SYNTAX_SHELL, sh_src, strlen(sh_src), &spans);
+        assert(n >= 5 && spans != NULL);
+        assert(spans[0].kind == DTPAD_TOK_PREPROC); /* shebang */
+        assert(spans[1].kind == DTPAD_TOK_KEY);     /* FOO */
+        assert(spans[2].kind == DTPAD_TOK_STRING);  /* "bar" */
+        free(spans);
+    }
 
     printf("pad-features-test: all checks passed!\n");
     return 0;

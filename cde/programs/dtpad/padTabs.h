@@ -18,6 +18,7 @@ void DtpadNewTab(Editor *pPad, const char *initial_path);
 void DtpadSelectTab(Editor *pPad, int index);
 void DtpadCloseActiveTab(Editor *pPad);
 void DtpadSetLineNumbers(Editor *pPad, Boolean enabled);
+void DtpadSetSyntaxHighlighting(Editor *pPad, Boolean enabled);
 void DtpadFlushAutosaveNow(Editor *pPad);
 
 #endif /* DTPAD_PAD_TABS_H */

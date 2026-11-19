@@ -16,8 +16,8 @@ dtpad_SOURCES = dtpad.c         editCB.c        fileCB.c \
 		optionsCB.c     printJob.c      printOutput.c \
 		printSetup.c    session.c       ttMsgSupport.c \
 		ttSaveSupport.c dirselect.c     dirselect.h \
-		padFeatures.c   padFeatures.h   padTabs.c \
-		padTabs.h
+		padFeatures.c   padFeatures.h   padSyntax.c \
+		padSyntax.h     padTabs.c       padTabs.h
 
 EXTRA_DIST = tests/check-dirselect.py tests/dirselect-test.c \
              tests/check-temp-file-create.py tests/check-temp-file-create.c \

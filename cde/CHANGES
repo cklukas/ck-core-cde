@@ -1,4 +1,27 @@
 2026-11-19
+- Add multi-language syntax highlighting, exact Xft line-number baseline
+  alignment, and toolbar icon auto-loading to **`dtpad`** and **`dtfile`**, and
+  bump `.ckgit/motif-revision` to `dda5b8fcb906cf9ef80ebf27416528d29922492e`
+  (`cde/programs/dtpad/padSyntax.{h,c}`, `cde/programs/dtpad/padTabs.{h,c}`,
+  `cde/programs/dtpad/Makefile.am`, `cde/programs/dtpad/tests/`,
+  `cde/programs/dtfile/BrowserErgonomics.c`, `cde/programs/icons/toolbar/`,
+  `cde/programs/dtwm/tests/check-dtwm-wayland-wp19.py`,
+  `docs/improvements/editor.md`):
+  - Add zero-dependency UTF-8 syntax detection and lexing (`padSyntax.{h,c}`)
+    covering C/C++, POSIX Shell/Bash, JSON, JavaScript/TypeScript, Python,
+    YAML/TOML/INI, XML/HTML/SVG, CSS, Markdown, Makefile/CMake, Rust/Go, SQL,
+    and Diff/Patch, rendered via CK Core Motif `XmTextSetColorSpans` with
+    luminance-adaptive dark/light CDE palette colors and an **Options → Syntax
+    Highlighting** checkbox (`Dtpad*syntaxHighlighting` in `~/.dt/dtpadrc`,
+    default `True`).
+  - Fix `dtpad` line-number gutter vertical alignment (`padTabs.c`) to draw with
+    the editor widget's `XmNrenderTable`, step UTF-8 scalar positions, and align
+    `XmStringBaseline` directly to `XmTextPosToXY`'s glyph baseline.
+  - Auto-load optional RGBA toolbar/tab icons (`16x16`–`48x48`) in `dtpad`
+    (`tab-new`) and `dtfile` (`go-previous`, `go-next`, `tab-new`, `tab-close`,
+    `edit-find`, `process-stop`, `window-close`) from
+    `/usr/dt/appconfig/icons/C/toolbar`, `/usr/share/ck-core/icons/toolbar`, or
+    `$CK_TOOLBAR_ICON_DIR` with automatic text-label fallback.
 - Deliver **WP-19 — Everyday Native Companions (`ck-view`, `ck-pdf`), Actionable
   `ck-tasks` & `dtpad`/`dtcm` Polish** across both `CDE (Wayland)` and
   `CDE (X11 / XLibre)` (`cde/programs/dtpad/`, `cde/programs/dtcm/dtcm/`,

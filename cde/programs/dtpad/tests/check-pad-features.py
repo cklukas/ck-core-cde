@@ -39,7 +39,8 @@ with tempfile.TemporaryDirectory(prefix="padfeatures-", dir=os.environ.get("TMPD
     exe = Path(tmp) / "pad-features-test"
     build = subprocess.run(
         [*cc, *flags, "-I", str(src),
-         str(src / "padFeatures.c"), str(src / "tests" / "pad-features-test.c"),
+         str(src / "padFeatures.c"), str(src / "padSyntax.c"),
+         str(src / "tests" / "pad-features-test.c"),
          "-o", str(exe)],
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, check=False)
     if build.returncode:

@@ -1,5 +1,6 @@
 #include "padTabs.h"
 #include "padFeatures.h"
+#include "padSyntax.h"
 
 #include <Dt/DtPStrings.h>
 #include <Dt/SmCreateDirs.h>
@@ -60,6 +61,7 @@ typedef struct _DtpadUiExt {
     int recent_count;
 
     Widget line_numbers_toggle;
+    Widget syntax_toggle;
     Widget open_tab_dialog;
 
     DtpadDocTab tabs[DTPAD_MAX_TABS];
@@ -68,6 +70,11 @@ typedef struct _DtpadUiExt {
     int next_tab_id;
     Boolean switching_tabs;
     Boolean show_line_numbers;
+    Boolean syntax_highlighting;
+    DtpadSyntaxLang active_lang;
+    Pixel syntax_pixels[2][DTPAD_TOK_COUNT];
+    Boolean syntax_pixels_init[2];
+    XtIntervalId syntax_timer;
     Boolean recovered_last_load;
 
     XtIntervalId autosave_timer;
@@ -180,6 +187,173 @@ static Boolean load_line_numbers_pref(Editor *pPad)
     return False;
 }
 
+static void save_syntax_pref(Editor *pPad, Boolean enabled)
+{
+    if (!pPad || !pPad->display) return;
+    const char *home = getenv("HOME");
+    if (!home || !home[0]) return;
+    _DtCreateDtDirs(pPad->display);
+    char path[PATH_MAX];
+    snprintf(path, sizeof(path), "%s/%s/dtpadrc", home, DtPERSONAL_CONFIG_DIRECTORY);
+    XrmDatabase db = XrmGetFileDatabase(path);
+    if (!db) db = XrmGetStringDatabase("");
+    XrmPutStringResource(&db, "Dtpad*syntaxHighlighting", enabled ? "True" : "False");
+    XrmPutFileDatabase(db, path);
+}
+
+static Boolean load_syntax_pref(Editor *pPad)
+{
+    if (!pPad || !pPad->display) return True;
+    XrmDatabase db = XtDatabase(pPad->display);
+    if (!db) return True;
+    char *str_type = NULL;
+    XrmValue val = {0, NULL};
+    if (XrmGetResource(db, "dtpad.syntaxHighlighting", "Dtpad.SyntaxHighlighting", &str_type, &val) &&
+        val.addr) {
+        if (strcasecmp((char *)val.addr, "false") == 0 || strcmp((char *)val.addr, "0") == 0) {
+            return False;
+        }
+        return True;
+    }
+    return True;
+}
+
+static Pixel alloc_hex_color(Display *dpy, Colormap cmap,
+                             unsigned short r8, unsigned short g8, unsigned short b8,
+                             Pixel fallback)
+{
+    XColor xc;
+    memset(&xc, 0, sizeof(xc));
+    xc.red = (unsigned short)(r8 * 257U);
+    xc.green = (unsigned short)(g8 * 257U);
+    xc.blue = (unsigned short)(b8 * 257U);
+    xc.flags = DoRed | DoGreen | DoBlue;
+    if (XAllocColor(dpy, cmap, &xc))
+        return xc.pixel;
+    return fallback;
+}
+
+static void ensure_syntax_palette(DtpadUiExt *ext, int dark_bg, Pixel fallback_fg)
+{
+    Display *dpy = XtDisplay(ext->text_widget);
+    Colormap cmap = DefaultColormap(dpy, DefaultScreen(dpy));
+    int slot = dark_bg ? 1 : 0;
+    if (ext->syntax_pixels_init[slot])
+        return;
+
+    if (dark_bg) {
+        /* Crisp high-contrast workstation syntax palette on dark slate / ModernDark */
+        ext->syntax_pixels[slot][DTPAD_TOK_KEYWORD]  = alloc_hex_color(dpy, cmap, 0xFF, 0xD1, 0x66, fallback_fg);
+        ext->syntax_pixels[slot][DTPAD_TOK_TYPE]     = alloc_hex_color(dpy, cmap, 0x7E, 0xE8, 0xFA, fallback_fg);
+        ext->syntax_pixels[slot][DTPAD_TOK_STRING]   = alloc_hex_color(dpy, cmap, 0xA8, 0xF0, 0xA2, fallback_fg);
+        ext->syntax_pixels[slot][DTPAD_TOK_NUMBER]   = alloc_hex_color(dpy, cmap, 0xFF, 0xB4, 0xA2, fallback_fg);
+        ext->syntax_pixels[slot][DTPAD_TOK_COMMENT]  = alloc_hex_color(dpy, cmap, 0xC6, 0xD2, 0xE1, fallback_fg);
+        ext->syntax_pixels[slot][DTPAD_TOK_PREPROC]  = alloc_hex_color(dpy, cmap, 0xF0, 0xA6, 0xFF, fallback_fg);
+        ext->syntax_pixels[slot][DTPAD_TOK_FUNCTION] = alloc_hex_color(dpy, cmap, 0x9B, 0xF6, 0xFF, fallback_fg);
+        ext->syntax_pixels[slot][DTPAD_TOK_KEY]      = alloc_hex_color(dpy, cmap, 0xFF, 0xE5, 0x99, fallback_fg);
+    } else {
+        /* High-contrast syntax palette on light / paper backgrounds */
+        ext->syntax_pixels[slot][DTPAD_TOK_KEYWORD]  = alloc_hex_color(dpy, cmap, 0x00, 0x33, 0xB3, fallback_fg);
+        ext->syntax_pixels[slot][DTPAD_TOK_TYPE]     = alloc_hex_color(dpy, cmap, 0x00, 0x62, 0x7A, fallback_fg);
+        ext->syntax_pixels[slot][DTPAD_TOK_STRING]   = alloc_hex_color(dpy, cmap, 0x06, 0x7D, 0x17, fallback_fg);
+        ext->syntax_pixels[slot][DTPAD_TOK_NUMBER]   = alloc_hex_color(dpy, cmap, 0x9E, 0x2A, 0x2B, fallback_fg);
+        ext->syntax_pixels[slot][DTPAD_TOK_COMMENT]  = alloc_hex_color(dpy, cmap, 0x5C, 0x67, 0x73, fallback_fg);
+        ext->syntax_pixels[slot][DTPAD_TOK_PREPROC]  = alloc_hex_color(dpy, cmap, 0x7B, 0x2C, 0xBF, fallback_fg);
+        ext->syntax_pixels[slot][DTPAD_TOK_FUNCTION] = alloc_hex_color(dpy, cmap, 0x00, 0x50, 0x9D, fallback_fg);
+        ext->syntax_pixels[slot][DTPAD_TOK_KEY]      = alloc_hex_color(dpy, cmap, 0x7F, 0x4F, 0x24, fallback_fg);
+    }
+    ext->syntax_pixels_init[slot] = True;
+}
+
+static void apply_syntax_highlighting(DtpadUiExt *ext)
+{
+    if (!ext || !ext->text_widget || !XmIsText(ext->text_widget))
+        return;
+
+    if (!ext->syntax_highlighting) {
+        ext->active_lang = DTPAD_SYNTAX_NONE;
+        XmTextClearColorSpans(ext->text_widget);
+        return;
+    }
+
+    char *full = XmTextGetString(ext->text_widget);
+    if (!full) {
+        ext->active_lang = DTPAD_SYNTAX_NONE;
+        XmTextClearColorSpans(ext->text_widget);
+        return;
+    }
+
+    const char *fname = (ext->pad && ext->pad->fileStuff.fileName)
+                            ? ext->pad->fileStuff.fileName
+                            : NULL;
+    DtpadSyntaxLang lang = dtpad_syntax_detect(fname, full);
+    ext->active_lang = lang;
+    if (lang == DTPAD_SYNTAX_NONE) {
+        XmTextClearColorSpans(ext->text_widget);
+        XtFree(full);
+        return;
+    }
+
+    Display *dpy = XtDisplay(ext->text_widget);
+    Colormap cmap = DefaultColormap(dpy, DefaultScreen(dpy));
+    Pixel bg = 0, fg = 0;
+    XtVaGetValues(ext->text_widget, XmNbackground, &bg, XmNforeground, &fg, NULL);
+    XColor qbg;
+    memset(&qbg, 0, sizeof(qbg));
+    qbg.pixel = bg;
+    XQueryColor(dpy, cmap, &qbg);
+    double lum = (0.2126 * (double)qbg.red +
+                  0.7152 * (double)qbg.green +
+                  0.0722 * (double)qbg.blue) / 65535.0;
+    int dark_bg = lum < 0.50 ? 1 : 0;
+    ensure_syntax_palette(ext, dark_bg, fg);
+
+    DtpadSyntaxSpan *lex_spans = NULL;
+    size_t nspans = dtpad_syntax_lex(lang, full, strlen(full), &lex_spans);
+    XtFree(full);
+
+    if (nspans == 0 || !lex_spans) {
+        free(lex_spans);
+        XmTextClearColorSpans(ext->text_widget);
+        return;
+    }
+
+    XmTextColorSpan *xm_spans = (XmTextColorSpan *)malloc(nspans * sizeof(*xm_spans));
+    if (!xm_spans) {
+        free(lex_spans);
+        return;
+    }
+    for (size_t i = 0; i < nspans; ++i) {
+        int kind = (int)lex_spans[i].kind;
+        if (kind < 0 || kind >= DTPAD_TOK_COUNT)
+            kind = 0;
+        xm_spans[i].left = (XmTextPosition)lex_spans[i].start_pos;
+        xm_spans[i].right = (XmTextPosition)lex_spans[i].end_pos;
+        xm_spans[i].foreground = ext->syntax_pixels[dark_bg][kind];
+    }
+    XmTextSetColorSpans(ext->text_widget, xm_spans, (Cardinal)nspans);
+    free(xm_spans);
+    free(lex_spans);
+}
+
+static void on_syntax_debounce_timeout(XtPointer client, XtIntervalId *id)
+{
+    (void)id;
+    DtpadUiExt *ext = (DtpadUiExt *)client;
+    if (!ext) return;
+    ext->syntax_timer = 0;
+    apply_syntax_highlighting(ext);
+}
+
+static void schedule_syntax_refresh(DtpadUiExt *ext)
+{
+    if (!ext || !ext->pad || !ext->pad->app_context) return;
+    if (ext->syntax_timer != 0)
+        XtRemoveTimeOut(ext->syntax_timer);
+    ext->syntax_timer = XtAppAddTimeOut(ext->pad->app_context, 35,
+                                        on_syntax_debounce_timeout, ext);
+}
+
 static void draw_line_gutter(DtpadUiExt *ext)
 {
     if (!ext || !ext->show_line_numbers || !ext->gutter_canvas ||
@@ -202,33 +376,44 @@ static void draw_line_gutter(DtpadUiExt *ext)
                   NULL);
     if (gw < 8 || gh < 8) return;
 
+    XmRenderTable rt = NULL;
+    XtVaGetValues(ext->text_widget, XmNrenderTable, &rt, NULL);
+
     XSetWindowBackground(dpy, win, bg);
     XClearWindow(dpy, win);
 
     GC gc = XCreateGC(dpy, win, 0, NULL);
-    XFontStruct *fs = XLoadQueryFont(dpy, "fixed");
-    if (fs) XSetFont(dpy, gc, fs->fid);
-    int ascent = fs ? fs->ascent : 11;
 
     /* Divider line on right edge */
     XSetForeground(dpy, gc, bs);
     XDrawLine(dpy, win, gc, (int)gw - 1, 0, (int)gw - 1, (int)gh);
     XSetForeground(dpy, gc, fg);
+    XSetBackground(dpy, gc, bg);
 
     char *full = XmTextGetString(ext->text_widget);
     if (full) {
-        size_t total_len = strlen(full);
+        size_t total_bytes = strlen(full);
         XmTextPosition top_pos = XmTextGetTopCharacter(ext->text_widget);
         if (top_pos < 0) top_pos = 0;
-        if ((size_t)top_pos > total_len) top_pos = (XmTextPosition)total_len;
 
-        /* Find start of line containing top_pos and its 1-based line number */
+        /* Advance through UTF-8 scalars up to top_pos and find the 1-based line number
+         * and starting scalar position of the line containing top_pos. */
         int line_num = 1;
-        size_t line_start = 0;
-        for (size_t i = 0; i < (size_t)top_pos; ++i) {
-            if (full[i] == '\n') {
-                line_num++;
-                line_start = i + 1;
+        long cur_scalar = 0;
+        long line_start_scalar = 0;
+        size_t line_start_byte = 0;
+        size_t b = 0;
+        while (b < total_bytes && cur_scalar < (long)top_pos) {
+            unsigned char c = (unsigned char)full[b++];
+            if (c >= 0x80U) {
+                while (b < total_bytes && (((unsigned char)full[b] & 0xC0U) == 0x80U))
+                    ++b;
+            }
+            ++cur_scalar;
+            if (c == '\n') {
+                ++line_num;
+                line_start_scalar = cur_scalar;
+                line_start_byte = b;
             }
         }
 
@@ -241,33 +426,61 @@ static void draw_line_gutter(DtpadUiExt *ext)
                 text_y_offset = dy;
             }
         }
-        Position tx = 0, ty = 0;
 
-        size_t pos = line_start;
-        int prev_drawn_y = -1000;
-        while (pos <= total_len) {
-            if (XmTextPosToXY(ext->text_widget, (XmTextPosition)pos, &tx, &ty)) {
-                int draw_y = (int)ty + text_y_offset + ascent - 2;
-                if (draw_y > (int)gh + 16) break;
-                if (draw_y >= 4 && draw_y != prev_drawn_y) {
+        Position tx = 0, ty = 0;
+        size_t pos_byte = line_start_byte;
+        long pos_scalar = line_start_scalar;
+        int prev_baseline_y = -10000;
+
+        while (pos_byte <= total_bytes) {
+            /* XmTextPosToXY returns *ty = exact glyph baseline in text_widget coords! */
+            if (XmTextPosToXY(ext->text_widget, (XmTextPosition)pos_scalar, &tx, &ty)) {
+                int baseline_y = (int)ty + text_y_offset;
+                if (baseline_y > (int)gh + 24)
+                    break;
+                if (baseline_y >= 2 && baseline_y != prev_baseline_y) {
                     char num_buf[24];
-                    int nlen = snprintf(num_buf, sizeof(num_buf), "%d", line_num);
-                    int tw_px = fs ? XTextWidth(fs, num_buf, nlen) : (nlen * 7);
-                    int draw_x = (int)gw - tw_px - 6;
-                    if (draw_x < 2) draw_x = 2;
-                    XDrawString(dpy, win, gc, draw_x, draw_y, num_buf, nlen);
-                    prev_drawn_y = draw_y;
+                    snprintf(num_buf, sizeof(num_buf), "%d", line_num);
+                    if (rt != NULL) {
+                        XmString num_xms = XmStringCreateLocalized(num_buf);
+                        Dimension str_bs = XmStringBaseline(rt, num_xms);
+                        int top_y = baseline_y - (int)str_bs;
+                        XmStringDraw(dpy, win, rt, num_xms, gc,
+                                     2, (Position)top_y,
+                                     (Dimension)(gw > 8 ? gw - 7 : gw),
+                                     XmALIGNMENT_END,
+                                     XmSTRING_DIRECTION_L_TO_R,
+                                     NULL);
+                        XmStringFree(num_xms);
+                    } else {
+                        XDrawString(dpy, win, gc, 4, baseline_y, num_buf, (int)strlen(num_buf));
+                    }
+                    prev_baseline_y = baseline_y;
                 }
             }
-            char *next_nl = strchr(full + pos, '\n');
-            if (!next_nl) break;
-            pos = (size_t)(next_nl - full) + 1U;
-            line_num++;
+            if (pos_byte >= total_bytes)
+                break;
+            /* Advance to next '\n' counting exact UTF-8 scalars */
+            int found_nl = 0;
+            while (pos_byte < total_bytes) {
+                unsigned char c = (unsigned char)full[pos_byte++];
+                if (c >= 0x80U) {
+                    while (pos_byte < total_bytes && (((unsigned char)full[pos_byte] & 0xC0U) == 0x80U))
+                        ++pos_byte;
+                }
+                ++pos_scalar;
+                if (c == '\n') {
+                    found_nl = 1;
+                    ++line_num;
+                    break;
+                }
+            }
+            if (!found_nl)
+                break;
         }
         XtFree(full);
     }
 
-    if (fs) XFreeFont(dpy, fs);
     XFreeGC(dpy, gc);
 }
 
@@ -278,14 +491,33 @@ static void on_gutter_expose(Widget w, XtPointer client, XtPointer call)
     draw_line_gutter((DtpadUiExt *)client);
 }
 
-static void on_text_changed_or_scrolled(Widget w, XtPointer client, XtPointer call)
+static void on_text_changed(Widget w, XtPointer client, XtPointer call)
 {
     (void)w;
     (void)call;
     DtpadUiExt *ext = (DtpadUiExt *)client;
     if (!ext || ext->switching_tabs) return;
     draw_line_gutter(ext);
+    schedule_syntax_refresh(ext);
     DtpadSyncActiveTabTitle(ext->pad);
+}
+
+static void on_text_scrolled(Widget w, XtPointer client, XtPointer call)
+{
+    (void)w;
+    (void)call;
+    DtpadUiExt *ext = (DtpadUiExt *)client;
+    if (!ext || ext->switching_tabs) return;
+    draw_line_gutter(ext);
+}
+
+static void on_text_structure_notify(Widget w, XtPointer client, XEvent *ev, Boolean *cont)
+{
+    (void)w;
+    (void)cont;
+    if (!ev || (ev->type != ConfigureNotify && ev->type != MapNotify))
+        return;
+    draw_line_gutter((DtpadUiExt *)client);
 }
 
 static void snapshot_active_tab(DtpadUiExt *ext)
@@ -423,6 +655,7 @@ void DtpadSelectTab(Editor *pPad, int index)
     ChangeMainWindowTitle(pPad);
     SetStatusLineMsg(pPad);
     refresh_tab_bar_ui(ext);
+    apply_syntax_highlighting(ext);
     draw_line_gutter(ext);
     DtpadPublishState(pPad);
 }
@@ -457,6 +690,7 @@ void DtpadNewTab(Editor *pPad, const char *initial_path)
     LoadFile(pPad, NULL);
     ChangeMainWindowTitle(pPad);
     refresh_tab_bar_ui(ext);
+    apply_syntax_highlighting(ext);
     draw_line_gutter(ext);
     DtpadPublishState(pPad);
 }
@@ -521,6 +755,19 @@ void DtpadSetLineNumbers(Editor *pPad, Boolean enabled)
                       NULL);
     }
     save_line_numbers_pref(pPad, ext->show_line_numbers);
+    DtpadPublishState(pPad);
+}
+
+void DtpadSetSyntaxHighlighting(Editor *pPad, Boolean enabled)
+{
+    DtpadUiExt *ext = find_ext(pPad);
+    if (!ext) return;
+    ext->syntax_highlighting = enabled ? True : False;
+    if (ext->syntax_toggle) {
+        XmToggleButtonSetState(ext->syntax_toggle, ext->syntax_highlighting, False);
+    }
+    apply_syntax_highlighting(ext);
+    save_syntax_pref(pPad, ext->syntax_highlighting);
     DtpadPublishState(pPad);
 }
 
@@ -602,6 +849,7 @@ void DtpadNotifyFileLoaded(Editor *pPad)
 
     snapshot_active_tab(ext);
     refresh_tab_bar_ui(ext);
+    apply_syntax_highlighting(ext);
     draw_line_gutter(ext);
     DtpadPublishState(pPad);
 }
@@ -624,6 +872,7 @@ void DtpadNotifyFileSaved(Editor *pPad, const char *saved_path)
         ext->recovered_last_load = False;
         snapshot_active_tab(ext);
         refresh_tab_bar_ui(ext);
+        apply_syntax_highlighting(ext);
         DtpadPublishState(pPad);
     }
 }
@@ -679,12 +928,15 @@ void DtpadPublishState(Editor *pPad)
     char json[PATH_MAX + 1024];
     snprintf(json, sizeof(json),
              "{\"tab_count\":%d,\"active_tab\":%d,\"file\":\"%s\","
-             "\"line_numbers\":%s,\"recovered\":%s,\"recent_count\":%d,"
+             "\"line_numbers\":%s,\"syntax_highlighting\":%s,\"syntax_lang\":\"%s\","
+             "\"recovered\":%s,\"recent_count\":%d,"
              "\"unsaved\":%s,\"preview\":\"%s\"}",
              ext->tab_count,
              ext->active_tab,
              esc_file,
              ext->show_line_numbers ? "true" : "false",
+             ext->syntax_highlighting ? "true" : "false",
+             dtpad_syntax_lang_id(ext->active_lang),
              ext->recovered_last_load ? "true" : "false",
              rcnt,
              DtEditorCheckForUnsavedChanges(pPad->editor) ? "true" : "false",
@@ -803,6 +1055,15 @@ static void on_line_numbers_toggled(Widget w, XtPointer client, XtPointer call)
     DtpadSetLineNumbers(pPad, cbs->set ? True : False);
 }
 
+static void on_syntax_toggled(Widget w, XtPointer client, XtPointer call)
+{
+    (void)w;
+    Editor *pPad = (Editor *)client;
+    XmToggleButtonCallbackStruct *cbs = (XmToggleButtonCallbackStruct *)call;
+    if (!pPad || !cbs) return;
+    DtpadSetSyntaxHighlighting(pPad, cbs->set ? True : False);
+}
+
 static void on_key_shortcuts(Widget w, XtPointer client, XEvent *ev, Boolean *cont)
 {
     (void)w;
@@ -856,6 +1117,7 @@ static void on_shell_property_notify(Widget w, XtPointer client, XEvent *ev, Boo
         DtpadCloseActiveTab(pPad);
     } else if (strncmp(cmd, "SET_TEXT ", 9) == 0) {
         set_editor_string_with_dirty_state(pPad->editor, cmd + 9, True);
+        apply_syntax_highlighting(ext);
         draw_line_gutter(ext);
         DtpadSyncActiveTabTitle(pPad);
     } else if (strcmp(cmd, "SAVE") == 0) {
@@ -864,6 +1126,10 @@ static void on_shell_property_notify(Widget w, XtPointer client, XEvent *ev, Boo
         DtpadSetLineNumbers(pPad, ext->show_line_numbers ? False : True);
     } else if (strncmp(cmd, "SET_LINE_NUMBERS ", 17) == 0) {
         DtpadSetLineNumbers(pPad, atoi(cmd + 17) != 0 ? True : False);
+    } else if (strcmp(cmd, "TOGGLE_SYNTAX_HIGHLIGHT") == 0) {
+        DtpadSetSyntaxHighlighting(pPad, ext->syntax_highlighting ? False : True);
+    } else if (strncmp(cmd, "SET_SYNTAX_HIGHLIGHT ", 21) == 0) {
+        DtpadSetSyntaxHighlighting(pPad, atoi(cmd + 21) != 0 ? True : False);
     } else if (strcmp(cmd, "FLUSH_AUTOSAVE") == 0) {
         DtpadFlushAutosaveNow(pPad);
         DtpadPublishState(pPad);
@@ -947,6 +1213,64 @@ void DtpadPopulateOptionsMenuExtras(Editor *pPad, Widget options_pane)
     XmStringFree(s_ln);
     XtAddCallback(ext->line_numbers_toggle, XmNvalueChangedCallback,
                   on_line_numbers_toggled, pPad);
+
+    Boolean init_syn = load_syntax_pref(pPad);
+    ext->syntax_highlighting = init_syn;
+
+    XmString s_syn = XmStringCreateLocalized("Syntax Highlighting");
+    ext->syntax_toggle = XtVaCreateManagedWidget(
+        "syntaxHighlighting", xmToggleButtonWidgetClass, options_pane,
+        XmNlabelString, s_syn,
+        XmNvisibleWhenOff, True,
+        XmNset, init_syn,
+        NULL);
+    XmStringFree(s_syn);
+    XtAddCallback(ext->syntax_toggle, XmNvalueChangedCallback,
+                  on_syntax_toggled, pPad);
+}
+
+static void dtpad_try_apply_icon(Widget btn, const char *icon_name, const char *tooltip)
+{
+    if (!btn || !icon_name || !icon_name[0]) return;
+    const char *env_dir = getenv("CK_TOOLBAR_ICON_DIR");
+    const char *roots[4];
+    int nroots = 0;
+    if (env_dir && env_dir[0]) roots[nroots++] = env_dir;
+    roots[nroots++] = "/usr/dt/appconfig/icons/C/toolbar";
+    roots[nroots++] = "/usr/local/share/ck-core/icons/toolbar";
+    roots[nroots++] = "/usr/share/ck-core/icons/toolbar";
+
+    const int sizes[] = { 16, 24, 32, 48 };
+    char found[PATH_MAX] = "";
+    for (int r = 0; r < nroots && !found[0]; ++r) {
+        for (size_t s = 0; s < sizeof(sizes) / sizeof(sizes[0]); ++s) {
+            char cand[PATH_MAX];
+            snprintf(cand, sizeof(cand), "%s/%dx%d/%s.png",
+                     roots[r], sizes[s], sizes[s], icon_name);
+            if (access(cand, R_OK) == 0) {
+                snprintf(found, sizeof(found), "%s", cand);
+                break;
+            }
+        }
+    }
+    if (!found[0]) return;
+
+    Pixel fg = 0, bg = 0, arm = 0;
+    XtVaGetValues(btn, XmNforeground, &fg, XmNbackground, &bg, XmNarmColor, &arm, NULL);
+    int depth = DefaultDepthOfScreen(XtScreen(btn));
+    Pixmap p_norm = XmGetScaledPixmap(btn, found, fg, bg, depth, 0.0);
+    if (p_norm != XmUNSPECIFIED_PIXMAP) {
+        XtVaSetValues(btn, XmNlabelType, XmPIXMAP, XmNlabelPixmap, p_norm, NULL);
+        Pixmap p_arm = XmGetScaledPixmap(btn, found, fg, arm, depth, 0.0);
+        if (p_arm != XmUNSPECIFIED_PIXMAP) {
+            XtVaSetValues(btn, XmNarmPixmap, p_arm, NULL);
+        }
+        if (tooltip && tooltip[0]) {
+            XmString tip = XmStringCreateLocalized((String)tooltip);
+            XtVaSetValues(btn, XmNtoolTipString, tip, NULL);
+            XmStringFree(tip);
+        }
+    }
 }
 
 Widget DtpadCreateWorkArea(Editor *pPad)
@@ -981,12 +1305,13 @@ Widget DtpadCreateWorkArea(Editor *pPad)
     XtManageChild(ext->tab_row);
 
     XmString s_plus = XmStringCreateLocalized("+");
-    ext->plus_btn = XtVaCreateManagedWidget("newTabPlus", xmPushButtonGadgetClass, ext->tab_row,
+    ext->plus_btn = XtVaCreateManagedWidget("newTabPlus", xmPushButtonWidgetClass, ext->tab_row,
                                             XmNlabelString, s_plus,
                                             XmNmarginWidth, 6,
                                             XmNmarginHeight, 2,
                                             NULL);
     XmStringFree(s_plus);
+    dtpad_try_apply_icon(ext->plus_btn, "tab-new", "New Tab (Ctrl+T)");
     XtAddCallback(ext->plus_btn, XmNactivateCallback, on_new_tab_cb, pPad);
 
     ext->body_form = XmCreateForm(ext->work_form, "dtpadBodyForm", NULL, 0);
@@ -1039,16 +1364,17 @@ Widget DtpadCreateWorkArea(Editor *pPad)
 
     ext->text_widget = XtNameToWidget(pPad->editor, "*text");
     if (ext->text_widget) {
-        XtAddCallback(ext->text_widget, XmNvalueChangedCallback, on_text_changed_or_scrolled, ext);
-        XtAddCallback(ext->text_widget, XmNmotionVerifyCallback, on_text_changed_or_scrolled, ext);
+        XtAddCallback(ext->text_widget, XmNvalueChangedCallback, on_text_changed, ext);
+        XtAddCallback(ext->text_widget, XmNmotionVerifyCallback, on_text_scrolled, ext);
         XtAddEventHandler(ext->text_widget, KeyPressMask, False, on_key_shortcuts, ext);
+        XtAddEventHandler(ext->text_widget, StructureNotifyMask, False, on_text_structure_notify, ext);
 
         Widget sw = XtParent(ext->text_widget);
         if (sw) {
             XtVaGetValues(sw, XmNverticalScrollBar, &ext->vscroll_widget, NULL);
             if (ext->vscroll_widget) {
-                XtAddCallback(ext->vscroll_widget, XmNvalueChangedCallback, on_text_changed_or_scrolled, ext);
-                XtAddCallback(ext->vscroll_widget, XmNdragCallback, on_text_changed_or_scrolled, ext);
+                XtAddCallback(ext->vscroll_widget, XmNvalueChangedCallback, on_text_scrolled, ext);
+                XtAddCallback(ext->vscroll_widget, XmNdragCallback, on_text_scrolled, ext);
             }
         }
     }
@@ -1057,6 +1383,7 @@ Widget DtpadCreateWorkArea(Editor *pPad)
     ext->tab_count = 1;
     ext->active_tab = 0;
     ext->next_tab_id = 1;
+    ext->syntax_highlighting = load_syntax_pref(pPad);
     memset(&ext->tabs[0], 0, sizeof(DtpadDocTab));
     ext->tabs[0].tab_id = 1;
     ext->tabs[0].saved_text = strdup("");

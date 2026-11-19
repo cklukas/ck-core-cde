@@ -47,12 +47,23 @@ until a second tab is opened:
   most recently opened or saved files in MRU order with atomic `0600` updates.
 - **Line-number gutter:** **Options → Show Line Numbers** (`Dtpad*showLineNumbers`
   persisted in `~/.dt/dtpadrc`) toggles a `48 px` right-aligned line-number
-  margin synchronized with `XmText` vertical scrolling and wrapping.
+  margin drawn with the editor widget's `XmNrenderTable` and aligned directly to
+  each wrapped or unwrapped line's `XmTextPosToXY` glyph baseline across UTF-8
+  documents.
+- **Multi-language syntax highlighting:** **Options → Syntax Highlighting**
+  (`Dtpad*syntaxHighlighting` persisted in `~/.dt/dtpadrc`, enabled by default)
+  automatically detects file extensions and `#!` shebangs for C/C++, Shell/Bash,
+  JSON, JavaScript/TypeScript, Python, YAML/TOML/INI, XML/HTML/SVG, CSS,
+  Markdown, Makefile/CMake, Rust/Go, SQL, and Diff/Patch (`programs/dtpad/padSyntax.c`).
+  Token spans are colored non-destructively via CK Core Motif's
+  `XmTextSetColorSpans` API with automatic background-luminance adaptation so
+  keywords, strings, comments, numbers, preprocessor directives, and types stay
+  high-contrast on both dark and light CDE palettes.
 - **Crash-recovery autosave (`~/.dt/dtpad-autosave/`):** Unsaved edits are
   periodically checkpointed to `0600` swap files keyed by canonical path and
   owner PID. Normal **Save** and clean **Close** remove the swap file; if the
   editor or session terminates abruptly (`SIGKILL` / power loss), reopening the
   file restores the unsaved buffer and marks it modified so the user can review
-  and save or discard it. The standalone persistence logic in
-  `programs/dtpad/padFeatures.c` runs under AddressSanitizer and
+  and save or discard it. Both `programs/dtpad/padFeatures.c` and
+  `programs/dtpad/padSyntax.c` run under AddressSanitizer and
   UndefinedBehaviorSanitizer via `programs/dtpad/tests/check-pad-features.py`.

@@ -42,6 +42,7 @@ import json
 import os
 from pathlib import Path
 import shlex
+import shutil
 import signal
 import subprocess
 import sys
@@ -506,6 +507,13 @@ def run_lane(
     pdf_path = lane_root / "manual.pdf"
     subprocess.run([str(asset_gen_bin), str(img_dir), str(pdf_path)], env=env, check=True)
 
+    # Populate a test 24x24 toolbar icon directory to exercise ck_toolbar_apply_icon + dtpad icon loader
+    tb_icon_dir = lane_root / "toolbar_icons" / "24x24"
+    tb_icon_dir.mkdir(parents=True, exist_ok=True)
+    for icon_nm in ("document-open", "document-save", "document-print", "sidebar-outline", "tab-new"):
+        shutil.copyfile(img_dir / "01_sample.png", tb_icon_dir / f"{icon_nm}.png")
+    env["CK_TOOLBAR_ICON_DIR"] = str(lane_root / "toolbar_icons")
+
     procs: list[subprocess.Popen] = []
     try:
         # 1. Isolated session D-Bus + mock org.freedesktop.systemd1
@@ -739,6 +747,10 @@ def run_lane(
         wait_for(lambda: lp_log.is_file() and "OfficeLaser" in lp_log.read_text(encoding="utf-8"),
                  timeout=5.0, desc=f"{lane} ck-pdf PRINT OfficeLaser")
 
+        send_ipc("_CK_PDF_STATE", "_CK_PDF_IPC", "SET_OUTLINE_WIDTH 310")
+        wait_for(lambda: get_json("_CK_PDF_STATE").get("outline_width", 0) >= 300,
+                 timeout=5.0, desc=f"{lane} ck-pdf SET_OUTLINE_WIDTH 310")
+
         pdf_sess_res = subprocess.run([str(x11_helper), "wm_save_yourself", "_CK_PDF_STATE"],
                                       env=env, capture_output=True, text=True, check=True)
         pdf_sess_id = pdf_sess_res.stdout.strip()
@@ -752,8 +764,10 @@ def run_lane(
         )
         procs.append(pdf_proc2)
         wait_for(
-            lambda: (s := get_json("_CK_PDF_STATE")).get("loaded") is True and s.get("page") == 3,
-            timeout=8.0, desc=f"{lane} ck-pdf -session restore page 3",
+            lambda: (s := get_json("_CK_PDF_STATE")).get("loaded") is True
+            and s.get("page") == 3
+            and s.get("outline_width", 0) >= 300,
+            timeout=8.0, desc=f"{lane} ck-pdf -session restore page 3 + outline_width",
         )
         pdf_proc2.terminate()
         pdf_proc2.wait(timeout=4.0)
@@ -786,6 +800,29 @@ def run_lane(
         send_ipc("_DTPAD_STATE", "_DTPAD_IPC", "TOGGLE_LINE_NUMBERS")
         wait_for(lambda: get_json("_DTPAD_STATE").get("line_numbers") is True,
                  timeout=5.0, desc=f"{lane} dtpad TOGGLE_LINE_NUMBERS")
+
+        # Open a C source file in a 3rd tab and verify syntax highlighting auto-detection + toggle
+        c_doc = lane_root / "sample_code.c"
+        c_doc.write_text("#include <stdio.h>\nint main(void) {\n    return 0;\n}\n", encoding="utf-8")
+        send_ipc("_DTPAD_STATE", "_DTPAD_IPC", f"OPEN_TAB {c_doc}")
+        wait_for(
+            lambda: (s := get_json("_DTPAD_STATE")).get("tab_count") == 3
+            and s.get("syntax_highlighting") is True
+            and s.get("syntax_lang") == "c",
+            timeout=6.0, desc=f"{lane} dtpad syntax highlighting auto-detected C",
+        )
+        send_ipc("_DTPAD_STATE", "_DTPAD_IPC", "SET_SYNTAX_HIGHLIGHT 0")
+        wait_for(lambda: get_json("_DTPAD_STATE").get("syntax_highlighting") is False,
+                 timeout=5.0, desc=f"{lane} dtpad disable syntax highlighting")
+        send_ipc("_DTPAD_STATE", "_DTPAD_IPC", "SET_SYNTAX_HIGHLIGHT 1")
+        wait_for(
+            lambda: (s := get_json("_DTPAD_STATE")).get("syntax_highlighting") is True
+            and s.get("syntax_lang") == "c",
+            timeout=5.0, desc=f"{lane} dtpad re-enable syntax highlighting",
+        )
+        send_ipc("_DTPAD_STATE", "_DTPAD_IPC", "SELECT_TAB 1")
+        wait_for(lambda: get_json("_DTPAD_STATE").get("active_tab") == 1,
+                 timeout=5.0, desc=f"{lane} dtpad switch back to doc2 tab")
 
         send_ipc("_DTPAD_STATE", "_DTPAD_IPC", "SET_TEXT CrashRecoveryPayload_WP19")
         wait_for(lambda: "CrashRecoveryPayload_WP19" in get_json("_DTPAD_STATE").get("preview", ""),
