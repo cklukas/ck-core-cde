@@ -812,6 +812,304 @@ struct wlr_buffer *dtwm_render_wireframe_outline(int w, int h) {
     return &buf->base;
 }
 
+struct wlr_buffer *dtwm_render_palette_wireframe_outline(
+    const DtwmColorSet *cs, int w, int h, double alpha
+) {
+    if (w < 12) w = 12;
+    if (h < 12) h = 12;
+    if (w > 8192) w = 8192;
+    if (h > 8192) h = 8192;
+    if (alpha <= 0.01) return nullptr;
+    if (alpha > 1.0) alpha = 1.0;
+
+    cairo_t *cr = nullptr;
+    DtwmCairoBuffer *buf = dtwm_cairo_buffer_create(w, h, &cr);
+    if (!buf) {
+        return nullptr;
+    }
+
+    cairo_save(cr);
+    cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+    cairo_paint(cr);
+    cairo_restore(cr);
+
+    double x1 = floor((double)w / 3.0) + 0.5;
+    double x2 = floor((2.0 * (double)w) / 3.0) + 0.5;
+    double y1 = floor((double)h / 3.0) + 0.5;
+    double y2 = floor((2.0 * (double)h) / 3.0) + 0.5;
+
+    cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE);
+
+    DtwmRgba halo = cs ? cs->bottom_shadow : (DtwmRgba){0.0, 0.0, 0.0, 1.0};
+    DtwmRgba core = cs ? cs->top_shadow : (DtwmRgba){1.0, 1.0, 1.0, 1.0};
+
+    cairo_set_source_rgba(cr, halo.r * 0.45, halo.g * 0.45, halo.b * 0.45, 0.84 * alpha);
+    cairo_set_line_width(cr, 3.0);
+    cairo_rectangle(cr, 1.5, 1.5, (double)w - 3.0, (double)h - 3.0);
+    cairo_stroke(cr);
+
+    if (w >= 48 && h >= 48) {
+        cairo_move_to(cr, x1, 2.0);
+        cairo_line_to(cr, x1, (double)h - 2.0);
+        cairo_move_to(cr, x2, 2.0);
+        cairo_line_to(cr, x2, (double)h - 2.0);
+        cairo_move_to(cr, 2.0, y1);
+        cairo_line_to(cr, (double)w - 2.0, y1);
+        cairo_move_to(cr, 2.0, y2);
+        cairo_line_to(cr, (double)w - 2.0, y2);
+        cairo_stroke(cr);
+    }
+
+    cairo_set_source_rgba(
+        cr,
+        0.35 + 0.65 * core.r,
+        0.35 + 0.65 * core.g,
+        0.35 + 0.65 * core.b,
+        0.96 * alpha
+    );
+    cairo_set_line_width(cr, 1.0);
+    cairo_rectangle(cr, 1.5, 1.5, (double)w - 3.0, (double)h - 3.0);
+    cairo_stroke(cr);
+
+    if (w >= 48 && h >= 48) {
+        cairo_move_to(cr, x1, 2.0);
+        cairo_line_to(cr, x1, (double)h - 2.0);
+        cairo_move_to(cr, x2, 2.0);
+        cairo_line_to(cr, x2, (double)h - 2.0);
+        cairo_move_to(cr, 2.0, y1);
+        cairo_line_to(cr, (double)w - 2.0, y1);
+        cairo_move_to(cr, 2.0, y2);
+        cairo_line_to(cr, (double)w - 2.0, y2);
+        cairo_stroke(cr);
+    }
+
+    cairo_surface_flush(buf->surface);
+    cairo_destroy(cr);
+    return &buf->base;
+}
+
+struct wlr_buffer *dtwm_render_anim_bevel_frame(
+    const DtwmPalette *pal,
+    const DtwmView *view,
+    DtwmAnimStyle style,
+    DtwmAnimKind kind,
+    int w,
+    int h,
+    double progress
+) {
+    if (!pal || w < 8 || h < 8) {
+        return nullptr;
+    }
+    if (w > 8192) w = 8192;
+    if (h > 8192) h = 8192;
+    if (progress < 0.0) progress = 0.0;
+    if (progress > 1.0) progress = 1.0;
+
+    const DtwmColorSet *cs = (view && view->active) ? &pal->active : &pal->inactive;
+    if (style == DTWM_ANIM_STYLE_WIREFRAME) {
+        return dtwm_render_palette_wireframe_outline(cs, w, h, 1.0);
+    }
+
+    bool is_minmax_icon = (kind == DTWM_ANIM_KIND_MINIMIZE || kind == DTWM_ANIM_KIND_RESTORE);
+    /* icon_blend: 0.0 = full window state, 1.0 = compact icon tile state */
+    double icon_blend = 0.0;
+    if (kind == DTWM_ANIM_KIND_MINIMIZE) {
+        icon_blend = progress;
+    } else if (kind == DTWM_ANIM_KIND_RESTORE) {
+        icon_blend = 1.0 - progress;
+    }
+
+    int render_h = h;
+    if (style == DTWM_ANIM_STYLE_TITLEBAR && is_minmax_icon) {
+        int target_bar_h = (int)lround((1.0 - icon_blend) * (DTWM_BORDER_WIDTH + DTWM_TITLE_HEIGHT + 2) +
+                                       icon_blend * 22.0);
+        if (target_bar_h < 18) target_bar_h = 18;
+        if (target_bar_h > h) target_bar_h = h;
+        render_h = target_bar_h;
+    }
+
+    cairo_t *cr = nullptr;
+    DtwmCairoBuffer *buf = dtwm_cairo_buffer_create(w, render_h, &cr);
+    if (!buf) {
+        return nullptr;
+    }
+
+    cairo_save(cr);
+    cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+    cairo_paint(cr);
+    cairo_restore(cr);
+
+    if (style == DTWM_ANIM_STYLE_TITLEBAR) {
+        int slab_h = is_minmax_icon ? render_h : (DTWM_BORDER_WIDTH + DTWM_TITLE_HEIGHT + 2);
+        if (slab_h > render_h) slab_h = render_h;
+
+        /* Crisp 2px outer Motif perimeter bevel for Maximize/Unmaximize */
+        if (!is_minmax_icon && render_h > slab_h + 4) {
+            draw_bevel(cr, 0, 0, w, render_h, 2.0, cs->top_shadow, cs->bottom_shadow);
+        }
+
+        /* Detached 3D CDE Titlebar Shuttle slab */
+        set_rgba(cr, cs->bg);
+        cairo_rectangle(cr, 0, 0, w, slab_h);
+        cairo_fill(cr);
+        draw_bevel(cr, 0, 0, w, slab_h, 2.0, cs->top_shadow, cs->bottom_shadow);
+
+        double pad = (slab_h >= 28) ? 4.0 : 2.0;
+        double ty = pad;
+        double th = (double)slab_h - 2.0 * pad;
+        if (th >= 12.0 && w >= 40) {
+            double tx = pad;
+            double tw = (double)w - 2.0 * pad;
+            double btn_w = th;
+            double title_x = tx;
+            double title_w = tw;
+
+            if ((!view || view->has_menu_btn) && title_w >= btn_w * 3.0) {
+                draw_bevel(cr, tx, ty, btn_w, th, 1.0, cs->top_shadow, cs->bottom_shadow);
+                draw_bevel(
+                    cr, tx + 4.0, ty + floor((th - 4.0) * 0.5), btn_w - 8.0, 4.0,
+                    1.0, cs->top_shadow, cs->bottom_shadow
+                );
+                title_x += btn_w;
+                title_w -= btn_w;
+            }
+            double right_edge = tx + tw;
+            if ((!view || view->has_max_btn) && title_w >= btn_w * 2.5) {
+                right_edge -= btn_w;
+                title_w -= btn_w;
+                draw_bevel(cr, right_edge, ty, btn_w, th, 1.0, cs->top_shadow, cs->bottom_shadow);
+                double sq = (th > 12.0) ? (th - 8.0) : 4.0;
+                draw_bevel(
+                    cr, right_edge + floor((btn_w - sq) * 0.5), ty + floor((th - sq) * 0.5),
+                    sq, sq, 1.0, cs->top_shadow, cs->bottom_shadow
+                );
+            }
+            if ((!view || view->has_min_btn) && title_w >= btn_w * 2.0) {
+                right_edge -= btn_w;
+                title_w -= btn_w;
+                draw_bevel(cr, right_edge, ty, btn_w, th, 1.0, cs->top_shadow, cs->bottom_shadow);
+                draw_bevel(
+                    cr, right_edge + floor((btn_w - 4.0) * 0.5), ty + floor((th - 4.0) * 0.5),
+                    4.0, 4.0, 1.0, cs->top_shadow, cs->bottom_shadow
+                );
+            }
+            if (title_w > 8.0) {
+                draw_bevel(cr, title_x, ty, title_w, th, 1.0, cs->top_shadow, cs->bottom_shadow);
+                const char *title = view ? dtwm_view_title(view) : "";
+                if (title && title[0] && title_w >= 28.0) {
+                    draw_pango_label(cr, title, title_x, ty, title_w, th, cs->fg, true, true);
+                }
+            }
+        }
+
+        cairo_surface_flush(buf->surface);
+        cairo_destroy(cr);
+        return &buf->base;
+    }
+
+    /* DTWM_ANIM_STYLE_BEVEL ("Bevel Morph & Latch" / "Bevel Glide"):
+     * Keeps physical Motif bevels razor-sharp at every intermediate frame while
+     * smoothly condensing the window frame & titlebar into the desktop icon bezel. */
+    double frame_alpha = 1.0 - icon_blend * 0.85;
+    if (frame_alpha < 0.0) frame_alpha = 0.0;
+
+    int b_side = (int)lround((1.0 - icon_blend) * DTWM_BORDER_WIDTH + icon_blend * 2.0);
+    if (b_side < 2) b_side = 2;
+    bool has_title = (!view || (view->decorated && view->has_title));
+    int b_top = has_title
+                    ? (int)lround((1.0 - icon_blend) * (DTWM_BORDER_WIDTH + DTWM_TITLE_HEIGHT) +
+                                  icon_blend * 2.0)
+                    : b_side;
+    if (b_top < b_side) b_top = b_side;
+    if (b_side * 2 >= w - 4) b_side = 2;
+    if (b_top + b_side >= render_h - 4) b_top = b_side;
+
+    if (frame_alpha > 0.04 && (!view || view->decorated)) {
+        DtwmRgba bg = cs->bg;
+        bg.a = frame_alpha;
+        set_rgba(cr, bg);
+        /* Top, bottom, left, right frame bands around open inner viewport */
+        cairo_rectangle(cr, 0, 0, w, b_top);
+        cairo_rectangle(cr, 0, render_h - b_side, w, b_side);
+        cairo_rectangle(cr, 0, b_top, b_side, render_h - b_top - b_side);
+        cairo_rectangle(cr, w - b_side, b_top, b_side, render_h - b_top - b_side);
+        cairo_fill(cr);
+
+        if (has_title && b_top >= 16 && w >= 64 && frame_alpha > 0.20) {
+            DtwmRgba ts = cs->top_shadow;
+            DtwmRgba bs = cs->bottom_shadow;
+            DtwmRgba fg = cs->fg;
+            ts.a = frame_alpha;
+            bs.a = frame_alpha;
+            fg.a = frame_alpha;
+            double ty = (b_side > 2) ? (double)b_side : 2.0;
+            double th = (double)b_top - ty;
+            if (th >= 10.0) {
+                draw_bevel(cr, b_side, ty, w - 2 * b_side, th, 1.0, ts, bs);
+                const char *title = view ? dtwm_view_title(view) : "";
+                if (title && title[0] && w >= 96 && th >= 14.0) {
+                    draw_pango_label(cr, title, b_side + 8, ty, w - 2 * b_side - 16, th, fg, true, true);
+                }
+            }
+        }
+    }
+
+    /* Unscaled crisp 2px raised Motif bevel perimeter throughout entire flight */
+    draw_bevel(cr, 0, 0, w, render_h, 2.0, cs->top_shadow, cs->bottom_shadow);
+    if (b_side >= 4 && w > 2 * b_side + 8 && render_h > b_top + b_side + 8 && frame_alpha > 0.2) {
+        DtwmRgba ts = cs->top_shadow;
+        DtwmRgba bs = cs->bottom_shadow;
+        ts.a = frame_alpha;
+        bs.a = frame_alpha;
+        draw_bevel(
+            cr,
+            b_side - 1,
+            b_side - 1,
+            w - 2 * (b_side - 1),
+            render_h - 2 * (b_side - 1),
+            1.0,
+            bs,
+            ts
+        );
+    }
+
+    /* Subtle workstation CAD 3x3 HUD hairline during peak flight velocity */
+    if (progress > 0.10 && progress < 0.75 && w >= 60 && render_h >= 60) {
+        double phase = (progress - 0.10) / 0.65;
+        double cad_alpha = 0.16 * sin(phase * M_PI);
+        if (cad_alpha > 0.01) {
+            double vx = b_side;
+            double vy = b_top;
+            double vw = (double)w - 2.0 * b_side;
+            double vh = (double)render_h - b_top - b_side;
+            if (vw >= 24.0 && vh >= 24.0) {
+                double x1 = floor(vx + vw / 3.0) + 0.5;
+                double x2 = floor(vx + (2.0 * vw) / 3.0) + 0.5;
+                double y1 = floor(vy + vh / 3.0) + 0.5;
+                double y2 = floor(vy + (2.0 * vh) / 3.0) + 0.5;
+                cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE);
+                cairo_set_line_width(cr, 1.0);
+                cairo_set_source_rgba(
+                    cr, cs->top_shadow.r, cs->top_shadow.g, cs->top_shadow.b, cad_alpha
+                );
+                cairo_move_to(cr, x1, vy + 1.0);
+                cairo_line_to(cr, x1, vy + vh - 1.0);
+                cairo_move_to(cr, x2, vy + 1.0);
+                cairo_line_to(cr, x2, vy + vh - 1.0);
+                cairo_move_to(cr, vx + 1.0, y1);
+                cairo_line_to(cr, vx + vw - 1.0, y1);
+                cairo_move_to(cr, vx + 1.0, y2);
+                cairo_line_to(cr, vx + vw - 1.0, y2);
+                cairo_stroke(cr);
+            }
+        }
+    }
+
+    cairo_surface_flush(buf->surface);
+    cairo_destroy(cr);
+    return &buf->base;
+}
+
 struct wlr_buffer *dtwm_render_task_switcher(DtwmServer *server, int *out_w, int *out_h) {
     int count = 0;
     DtwmView *v;

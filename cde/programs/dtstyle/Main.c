@@ -328,6 +328,9 @@ openStartupDialogByName(Widget shell, const char *name)
         popup_displayBB(shell);
     } else if (strncmp(name, "Backdrop", 8) == 0) {
         BackdropDialog(shell);
+    } else if (strncmp(name, "Window", 6) == 0) {
+        extern void popup_dtwmBB(Widget);
+        popup_dtwmBB(shell);
     }
 }
 
@@ -549,6 +552,12 @@ malloc_trace(0);
                 strcmp(argv[ai], "--backdrop") == 0) {
                 openDisplayDialogOnStart = True;
                 s_startupDialogName = "Backdrop";
+                continue;
+            }
+            if (strcmp(argv[ai], "-window") == 0 ||
+                strcmp(argv[ai], "--window") == 0) {
+                openDisplayDialogOnStart = True;
+                s_startupDialogName = "Window";
                 continue;
             }
             argv[out_argc++] = argv[ai];

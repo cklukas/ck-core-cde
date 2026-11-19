@@ -83,7 +83,8 @@ typedef struct {
 static Boolean GetWindowAnimRect (Window win, Window root, WmAnimRect *rect);
 static Boolean GetClientFrameAnimRect (ClientData *pCD, WmAnimRect *rect);
 static Boolean GetClientIconAnimRect (ClientData *pCD, WmAnimRect *rect);
-static void AnimateWindowRect (WmScreenData *pSD, const WmAnimRect *startRect, const WmAnimRect *endRect);
+static void AnimateWindowRect (WmScreenData *pSD, const WmAnimRect *startRect,
+			       const WmAnimRect *endRect, unsigned char animMode);
 
 static Boolean
 IsOpenIconEligible (ClientData *pCD)
@@ -218,7 +219,8 @@ GetClientIconAnimRect (ClientData *pCD, WmAnimRect *rect)
 }
 
 static void
-AnimateWindowRect (WmScreenData *pSD, const WmAnimRect *startRect, const WmAnimRect *endRect)
+AnimateWindowRect (WmScreenData *pSD, const WmAnimRect *startRect,
+		   const WmAnimRect *endRect, unsigned char animMode)
 {
     int dx, dy;
     int dw, dh;
@@ -227,17 +229,31 @@ AnimateWindowRect (WmScreenData *pSD, const WmAnimRect *startRect, const WmAnimR
     int i;
     int x, y;
     unsigned int w, h;
-    const long totalUsec = 200000L;
+    unsigned int startH, endH;
+    long totalUsec;
 
-    if (!pSD || !startRect || !endRect)
+    if (!pSD || !startRect || !endRect || animMode == WM_ANIM_NONE)
     {
         return;
+    }
+
+    startH = startRect->height;
+    endH = endRect->height;
+    if (animMode == WM_ANIM_TITLEBAR)
+    {
+        if (startH > 28) startH = 26;
+        if (endH > 28) endH = 26;
+        totalUsec = 140000L;
+    }
+    else
+    {
+        totalUsec = 200000L;
     }
 
     dx = endRect->x - startRect->x;
     dy = endRect->y - startRect->y;
     dw = (int)endRect->width - (int)startRect->width;
-    dh = (int)endRect->height - (int)startRect->height;
+    dh = (int)endH - (int)startH;
 
     maxDelta = abs(dx);
     if (abs(dy) > maxDelta) maxDelta = abs(dy);
@@ -245,15 +261,23 @@ AnimateWindowRect (WmScreenData *pSD, const WmAnimRect *startRect, const WmAnimR
     if (abs(dh) > maxDelta) maxDelta = abs(dh);
 
     steps = maxDelta / 25;
-    if (steps < 10) steps = 10;
-    if (steps > 50) steps = 50;
+    if (animMode == WM_ANIM_TITLEBAR)
+    {
+        if (steps < 8) steps = 8;
+        if (steps > 28) steps = 28;
+    }
+    else
+    {
+        if (steps < 10) steps = 10;
+        if (steps > 50) steps = 50;
+    }
 
     for (i = 0; i <= steps; i++)
     {
         x = startRect->x + (dx * i) / steps;
         y = startRect->y + (dy * i) / steps;
         w = (unsigned int)((int)startRect->width + (dw * i) / steps);
-        h = (unsigned int)((int)startRect->height + (dh * i) / steps);
+        h = (unsigned int)((int)startH + (dh * i) / steps);
 
         if (w == 0) w = 1;
         if (h == 0) h = 1;
@@ -379,14 +403,26 @@ void SetClientStateWithEventMask (ClientData *pCD, int newState, Time setTime, u
 	case NORMAL_STATE:
 	case MAXIMIZED_STATE:
 	{
-	    WmAnimRect iconRect;
+	    WmAnimRect startRect;
 	    WmAnimRect frameRect;
 	    Boolean doAnimate = False;
+	    unsigned char animMode = WM_ANIM_NONE;
 
 	    if ((currentState == MINIMIZED_STATE) &&
-		pSD->animateMinimizeRestore)
+		(pSD->minAnimMode != WM_ANIM_NONE))
 	    {
-		doAnimate = GetClientIconAnimRect (pCD, &iconRect);
+		animMode = pSD->minAnimMode;
+		doAnimate = GetClientIconAnimRect (pCD, &startRect);
+	    }
+	    else if (((currentState == NORMAL_STATE) ||
+		      (currentState == MAXIMIZED_STATE)) &&
+		     (currentState != newState) &&
+		     (pSD->maxAnimMode != WM_ANIM_NONE) &&
+		     !(pCD->clientFlags & WM_INITIALIZATION) &&
+		     !firstTime)
+	    {
+		animMode = pSD->maxAnimMode;
+		doAnimate = GetClientFrameAnimRect (pCD, &startRect);
 	    }
 
 	    SetupWindowStateWithEventMask (pCD, newState, setTime, event_mask);
@@ -394,7 +430,7 @@ void SetClientStateWithEventMask (ClientData *pCD, int newState, Time setTime, u
 	    if (doAnimate &&
 		GetClientFrameAnimRect (pCD, &frameRect))
 	    {
-		AnimateWindowRect (pSD, &iconRect, &frameRect);
+		AnimateWindowRect (pSD, &startRect, &frameRect, animMode);
 	    }
 	    XMapWindow (DISPLAY, pCD->client);
 	    XMapWindow (DISPLAY, pCD->clientFrameWin);
@@ -417,7 +453,7 @@ void SetClientStateWithEventMask (ClientData *pCD, int newState, Time setTime, u
 	    if ((pCD->clientState == NORMAL_STATE) ||
 		(pCD->clientState == MAXIMIZED_STATE))
 	    {
-		if (pSD->animateMinimizeRestore)
+		if (pSD->minAnimMode != WM_ANIM_NONE)
 		{
 		    doAnimate = (GetClientFrameAnimRect (pCD, &frameRect) &&
 				 GetClientIconAnimRect (pCD, &iconRect));
@@ -469,7 +505,7 @@ void SetClientStateWithEventMask (ClientData *pCD, int newState, Time setTime, u
 
 	    if (doAnimate)
 	    {
-		AnimateWindowRect (pSD, &frameRect, &iconRect);
+		AnimateWindowRect (pSD, &frameRect, &iconRect, pSD->minAnimMode);
 	    }
 
 	    /*
@@ -490,7 +526,7 @@ void SetClientStateWithEventMask (ClientData *pCD, int newState, Time setTime, u
 		ShowAllIconsForMinimizedClient (pCD);
 	    }
 
-	    if (pSD->animateMinimizeRestore &&
+	    if ((pSD->minAnimMode != WM_ANIM_NONE) &&
 		!(pCD->clientFlags & WM_INITIALIZATION) &&
 		!firstTime)
 	    {

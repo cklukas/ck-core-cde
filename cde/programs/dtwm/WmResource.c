@@ -45,6 +45,7 @@
 #include "WmIBitmap.h"
 
 #include <stdio.h>
+#include <ctype.h>
 
 #include <Xm/XmP.h>
 #include <Xm/RowColumn.h>
@@ -1426,6 +1427,24 @@ XtResource wmScreenResources[] =
 	XtOffsetOf (WmScreenData, animateMinimizeRestore),
 	XtRImmediate,
 	(XtPointer)True
+    },
+    {
+	WmNminimizeAnimation,
+	WmCMinimizeAnimation,
+	XtRString,
+	sizeof (String),
+	XtOffsetOf (WmScreenData, minimizeAnimation),
+	XtRString,
+	(XtPointer)"auto"
+    },
+    {
+	WmNmaximizeAnimation,
+	WmCMaximizeAnimation,
+	XtRString,
+	sizeof (String),
+	XtOffsetOf (WmScreenData, maximizeAnimation),
+	XtRString,
+	(XtPointer)"auto"
     },
 
     {
@@ -5021,6 +5040,10 @@ ProcessScreenResources (WmScreenData *pSD, unsigned char *screenName)
 
 	pSD->moveOpaque = (((XmScreen) XmGetXmScreen(XtScreen(pSD->screenTopLevelW)))
 			   -> screen.moveOpaque);
+	pSD->minAnimMode = WmResolveX11AnimMode (pSD->minimizeAnimation, False,
+						 pSD->animateMinimizeRestore);
+	pSD->maxAnimMode = WmResolveX11AnimMode (pSD->maximizeAnimation, True,
+						 pSD->animateMinimizeRestore);
     }
 
 
@@ -5917,8 +5940,55 @@ SetStdScreenResourceValues (WmScreenData *pSD)
 
     pSD->feedbackGeometry = nullptr;
     pSD->moveOpaque = False;
+    pSD->animateMinimizeRestore = False;
+    pSD->minimizeAnimation = nullptr;
+    pSD->maximizeAnimation = nullptr;
+    pSD->minAnimMode = WM_ANIM_NONE;
+    pSD->maxAnimMode = WM_ANIM_NONE;
 
 } /* END OF FUNCTION SetStdScreenResourceValues */
+
+unsigned char
+WmResolveX11AnimMode (const char *style, Boolean isMaximize, Boolean animateMinimizeRestore)
+{
+    char buf[32];
+    size_t i = 0;
+
+    if (style != nullptr)
+    {
+	while (*style && isspace((unsigned char)*style))
+	{
+	    style++;
+	}
+	while (style[i] != '\0' && !isspace((unsigned char)style[i]) && i + 1 < sizeof(buf))
+	{
+	    buf[i] = (char)tolower((unsigned char)style[i]);
+	    i++;
+	}
+    }
+    buf[i] = '\0';
+
+    if (strcmp(buf, "none") == 0 || strcmp(buf, "false") == 0 ||
+	strcmp(buf, "off") == 0 || strcmp(buf, "0") == 0)
+    {
+	return WM_ANIM_NONE;
+    }
+    if (strcmp(buf, "wireframe") == 0)
+    {
+	return WM_ANIM_WIREFRAME;
+    }
+    if (strcmp(buf, "titlebar") == 0 || strcmp(buf, "titlebar_shuttle") == 0)
+    {
+	return WM_ANIM_TITLEBAR;
+    }
+
+    /* "auto", empty, or Wayland-specific "bevel" falls back to X11 backend defaults */
+    if (isMaximize)
+    {
+	return WM_ANIM_NONE;
+    }
+    return animateMinimizeRestore ? WM_ANIM_WIREFRAME : WM_ANIM_NONE;
+}
 
 
 /*************************************<->*************************************

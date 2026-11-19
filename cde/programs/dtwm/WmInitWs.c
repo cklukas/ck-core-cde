@@ -1305,6 +1305,10 @@ InitWmScreen (WmScreenData *pSD, int sNum)
     pSD->openIconBarActiveColor = 0;
     pSD->openIconBarInactiveColor = 0;
     pSD->animateMinimizeRestore = False;
+    pSD->minimizeAnimation = nullptr;
+    pSD->maximizeAnimation = nullptr;
+    pSD->minAnimMode = WM_ANIM_NONE;
+    pSD->maxAnimMode = WM_ANIM_NONE;
     pSD->showTaskSwitcher = False;
     pSD->taskSwitchWin = None;
     pSD->taskSwitchActive = False;

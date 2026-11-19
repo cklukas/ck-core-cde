@@ -700,6 +700,7 @@ void dtwm_switch_workspace(DtwmServer *server, uint32_t ws_idx) {
     if (server->current_workspace == ws_idx) {
         return;
     }
+    dtwm_anim_cancel_all(server);
     server->current_workspace = ws_idx;
     server->palette.desktop_bg = server->workspaces[ws_idx].colors.bg;
 
@@ -1035,6 +1036,15 @@ static void handle_dt_wm_request_item(DtwmServer *server, const char *cmd) {
     if (!*cmd) return;
     if (dtwm_hw_handle_wm_request(server, cmd)) return;
     if (dtwm_output_mgmt_handle_wm_request(server, cmd)) return;
+
+    if (strncmp(cmd, "f.set_minimize_animation", 24) == 0 && isspace((unsigned char)cmd[24])) {
+        server->minimize_anim_style = dtwm_parse_anim_style(cmd + 25);
+        return;
+    }
+    if (strncmp(cmd, "f.set_maximize_animation", 24) == 0 && isspace((unsigned char)cmd[24])) {
+        server->maximize_anim_style = dtwm_parse_anim_style(cmd + 25);
+        return;
+    }
 
     if (strncmp(cmd, "f.change_backdrop", 17) == 0 && isspace((unsigned char)cmd[17])) {
         char path[512] = {0};
@@ -1595,7 +1605,11 @@ static void sync_xcb_resource_manager_profile(DtwmServer *server) {
                 } else if (xrdb_key_matches(line, klen, "secondariesOnTop")) {
                     server->allow_primary_on_top = !parse_xrdb_bool(val, true);
                 } else if (xrdb_key_matches(line, klen, "animateMinimizeRestore")) {
-                    server->animate_minimize = parse_xrdb_bool(val, server->animate_minimize);
+                    server->legacy_animate_minimize = parse_xrdb_bool(val, server->legacy_animate_minimize);
+                } else if (xrdb_key_matches(line, klen, "minimizeAnimation")) {
+                    server->minimize_anim_style = dtwm_parse_anim_style(val);
+                } else if (xrdb_key_matches(line, klen, "maximizeAnimation")) {
+                    server->maximize_anim_style = dtwm_parse_anim_style(val);
                 } else if (xrdb_key_matches(line, klen, "showTaskSwitcher")) {
                     server->show_task_switcher = parse_xrdb_bool(val, server->show_task_switcher);
                 } else if (xrdb_key_matches(line, klen, "useIconBox")) {

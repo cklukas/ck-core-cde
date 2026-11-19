@@ -132,6 +132,22 @@ typedef enum {
     DTWM_VIEW_XWAYLAND = 1,
 } DtwmViewKind;
 
+typedef enum {
+    DTWM_ANIM_STYLE_AUTO = 0,
+    DTWM_ANIM_STYLE_NONE,
+    DTWM_ANIM_STYLE_BEVEL,
+    DTWM_ANIM_STYLE_TITLEBAR,
+    DTWM_ANIM_STYLE_WIREFRAME,
+} DtwmAnimStyle;
+
+typedef enum {
+    DTWM_ANIM_KIND_NONE = 0,
+    DTWM_ANIM_KIND_MINIMIZE,
+    DTWM_ANIM_KIND_RESTORE,
+    DTWM_ANIM_KIND_MAXIMIZE,
+    DTWM_ANIM_KIND_UNMAXIMIZE,
+} DtwmAnimKind;
+
 typedef struct DtwmServer DtwmServer;
 typedef struct DtwmView DtwmView;
 typedef struct DtwmForeignToplevel DtwmForeignToplevel;
@@ -184,6 +200,7 @@ struct DtwmView {
     int icon_x, icon_y, icon_w, icon_h;
     int icon_box_w, icon_box_h;
     bool icon_clipped_out;
+    bool icon_latched;
 
     /* Decoration flags (honoring xdg-decoration + _MOTIF_WM_HINTS) */
     bool decorated;
@@ -342,7 +359,9 @@ struct DtwmServer {
     bool focus_follows_mouse;
     bool focus_auto_raise;
     bool allow_primary_on_top;
-    bool animate_minimize;
+    bool legacy_animate_minimize;
+    DtwmAnimStyle minimize_anim_style;
+    DtwmAnimStyle maximize_anim_style;
     bool show_task_switcher;
 
     /* Interactive CDE Icon Box window state (when use_icon_box is enabled) */
@@ -418,13 +437,27 @@ struct DtwmServer {
     int wireframe_w, wireframe_h;
     struct wlr_scene_buffer *wireframe_buf;
 
-    /* Minimize / restore wireframe zoom animation & interactive resize flush */
+    /* Window minimize / restore & maximize / unmaximize vsync animation engine */
     struct wl_event_source *anim_timer;
     struct wl_event_source *resize_flush_timer;
-    struct wlr_scene_buffer *anim_buf;
+    struct wlr_scene_tree *anim_tree;
+    struct wlr_scene_buffer *anim_trail_buf;
+    struct wlr_scene_buffer *anim_client_buf;
+    struct wlr_scene_buffer *anim_icon_buf;
+    struct wlr_scene_buffer *anim_frame_buf;
+    DtwmView *anim_view;
+    DtwmAnimKind anim_kind;
+    DtwmAnimStyle anim_active_style;
+    uint64_t anim_start_ns;
+    uint32_t anim_duration_ms;
+    bool anim_in_latch_phase;
+    bool anim_hides_view_frame;
     struct wlr_box anim_from_box;
     struct wlr_box anim_to_box;
-    int anim_step;
+    struct wlr_box anim_cur_box;
+    struct wlr_box anim_prev_box;
+    int anim_client_src_w;
+    int anim_client_src_h;
 
     /* Double-click titlebar / window-menu button detection & live XCursor theme/size */
     uint32_t double_click_ms;
@@ -514,6 +547,18 @@ struct wlr_buffer *dtwm_render_root_menu(
 int dtwm_root_menu_item_at(int rx, int ry, int menu_w, int menu_h);
 struct wlr_buffer *dtwm_render_snap_preview(const DtwmPalette *pal, int w, int h);
 struct wlr_buffer *dtwm_render_wireframe_outline(int w, int h);
+struct wlr_buffer *dtwm_render_palette_wireframe_outline(
+    const DtwmColorSet *cs, int w, int h, double alpha
+);
+struct wlr_buffer *dtwm_render_anim_bevel_frame(
+    const DtwmPalette *pal,
+    const DtwmView *view,
+    DtwmAnimStyle style,
+    DtwmAnimKind kind,
+    int w,
+    int h,
+    double progress
+);
 struct wlr_buffer *dtwm_render_task_switcher(DtwmServer *server, int *out_w, int *out_h);
 
 /* cde_workspace.c */
@@ -551,6 +596,7 @@ void dtwm_icons_on_xcb_property(DtwmServer *server, xcb_window_t win, xcb_atom_t
 void dtwm_icons_set_wm_state(DtwmView *view);
 void dtwm_icons_relayout(DtwmServer *server);
 void dtwm_icons_update_view(DtwmView *view);
+struct wlr_buffer *dtwm_icons_render_tile_buffer(DtwmView *view, int *out_w, int *out_h);
 DtwmView *dtwm_icons_view_at(DtwmServer *server, double lx, double ly);
 void dtwm_icons_set_open_window_icons(DtwmServer *server, bool enabled);
 void dtwm_icons_set_use_icon_box(DtwmServer *server, bool enabled);
@@ -591,6 +637,10 @@ void dtwm_open_window_menu_for_view(DtwmServer *server, DtwmView *view, int x, i
 void dtwm_view_set_maximized(DtwmView *view, bool maximized);
 void dtwm_view_set_minimized(DtwmView *view, bool minimized);
 void dtwm_view_close(DtwmView *view);
+DtwmAnimStyle dtwm_parse_anim_style(const char *val);
+DtwmAnimStyle dtwm_resolve_anim_style(const DtwmServer *server, bool is_maximize);
+void dtwm_anim_cancel_all(DtwmServer *server);
+void dtwm_anim_cancel_for_view(DtwmServer *server, DtwmView *view);
 
 /* cde_output_mgmt.c */
 void dtwm_output_mgmt_init(DtwmServer *server);

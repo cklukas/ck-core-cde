@@ -1,3 +1,38 @@
+2026-11-19
+- Add backend-aware minimize/restore and maximize/unmaximize window animations across
+  `dtwm-wayland`, X11 `dtwm`, and `Style Manager - Window` (`cde/programs/dtstyle/Dtwm.c`,
+  `cde/programs/dtstyle/dtstyle.msg`, `cde/programs/dtwm/WmResNames.h`,
+  `cde/programs/dtwm/WmGlobal.h`, `cde/programs/dtwm/WmInitWs.c`,
+  `cde/programs/dtwm/WmResource.h`, `cde/programs/dtwm/WmResource.c`,
+  `cde/programs/dtwm/WmWinState.c`, `cde/programs/dtwm/Dtwm.defs.src`,
+  `cde/programs/dtwm/wayland/dtwm_wayland.h`,
+  `cde/programs/dtwm/wayland/cde_bevel.c`,
+  `cde/programs/dtwm/wayland/cde_icons.c`,
+  `cde/programs/dtwm/wayland/cde_session_lock.c`,
+  `cde/programs/dtwm/wayland/cde_workspace.c`,
+  `cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `docs/improvements/wayland.md`, `docs/improvements/window-management.md`), and
+  advance `.ckgit/motif-revision` and `.ckgit/ci.yml` to published CK Core Motif
+  ABI 9 `445c9c2166e9726ef70815ef77c087931e03c5c4`:
+  - Replace the fixed 4-tick wireframe timer in `dtwm-wayland` with a vsync-paced,
+    mid-flight-interruptible `wlroots-0.19` scene animation engine supporting
+    **Bevel Morph** / **Bevel Glide** (`bevel`, Wayland default — zero-copy client
+    surface morph with crisp unscaled `2px` Motif bevels, subtle `3×3` CAD HUD
+    hairline, icon crossfade, and `32 ms` depressed Motif icon bevel latch on
+    minimize arrival), **Titlebar Shuttle** (`titlebar`), **Wireframe**
+    (`wireframe` with 2-frame phosphor trail), and **None** (`none`), switchable
+    live via `RESOURCE_MANAGER` (`Dtwm*minimizeAnimation`,
+    `Dtwm*maximizeAnimation`) or `_DT_WM_REQUEST`.
+  - Extend classic X11 `dtwm` with `Dtwm*minimizeAnimation` and
+    `Dtwm*maximizeAnimation` supporting `none` (X11 maximize default), `wireframe`
+    (X11 minimize default), and `titlebar` (flying caption-bar outline), while
+    keeping `Dtwm*animateMinimizeRestore` compatible and degrading Wayland-only
+    `bevel` settings cleanly when roaming `$HOME` between Wayland and X11 logins.
+  - Replace the single *Animate Minimize / Restore* checkbox in
+    `Style Manager - Window` with backend-aware **Minimize / Restore Animation**
+    and **Maximize / Restore Animation** `XmOptionMenu` selectors that populate
+    only the animation styles supported by the active X11 or Wayland session.
+
 2026-11-18
 - Integrate the CK-Core CDE 3.0.0 Wayland & X11 desktop stack onto `master` and
   advance `.ckgit/motif-revision` and `.ckgit/ci.yml` to published CK Core Motif

@@ -107,6 +107,7 @@ git archive HEAD | tar -x -C "$cde_source"
 (cd "$motif_build" && "$motif_source/configure" \
     --prefix="$motif_prefix" --disable-demos --disable-static \
     --enable-xft --enable-unicode-text --enable-atspi --enable-svg \
+    --enable-xlibre-dpi \
     CC="$cc" CXX="$cxx" CFLAGS='-O1 -g0 -std=c23' CXXFLAGS='-O1 -g0')
 for component in bindings bitmaps config localized lib include tools/wml clients/uil; do
     make -j4 -C "$motif_build/$component"

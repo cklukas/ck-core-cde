@@ -649,6 +649,94 @@ static void draw_default_cde_app_emblem(
     );
 }
 
+struct wlr_buffer *dtwm_icons_render_tile_buffer(DtwmView *view, int *out_w, int *out_h) {
+    if (!view || !view->server) return nullptr;
+    DtwmServer *server = view->server;
+
+    int img_dim = server->large_icons ? 96 : 48;
+    int frame_pad = 4;
+    int img_box = img_dim + frame_pad * 2;
+    int label_w = server->large_icons ? 112 : 76;
+    if (label_w < img_box) label_w = img_box;
+    int label_h = 20;
+    int total_w = label_w;
+    int total_h = img_box + 2 + label_h;
+
+    view->icon_box_w = total_w;
+    view->icon_box_h = total_h;
+    int img_x = (total_w - img_box) / 2;
+    view->icon_w = img_dim;
+    view->icon_h = img_dim;
+    if (out_w) *out_w = total_w;
+    if (out_h) *out_h = total_h;
+
+    cairo_t *cr = nullptr;
+    cairo_surface_t *surf = nullptr;
+    struct wlr_buffer *buf = dtwm_cairo_buffer_begin(total_w, total_h, &cr, &surf);
+    if (!buf) return nullptr;
+
+    /* Clear full tile to transparent so narrow icon box sits cleanly above wider label plate */
+    cairo_save(cr);
+    cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+    cairo_paint(cr);
+    cairo_restore(cr);
+
+    /* Active-focus marker uses CDE active Crimson bevels; inactive uses CDE Slate */
+    const DtwmColorSet *cs = view->active ? &server->palette.active : &server->palette.inactive;
+    bool shaped = icon_surface_has_transparency(view->icon_surface);
+    bool sunken = view->icon_latched || (view->minimized && !view->active);
+    double press_off = view->icon_latched ? 1.0 : 0.0;
+
+    if (!shaped || view->active || view->icon_latched) {
+        cairo_set_source_rgba(cr, cs->bg.r, cs->bg.g, cs->bg.b, (shaped && !view->icon_latched) ? 0.35 : 1.0);
+        cairo_rectangle(cr, img_x, 0, img_box, img_box);
+        cairo_fill(cr);
+        if (sunken) {
+            dtwm_draw_bevel(cr, img_x, 0, img_box, img_box, 2.0, cs->bottom_shadow, cs->top_shadow);
+        } else {
+            dtwm_draw_bevel(cr, img_x, 0, img_box, img_box, 2.0, cs->top_shadow, cs->bottom_shadow);
+        }
+    }
+
+    /* Icon image (client dynamic pixmap or fallback CDE emblem) */
+    if (view->icon_surface) {
+        int sw = cairo_image_surface_get_width(view->icon_surface);
+        int sh = cairo_image_surface_get_height(view->icon_surface);
+        if (sw > 0 && sh > 0) {
+            cairo_save(cr);
+            cairo_translate(cr, img_x + frame_pad + press_off, frame_pad + press_off);
+            cairo_scale(cr, (double)img_dim / sw, (double)img_dim / sh);
+            cairo_set_source_surface(cr, view->icon_surface, 0, 0);
+            cairo_pattern_set_filter(cairo_get_source(cr), CAIRO_FILTER_GOOD);
+            cairo_paint(cr);
+            cairo_restore(cr);
+        }
+    } else {
+        draw_default_cde_app_emblem(
+            cr, img_x + frame_pad + press_off, frame_pad + press_off, img_dim, view, cs
+        );
+    }
+
+    /* Bottom 3D CDE icon label plate */
+    double ly = img_box + 2;
+    cairo_set_source_rgba(cr, cs->bg.r, cs->bg.g, cs->bg.b, 1.0);
+    cairo_rectangle(cr, 0, ly, label_w, label_h);
+    cairo_fill(cr);
+    if (view->icon_latched) {
+        dtwm_draw_bevel(cr, 0, ly, label_w, label_h, 1.5, cs->bottom_shadow, cs->top_shadow);
+    } else {
+        dtwm_draw_bevel(cr, 0, ly, label_w, label_h, 1.5, cs->top_shadow, cs->bottom_shadow);
+    }
+
+    const char *label = dtwm_view_title(view);
+    dtwm_draw_label(
+        cr, label, 2 + press_off, ly + press_off, label_w - 4, label_h, cs->fg, true, view->active
+    );
+
+    dtwm_cairo_buffer_finish(cr, surf);
+    return buf;
+}
+
 void dtwm_icons_update_view(DtwmView *view) {
     if (!view || !view->server) return;
     DtwmServer *server = view->server;
@@ -668,80 +756,8 @@ void dtwm_icons_update_view(DtwmView *view) {
         view->desktop_icon_buf = wlr_scene_buffer_create(server->desktop_icon_tree, nullptr);
     }
 
-    int img_dim = server->large_icons ? 96 : 48;
-    int frame_pad = 4;
-    int img_box = img_dim + frame_pad * 2;
-    int label_w = server->large_icons ? 112 : 76;
-    if (label_w < img_box) label_w = img_box;
-    int label_h = 20;
-    int total_w = label_w;
-    int total_h = img_box + 2 + label_h;
-
-    view->icon_box_w = total_w;
-    view->icon_box_h = total_h;
-    int img_x = (total_w - img_box) / 2;
-    view->icon_w = img_dim;
-    view->icon_h = img_dim;
-
-    cairo_t *cr = nullptr;
-    cairo_surface_t *surf = nullptr;
-    struct wlr_buffer *buf = dtwm_cairo_buffer_begin(total_w, total_h, &cr, &surf);
+    struct wlr_buffer *buf = dtwm_icons_render_tile_buffer(view, nullptr, nullptr);
     if (!buf) return;
-
-    /* Clear full tile to transparent so narrow icon box sits cleanly above wider label plate */
-    cairo_save(cr);
-    cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
-    cairo_paint(cr);
-    cairo_restore(cr);
-
-    /* Active-focus marker uses CDE active Crimson bevels; inactive uses CDE Slate */
-    const DtwmColorSet *cs = view->active ? &server->palette.active : &server->palette.inactive;
-    bool shaped = icon_surface_has_transparency(view->icon_surface);
-
-    if (!shaped || view->active) {
-        cairo_set_source_rgba(cr, cs->bg.r, cs->bg.g, cs->bg.b, shaped ? 0.35 : 1.0);
-        cairo_rectangle(cr, img_x, 0, img_box, img_box);
-        cairo_fill(cr);
-        if (view->minimized && !view->active) {
-            dtwm_draw_bevel(cr, img_x, 0, img_box, img_box, 2.0, cs->bottom_shadow, cs->top_shadow);
-        } else {
-            dtwm_draw_bevel(cr, img_x, 0, img_box, img_box, 2.0, cs->top_shadow, cs->bottom_shadow);
-        }
-    }
-
-    /* Icon image (client dynamic pixmap or fallback CDE emblem) */
-    if (view->icon_surface) {
-        int sw = cairo_image_surface_get_width(view->icon_surface);
-        int sh = cairo_image_surface_get_height(view->icon_surface);
-        if (sw > 0 && sh > 0) {
-            cairo_save(cr);
-            cairo_translate(cr, img_x + frame_pad, frame_pad);
-            cairo_scale(cr, (double)img_dim / sw, (double)img_dim / sh);
-            cairo_set_source_surface(cr, view->icon_surface, 0, 0);
-            cairo_pattern_set_filter(cairo_get_source(cr), CAIRO_FILTER_GOOD);
-            cairo_paint(cr);
-            cairo_restore(cr);
-        }
-    } else {
-        draw_default_cde_app_emblem(cr, img_x + frame_pad, frame_pad, img_dim, view, cs);
-    }
-
-    /* Bottom 3D CDE icon label plate */
-    double ly = img_box + 2;
-    cairo_set_source_rgba(cr, cs->bg.r, cs->bg.g, cs->bg.b, 1.0);
-    cairo_rectangle(cr, 0, ly, label_w, label_h);
-    cairo_fill(cr);
-    dtwm_draw_bevel(cr, 0, ly, label_w, label_h, 1.5, cs->top_shadow, cs->bottom_shadow);
-
-    const char *label = nullptr;
-    if (view->kind == DTWM_VIEW_XWAYLAND && view->xwayland_surface) {
-        label = dtwm_view_title(view);
-    } else {
-        label = dtwm_view_title(view);
-    }
-    dtwm_draw_label(cr, label, 2, ly, label_w - 4, label_h, cs->fg, true, view->active);
-
-    dtwm_cairo_buffer_finish(cr, surf);
     wlr_scene_buffer_set_buffer(view->desktop_icon_buf, buf);
     wlr_scene_node_set_enabled(&view->desktop_icon_buf->node, !view->icon_clipped_out);
     wlr_buffer_drop(buf);
@@ -1319,6 +1335,7 @@ void dtwm_icons_on_view_map(DtwmView *view) {
 void dtwm_icons_on_view_unmap_or_destroy(DtwmView *view, bool destroying) {
     if (!view || !view->server) return;
     DtwmServer *server = view->server;
+    dtwm_anim_cancel_for_view(server, view);
     if (server->swallowed_clock_view == view) {
         server->swallowed_clock_view = nullptr;
         dtwm_update_front_panel(server);

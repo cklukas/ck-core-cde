@@ -7,9 +7,11 @@
 
 #include "dtwm_wayland.h"
 
+#include <ctype.h>
 #include <getopt.h>
 #include <limits.h>
 #include <linux/input-event-codes.h>
+#include <math.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -332,10 +334,555 @@ static void focus_view(DtwmServer *server, DtwmView *view, struct wlr_surface *s
     focus_view_ex(server, view, surface, true);
 }
 
+static uint64_t dtwm_now_nsec(void) {
+    struct timespec ts = {0};
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (uint64_t)ts.tv_sec * 1000000000ull + (uint64_t)ts.tv_nsec;
+}
+
+DtwmAnimStyle dtwm_parse_anim_style(const char *val) {
+    if (!val) return DTWM_ANIM_STYLE_AUTO;
+    while (*val && isspace((unsigned char)*val)) val++;
+    char buf[32] = {0};
+    size_t i = 0;
+    while (val[i] && !isspace((unsigned char)val[i]) && i + 1 < sizeof(buf)) {
+        buf[i] = (char)tolower((unsigned char)val[i]);
+        i++;
+    }
+    buf[i] = '\0';
+
+    if (strcmp(buf, "none") == 0 || strcmp(buf, "false") == 0 ||
+        strcmp(buf, "off") == 0 || strcmp(buf, "0") == 0) {
+        return DTWM_ANIM_STYLE_NONE;
+    }
+    if (strcmp(buf, "bevel") == 0 || strcmp(buf, "bevel_morph") == 0 ||
+        strcmp(buf, "bevel_glide") == 0 || strcmp(buf, "bevelmorph") == 0 ||
+        strcmp(buf, "bevelglide") == 0) {
+        return DTWM_ANIM_STYLE_BEVEL;
+    }
+    if (strcmp(buf, "titlebar") == 0 || strcmp(buf, "titlebar_shuttle") == 0 ||
+        strcmp(buf, "titlebarshuttle") == 0) {
+        return DTWM_ANIM_STYLE_TITLEBAR;
+    }
+    if (strcmp(buf, "wireframe") == 0) {
+        return DTWM_ANIM_STYLE_WIREFRAME;
+    }
+    return DTWM_ANIM_STYLE_AUTO;
+}
+
+DtwmAnimStyle dtwm_resolve_anim_style(const DtwmServer *server, bool is_maximize) {
+    if (!server || server->greeter_mode || server->session_locked) {
+        return DTWM_ANIM_STYLE_NONE;
+    }
+    DtwmAnimStyle raw = is_maximize ? server->maximize_anim_style : server->minimize_anim_style;
+    if (raw != DTWM_ANIM_STYLE_AUTO) {
+        return raw;
+    }
+    if (!is_maximize && !server->legacy_animate_minimize) {
+        return DTWM_ANIM_STYLE_NONE;
+    }
+    /* Wayland default for both minimize/restore and maximize/unmaximize is Bevel */
+    return DTWM_ANIM_STYLE_BEVEL;
+}
+
+static void schedule_all_outputs_frame(DtwmServer *server) {
+    if (!server) return;
+    DtwmOutput *out;
+    wl_list_for_each(out, &server->outputs, link) {
+        if (out->wlr_output && out->wlr_output->enabled) {
+            wlr_output_schedule_frame(out->wlr_output);
+        }
+    }
+}
+
+static struct wlr_buffer *lock_view_client_buffer(DtwmView *view) {
+    if (!view) return nullptr;
+    struct wlr_surface *surf = view_wlr_surface(view);
+    if (!surf || !surf->buffer) return nullptr;
+    return wlr_buffer_lock(&surf->buffer->base);
+}
+
+static void clear_anim_scene_nodes(DtwmServer *server) {
+    if (!server) return;
+    if (server->anim_trail_buf) {
+        wlr_scene_buffer_set_buffer(server->anim_trail_buf, nullptr);
+        wlr_scene_node_set_enabled(&server->anim_trail_buf->node, false);
+    }
+    if (server->anim_client_buf) {
+        wlr_scene_buffer_set_buffer(server->anim_client_buf, nullptr);
+        wlr_scene_buffer_set_source_box(server->anim_client_buf, nullptr);
+        wlr_scene_buffer_set_dest_size(server->anim_client_buf, 0, 0);
+        wlr_scene_buffer_set_opacity(server->anim_client_buf, 1.0f);
+        wlr_scene_node_set_enabled(&server->anim_client_buf->node, false);
+    }
+    if (server->anim_icon_buf) {
+        wlr_scene_buffer_set_buffer(server->anim_icon_buf, nullptr);
+        wlr_scene_buffer_set_dest_size(server->anim_icon_buf, 0, 0);
+        wlr_scene_buffer_set_opacity(server->anim_icon_buf, 1.0f);
+        wlr_scene_node_set_enabled(&server->anim_icon_buf->node, false);
+    }
+    if (server->anim_frame_buf) {
+        wlr_scene_buffer_set_buffer(server->anim_frame_buf, nullptr);
+        wlr_scene_node_set_enabled(&server->anim_frame_buf->node, false);
+    }
+    if (server->anim_tree) {
+        wlr_scene_node_set_enabled(&server->anim_tree->node, false);
+    }
+}
+
+static void finish_or_cancel_anim(DtwmServer *server, bool allow_latch) {
+    if (!server || server->anim_kind == DTWM_ANIM_KIND_NONE) {
+        return;
+    }
+    DtwmView *v = server->anim_view;
+
+    if (allow_latch && !server->anim_in_latch_phase &&
+        server->anim_kind == DTWM_ANIM_KIND_MINIMIZE &&
+        server->anim_active_style == DTWM_ANIM_STYLE_BEVEL &&
+        v && v->mapped && v->minimized) {
+        clear_anim_scene_nodes(server);
+        server->anim_in_latch_phase = true;
+        server->anim_hides_view_frame = false;
+        server->anim_start_ns = dtwm_now_nsec();
+        server->anim_duration_ms = 32;
+        v->icon_latched = true;
+        dtwm_icons_update_view(v);
+        schedule_all_outputs_frame(server);
+        if (server->anim_timer) {
+            wl_event_source_timer_update(server->anim_timer, 34);
+        }
+        return;
+    }
+
+    clear_anim_scene_nodes(server);
+    if (v) {
+        if (v->icon_latched) {
+            v->icon_latched = false;
+            if (v->mapped) {
+                dtwm_icons_update_view(v);
+            }
+        }
+        if (server->anim_hides_view_frame && v->frame_tree && v->mapped) {
+            wlr_scene_node_set_enabled(&v->frame_tree->node, dtwm_view_visible_on_current_ws(v));
+        }
+        if (v->desktop_icon_buf && v->mapped && (v->minimized || server->show_open_window_icons)) {
+            wlr_scene_node_set_enabled(&v->desktop_icon_buf->node, !v->icon_clipped_out);
+        }
+    }
+
+    server->anim_view = nullptr;
+    server->anim_kind = DTWM_ANIM_KIND_NONE;
+    server->anim_active_style = DTWM_ANIM_STYLE_NONE;
+    server->anim_in_latch_phase = false;
+    server->anim_hides_view_frame = false;
+    server->anim_prev_box = (struct wlr_box){0};
+    if (server->anim_timer) {
+        wl_event_source_timer_update(server->anim_timer, 0);
+    }
+    schedule_all_outputs_frame(server);
+}
+
+void dtwm_anim_cancel_all(DtwmServer *server) {
+    finish_or_cancel_anim(server, false);
+}
+
+void dtwm_anim_cancel_for_view(DtwmServer *server, DtwmView *view) {
+    if (!server || !view) return;
+    if (server->anim_view == view) {
+        finish_or_cancel_anim(server, false);
+    } else if (view->icon_latched) {
+        view->icon_latched = false;
+    }
+}
+
+static void step_window_anim(DtwmServer *server, uint64_t now_ns) {
+    if (!server || server->anim_kind == DTWM_ANIM_KIND_NONE || !server->anim_tree) {
+        return;
+    }
+    if (server->session_locked || server->greeter_mode) {
+        finish_or_cancel_anim(server, false);
+        return;
+    }
+
+    uint64_t elapsed_ns = (now_ns >= server->anim_start_ns) ? (now_ns - server->anim_start_ns) : 0;
+    double elapsed_ms = (double)elapsed_ns / 1000000.0;
+    double dur_ms = (server->anim_duration_ms > 0) ? (double)server->anim_duration_ms : 1.0;
+
+    if (server->anim_in_latch_phase) {
+        if (elapsed_ms >= dur_ms) {
+            finish_or_cancel_anim(server, false);
+        } else {
+            schedule_all_outputs_frame(server);
+        }
+        return;
+    }
+
+    if (elapsed_ms >= dur_ms) {
+        finish_or_cancel_anim(server, true);
+        return;
+    }
+
+    double raw_t = elapsed_ms / dur_ms;
+    if (raw_t < 0.0) raw_t = 0.0;
+    if (raw_t > 1.0) raw_t = 1.0;
+
+    /* Decisive workstation quartic/cubic ease-out without rubbery overshoot */
+    double exp_pow = (server->anim_kind == DTWM_ANIM_KIND_MINIMIZE) ? 3.2 : 4.0;
+    double u = 1.0 - pow(1.0 - raw_t, exp_pow);
+
+    int x = (int)lround(server->anim_from_box.x +
+                        (server->anim_to_box.x - server->anim_from_box.x) * u);
+    int y = (int)lround(server->anim_from_box.y +
+                        (server->anim_to_box.y - server->anim_from_box.y) * u);
+    int w = (int)lround(server->anim_from_box.width +
+                        (server->anim_to_box.width - server->anim_from_box.width) * u);
+    int h = (int)lround(server->anim_from_box.height +
+                        (server->anim_to_box.height - server->anim_from_box.height) * u);
+    if (w < 12) w = 12;
+    if (h < 12) h = 12;
+
+    struct wlr_box prev = server->anim_cur_box;
+    server->anim_cur_box = (struct wlr_box){.x = x, .y = y, .width = w, .height = h};
+
+    wlr_scene_node_set_position(&server->anim_tree->node, x, y);
+    wlr_scene_node_set_enabled(&server->anim_tree->node, true);
+
+    DtwmView *view = server->anim_view;
+    DtwmAnimStyle style = server->anim_active_style;
+    DtwmAnimKind kind = server->anim_kind;
+    bool is_minmax_icon = (kind == DTWM_ANIM_KIND_MINIMIZE || kind == DTWM_ANIM_KIND_RESTORE);
+
+    /* Refresh maximize/unmaximize client texture automatically once client commits new buffer */
+    if (!is_minmax_icon && view && (style == DTWM_ANIM_STYLE_BEVEL || style == DTWM_ANIM_STYLE_TITLEBAR)) {
+        struct wlr_surface *surf = view_wlr_surface(view);
+        if (surf && surf->buffer && server->anim_client_buf) {
+            struct wlr_buffer *live_b = &surf->buffer->base;
+            if (live_b->width != server->anim_client_src_w ||
+                live_b->height != server->anim_client_src_h) {
+                wlr_scene_buffer_set_buffer(server->anim_client_buf, live_b);
+                server->anim_client_src_w = live_b->width;
+                server->anim_client_src_h = live_b->height;
+            }
+        }
+    }
+
+    if (style == DTWM_ANIM_STYLE_WIREFRAME) {
+        const DtwmColorSet *cs =
+            (view && view->active) ? &server->palette.active : &server->palette.inactive;
+        if (server->anim_trail_buf) {
+            if (prev.width >= 12 && prev.height >= 12 &&
+                (abs(prev.x - x) > 1 || abs(prev.y - y) > 1 ||
+                 abs(prev.width - w) > 1 || abs(prev.height - h) > 1)) {
+                struct wlr_buffer *tbuf =
+                    dtwm_render_palette_wireframe_outline(cs, prev.width, prev.height, 0.30);
+                if (tbuf) {
+                    wlr_scene_buffer_set_buffer(server->anim_trail_buf, tbuf);
+                    wlr_buffer_drop(tbuf);
+                    wlr_scene_node_set_position(&server->anim_trail_buf->node, prev.x - x, prev.y - y);
+                    wlr_scene_node_set_enabled(&server->anim_trail_buf->node, true);
+                }
+            } else {
+                wlr_scene_node_set_enabled(&server->anim_trail_buf->node, false);
+            }
+        }
+        struct wlr_buffer *fbuf = dtwm_render_palette_wireframe_outline(cs, w, h, 1.0);
+        if (fbuf && server->anim_frame_buf) {
+            wlr_scene_buffer_set_buffer(server->anim_frame_buf, fbuf);
+            wlr_buffer_drop(fbuf);
+            wlr_scene_node_set_position(&server->anim_frame_buf->node, 0, 0);
+            wlr_scene_node_set_enabled(&server->anim_frame_buf->node, true);
+        }
+    } else if (style == DTWM_ANIM_STYLE_TITLEBAR) {
+        if (server->anim_trail_buf) {
+            wlr_scene_node_set_enabled(&server->anim_trail_buf->node, false);
+        }
+        /* Brief client fade on minimize/restore while detached 3D titlebar shuttles */
+        if (server->anim_client_buf && server->anim_client_src_w > 0 && server->anim_client_src_h > 0) {
+            if (is_minmax_icon) {
+                double fade = (kind == DTWM_ANIM_KIND_MINIMIZE)
+                                  ? (1.0 - raw_t / 0.40)
+                                  : ((raw_t - 0.58) / 0.42);
+                if (fade > 0.02) {
+                    if (fade > 1.0) fade = 1.0;
+                    struct wlr_box win_ref =
+                        (kind == DTWM_ANIM_KIND_MINIMIZE) ? server->anim_from_box : server->anim_to_box;
+                    int l = DTWM_BORDER_WIDTH, t_in = DTWM_BORDER_WIDTH + DTWM_TITLE_HEIGHT;
+                    int r = DTWM_BORDER_WIDTH, b_in = DTWM_BORDER_WIDTH;
+                    if (view) dtwm_view_insets(view, &l, &t_in, &r, &b_in);
+                    int cw = win_ref.width - l - r;
+                    int ch = win_ref.height - t_in - b_in;
+                    if (cw > 8 && ch > 8) {
+                        wlr_scene_node_set_position(
+                            &server->anim_client_buf->node, win_ref.x - x + l, win_ref.y - y + t_in
+                        );
+                        wlr_scene_buffer_set_source_box(server->anim_client_buf, nullptr);
+                        wlr_scene_buffer_set_dest_size(server->anim_client_buf, cw, ch);
+                        wlr_scene_buffer_set_opacity(server->anim_client_buf, (float)(fade * 0.72));
+                        wlr_scene_node_set_enabled(&server->anim_client_buf->node, true);
+                    }
+                } else {
+                    wlr_scene_node_set_enabled(&server->anim_client_buf->node, false);
+                }
+            } else {
+                int l = DTWM_BORDER_WIDTH, t_in = DTWM_BORDER_WIDTH + DTWM_TITLE_HEIGHT;
+                int r = DTWM_BORDER_WIDTH, b_in = DTWM_BORDER_WIDTH;
+                if (view) dtwm_view_insets(view, &l, &t_in, &r, &b_in);
+                int cw = w - l - r;
+                int ch = h - t_in - b_in;
+                if (cw > 8 && ch > 8) {
+                    wlr_scene_node_set_position(&server->anim_client_buf->node, l, t_in);
+                    wlr_scene_buffer_set_source_box(server->anim_client_buf, nullptr);
+                    wlr_scene_buffer_set_dest_size(server->anim_client_buf, cw, ch);
+                    wlr_scene_buffer_set_opacity(server->anim_client_buf, 0.92f);
+                    wlr_scene_node_set_enabled(&server->anim_client_buf->node, true);
+                } else {
+                    wlr_scene_node_set_enabled(&server->anim_client_buf->node, false);
+                }
+            }
+        }
+        struct wlr_buffer *fbuf = dtwm_render_anim_bevel_frame(
+            &server->palette, view, style, kind, w, h, u
+        );
+        if (fbuf && server->anim_frame_buf) {
+            wlr_scene_buffer_set_buffer(server->anim_frame_buf, fbuf);
+            wlr_buffer_drop(fbuf);
+            wlr_scene_node_set_position(&server->anim_frame_buf->node, 0, 0);
+            wlr_scene_node_set_enabled(&server->anim_frame_buf->node, true);
+        }
+    } else {
+        /* DTWM_ANIM_STYLE_BEVEL ("Bevel Morph & Latch" / "Bevel Glide") */
+        if (server->anim_trail_buf) {
+            wlr_scene_node_set_enabled(&server->anim_trail_buf->node, false);
+        }
+        double icon_blend = 0.0;
+        if (kind == DTWM_ANIM_KIND_MINIMIZE) {
+            icon_blend = u;
+        } else if (kind == DTWM_ANIM_KIND_RESTORE) {
+            icon_blend = 1.0 - u;
+        }
+
+        int b_side = (int)lround((1.0 - icon_blend) * DTWM_BORDER_WIDTH + icon_blend * 2.0);
+        if (b_side < 2) b_side = 2;
+        bool has_title = (!view || (view->decorated && view->has_title));
+        int b_top = has_title
+                        ? (int)lround((1.0 - icon_blend) * (DTWM_BORDER_WIDTH + DTWM_TITLE_HEIGHT) +
+                                      icon_blend * 2.0)
+                        : b_side;
+        if (b_top < b_side) b_top = b_side;
+        if (b_side * 2 >= w - 4) b_side = 2;
+        if (b_top + b_side >= h - 4) b_top = b_side;
+
+        int in_w = w - 2 * b_side;
+        int in_h = h - b_top - b_side;
+
+        /* 1. Client surface layer with aspect-preserving crop & smooth crossfade */
+        if (server->anim_client_buf && server->anim_client_src_w > 0 &&
+            server->anim_client_src_h > 0 && in_w >= 4 && in_h >= 4) {
+            double c_alpha = 1.0;
+            if (is_minmax_icon) {
+                c_alpha = 1.0 - (icon_blend - 0.22) / 0.63;
+                if (c_alpha < 0.0) c_alpha = 0.0;
+                if (c_alpha > 1.0) c_alpha = 1.0;
+            }
+            if (c_alpha > 0.02) {
+                double sw = (double)server->anim_client_src_w;
+                double sh = (double)server->anim_client_src_h;
+                struct wlr_fbox sbox = {.x = 0.0, .y = 0.0, .width = sw, .height = sh};
+                if (is_minmax_icon && sw > 8.0 && sh > 8.0 && in_w > 0 && in_h > 0) {
+                    double dst_aspect = (double)in_w / (double)in_h;
+                    double src_aspect = sw / sh;
+                    double crop_w = sw, crop_h = sh;
+                    if (src_aspect > dst_aspect) {
+                        crop_w = sh * dst_aspect;
+                    } else {
+                        crop_h = sw / dst_aspect;
+                    }
+                    /* Blend smoothly between full window view and aspect-matched center crop */
+                    double cw = sw * (1.0 - icon_blend) + crop_w * icon_blend;
+                    double ch = sh * (1.0 - icon_blend) + crop_h * icon_blend;
+                    sbox.x = (sw - cw) * 0.5;
+                    sbox.y = (sh - ch) * 0.5;
+                    sbox.width = cw;
+                    sbox.height = ch;
+                }
+                wlr_scene_node_set_position(&server->anim_client_buf->node, b_side, b_top);
+                wlr_scene_buffer_set_source_box(server->anim_client_buf, &sbox);
+                wlr_scene_buffer_set_dest_size(server->anim_client_buf, in_w, in_h);
+                wlr_scene_buffer_set_opacity(server->anim_client_buf, (float)c_alpha);
+                wlr_scene_node_set_enabled(&server->anim_client_buf->node, true);
+            } else {
+                wlr_scene_node_set_enabled(&server->anim_client_buf->node, false);
+            }
+        } else if (server->anim_client_buf) {
+            wlr_scene_node_set_enabled(&server->anim_client_buf->node, false);
+        }
+
+        /* 2. CDE Desktop Icon tile crossfade layer (aligned so img_box matches w x h at icon end) */
+        if (server->anim_icon_buf && is_minmax_icon && view) {
+            double i_alpha = (icon_blend - 0.28) / 0.62;
+            if (i_alpha < 0.0) i_alpha = 0.0;
+            if (i_alpha > 1.0) i_alpha = 1.0;
+            if (i_alpha > 0.02) {
+                int img_dim = server->large_icons ? 96 : 48;
+                int img_box = img_dim + 8;
+                int tile_w = view->icon_box_w > 0 ? view->icon_box_w : 76;
+                int tile_h = view->icon_box_h > 0 ? view->icon_box_h : (img_box + 22);
+                double sx = (double)w / (double)img_box;
+                double sy = (double)h / (double)img_box;
+                int dst_tw = (int)lround((double)tile_w * sx);
+                int dst_th = (int)lround((double)tile_h * sy);
+                int off_x = -(int)lround((double)((tile_w - img_box) / 2) * sx);
+                wlr_scene_node_set_position(&server->anim_icon_buf->node, off_x, 0);
+                wlr_scene_buffer_set_dest_size(
+                    server->anim_icon_buf, dst_tw > 4 ? dst_tw : 4, dst_th > 4 ? dst_th : 4
+                );
+                wlr_scene_buffer_set_opacity(server->anim_icon_buf, (float)i_alpha);
+                wlr_scene_node_set_enabled(&server->anim_icon_buf->node, true);
+            } else {
+                wlr_scene_node_set_enabled(&server->anim_icon_buf->node, false);
+            }
+        } else if (server->anim_icon_buf) {
+            wlr_scene_node_set_enabled(&server->anim_icon_buf->node, false);
+        }
+
+        /* 3. Crisp unscaled 2px Motif bevel perimeter & HUD hairline */
+        struct wlr_buffer *fbuf = dtwm_render_anim_bevel_frame(
+            &server->palette, view, style, kind, w, h, u
+        );
+        if (fbuf && server->anim_frame_buf) {
+            wlr_scene_buffer_set_buffer(server->anim_frame_buf, fbuf);
+            wlr_buffer_drop(fbuf);
+            wlr_scene_node_set_position(&server->anim_frame_buf->node, 0, 0);
+            wlr_scene_node_set_enabled(&server->anim_frame_buf->node, true);
+        }
+    }
+
+    schedule_all_outputs_frame(server);
+    if (server->anim_timer) {
+        wl_event_source_timer_update(server->anim_timer, 16);
+    }
+}
+
+static int handle_anim_timer(void *data) {
+    DtwmServer *server = data;
+    if (!server || server->anim_kind == DTWM_ANIM_KIND_NONE) {
+        return 0;
+    }
+    step_window_anim(server, dtwm_now_nsec());
+    return 0;
+}
+
+static void start_window_anim(
+    DtwmServer *server,
+    DtwmView *view,
+    DtwmAnimKind kind,
+    struct wlr_box from_box,
+    struct wlr_box to_box,
+    struct wlr_buffer *client_buf_override,
+    struct wlr_buffer *icon_buf_override
+) {
+    if (!server || !view || !server->anim_tree || !server->anim_timer) {
+        return;
+    }
+    if (view->is_panel || view->is_subpanel || view->is_desktop_pin ||
+        view->is_swallowed || view->is_lock_dialog) {
+        return;
+    }
+    bool is_max = (kind == DTWM_ANIM_KIND_MAXIMIZE || kind == DTWM_ANIM_KIND_UNMAXIMIZE);
+    DtwmAnimStyle style = dtwm_resolve_anim_style(server, is_max);
+    if (style == DTWM_ANIM_STYLE_NONE) {
+        return;
+    }
+
+    /* Smoothly reverse from current interpolated box when interrupting the same window */
+    if (server->anim_view == view && server->anim_kind != DTWM_ANIM_KIND_NONE &&
+        !server->anim_in_latch_phase && server->anim_cur_box.width > 0 &&
+        server->anim_cur_box.height > 0) {
+        from_box = server->anim_cur_box;
+    }
+    finish_or_cancel_anim(server, false);
+
+    server->anim_view = view;
+    server->anim_kind = kind;
+    server->anim_active_style = style;
+    server->anim_from_box = from_box;
+    server->anim_to_box = to_box;
+    server->anim_cur_box = from_box;
+    server->anim_prev_box = from_box;
+    server->anim_start_ns = dtwm_now_nsec();
+    server->anim_in_latch_phase = false;
+
+    if (is_max) {
+        server->anim_duration_ms = (style == DTWM_ANIM_STYLE_TITLEBAR) ? 90 : 95;
+    } else if (kind == DTWM_ANIM_KIND_MINIMIZE) {
+        server->anim_duration_ms =
+            (style == DTWM_ANIM_STYLE_BEVEL) ? 125 : ((style == DTWM_ANIM_STYLE_TITLEBAR) ? 105 : 110);
+    } else {
+        server->anim_duration_ms =
+            (style == DTWM_ANIM_STYLE_BEVEL) ? 120 : ((style == DTWM_ANIM_STYLE_TITLEBAR) ? 105 : 110);
+    }
+
+    server->anim_client_src_w = 0;
+    server->anim_client_src_h = 0;
+    if (style != DTWM_ANIM_STYLE_WIREFRAME && server->anim_client_buf) {
+        if (client_buf_override) {
+            wlr_scene_buffer_set_buffer(server->anim_client_buf, client_buf_override);
+            wlr_scene_buffer_set_filter_mode(server->anim_client_buf, WLR_SCALE_FILTER_BILINEAR);
+            server->anim_client_src_w = client_buf_override->width;
+            server->anim_client_src_h = client_buf_override->height;
+        } else {
+            struct wlr_surface *surf = view_wlr_surface(view);
+            if (surf && surf->buffer) {
+                struct wlr_buffer *cbuf = &surf->buffer->base;
+                wlr_scene_buffer_set_buffer(server->anim_client_buf, cbuf);
+                wlr_scene_buffer_set_filter_mode(server->anim_client_buf, WLR_SCALE_FILTER_BILINEAR);
+                server->anim_client_src_w = cbuf->width;
+                server->anim_client_src_h = cbuf->height;
+            }
+        }
+    }
+
+    if (style == DTWM_ANIM_STYLE_BEVEL && !is_max && server->anim_icon_buf) {
+        if (icon_buf_override) {
+            wlr_scene_buffer_set_buffer(server->anim_icon_buf, icon_buf_override);
+            wlr_scene_buffer_set_filter_mode(server->anim_icon_buf, WLR_SCALE_FILTER_BILINEAR);
+        } else {
+            struct wlr_buffer *ibuf = dtwm_icons_render_tile_buffer(view, nullptr, nullptr);
+            if (ibuf) {
+                wlr_scene_buffer_set_buffer(server->anim_icon_buf, ibuf);
+                wlr_scene_buffer_set_filter_mode(server->anim_icon_buf, WLR_SCALE_FILTER_BILINEAR);
+                wlr_buffer_drop(ibuf);
+            }
+        }
+    }
+
+    /* Hide live frame_tree during Restore/Maximize/Unmaximize morph so there is no double-draw */
+    server->anim_hides_view_frame =
+        (style != DTWM_ANIM_STYLE_WIREFRAME && kind != DTWM_ANIM_KIND_MINIMIZE);
+    if (server->anim_hides_view_frame && view->frame_tree) {
+        wlr_scene_node_set_enabled(&view->frame_tree->node, false);
+    }
+    /* When open-window icons are off, wait until arrival to reveal the newly created desktop icon */
+    if (kind == DTWM_ANIM_KIND_MINIMIZE && style == DTWM_ANIM_STYLE_BEVEL &&
+        !server->show_open_window_icons && view->desktop_icon_buf) {
+        wlr_scene_node_set_enabled(&view->desktop_icon_buf->node, false);
+    }
+
+    step_window_anim(server, server->anim_start_ns);
+}
+
 static void view_set_maximized(DtwmView *view, bool maximized) {
     if (view->maximized == maximized) {
         return;
     }
+    DtwmServer *server = view->server;
+    bool can_anim = (view->mapped && !view->minimized && dtwm_view_visible_on_current_ws(view) &&
+                     dtwm_resolve_anim_style(server, true) != DTWM_ANIM_STYLE_NONE);
+    int pre_ow = 0, pre_oh = 0;
+    dtwm_view_outer_size(view, &pre_ow, &pre_oh);
+    struct wlr_box from_box = {.x = view->x, .y = view->y, .width = pre_ow, .height = pre_oh};
+    struct wlr_buffer *pre_cbuf = can_anim ? lock_view_client_buffer(view) : nullptr;
+
     if (maximized) {
         view->saved_x = view->x;
         view->saved_y = view->y;
@@ -370,50 +917,27 @@ static void view_set_maximized(DtwmView *view, bool maximized) {
         }
     }
     dtwm_foreign_toplevel_sync(view);
-}
 
-static int handle_anim_timer(void *data) {
-    DtwmServer *server = data;
-    if (!server || !server->anim_buf) {
-        return 0;
+    if (can_anim) {
+        int post_ow = 0, post_oh = 0;
+        dtwm_view_outer_size(view, &post_ow, &post_oh);
+        struct wlr_box to_box = {.x = view->x, .y = view->y, .width = post_ow, .height = post_oh};
+        if (from_box.x != to_box.x || from_box.y != to_box.y ||
+            from_box.width != to_box.width || from_box.height != to_box.height) {
+            start_window_anim(
+                server,
+                view,
+                maximized ? DTWM_ANIM_KIND_MAXIMIZE : DTWM_ANIM_KIND_UNMAXIMIZE,
+                from_box,
+                to_box,
+                pre_cbuf,
+                nullptr
+            );
+        }
     }
-    const int total_steps = 4;
-    if (server->anim_step <= 0 || server->anim_step > total_steps) {
-        wlr_scene_buffer_set_buffer(server->anim_buf, nullptr);
-        wlr_scene_node_set_enabled(&server->anim_buf->node, false);
-        server->anim_step = 0;
-        return 0;
+    if (pre_cbuf) {
+        wlr_buffer_unlock(pre_cbuf);
     }
-    double t = (double)server->anim_step / (double)(total_steps + 1);
-    int x = (int)(server->anim_from_box.x + (server->anim_to_box.x - server->anim_from_box.x) * t);
-    int y = (int)(server->anim_from_box.y + (server->anim_to_box.y - server->anim_from_box.y) * t);
-    int w = (int)(server->anim_from_box.width + (server->anim_to_box.width - server->anim_from_box.width) * t);
-    int h = (int)(server->anim_from_box.height + (server->anim_to_box.height - server->anim_from_box.height) * t);
-    struct wlr_buffer *buf = dtwm_render_wireframe_outline(w, h);
-    if (buf) {
-        wlr_scene_buffer_set_buffer(server->anim_buf, buf);
-        wlr_buffer_drop(buf);
-        wlr_scene_node_set_position(&server->anim_buf->node, x, y);
-        wlr_scene_node_set_enabled(&server->anim_buf->node, true);
-    }
-    server->anim_step++;
-    if (server->anim_timer) {
-        wl_event_source_timer_update(server->anim_timer, 18);
-    }
-    return 0;
-}
-
-static void start_minimize_restore_anim(
-    DtwmServer *server, struct wlr_box from_box, struct wlr_box to_box
-) {
-    if (!server || !server->animate_minimize || server->greeter_mode || !server->anim_timer ||
-        !server->anim_buf) {
-        return;
-    }
-    server->anim_from_box = from_box;
-    server->anim_to_box = to_box;
-    server->anim_step = 1;
-    handle_anim_timer(server);
 }
 
 static void view_set_minimized(DtwmView *view, bool minimized) {
@@ -421,17 +945,26 @@ static void view_set_minimized(DtwmView *view, bool minimized) {
         return;
     }
     DtwmServer *server = view->server;
+    DtwmAnimStyle style = dtwm_resolve_anim_style(server, false);
     int ow = 0, oh = 0;
     dtwm_view_outer_size(view, &ow, &oh);
     struct wlr_box win_box = {.x = view->x, .y = view->y, .width = ow, .height = oh};
+    int img_box = (server->large_icons ? 96 : 48) + 8;
     struct wlr_box pre_icon_box = {
-        .x = view->icon_x,
-        .y = view->icon_y,
-        .width = view->icon_box_w > 0 ? view->icon_box_w : 56,
-        .height = view->icon_box_h > 0 ? view->icon_box_h : 56,
+        .x = view->icon_x - 4,
+        .y = view->icon_y - 4,
+        .width = img_box,
+        .height = img_box,
     };
+    struct wlr_buffer *pre_cbuf =
+        (view->mapped && style != DTWM_ANIM_STYLE_NONE) ? lock_view_client_buffer(view) : nullptr;
+    struct wlr_buffer *pre_ibuf =
+        (view->mapped && !minimized && style == DTWM_ANIM_STYLE_BEVEL)
+            ? dtwm_icons_render_tile_buffer(view, nullptr, nullptr)
+            : nullptr;
 
     view->minimized = minimized;
+    view->icon_latched = false;
     if (view->frame_tree) {
         wlr_scene_node_set_enabled(&view->frame_tree->node, dtwm_view_visible_on_current_ws(view));
     }
@@ -441,22 +974,6 @@ static void view_set_minimized(DtwmView *view, bool minimized) {
     }
     dtwm_icons_relayout(server);
     dtwm_foreign_toplevel_sync(view);
-
-    if (view->mapped && server->animate_minimize) {
-        struct wlr_box icon_box = minimized
-            ? (struct wlr_box){
-                  .x = view->icon_x,
-                  .y = view->icon_y,
-                  .width = view->icon_box_w > 0 ? view->icon_box_w : 56,
-                  .height = view->icon_box_h > 0 ? view->icon_box_h : 56,
-              }
-            : pre_icon_box;
-        if (icon_box.x > 0 || icon_box.y > 0) {
-            start_minimize_restore_anim(
-                server, minimized ? win_box : icon_box, minimized ? icon_box : win_box
-            );
-        }
-    }
 
     if (minimized && server->focused_view == view) {
         clear_active_focus(server);
@@ -470,6 +987,30 @@ static void view_set_minimized(DtwmView *view, bool minimized) {
             }
         }
     }
+
+    if (view->mapped && style != DTWM_ANIM_STYLE_NONE) {
+        struct wlr_box icon_box = minimized
+            ? (struct wlr_box){
+                  .x = view->icon_x - 4,
+                  .y = view->icon_y - 4,
+                  .width = img_box,
+                  .height = img_box,
+              }
+            : pre_icon_box;
+        if (icon_box.x > -32 || icon_box.y > -32) {
+            start_window_anim(
+                server,
+                view,
+                minimized ? DTWM_ANIM_KIND_MINIMIZE : DTWM_ANIM_KIND_RESTORE,
+                minimized ? win_box : icon_box,
+                minimized ? icon_box : win_box,
+                pre_cbuf,
+                pre_ibuf
+            );
+        }
+    }
+    if (pre_cbuf) wlr_buffer_unlock(pre_cbuf);
+    if (pre_ibuf) wlr_buffer_drop(pre_ibuf);
 }
 
 static void view_close(DtwmView *view) {
@@ -2229,7 +2770,11 @@ static void handle_request_start_drag(struct wl_listener *listener, void *data) 
 static void handle_output_frame(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmOutput *output = wl_container_of(listener, output, frame);
-    struct wlr_scene_output *scene_output = wlr_scene_get_scene_output(output->server->scene, output->wlr_output);
+    DtwmServer *server = output->server;
+    if (server && server->anim_kind != DTWM_ANIM_KIND_NONE) {
+        step_window_anim(server, dtwm_now_nsec());
+    }
+    struct wlr_scene_output *scene_output = wlr_scene_get_scene_output(server->scene, output->wlr_output);
     if (!scene_output) return;
 
     struct wlr_output_state state;
@@ -3669,8 +4214,16 @@ int main(int argc, char **argv) {
     wlr_scene_node_set_enabled(&server.snap_preview_buf->node, false);
     server.wireframe_buf = wlr_scene_buffer_create(server.overlay_tree, nullptr);
     wlr_scene_node_set_enabled(&server.wireframe_buf->node, false);
-    server.anim_buf = wlr_scene_buffer_create(server.overlay_tree, nullptr);
-    wlr_scene_node_set_enabled(&server.anim_buf->node, false);
+    server.anim_tree = wlr_scene_tree_create(server.overlay_tree);
+    wlr_scene_node_set_enabled(&server.anim_tree->node, false);
+    server.anim_trail_buf = wlr_scene_buffer_create(server.anim_tree, nullptr);
+    wlr_scene_node_set_enabled(&server.anim_trail_buf->node, false);
+    server.anim_client_buf = wlr_scene_buffer_create(server.anim_tree, nullptr);
+    wlr_scene_node_set_enabled(&server.anim_client_buf->node, false);
+    server.anim_icon_buf = wlr_scene_buffer_create(server.anim_tree, nullptr);
+    wlr_scene_node_set_enabled(&server.anim_icon_buf->node, false);
+    server.anim_frame_buf = wlr_scene_buffer_create(server.anim_tree, nullptr);
+    wlr_scene_node_set_enabled(&server.anim_frame_buf->node, false);
     server.anim_timer = wl_event_loop_add_timer(ev_loop, handle_anim_timer, &server);
     server.resize_flush_timer = wl_event_loop_add_timer(ev_loop, handle_resize_flush_timer, &server);
     server.menu_buf = wlr_scene_buffer_create(server.overlay_tree, nullptr);
@@ -3682,7 +4235,9 @@ int main(int argc, char **argv) {
     server.focus_follows_mouse = false;
     server.focus_auto_raise = true;
     server.allow_primary_on_top = false;
-    server.animate_minimize = true;
+    server.legacy_animate_minimize = true;
+    server.minimize_anim_style = DTWM_ANIM_STYLE_AUTO;
+    server.maximize_anim_style = DTWM_ANIM_STYLE_AUTO;
     server.show_task_switcher = true;
     server.double_click_ms = 500;
     server.cursor_size = 24;

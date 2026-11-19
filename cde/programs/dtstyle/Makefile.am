@@ -6,7 +6,8 @@ EXTRA_DIST = tests/check-home-environment.py tests/check-home-environment.c \
              tests/check-palette-file-create.py tests/check-palette-file-create.c \
              tests/check-exit-signal.py tests/check-exit-signal.c \
              tests/check-color-minmax.py tests/check-color-minmax.c \
-             tests/check-dtstyle-hardening.py tests/check-dtstyle-hardening.c
+             tests/check-dtstyle-hardening.py tests/check-dtstyle-hardening.c \
+             tests/check-window-animations.py tests/check-window-animations.c
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-home-environment.py
@@ -14,6 +15,7 @@ check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-exit-signal.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-color-minmax.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtstyle-hardening.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-window-animations.py
 
 dtstyle_CPPFLAGS = -DCDE_CONFIGURATION_TOP=\"$(CDE_CONFIGURATION_TOP)\"	\
 	-DCDE_INSTALLATION_TOP=\"$(CDE_INSTALLATION_TOP)\" -I../dthelp	\
