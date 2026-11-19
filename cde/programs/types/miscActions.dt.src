@@ -312,6 +312,39 @@ ACTION CkMixer
         DESCRIPTION     Open the CK Core Audio Volume Mixer.
 }
 
+ACTION CkSound
+{
+        LABEL           Sound & MIDI
+        ICON            Fpsound
+        ARG_COUNT       0
+        TYPE            COMMAND
+        WINDOW_TYPE     NO_STDIO
+        EXEC_STRING     ck-sound
+        DESCRIPTION     Open the CK Core Sound & MIDI Control Panel.
+}
+
+ACTION CkMidi
+{
+        LABEL           MIDI Player
+        ICON            Fpmidi
+        ARG_COUNT       0
+        TYPE            COMMAND
+        WINDOW_TYPE     NO_STDIO
+        EXEC_STRING     ck-midi
+        DESCRIPTION     Open the CK Core General MIDI Player.
+}
+
+ACTION CkMidi
+{
+        LABEL           MIDI Player
+        ICON            Fpmidi
+        ARG_COUNT       >0
+        TYPE            COMMAND
+        WINDOW_TYPE     NO_STDIO
+        EXEC_STRING     ck-midi "%(File)Arg_1%"
+        DESCRIPTION     Play a Standard MIDI File in CK Core MIDI Player.
+}
+
 ACTION DtstyleDisplay
 {
         LABEL           Monitors & Display

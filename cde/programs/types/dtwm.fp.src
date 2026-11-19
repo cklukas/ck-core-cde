@@ -425,12 +425,25 @@ CONTROL AudioMixer
   HELP_VOLUME		FPanel
 }
 
-CONTROL DisplayMonitors
+CONTROL SoundMidi
 {
   TYPE			icon
   CONTAINER_NAME	SystemSubpanel
   CONTAINER_TYPE	SUBPANEL
   POSITION_HINTS	6
+  ICON			Fpsound
+  LABEL			Sound & MIDI
+  PUSH_ACTION		CkSound
+  HELP_TOPIC		FPOnItemStyle
+  HELP_VOLUME		FPanel
+}
+
+CONTROL DisplayMonitors
+{
+  TYPE			icon
+  CONTAINER_NAME	SystemSubpanel
+  CONTAINER_TYPE	SUBPANEL
+  POSITION_HINTS	7
   ICON			Fpdisp
   LABEL			Monitors & Display
   PUSH_ACTION		DtstyleDisplay

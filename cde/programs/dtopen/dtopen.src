@@ -25,9 +25,16 @@ fi
 
 if [ -z "$DTOPEN_VAUDIO" ]
 then
-    VAUDIO="mpv vlc rhythmbox audacious ffplay"
+    VAUDIO="mpv vlc rhythmbox audacious ffplay aplay"
 else
     VAUDIO="$DTOPEN_VAUDIO"
+fi
+
+if [ -z "$DTOPEN_VMIDI" ]
+then
+    VMIDI="ck-midi timidity vlc mpv"
+else
+    VMIDI="$DTOPEN_VMIDI"
 fi
 
 if [ -z "$DTOPEN_VPS" ]
@@ -110,7 +117,7 @@ DoSimpleCmd()
     return 0
 }
 
-COMMANDS="dtopen dtopen_any dtopen_image dtopen_pdf dtopen_ps dtopen_video dtopen_audio dtopen_office"
+COMMANDS="dtopen dtopen_any dtopen_image dtopen_pdf dtopen_ps dtopen_video dtopen_audio dtopen_midi dtopen_office"
 
 case $APPNAME in
     dtopen_image)
@@ -132,6 +139,15 @@ case $APPNAME in
     dtopen_audio)
         if [ -z "$DTOPEN_VAUDIO" ]; then TryXdgMimeOpen "$@"; fi
         DoSimpleCmd "$VAUDIO" "$@"
+        ;;
+    dtopen_midi)
+        if [ -z "$DTOPEN_VMIDI" ] && [ -n "$(FindProg ck-midi)" ]
+        then
+            DoSimpleCmd "ck-midi" "$@"
+        else
+            if [ -z "$DTOPEN_VMIDI" ]; then TryXdgMimeOpen "$@"; fi
+            DoSimpleCmd "$VMIDI" "$@"
+        fi
         ;;
     dtopen_office)
         if [ -z "$DTOPEN_VOFFICE" ]; then TryXdgMimeOpen "$@"; fi

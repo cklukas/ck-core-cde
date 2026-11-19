@@ -30,6 +30,8 @@ APPS_NON_CEF_TARGETS = [
     "ck-load",
     "ck-tasks",
     "ck-mixer",
+    "ck-sound",
+    "ck-midi",
     "ck-clock",
     "ck-calc",
     "ck-character-map",
@@ -164,6 +166,8 @@ def host_dispatch_to_lima(args: argparse.Namespace) -> int:
     ]
     if args.skip_cde_check:
         guest_cmd.append("--skip-cde-check")
+    if args.fs_revision:
+        guest_cmd.extend(["--fs-revision", args.fs_revision])
 
     cmd = ["limactl", "shell", args.vm_name, "--"] + guest_cmd
     return subprocess.call(cmd, env=env)
@@ -266,6 +270,17 @@ def sync_git_checkout(src_repo: Path, dst_dir: Path, rev: str, *, include_worktr
         raise SystemExit(f"git archive failed for {src_repo} @ {rev}")
     if diff_bytes:
         overlay_worktree_diff(src_repo, dst_dir)
+    if include_worktree_diff:
+        untracked = subprocess.check_output(
+            ["git", "-c", "safe.directory=*", "-C", str(src_repo), "ls-files", "--others", "--exclude-standard"],
+            text=True,
+        ).splitlines()
+        for rel in sorted(untracked):
+            sfile = src_repo / rel
+            if sfile.is_file():
+                dfile = dst_dir / rel
+                dfile.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(sfile, dfile)
     marker.write_text(stamp + "\n", encoding="utf-8")
     return stamp
 
@@ -296,7 +311,7 @@ def guest_run(args: argparse.Namespace) -> int:
 
     cde_rev = git_rev(cde_repo)
     motif_rev = args.motif_revision or git_rev(motif_repo)
-    fs_rev = pinned_or_head_rev(cde_repo, ".ckgit/fs-revision", fs_repo)
+    fs_rev = args.fs_revision or pinned_or_head_rev(cde_repo, ".ckgit/fs-revision", fs_repo)
     apps_rev = git_rev(apps_repo)
 
     build_root = Path(args.guest_build_root)
@@ -668,6 +683,7 @@ def main() -> int:
     ap.add_argument("--motif-repo", default="/Volumes/S8T/tmp/cde-wayland-wp00-9a09ad77/ck-core-motif-wt")
     ap.add_argument("--motif-revision", default="", help="Explicit Motif commit (default: motif-repo HEAD)")
     ap.add_argument("--fs-repo", default="/Volumes/PRO-BLADE/git/ck-core-fs-lib")
+    ap.add_argument("--fs-revision", default="", help="Explicit ck-core-fs-lib commit")
     ap.add_argument("--apps-repo", default="/Volumes/S8T/tmp/cde-wayland-wp00-9a09ad77/ck-core-apps-wt")
     ap.add_argument("--guest-build-root", default="/var/tmp/ck-wayland-build/wp00")
     ap.add_argument("--output-dir", default="", help="Durable receipt & screenshot output directory")

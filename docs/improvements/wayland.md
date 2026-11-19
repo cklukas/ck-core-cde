@@ -265,8 +265,9 @@ panel instrumentation:
 - **Slide-Up *System & Hardware* Subpanel (`SystemSubpanel`):** Positioned above
   `Desktop Style` (`Style`), providing one-click access to *System Status &
   Tray* (`CkStatus`), *Power & Battery* (`CkPower`), *Network & Wi-Fi*
-  (`CkNetwork`), *Bluetooth* (`CkBluetooth`), *Audio Mixer* (`CkMixer`), and
-  *Monitors & Display* (`DtstyleDisplay`). Right-clicking any subpanel item and
+  (`CkNetwork`), *Bluetooth* (`CkBluetooth`), *Audio Mixer* (`CkMixer`),
+  *Sound & MIDI* (`CkSound`), and *Monitors & Display* (`DtstyleDisplay`).
+  Right-clicking any subpanel item and
   choosing **Copy To Main Panel** immediately updates the main Front Panel and
   persists `~/.dt/sessions/dtwmfp.session` (saved both on customization and on
   `dtwm-panel` `SIGTERM`/`SIGINT` shutdown).

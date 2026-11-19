@@ -1,4 +1,23 @@
 2026-11-19
+- Wire General MIDI file associations (`AUDIO_MIDI`), `dtopen_midi`, Front Panel
+  `Sound & MIDI` controls, Application Manager `Media_Tools` entries, `dtstyle`
+  Beep shortcut, and conditional virtual MIDI port startup across Wayland and X11
+  (`cde/programs/types/datatypes.dt.src`, `cde/programs/types/miscActions.dt.src`,
+  `cde/programs/types/dtwm.fp.src`, `cde/programs/dtopen/dtopen.src`,
+  `cde/programs/dtopen/Makefile.am`, `cde/programs/localized/templates/appmgr.am`,
+  `cde/programs/dtstyle/Audio.c`, `cde/programs/dtsession/SmWayland.c`,
+  `cde/debian/Xsession.wayland`, `cde/programs/dtlogin/config/Xsession.src`):
+  - Define `AUDIO_MIDI` (`ICON Dtmidi`, `MIME_TYPE audio/midi`) matching `*.mid`,
+    `*.midi`, `*.kar`, `*.rmi`, and `0 string MThd`, routed via `PlayMidi` ->
+    `dtopen_midi` (`ck-midi` ahead of `timidity`/`vlc`/`mpv`), and route legacy
+    non-Sun `AUDIO_AU`, `AUDIO_SND`, and `AUDIO_WAV` types to `DisplayAudio`
+    instead of `dterror.ds`.
+  - Register `CkSound` (`ICON Fpsound`) and `CkMidi` (`ICON Fpmidi`) actions,
+    expose *Sound & MIDI* in Front Panel `SystemSubpanel` and `Media_Tools`
+    Application Manager, add a **Sound & MIDI...** launcher button inside
+    `dtstyle` **Beep** when `ck-sound` is installed, and auto-start
+    `ck-midi --daemon` at session login when `virtual_port=1` is enabled in
+    `~/.config/ck-core/midi.conf`.
 - Correct the gray values in the front-panel status icons
   (`cde/programs/icons/Fpbt.{t,m,l}.pm`, `Fpdisp.{t,m,l}.pm`,
   `Fpnet.{t,m,l}.pm`, `Fppower.{t,m,l}.pm`, `Fpstatus.{t,m,l}.pm`,

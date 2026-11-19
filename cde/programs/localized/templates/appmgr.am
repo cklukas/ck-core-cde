@@ -66,7 +66,8 @@ desktop_tools_SCRIPTS = Desktop_Tools/Rm Desktop_Tools/DttermRlogin	\
 	Desktop_Tools/XtermDtspcd
 
 media_toolsdir = $(CDE_INSTALLATION_TOP)/appconfig/appmanager/$(LANG)/Media_Tools
-media_tools_SCRIPTS = Media_Tools/k3b Media_Tools/rhythmbox		\
+media_tools_SCRIPTS = Media_Tools/CkMidi Media_Tools/CkSound		\
+	Media_Tools/CkMixer Media_Tools/k3b Media_Tools/rhythmbox	\
 	Media_Tools/xine Media_Tools/vlc Media_Tools/rosegarden		\
 	Media_Tools/pavucontrol Media_Tools/sound-juicer		\
 	Media_Tools/amarok Media_Tools/brasero Media_Tools/k9copy

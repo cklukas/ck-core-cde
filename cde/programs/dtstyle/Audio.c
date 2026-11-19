@@ -59,6 +59,7 @@
 #include <Dt/Message.h>
 #include <Dt/HourGlass.h>
 #include <Dt/Wsm.h>
+#include <unistd.h>
 
 #include "Help.h"
 #include "Main.h"
@@ -86,6 +87,8 @@ static void _DtmapCB_audioDlg  ( Widget, XtPointer, XtPointer ) ;
 static int getValue         ( Widget w) ;
 static void valueChangedCB  ( Widget, XtPointer, XtPointer ) ;
 static void systemDefaultCB ( Widget, XtPointer, XtPointer ) ;
+static void openSoundMidiCB ( Widget, XtPointer, XtPointer ) ;
+static Boolean findCkSoundBinary( char *out_buf, size_t out_len ) ;
 static void ButtonCB        ( Widget, XtPointer, XtPointer ) ;
 
 
@@ -96,6 +99,7 @@ static void ButtonCB        ( Widget, XtPointer, XtPointer ) ;
 typedef struct {
     Widget      pictLabel;
     Widget      systemDefault;
+    Widget      soundMidiBtn;
     Widget      volLabGad;
     Widget      toneLabGad;
     Widget      durLabGad;
@@ -217,6 +221,22 @@ build_audioDlg(
     widget_list[count++] = 
     audio.systemDefault = XmCreatePushButtonGadget(form, "systemDefault", args, n);
     XmStringFree(string);
+
+    audio.soundMidiBtn = nullptr;
+    {
+        char cksound_bin[1024];
+        if (findCkSoundBinary(cksound_bin, sizeof(cksound_bin))) {
+            n = 0;
+            XtSetArg(args[n], XmNmarginHeight, LB_MARGIN_HEIGHT);  n++;
+            XtSetArg(args[n], XmNmarginWidth, LB_MARGIN_WIDTH);  n++;
+            string = CMPSTR("Sound & MIDI...");
+            XtSetArg(args[n], XmNlabelString, string); n++;
+            widget_list[count++] =
+            audio.soundMidiBtn = XmCreatePushButtonGadget(form, "soundMidiBtn", args, n);
+            XmStringFree(string);
+            XtAddCallback(audio.soundMidiBtn, XmNactivateCallback, openSoundMidiCB, nullptr);
+        }
+    }
 
     n = 0;
     XtSetArg(args[n], XmNalignment, XmALIGNMENT_END); n++;
@@ -353,6 +373,19 @@ formLayoutCB(
     XtSetArg(args[n], XmNrightAttachment,    XmATTACH_FORM);       n++;
     XtSetArg(args[n], XmNrightOffset,        style.horizontalSpacing);  n++;
     XtSetValues (audio.systemDefault, args, n);
+
+    if (audio.soundMidiBtn != nullptr)
+    {
+        n=0;
+        XtSetArg(args[n], XmNtopAttachment,    XmATTACH_FORM);            n++;
+        XtSetArg(args[n], XmNtopOffset,        style.verticalSpacing);    n++;
+        XtSetArg(args[n], XmNbottomAttachment, XmATTACH_NONE);            n++;
+        XtSetArg(args[n], XmNleftAttachment,   XmATTACH_NONE);            n++;
+        XtSetArg(args[n], XmNrightAttachment,  XmATTACH_WIDGET);          n++;
+        XtSetArg(args[n], XmNrightWidget,      audio.systemDefault);      n++;
+        XtSetArg(args[n], XmNrightOffset,      style.horizontalSpacing);  n++;
+        XtSetValues (audio.soundMidiBtn, args, n);
+    }
 
     /* Volume Label */
     n=0;
@@ -517,6 +550,63 @@ valueChangedCB(
     XBell(style.display,0);
 
     audio.systemDefaultFlag = False;
+}
+
+static Boolean
+findCkSoundBinary(
+        char *out_buf,
+        size_t out_len )
+{
+    const char *path_env = getenv("PATH");
+    if (path_env && path_env[0]) {
+        const char *p = path_env;
+        while (*p) {
+            const char *colon = strchr(p, ':');
+            size_t dlen = colon ? (size_t)(colon - p) : strlen(p);
+            if (dlen > 0 && dlen + 12 < out_len) {
+                snprintf(out_buf, out_len, "%.*s/ck-sound", (int)dlen, p);
+                if (access(out_buf, X_OK) == 0)
+                    return True;
+            }
+            if (!colon)
+                break;
+            p = colon + 1;
+        }
+    }
+    static const char *const fallbacks[] = {
+        "/usr/local/bin/ck-sound",
+        CDE_INSTALLATION_TOP "/bin/ck-sound",
+        "/usr/bin/ck-sound",
+        nullptr
+    };
+    for (int i = 0; fallbacks[i] != nullptr; ++i) {
+        if (access(fallbacks[i], X_OK) == 0) {
+            snprintf(out_buf, out_len, "%s", fallbacks[i]);
+            return True;
+        }
+    }
+    return False;
+}
+
+static void
+openSoundMidiCB(
+        Widget w,
+        XtPointer client_data,
+        XtPointer call_data )
+{
+    (void)w;
+    (void)client_data;
+    (void)call_data;
+    char bin[1024];
+    if (!findCkSoundBinary(bin, sizeof(bin)))
+        return;
+    pid_t pid = fork();
+    if (pid == 0) {
+        setsid();
+        char *argv[] = { bin, nullptr };
+        execv(bin, argv);
+        _exit(127);
+    }
 }
 
 /*+++++++++++++++++++++++++++++++++++++++*/

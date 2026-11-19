@@ -244,24 +244,16 @@ ACTION Open
 {
 	LABEL		%|nls-1-Open|
         ARG_TYPE        AUDIO_AU
-        TYPE            COMMAND
-        WINDOW_TYPE     NO_STDIO
-        EXEC_STRING     CDE_INSTALLATION_TOP/bin/dterror.ds \
-                       "%|nls-3013-#Cannot#|" \
-                       "%|nls-13-#Information#|" \
-                       "%|nls-6-#OK#|"
+        TYPE            MAP
+        MAP_ACTION      DisplayAudio
         DESCRIPTION     %|nls-3010-#Your system #|
 }
 ACTION Play
 {
         LABEL           %|nls-3012-Play|
         ARG_TYPE        AUDIO_AU
-        TYPE            COMMAND
-        WINDOW_TYPE     NO_STDIO
-        EXEC_STRING     CDE_INSTALLATION_TOP/bin/dterror.ds \
-                        "%|nls-3013-#Cannot#|" \
-                        "%|nls-13-#Information#|" \
-                        "%|nls-6-#OK#|"
+        TYPE            MAP
+        MAP_ACTION      DisplayAudio
         DESCRIPTION     %|nls-3011-#Your system #|
 }
 #endif
@@ -286,12 +278,8 @@ ACTION Open
 {
 	LABEL		%|nls-1-Open|
         ARG_TYPE        AUDIO_SND
-        TYPE            COMMAND
-        WINDOW_TYPE     NO_STDIO
-        EXEC_STRING     CDE_INSTALLATION_TOP/bin/dterror.ds \
-                       "%|nls-3013-#Cannot#|" \
-                       "%|nls-13-#Information#|" \
-                       "%|nls-6-#OK#|"
+        TYPE            MAP
+        MAP_ACTION      DisplayAudio
         DESCRIPTION     %|nls-3011-#Your system #|
 }
 ACTION Play
@@ -323,12 +311,8 @@ ACTION Open
 {
 	LABEL		%|nls-1-Open|
         ARG_TYPE        AUDIO_WAV
-        TYPE            COMMAND
-        WINDOW_TYPE     NO_STDIO
-        EXEC_STRING     CDE_INSTALLATION_TOP/bin/dterror.ds \
-                       "%|nls-3013-#Cannot#|" \
-                       "%|nls-13-#Information#|" \
-                       "%|nls-6-#OK#|"
+        TYPE            MAP
+        MAP_ACTION      DisplayAudio
         DESCRIPTION     %|nls-3011-#Your system #|
 }
 ACTION Play
@@ -1046,6 +1030,89 @@ ACTION Open
 	ARG_TYPE        AUDIO_MODERN
 	TYPE            MAP
 	MAP_ACTION      DisplayAudio
+}
+
+ACTION PlayMidi
+{
+	LABEL           MIDI Player
+	TYPE            COMMAND
+	ICON            Fpmidi
+	WINDOW_TYPE     NO_STDIO
+	ARG_COUNT       >0
+	EXEC_STRING     dtopen_midi %(File)Args%
+	DESCRIPTION     Play a Standard MIDI File (.mid, .midi, .kar, .rmi).
+}
+DATA_ATTRIBUTES AUDIO_MIDI
+{
+	ACTIONS         Open,Play
+	ICON            Dtmidi
+	NAME_TEMPLATE   %s.mid
+	MIME_TYPE       audio/midi
+	DESCRIPTION     Standard MIDI File (SMF / RMID / Karaoke) music sequence.
+	TYPE_LABEL      MIDI
+}
+DATA_CRITERIA AUDIO_MIDI1
+{
+	DATA_ATTRIBUTES_NAME AUDIO_MIDI
+	MODE            f
+	NAME_PATTERN    *.mid
+}
+DATA_CRITERIA AUDIO_MIDI2
+{
+	DATA_ATTRIBUTES_NAME AUDIO_MIDI
+	MODE            f
+	NAME_PATTERN    *.MID
+}
+DATA_CRITERIA AUDIO_MIDI3
+{
+	DATA_ATTRIBUTES_NAME AUDIO_MIDI
+	MODE            f
+	NAME_PATTERN    *.midi
+}
+DATA_CRITERIA AUDIO_MIDI4
+{
+	DATA_ATTRIBUTES_NAME AUDIO_MIDI
+	MODE            f
+	NAME_PATTERN    *.MIDI
+}
+DATA_CRITERIA AUDIO_MIDI5
+{
+	DATA_ATTRIBUTES_NAME AUDIO_MIDI
+	MODE            f
+	NAME_PATTERN    *.kar
+}
+DATA_CRITERIA AUDIO_MIDI6
+{
+	DATA_ATTRIBUTES_NAME AUDIO_MIDI
+	MODE            f
+	NAME_PATTERN    *.rmi
+}
+DATA_CRITERIA AUDIO_MIDI7
+{
+	DATA_ATTRIBUTES_NAME AUDIO_MIDI
+	MODE            f
+	CONTENT         0 string MThd
+}
+ACTION Open
+{
+	LABEL           %|nls-1-Open|
+	ARG_TYPE        AUDIO_MIDI
+	TYPE            MAP
+	MAP_ACTION      PlayMidi
+}
+ACTION Play
+{
+	LABEL           %|nls-3012-Play|
+	ARG_TYPE        AUDIO_MIDI
+	TYPE            MAP
+	MAP_ACTION      PlayMidi
+}
+ACTION Print
+{
+	LABEL           %|nls-2-Print|
+	ARG_TYPE        AUDIO_MIDI
+	TYPE            MAP
+	MAP_ACTION      NoPrint
 }
 
 ACTION DisplayOffice

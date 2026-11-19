@@ -466,6 +466,10 @@ static void spawn_compositor_if_needed(void) {
                             "fi; "
                             "if command -v ck-status >/dev/null 2>&1; then "
                             "ck-status --daemon >/dev/null 2>&1 & "
+                            "fi; "
+                            "_midi_cfg=\"${XDG_CONFIG_HOME:-$HOME/.config}/ck-core/midi.conf\"; "
+                            "if [ -f \"$_midi_cfg\" ] && grep -q '^virtual_port=1' \"$_midi_cfg\" && command -v ck-midi >/dev/null 2>&1; then "
+                            "ck-midi --daemon >/dev/null 2>&1 & "
                             "fi",
                             (char *)nullptr
                         );
