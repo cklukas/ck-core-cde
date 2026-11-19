@@ -478,9 +478,86 @@ static double anim_smoothstep(double edge0, double edge1, double x) {
         return (x >= edge1) ? 1.0 : 0.0;
     }
     double t = (x - edge0) / (edge1 - edge0);
-    if (t < 0.0) t = 0.0;
+    if (!(t >= 0.0)) t = 0.0;
     if (t > 1.0) t = 1.0;
-    return t * t * (3.0 - 2.0 * t);
+    double s = t * t * (3.0 - 2.0 * t);
+    if (!(s >= 0.0)) return 0.0;
+    if (s > 1.0) return 1.0;
+    return s;
+}
+
+static float clamp_anim_opacity(double a) {
+    if (!(a >= 0.0)) return 0.0f;
+    if (a >= 1.0) return 1.0f;
+    return (float)a;
+}
+
+/* Compute an aspect-matched center crop box guaranteed to satisfy both wlroots
+ * wlr_scene_buffer_set_source_box (x,y,width,height >= 0) and renderer texture
+ * bounds (x + width <= tex_w, y + height <= tex_h) without FMA 1-ULP overshoot.
+ * Returns false when the full uncropped buffer should be sampled (nullptr). */
+static bool compute_anim_client_source_box(
+    int tex_w,
+    int tex_h,
+    int in_w,
+    int in_h,
+    double crop_blend,
+    struct wlr_fbox *out_box
+) {
+    if (!out_box || tex_w <= 8 || tex_h <= 8 || in_w <= 0 || in_h <= 0 || !(crop_blend > 0.001)) {
+        return false;
+    }
+    if (crop_blend > 1.0) {
+        crop_blend = 1.0;
+    }
+    double sw = (double)tex_w;
+    double sh = (double)tex_h;
+    double dst_aspect = (double)in_w / (double)in_h;
+    double src_aspect = sw / sh;
+    double cw = sw;
+    double ch = sh;
+    if (src_aspect > dst_aspect) {
+        double crop_w = fmin(sw, sh * dst_aspect);
+        cw = sw - (sw - crop_w) * crop_blend;
+    } else if (src_aspect < dst_aspect) {
+        double crop_h = fmin(sh, sw / dst_aspect);
+        ch = sh - (sh - crop_h) * crop_blend;
+    } else {
+        return false;
+    }
+
+    if (!(cw >= 1.0)) cw = 1.0;
+    if (cw > sw) cw = sw;
+    if (!(ch >= 1.0)) ch = 1.0;
+    if (ch > sh) ch = sh;
+
+    double sx = (sw > cw) ? ((sw - cw) * 0.5) : 0.0;
+    double sy = (sh > ch) ? ((sh - ch) * 0.5) : 0.0;
+    if (!(sx >= 0.0) || sx >= sw) sx = 0.0;
+    if (!(sy >= 0.0) || sy >= sh) sy = 0.0;
+
+    if (sx + cw > sw) {
+        cw = sw - sx;
+        if (sx + cw > sw) {
+            cw = nextafter(cw, 0.0);
+        }
+    }
+    if (sy + ch > sh) {
+        ch = sh - sy;
+        if (sy + ch > sh) {
+            ch = nextafter(ch, 0.0);
+        }
+    }
+    if (!(cw > 0.0) || !(ch > 0.0)) {
+        return false;
+    }
+    *out_box = (struct wlr_fbox){
+        .x = sx,
+        .y = sy,
+        .width = cw,
+        .height = ch,
+    };
+    return true;
 }
 
 static int anim_latch_duration_ms(DtwmAnimSpeed speed) {
@@ -560,7 +637,7 @@ static void schedule_all_outputs_frame(DtwmServer *server) {
 static struct wlr_buffer *lock_view_client_buffer(DtwmView *view) {
     if (!view) return nullptr;
     struct wlr_surface *surf = view_wlr_surface(view);
-    if (!surf || !surf->buffer) return nullptr;
+    if (!surf || !surf->buffer || !surf->buffer->texture) return nullptr;
     return wlr_buffer_lock(&surf->buffer->base);
 }
 
@@ -662,7 +739,10 @@ static void step_window_anim(DtwmServer *server, uint64_t now_ns) {
     if (!server || server->anim_kind == DTWM_ANIM_KIND_NONE || !server->anim_tree) {
         return;
     }
-    if (server->session_locked || server->greeter_mode) {
+    if (server->session_locked || server->greeter_mode ||
+        (server->anim_view &&
+         (!server->anim_view->mapped ||
+          (server->anim_view->workspace_mask & (1u << server->current_workspace)) == 0))) {
         finish_or_cancel_anim(server, false);
         return;
     }
@@ -727,10 +807,12 @@ static void step_window_anim(DtwmServer *server, uint64_t now_ns) {
     /* Refresh maximize/unmaximize client texture automatically once client commits new buffer */
     if (!is_minmax_icon && view && (style == DTWM_ANIM_STYLE_BEVEL || style == DTWM_ANIM_STYLE_TITLEBAR)) {
         struct wlr_surface *surf = view_wlr_surface(view);
-        if (surf && surf->buffer && server->anim_client_buf) {
+        if (surf && surf->buffer && surf->buffer->texture && server->anim_client_buf) {
             struct wlr_buffer *live_b = &surf->buffer->base;
-            if (live_b->width != server->anim_client_src_w ||
-                live_b->height != server->anim_client_src_h) {
+            if (live_b->width > 0 && live_b->height > 0 &&
+                (live_b->width != server->anim_client_src_w ||
+                 live_b->height != server->anim_client_src_h)) {
+                wlr_scene_buffer_set_source_box(server->anim_client_buf, nullptr);
                 wlr_scene_buffer_set_buffer(server->anim_client_buf, live_b);
                 server->anim_client_src_w = live_b->width;
                 server->anim_client_src_h = live_b->height;
@@ -769,7 +851,8 @@ static void step_window_anim(DtwmServer *server, uint64_t now_ns) {
             wlr_scene_node_set_enabled(&server->anim_trail_buf->node, false);
         }
         /* Brief client fade on minimize/restore while detached 3D titlebar shuttles */
-        if (server->anim_client_buf && server->anim_client_src_w > 0 && server->anim_client_src_h > 0) {
+        if (server->anim_client_buf && server->anim_client_buf->buffer &&
+            server->anim_client_src_w > 0 && server->anim_client_src_h > 0) {
             if (is_minmax_icon) {
                 double fade = (kind == DTWM_ANIM_KIND_MINIMIZE)
                                   ? (1.0 - raw_t / 0.40)
@@ -789,8 +872,12 @@ static void step_window_anim(DtwmServer *server, uint64_t now_ns) {
                         );
                         wlr_scene_buffer_set_source_box(server->anim_client_buf, nullptr);
                         wlr_scene_buffer_set_dest_size(server->anim_client_buf, cw, ch);
-                        wlr_scene_buffer_set_opacity(server->anim_client_buf, (float)(fade * 0.72));
+                        wlr_scene_buffer_set_opacity(
+                            server->anim_client_buf, clamp_anim_opacity(fade * 0.72)
+                        );
                         wlr_scene_node_set_enabled(&server->anim_client_buf->node, true);
+                    } else {
+                        wlr_scene_node_set_enabled(&server->anim_client_buf->node, false);
                     }
                 } else {
                     wlr_scene_node_set_enabled(&server->anim_client_buf->node, false);
@@ -811,6 +898,8 @@ static void step_window_anim(DtwmServer *server, uint64_t now_ns) {
                     wlr_scene_node_set_enabled(&server->anim_client_buf->node, false);
                 }
             }
+        } else if (server->anim_client_buf) {
+            wlr_scene_node_set_enabled(&server->anim_client_buf->node, false);
         }
         struct wlr_buffer *fbuf = dtwm_render_anim_bevel_frame(
             &server->palette, view, style, kind, w, h, u
@@ -853,34 +942,25 @@ static void step_window_anim(DtwmServer *server, uint64_t now_ns) {
         int in_h = h - b_top - b_side;
 
         /* 1. Client surface layer: stays 100% opaque until near the icon (icon_prox >= 0.70) */
-        if (server->anim_client_buf && server->anim_client_src_w > 0 &&
-            server->anim_client_src_h > 0 && in_w >= 4 && in_h >= 4) {
+        struct wlr_buffer *attached_cbuf =
+            server->anim_client_buf ? server->anim_client_buf->buffer : nullptr;
+        int tex_w = attached_cbuf ? attached_cbuf->width : 0;
+        int tex_h = attached_cbuf ? attached_cbuf->height : 0;
+        if (server->anim_client_buf && attached_cbuf && tex_w > 0 && tex_h > 0 &&
+            in_w >= 4 && in_h >= 4) {
             double c_alpha = is_minmax_icon ? (1.0 - anim_smoothstep(0.70, 0.96, icon_prox)) : 1.0;
             if (c_alpha > 0.02) {
-                double sw = (double)server->anim_client_src_w;
-                double sh = (double)server->anim_client_src_h;
-                struct wlr_fbox sbox = {.x = 0.0, .y = 0.0, .width = sw, .height = sh};
-                if (is_minmax_icon && crop_blend > 0.001 && sw > 8.0 && sh > 8.0 && in_w > 0 && in_h > 0) {
-                    double dst_aspect = (double)in_w / (double)in_h;
-                    double src_aspect = sw / sh;
-                    double crop_w = sw, crop_h = sh;
-                    if (src_aspect > dst_aspect) {
-                        crop_w = sh * dst_aspect;
-                    } else {
-                        crop_h = sw / dst_aspect;
-                    }
-                    /* Blend smoothly between full window view and aspect-matched center crop near icon */
-                    double cw = sw * (1.0 - crop_blend) + crop_w * crop_blend;
-                    double ch = sh * (1.0 - crop_blend) + crop_h * crop_blend;
-                    sbox.x = (sw - cw) * 0.5;
-                    sbox.y = (sh - ch) * 0.5;
-                    sbox.width = cw;
-                    sbox.height = ch;
-                }
+                struct wlr_fbox sbox = {0};
+                bool use_crop = is_minmax_icon &&
+                                compute_anim_client_source_box(
+                                    tex_w, tex_h, in_w, in_h, crop_blend, &sbox
+                                );
                 wlr_scene_node_set_position(&server->anim_client_buf->node, b_side, b_top);
-                wlr_scene_buffer_set_source_box(server->anim_client_buf, &sbox);
+                wlr_scene_buffer_set_source_box(
+                    server->anim_client_buf, use_crop ? &sbox : nullptr
+                );
                 wlr_scene_buffer_set_dest_size(server->anim_client_buf, in_w, in_h);
-                wlr_scene_buffer_set_opacity(server->anim_client_buf, (float)c_alpha);
+                wlr_scene_buffer_set_opacity(server->anim_client_buf, clamp_anim_opacity(c_alpha));
                 wlr_scene_node_set_enabled(&server->anim_client_buf->node, true);
             } else {
                 wlr_scene_node_set_enabled(&server->anim_client_buf->node, false);
@@ -890,7 +970,7 @@ static void step_window_anim(DtwmServer *server, uint64_t now_ns) {
         }
 
         /* 2. CDE Desktop Icon tile crossfade layer (fades in/out only near the icon [0.68 .. 0.94]) */
-        if (server->anim_icon_buf && is_minmax_icon && view) {
+        if (server->anim_icon_buf && server->anim_icon_buf->buffer && is_minmax_icon && view) {
             double i_alpha = anim_smoothstep(0.68, 0.94, icon_prox);
             if (i_alpha > 0.02) {
                 int img_dim = server->large_icons ? 96 : 48;
@@ -906,7 +986,7 @@ static void step_window_anim(DtwmServer *server, uint64_t now_ns) {
                 wlr_scene_buffer_set_dest_size(
                     server->anim_icon_buf, dst_tw > 4 ? dst_tw : 4, dst_th > 4 ? dst_th : 4
                 );
-                wlr_scene_buffer_set_opacity(server->anim_icon_buf, (float)i_alpha);
+                wlr_scene_buffer_set_opacity(server->anim_icon_buf, clamp_anim_opacity(i_alpha));
                 wlr_scene_node_set_enabled(&server->anim_icon_buf->node, true);
             } else {
                 wlr_scene_node_set_enabled(&server->anim_icon_buf->node, false);
@@ -964,11 +1044,17 @@ static void start_window_anim(
         return;
     }
 
-    /* Smoothly reverse from current interpolated box when interrupting the same window */
-    if (server->anim_view == view && server->anim_kind != DTWM_ANIM_KIND_NONE &&
-        !server->anim_in_latch_phase && server->anim_cur_box.width > 0 &&
-        server->anim_cur_box.height > 0) {
-        from_box = server->anim_cur_box;
+    /* Smoothly reverse from current interpolated box when interrupting the same window,
+     * retaining any locked client buffer across cancel if the surface dropped its buffer */
+    struct wlr_buffer *retained_cbuf = nullptr;
+    if (server->anim_view == view && server->anim_kind != DTWM_ANIM_KIND_NONE) {
+        if (!server->anim_in_latch_phase && server->anim_cur_box.width > 0 &&
+            server->anim_cur_box.height > 0) {
+            from_box = server->anim_cur_box;
+        }
+        if (!client_buf_override && server->anim_client_buf && server->anim_client_buf->buffer) {
+            retained_cbuf = wlr_buffer_lock(server->anim_client_buf->buffer);
+        }
     }
     finish_or_cancel_anim(server, false);
 
@@ -987,21 +1073,23 @@ static void start_window_anim(
     server->anim_client_src_w = 0;
     server->anim_client_src_h = 0;
     if (style != DTWM_ANIM_STYLE_WIREFRAME && server->anim_client_buf) {
-        if (client_buf_override) {
-            wlr_scene_buffer_set_buffer(server->anim_client_buf, client_buf_override);
-            wlr_scene_buffer_set_filter_mode(server->anim_client_buf, WLR_SCALE_FILTER_BILINEAR);
-            server->anim_client_src_w = client_buf_override->width;
-            server->anim_client_src_h = client_buf_override->height;
-        } else {
+        struct wlr_buffer *chosen_cbuf = client_buf_override ? client_buf_override : retained_cbuf;
+        if (!chosen_cbuf) {
             struct wlr_surface *surf = view_wlr_surface(view);
-            if (surf && surf->buffer) {
-                struct wlr_buffer *cbuf = &surf->buffer->base;
-                wlr_scene_buffer_set_buffer(server->anim_client_buf, cbuf);
-                wlr_scene_buffer_set_filter_mode(server->anim_client_buf, WLR_SCALE_FILTER_BILINEAR);
-                server->anim_client_src_w = cbuf->width;
-                server->anim_client_src_h = cbuf->height;
+            if (surf && surf->buffer && surf->buffer->texture) {
+                chosen_cbuf = &surf->buffer->base;
             }
         }
+        if (chosen_cbuf && chosen_cbuf->width > 0 && chosen_cbuf->height > 0) {
+            wlr_scene_buffer_set_source_box(server->anim_client_buf, nullptr);
+            wlr_scene_buffer_set_buffer(server->anim_client_buf, chosen_cbuf);
+            wlr_scene_buffer_set_filter_mode(server->anim_client_buf, WLR_SCALE_FILTER_BILINEAR);
+            server->anim_client_src_w = chosen_cbuf->width;
+            server->anim_client_src_h = chosen_cbuf->height;
+        }
+    }
+    if (retained_cbuf) {
+        wlr_buffer_unlock(retained_cbuf);
     }
 
     if (style == DTWM_ANIM_STYLE_BEVEL && !is_max && server->anim_icon_buf) {
@@ -1150,7 +1238,8 @@ static void view_set_minimized(DtwmView *view, bool minimized) {
         }
     }
 
-    if (view->mapped && style != DTWM_ANIM_STYLE_NONE) {
+    bool on_cur_ws = (view->workspace_mask & (1u << server->current_workspace)) != 0;
+    if (view->mapped && on_cur_ws && style != DTWM_ANIM_STYLE_NONE) {
         struct wlr_box icon_box = minimized
             ? (struct wlr_box){
                   .x = view->icon_x - 4,
@@ -1568,6 +1657,7 @@ static void dismiss_open_client_popups(DtwmServer *server, uint32_t t_ms) {
 
 static void begin_interactive(DtwmView *view, DtwmCursorMode mode, uint32_t edges) {
     DtwmServer *server = view->server;
+    dtwm_anim_cancel_for_view(server, view);
     close_window_menu(server);
     dismiss_open_client_popups(server, dtwm_now_msec());
     hide_wireframe_outline(server);
@@ -3895,6 +3985,8 @@ static void xdg_toplevel_destroy(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmView *view = wl_container_of(listener, view, destroy);
     DtwmServer *server = view->server;
+    view->mapped = false;
+    dtwm_anim_cancel_for_view(server, view);
     if (view == server->focused_view) {
         server->focused_view = nullptr;
     }
@@ -4763,6 +4855,8 @@ static void xwayland_destroy(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmView *view = wl_container_of(listener, view, destroy);
     DtwmServer *server = view->server;
+    view->mapped = false;
+    dtwm_anim_cancel_for_view(server, view);
     if (view == server->grabbed_view) {
         server->cursor_mode = DTWM_CURSOR_PASSTHROUGH;
         server->grabbed_view = nullptr;

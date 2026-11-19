@@ -1,4 +1,16 @@
 2026-11-19
+- Fix an intermittent `dtwm-wayland` compositor abort (`SIGABRT` in
+  `wlr_scene_buffer_set_source_box`: `box->x >= 0 && box->y >= 0 && box->width >= 0 && box->height >= 0`)
+  during **Bevel Morph** minimize and restore animations when IEEE-754 FMA
+  interpolation of the uncropped client texture axis overshot the source buffer
+  size by 1 ULP near the desktop icon (`cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `cde/programs/dtwm/tests/check-dtwm-wayland-icons.py`):
+  - Interpolate only the cropped source axis when `crop_blend > 0.001`, pass
+    `nullptr` to `wlr_scene_buffer_set_source_box` whenever the full client
+    buffer is sampled, clamp source boxes strictly within `[0, tex_w] x [0, tex_h]`,
+    clamp scene-buffer opacities to `[0, 1]`, verify `wlr_client_buffer.texture`
+    validity, and cancel in-flight window animations cleanly on interactive
+    move/resize grabs and view teardown.
 - Refine Wayland **Bevel Morph** window-to-icon crossfade timing so minimize and
   restore keep the live window surface crisp across the workspace and transition
   into/from the icon tile symmetrically only near the icon, and add an

@@ -247,7 +247,9 @@ int main(int argc, char **argv) {
     wl_surface_commit(surf);
     while (!g_configured && wl_display_dispatch(dpy) != -1) {}
 
-    struct wl_buffer *wbuf = make_shm_buf(240, 160, 0xFF243448u);
+    int win_w = (argc > 2 && atoi(argv[2]) >= 32) ? atoi(argv[2]) : 240;
+    int win_h = (argc > 3 && atoi(argv[3]) >= 32) ? atoi(argv[3]) : 160;
+    struct wl_buffer *wbuf = make_shm_buf(win_w, win_h, 0xFF243448u);
     wl_surface_attach(surf, wbuf, 0, 0);
     wl_surface_commit(surf);
     wl_display_flush(dpy);
@@ -630,6 +632,46 @@ def main() -> int:
             time.sleep(0.22)
             if comp.poll() is not None:
                 raise SystemExit(f"dtwm-wayland crashed during mid-flight animation cancel (rc={comp.returncode})")
+
+            # Stress Bevel Morph near-icon aspect-crop source_box across landscape (720x480),
+            # portrait (360x540), and square (480x480) client buffers (guards against FMA 1-ULP
+            # negative sbox.x/sbox.y assertions in wlr_scene_buffer_set_source_box).
+            shot_probe = work / "wp04-anim-crop-probe.png"
+            for title_tag, cw_s, ch_s in (
+                ("CropWide720x480", "720", "480"),
+                ("CropTall360x540", "360", "540"),
+                ("CropSquare480", "480", "480"),
+            ):
+                p_crop = subprocess.Popen(
+                    [str(wl_ic_bin), title_tag, cw_s, ch_s],
+                    env=c_env,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    start_new_session=True,
+                )
+                try:
+                    time.sleep(0.28)
+                    for _ in range(3):
+                        subprocess.run(["wlrctl", "toplevel", "minimize", f"title:{title_tag}"], env=c_env, check=True)
+                        for _ in range(8):
+                            time.sleep(0.028)
+                            subprocess.run(["grim", str(shot_probe)], env=c_env, check=True)
+                        time.sleep(0.08)
+                        subprocess.run(["wlrctl", "toplevel", "focus", f"title:{title_tag}"], env=c_env, check=True)
+                        for _ in range(8):
+                            time.sleep(0.028)
+                            subprocess.run(["grim", str(shot_probe)], env=c_env, check=True)
+                        time.sleep(0.08)
+                        if comp.poll() is not None:
+                            raise SystemExit(
+                                f"dtwm-wayland crashed during {title_tag} Bevel Morph crop cycle (rc={comp.returncode})"
+                            )
+                finally:
+                    p_crop.kill()
+                    p_crop.wait(timeout=3)
+
+            subprocess.run(["wlrctl", "toplevel", "focus", "title:WaylandIconApp"], env=c_env, check=True)
+            time.sleep(0.08)
 
             shot_settled = work / "wp04-anim-settled.png"
             subprocess.run(["grim", str(shot_settled)], env=c_env, check=True)
