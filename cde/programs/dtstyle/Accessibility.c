@@ -832,7 +832,7 @@ BuildAccessibilityDialog(Widget shell)
     XmStringFree(xms);
 
     /* 3. Screen Magnifier */
-    CreateSectionFrame(mainCol, "magnifierFrame", "Screen Magnifier (Super+= / Super+- / Super+0)", &magRC);
+    CreateSectionFrame(mainCol, "magnifierFrame", "Screen Magnifier (Super or Ctrl+Alt + = / - / 0)", &magRC);
 
     xms = CMPSTR("Enable Full-Screen Magnifier");
     g_a11yUI.magToggle = XtVaCreateManagedWidget(

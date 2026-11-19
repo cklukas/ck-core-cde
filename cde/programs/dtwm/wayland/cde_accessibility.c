@@ -1022,8 +1022,16 @@ static void step_magnifier_zoom(DtwmServer *server, int delta_pct) {
     dtwm_a11y_publish_state(server);
 }
 
+static bool has_magnifier_mod(uint32_t mods) {
+    if (mods & WLR_MODIFIER_LOGO) {
+        return true;
+    }
+    const uint32_t ctrl_alt = WLR_MODIFIER_CTRL | WLR_MODIFIER_ALT;
+    return (mods & ctrl_alt) == ctrl_alt;
+}
+
 bool dtwm_a11y_handle_shortcut(DtwmServer *server, uint32_t mods, xkb_keysym_t sym) {
-    if (!server || !server->a11y || !(mods & WLR_MODIFIER_LOGO)) {
+    if (!server || !server->a11y || !has_magnifier_mod(mods)) {
         return false;
     }
     switch (sym) {
@@ -1061,7 +1069,7 @@ bool dtwm_a11y_handle_axis(
     }
     struct wlr_keyboard *kbd = server->seat ? wlr_seat_get_keyboard(server->seat) : nullptr;
     uint32_t mods = dtwm_a11y_effective_modifiers(server, kbd);
-    if (!(mods & WLR_MODIFIER_LOGO)) {
+    if (!has_magnifier_mod(mods)) {
         return false;
     }
     double dir = (discrete != 0) ? (double)discrete : delta;
@@ -1144,26 +1152,28 @@ bool dtwm_a11y_render_output_frame(DtwmOutput *output, struct wlr_scene_output *
     struct wlr_box obox = {0, 0, bw, bh};
     wlr_output_layout_get_box(server->output_layout, wlr_output, &obox);
 
-    double rel_x = (double)bw * 0.5;
-    double rel_y = (double)bh * 0.5;
+    double u = 0.5;
+    double v = 0.5;
     if (server->cursor && obox.width > 0 && obox.height > 0) {
-        rel_x = (server->cursor->x - (double)obox.x) * (double)bw / (double)obox.width;
-        rel_y = (server->cursor->y - (double)obox.y) * (double)bh / (double)obox.height;
+        u = (server->cursor->x - (double)obox.x) / (double)obox.width;
+        v = (server->cursor->y - (double)obox.y) / (double)obox.height;
     }
-    if (rel_x < 0.0) rel_x = 0.0;
-    if (rel_x > (double)bw) rel_x = (double)bw;
-    if (rel_y < 0.0) rel_y = 0.0;
-    if (rel_y > (double)bh) rel_y = (double)bh;
+    if (u < 0.0) u = 0.0;
+    if (u > 1.0) u = 1.0;
+    if (v < 0.0) v = 0.0;
+    if (v > 1.0) v = 1.0;
 
+    /* Proportional anchor-matched panning:
+     * Choosing src_x = u * (bw - src_w) and src_y = v * (bh - src_h) ensures the
+     * unmagnified desktop coordinate under (cursor->x, cursor->y), namely
+     * (u * bw, v * bh), is drawn at ((u * bw - src_x) * z, (v * bh - src_y) * z)
+     * == (u * bw, v * bh) on screen — coinciding 1:1 with the hardware/host cursor
+     * hotspot across [0..1] at every zoom factor while still reaching all edges. */
     double z = (double)zoom_pct / 100.0;
     double src_w = (double)bw / z;
     double src_h = (double)bh / z;
-    double src_x = rel_x - src_w * 0.5;
-    double src_y = rel_y - src_h * 0.5;
-    if (src_x < 0.0) src_x = 0.0;
-    if (src_y < 0.0) src_y = 0.0;
-    if (src_x + src_w > (double)bw) src_x = (double)bw - src_w;
-    if (src_y + src_h > (double)bh) src_y = (double)bh - src_h;
+    double src_x = u * ((double)bw - src_w);
+    double src_y = v * ((double)bh - src_h);
 
     bool committed = false;
     struct wlr_output_state out_state;

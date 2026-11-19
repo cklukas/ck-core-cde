@@ -1,4 +1,10 @@
 2026-11-19
+- Align full-screen magnifier viewport panning 1:1 with hardware and VM host
+  pointer coordinates across `125%`–`400%` zoom (`src_x = u * (bw - src_w)`,
+  `src_y = v * (bh - src_h)`) so clicks hit magnified dialog controls accurately,
+  and accept `Ctrl+Alt` alongside `Super` for `+`/`=`, `-`, `0`, and scroll
+  magnifier shortcuts (`cde/programs/dtwm/wayland/cde_accessibility.c`,
+  `cde/programs/dtstyle/Accessibility.c`, `docs/improvements/accessibility.md`).
 - Wire the Front Panel activity indicator light (`CONTROL Busy`, `Fplite` /
   `FpliteY`) and busy cursor under Wayland (`cde/programs/dtwm/wayland/WmFpWayland.c`,
   `cde/programs/dtwm/wayland/cde_workspace.c`,
