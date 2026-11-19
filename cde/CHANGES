@@ -1,4 +1,9 @@
 2026-11-20
+- Update pinned CK Core Motif ABI 9 revision to `e6e7d9226871` so live palette
+  switches from pure black or white palettes (such as `HighContrast`) back to
+  Classic 3D-beveled palettes clear `50_foreground` shadow-dither pixmaps on
+  both existing and newly created controls (`.ckgit/motif-revision`,
+  `.ckgit/ci.yml`).
 - Unify **Style Manager - Color & Theme** (`dtstyle`) with CK Core Motif ABI 9
   appearance profiles (`Classic CDE (3D Bevel)`, `Modern Motif (Flat & Rounded)`,
   `High Contrast (Accessible)`) and layout spacing (`Comfortable`, `Compact`),
