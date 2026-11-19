@@ -351,6 +351,7 @@ void dtwm_lock_notify_activity(DtwmServer *server) {
     if (server && server->idle_notifier && server->seat) {
         wlr_idle_notifier_v1_notify_activity(server->idle_notifier, server->seat);
     }
+    dtwm_power_display_notify_activity(server);
 }
 
 /* --- Hardware / Input / Bell / Saver IPC --- */

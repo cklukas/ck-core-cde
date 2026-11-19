@@ -31,6 +31,8 @@
 #include "Queue.h"
 #include "PrintJob.h"
 #include "ParseJobs.h"
+#include "CupsDiscovery.h"
+#include <stdio.h>
 #include <stdlib.h>
 
 extern "C" {
@@ -136,6 +138,29 @@ Queue::~Queue()
 
 void Queue::LoadAttributes(int /*n_attrs*/, Attribute **attrs)
 {
+   DtCupsPrinter cpr;
+   if (DtCupsFindPrinter(Name(), &cpr))
+    {
+      free(attrs[0]->Value);
+      free(attrs[0]->DisplayValue);
+      attrs[0]->Value = strdup(Name());
+      attrs[0]->DisplayValue = strdup(Name());
+
+      char desc[512];
+      snprintf(desc, sizeof(desc), "%s (%s%s)",
+               cpr.make_model[0] ? cpr.make_model : "CUPS Queue",
+               cpr.device_uri,
+               cpr.ipp_everywhere ? ", IPP Everywhere" : "");
+      free(attrs[1]->Value);
+      free(attrs[1]->DisplayValue);
+      attrs[1]->Value = strdup(desc);
+      attrs[1]->DisplayValue = strdup(desc);
+      is_remote = false;
+      remote_up = true;
+      _loaded_attributes = true;
+      return;
+    }
+
    size_t cmd_cap = strlen(GET_ATTRS) + strlen(Name()) + 16;
    char *command = new char[cmd_cap];
    snprintf(command, cmd_cap, GET_ATTRS, Name());
@@ -381,6 +406,22 @@ void Queue::InitChildren()
 
 void Queue::ProcessJobs(char *jobs)
 {
+   DtCupsPrinter cpr;
+   if (!jobs && DtCupsFindPrinter(Name(), &cpr))
+    {
+      DtCupsJob cjobs[DT_CUPS_MAX_JOBS];
+      int nj = DtCupsDiscoverJobs(Name(), cjobs, DT_CUPS_MAX_JOBS);
+      for (int i = 0; i < nj; ++i)
+       {
+         char jnum[32], jsize[64];
+         snprintf(jnum, sizeof(jnum), "%d", cjobs[i].id);
+         snprintf(jsize, sizeof(jsize), "%d KB (%s)", cjobs[i].size_kb, cjobs[i].state);
+         new PrintJob(this, cjobs[i].title, jnum, cjobs[i].user,
+                      cjobs[i].date_str, cjobs[i].time_str, jsize);
+       }
+      return;
+    }
+
    char *job_list;
    int n_jobs;
 

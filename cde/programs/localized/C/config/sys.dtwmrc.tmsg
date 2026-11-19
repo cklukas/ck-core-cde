@@ -178,6 +178,10 @@ $ *
     Alt<Key>F2			root|icon|window	f.exec "ck-launch --toggle"\n\
     Mod4<Key>space		root|icon|window	f.exec "ck-launch --toggle"\n\
     Mod4<Key>l			root|icon|window	f.exec "dtaction LockDisplay"\n\
+    Mod4<Key>Left		root|icon|window	f.tile_window left\n\
+    Mod4<Key>Right		root|icon|window	f.tile_window right\n\
+    Mod4<Key>Up			root|icon|window	f.tile_window up\n\
+    Mod4<Key>Down		root|icon|window	f.tile_window down\n\
     <Key>Print			root|icon|window	f.exec "ck-grab"\n\
     Shift<Key>Print		root|icon|window	f.exec "ck-grab --region --clipboard"\n\
     Alt<Key>F6			window			f.next_key transient\n\
@@ -204,6 +208,10 @@ $ *
     Alt<Key>F2			root|icon|window	f.exec "ck-launch --toggle"\n\
     Mod4<Key>space		root|icon|window	f.exec "ck-launch --toggle"\n\
     Mod4<Key>l			root|icon|window	f.exec "dtaction LockDisplay"\n\
+    Mod4<Key>Left		root|icon|window	f.tile_window left\n\
+    Mod4<Key>Right		root|icon|window	f.tile_window right\n\
+    Mod4<Key>Up			root|icon|window	f.tile_window up\n\
+    Mod4<Key>Down		root|icon|window	f.tile_window down\n\
     <Key>Print			root|icon|window	f.exec "ck-grab"\n\
     Shift<Key>Print		root|icon|window	f.exec "ck-grab --region --clipboard"\n\
     Alt<Key>F6			window			f.next_key transient
@@ -230,6 +238,10 @@ $ *
     Alt<Key>F2			root|icon|window	f.exec "ck-launch --toggle"\n\
     Mod4<Key>space		root|icon|window	f.exec "ck-launch --toggle"\n\
     Mod4<Key>l			root|icon|window	f.exec "dtaction LockDisplay"\n\
+    Mod4<Key>Left		root|icon|window	f.tile_window left\n\
+    Mod4<Key>Right		root|icon|window	f.tile_window right\n\
+    Mod4<Key>Up			root|icon|window	f.tile_window up\n\
+    Mod4<Key>Down		root|icon|window	f.tile_window down\n\
     <Key>Print			root|icon|window	f.exec "ck-grab"\n\
     Shift<Key>Print		root|icon|window	f.exec "ck-grab --region --clipboard"\n\
     Alt<Key>F6  		window			f.next_key transient\n\

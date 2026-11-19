@@ -149,6 +149,11 @@ static void after_outputs_reconfigured(DtwmServer *server) {
     dtwm_sync_xwayland_randr_dpi(server);
     dtwm_lock_sync_outputs(server);
     dtwm_output_mgmt_sync(server);
+    dtwm_power_display_sync_outputs(server);
+}
+
+void dtwm_output_mgmt_after_reconfigure(DtwmServer *server) {
+    if (server) after_outputs_reconfigured(server);
 }
 
 void dtwm_output_mgmt_publish_x11(DtwmServer *server) {

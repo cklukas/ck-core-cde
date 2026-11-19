@@ -2226,6 +2226,355 @@ Boolean F_Maximize (String args, ClientData *pCD, XEvent *event)
 
 } /* END OF FUNCTION F_Maximize */
 
+enum {
+    WM_TILE_NONE = 0,
+    WM_TILE_LEFT = 1,
+    WM_TILE_RIGHT = 2,
+    WM_TILE_TOP = 3,
+    WM_TILE_BOTTOM = 4,
+    WM_TILE_TOP_LEFT = 5,
+    WM_TILE_TOP_RIGHT = 6,
+    WM_TILE_BOTTOM_LEFT = 7,
+    WM_TILE_BOTTOM_RIGHT = 8
+};
+
+static void
+ComputeTileUsableWorkarea (WmScreenData *pSD, int *outX, int *outY,
+			   int *outW, int *outH)
+{
+    int screenW = DisplayWidth (DISPLAY, pSD->screen);
+    int screenH = DisplayHeight (DISPLAY, pSD->screen);
+    int top = 0;
+    int bottom = 0;
+    int left = 0;
+    int right = 0;
+    ClientListEntry *pEntry;
+
+    for (pEntry = pSD->clientList; pEntry; pEntry = pEntry->nextSibling)
+    {
+	ClientData *pFP = pEntry->pCD;
+	int fpx, fpy, fpw, fph;
+
+	if (!pFP || pFP->clientState == MINIMIZED_STATE)
+	    continue;
+	if (!(pFP->clientFlags & FRONT_PANEL_BOX))
+	    continue;
+
+	fpx = pFP->clientX - pFP->clientOffset.x;
+	fpy = pFP->clientY - pFP->clientOffset.y;
+	fpw = pFP->clientWidth + 2 * pFP->clientOffset.x;
+	fph = pFP->clientHeight + pFP->clientOffset.x + pFP->clientOffset.y;
+
+	if (fpw >= fph)
+	{
+	    if (fpy >= screenH / 2 && fpy > 120)
+	    {
+		int reserve = screenH - fpy;
+		if (bottom < reserve) bottom = reserve;
+	    }
+	    else if (fpy + fph <= screenH / 2)
+	    {
+		int reserve = fpy + fph;
+		if (top < reserve) top = reserve;
+	    }
+	}
+	else
+	{
+	    if (fpx < screenW / 2)
+	    {
+		int reserve = fpx + fpw;
+		if (left < reserve) left = reserve;
+	    }
+	    else
+	    {
+		int reserve = screenW - fpx;
+		if (right < reserve) right = reserve;
+	    }
+	}
+    }
+
+    if (pSD->launcherList)
+    {
+	LauncherWindow *lEntry;
+	for (lEntry = pSD->launcherList; lEntry; lEntry = lEntry->next)
+	{
+	    ClientData *pLP = lEntry->pCD;
+	    int px, py, pw, ph;
+
+	    if (!pLP && lEntry->win != None &&
+		!XFindContext (DISPLAY, lEntry->win, wmGD.windowContextType,
+			       (caddr_t *)&pLP))
+	    {
+		lEntry->pCD = pLP;
+	    }
+	    if (pLP)
+	    {
+		if (pLP->clientState == MINIMIZED_STATE)
+		    continue;
+		px = pLP->clientX - pLP->clientOffset.x;
+		py = pLP->clientY - pLP->clientOffset.y;
+		pw = pLP->clientWidth + 2 * pLP->clientOffset.x;
+		ph = pLP->clientHeight + pLP->clientOffset.x + pLP->clientOffset.y;
+	    }
+	    else if (lEntry->win != None)
+	    {
+		XWindowAttributes wa;
+		Window ch = None;
+		if (!XGetWindowAttributes (DISPLAY, lEntry->win, &wa) ||
+		    wa.map_state != IsViewable)
+		    continue;
+		px = wa.x;
+		py = wa.y;
+		XTranslateCoordinates (DISPLAY, lEntry->win, pSD->rootWindow,
+				       0, 0, &px, &py, &ch);
+		pw = wa.width;
+		ph = wa.height;
+	    }
+	    else
+	    {
+		continue;
+	    }
+
+	    if (pw >= ph)
+	    {
+		if (py >= screenH / 2 && py > 120)
+		{
+		    int reserve = screenH - py;
+		    if (bottom < reserve) bottom = reserve;
+		}
+		else if (py + ph <= screenH / 2)
+		{
+		    int reserve = py + ph;
+		    if (top < reserve) top = reserve;
+		}
+	    }
+	    else
+	    {
+		if (px < screenW / 2)
+		{
+		    int reserve = px + pw;
+		    if (left < reserve) left = reserve;
+		}
+		else
+		{
+		    int reserve = screenW - px;
+		    if (right < reserve) right = reserve;
+		}
+	    }
+	}
+    }
+
+    *outX = left;
+    *outY = top;
+    *outW = screenW - left - right;
+    *outH = screenH - top - bottom;
+    if (*outW < 160) *outW = 160;
+    if (*outH < 120) *outH = 120;
+}
+
+Boolean F_Tile_Window (String args, ClientData *pCD, XEvent *event)
+{
+    WmScreenData *pSD;
+    const char *dir = args ? args : "";
+    int ux, uy, uw, uh, hw, hh;
+    int tx, ty, tw, th;
+    unsigned int cw, ch;
+    int cur, next = WM_TILE_NONE;
+    Time ts;
+
+    while (*dir && (*dir == ' ' || *dir == '\t' || *dir == '"'))
+	dir++;
+
+    if (!pCD || pCD->clientState == MINIMIZED_STATE ||
+	(pCD->clientFlags & (CLIENT_WM_CLIENTS | FRONT_PANEL_BOX)))
+    {
+	pCD = wmGD.keyboardFocus;
+    }
+    if ((!pCD || pCD->clientState == MINIMIZED_STATE ||
+	 (pCD->clientFlags & (CLIENT_WM_CLIENTS | FRONT_PANEL_BOX))) &&
+	ACTIVE_WS && ACTIVE_WS->ppClients)
+    {
+	unsigned int i;
+	pCD = nullptr;
+	for (i = 0; i < ACTIVE_WS->numClients; ++i)
+	{
+	    ClientData *cand = ACTIVE_WS->ppClients[i];
+	    if (cand && cand->clientState != MINIMIZED_STATE &&
+		!(cand->clientFlags & (CLIENT_WM_CLIENTS | FRONT_PANEL_BOX)) &&
+		(cand->clientFunctions & MWM_FUNC_RESIZE))
+	    {
+		pCD = cand;
+		break;
+	    }
+	}
+    }
+
+    if (!pCD || !pCD->pSD || !(pCD->clientFunctions & MWM_FUNC_RESIZE))
+	return (False);
+
+    pSD = pCD->pSD;
+    ts = event ? GetFunctionTimestamp ((XButtonEvent *)event) : GetTimestamp ();
+    ComputeTileUsableWorkarea (pSD, &ux, &uy, &uw, &uh);
+
+    if (pCD->tileState == WM_TILE_NONE && pCD->clientState != MAXIMIZED_STATE)
+    {
+	pCD->tileSavedX = pCD->clientX - pCD->clientOffset.x;
+	pCD->tileSavedY = pCD->clientY - pCD->clientOffset.y;
+	pCD->tileSavedW = pCD->clientWidth;
+	pCD->tileSavedH = pCD->clientHeight;
+	pCD->tileSavedValid = True;
+    }
+    else if (!pCD->tileSavedValid)
+    {
+	pCD->tileSavedX = pCD->clientX - pCD->clientOffset.x;
+	pCD->tileSavedY = pCD->clientY - pCD->clientOffset.y;
+	pCD->tileSavedW = pCD->clientWidth > 64 ? pCD->clientWidth : 640;
+	pCD->tileSavedH = pCD->clientHeight > 48 ? pCD->clientHeight : 440;
+	pCD->tileSavedValid = True;
+    }
+
+    cur = pCD->tileState;
+
+    if (strncasecmp (dir, "left", 4) == 0)
+    {
+	if (pCD->clientState == MAXIMIZED_STATE)
+	{
+	    SetClientState (pCD, NORMAL_STATE, ts);
+	    next = WM_TILE_LEFT;
+	}
+	else if (cur == WM_TILE_TOP || cur == WM_TILE_TOP_RIGHT)
+	    next = WM_TILE_TOP_LEFT;
+	else if (cur == WM_TILE_BOTTOM || cur == WM_TILE_BOTTOM_RIGHT)
+	    next = WM_TILE_BOTTOM_LEFT;
+	else
+	    next = WM_TILE_LEFT;
+    }
+    else if (strncasecmp (dir, "right", 5) == 0)
+    {
+	if (pCD->clientState == MAXIMIZED_STATE)
+	{
+	    SetClientState (pCD, NORMAL_STATE, ts);
+	    next = WM_TILE_RIGHT;
+	}
+	else if (cur == WM_TILE_TOP || cur == WM_TILE_TOP_LEFT)
+	    next = WM_TILE_TOP_RIGHT;
+	else if (cur == WM_TILE_BOTTOM || cur == WM_TILE_BOTTOM_LEFT)
+	    next = WM_TILE_BOTTOM_RIGHT;
+	else
+	    next = WM_TILE_RIGHT;
+    }
+    else if (strncasecmp (dir, "up", 2) == 0)
+    {
+	if (pCD->clientState == MAXIMIZED_STATE)
+	    return (False);
+	if (cur == WM_TILE_TOP)
+	{
+	    pCD->tileState = WM_TILE_NONE;
+	    if (pCD->tileSavedValid)
+	    {
+		pCD->clientX = pCD->tileSavedX + pCD->clientOffset.x;
+		pCD->clientY = pCD->tileSavedY + pCD->clientOffset.y;
+		pCD->clientWidth = pCD->tileSavedW;
+		pCD->clientHeight = pCD->tileSavedH;
+	    }
+	    if (pCD->clientFunctions & MWM_FUNC_MAXIMIZE)
+		SetClientState (pCD, MAXIMIZED_STATE, ts);
+	    return (False);
+	}
+	if (cur == WM_TILE_LEFT || cur == WM_TILE_BOTTOM_LEFT)
+	    next = WM_TILE_TOP_LEFT;
+	else if (cur == WM_TILE_RIGHT || cur == WM_TILE_BOTTOM_RIGHT)
+	    next = WM_TILE_TOP_RIGHT;
+	else
+	    next = WM_TILE_TOP;
+    }
+    else if (strncasecmp (dir, "down", 4) == 0)
+    {
+	if (pCD->clientState == MAXIMIZED_STATE)
+	{
+	    SetClientState (pCD, NORMAL_STATE, ts);
+	    pCD->tileState = WM_TILE_NONE;
+	    return (False);
+	}
+	if (cur == WM_TILE_LEFT)
+	    next = WM_TILE_BOTTOM_LEFT;
+	else if (cur == WM_TILE_RIGHT)
+	    next = WM_TILE_BOTTOM_RIGHT;
+	else if (cur == WM_TILE_BOTTOM ||
+		 cur == WM_TILE_TOP_LEFT || cur == WM_TILE_TOP_RIGHT ||
+		 cur == WM_TILE_BOTTOM_LEFT || cur == WM_TILE_BOTTOM_RIGHT)
+	{
+	    pCD->tileState = WM_TILE_NONE;
+	    if (pCD->tileSavedValid)
+	    {
+		int rx = wmGD.positionIsFrame
+		    ? pCD->tileSavedX : (pCD->tileSavedX + pCD->clientOffset.x);
+		int ry = wmGD.positionIsFrame
+		    ? pCD->tileSavedY : (pCD->tileSavedY + pCD->clientOffset.y);
+		ProcessNewConfiguration (pCD,
+					 rx,
+					 ry,
+					 (unsigned int)pCD->tileSavedW,
+					 (unsigned int)pCD->tileSavedH,
+					 TRUE);
+	    }
+	    return (False);
+	}
+	else
+	    next = WM_TILE_BOTTOM;
+    }
+    else
+    {
+	return (False);
+    }
+
+    hw = uw / 2;
+    hh = uh / 2;
+    switch (next)
+    {
+	case WM_TILE_LEFT:
+	    tx = ux; ty = uy; tw = hw; th = uh;
+	    break;
+	case WM_TILE_RIGHT:
+	    tx = ux + hw; ty = uy; tw = uw - hw; th = uh;
+	    break;
+	case WM_TILE_TOP:
+	    tx = ux; ty = uy; tw = uw; th = hh;
+	    break;
+	case WM_TILE_BOTTOM:
+	    tx = ux; ty = uy + hh; tw = uw; th = uh - hh;
+	    break;
+	case WM_TILE_TOP_LEFT:
+	    tx = ux; ty = uy; tw = hw; th = hh;
+	    break;
+	case WM_TILE_TOP_RIGHT:
+	    tx = ux + hw; ty = uy; tw = uw - hw; th = hh;
+	    break;
+	case WM_TILE_BOTTOM_LEFT:
+	    tx = ux; ty = uy + hh; tw = hw; th = uh - hh;
+	    break;
+	case WM_TILE_BOTTOM_RIGHT:
+	    tx = ux + hw; ty = uy + hh; tw = uw - hw; th = uh - hh;
+	    break;
+	default:
+	    return (False);
+    }
+
+    cw = (tw > 2 * pCD->clientOffset.x + 64)
+	? (unsigned int)(tw - 2 * pCD->clientOffset.x) : 64u;
+    ch = (th > pCD->clientOffset.x + pCD->clientOffset.y + 48)
+	? (unsigned int)(th - pCD->clientOffset.x - pCD->clientOffset.y) : 48u;
+
+    {
+	int cfgX = wmGD.positionIsFrame ? tx : (tx + pCD->clientOffset.x);
+	int cfgY = wmGD.positionIsFrame ? ty : (ty + pCD->clientOffset.y);
+	ProcessNewConfiguration (pCD, cfgX, cfgY, cw, ch, TRUE);
+    }
+    pCD->tileState = next;
+    Do_Raise (pCD, nullptr, STACK_NORMAL);
+    return (False);
+}
+
 
 
 /*************************************<->*************************************

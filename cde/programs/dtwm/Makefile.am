@@ -19,7 +19,7 @@ EXTRA_DIST = tests/check-property-readers.py tests/property-client.c \
              tests/check-dtwm-wayland-wp12.py tests/check-dtwm-wayland-wp13.py \
              tests/check-dtwm-wayland-wp14.py tests/check-dtwm-wayland-wp15.py \
              tests/check-dtwm-wayland-wp16.py tests/check-dtwm-wayland-wp17.py \
-             tests/check-dtwm-wayland-wp19.py \
+             tests/check-dtwm-wayland-wp18.py tests/check-dtwm-wayland-wp19.py \
              tests/check-dtwm-wayland-menus.py \
              wayland/protocols/wlr-layer-shell-unstable-v1.xml \
              wayland/protocols/wlr-output-power-management-unstable-v1.xml \
@@ -49,6 +49,7 @@ if BUILD_DTWM_WAYLAND
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp15.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp16.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp17.py --compositor ./dtwm-wayland
+	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp18.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp19.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-menus.py --compositor ./dtwm-wayland
 endif
@@ -115,12 +116,13 @@ dtwm_wayland_SOURCES = wayland/dtwm_wayland.h \
                        wayland/cde_session_lock.c \
                        wayland/cde_output_mgmt.c \
                        wayland/cde_ime.c \
+                       wayland/cde_power_display.c \
                        wayland/dtwm_wayland_main.c
 nodist_dtwm_wayland_SOURCES = $(WAYLAND_GEN_HDRS) $(WAYLAND_GEN_SRCS)
 dtwm_wayland_CPPFLAGS = -I$(builddir)/wayland -I$(srcdir)/wayland -DWLR_USE_UNSTABLE=1 \
                         -DCDE_INSTALLATION_TOP=\"$(CDE_INSTALLATION_TOP)\"
 dtwm_wayland_CFLAGS = $(WAYLAND_COMP_CFLAGS)
-dtwm_wayland_LDADD = $(WAYLAND_COMP_LIBS) -lxcb-randr -lxcb-xfixes -linput
+dtwm_wayland_LDADD = $(WAYLAND_COMP_LIBS) -lxcb-randr -lxcb-xfixes -linput -ldl -lm
 
 dtwm_panel_SOURCES = wayland/WmFpWayland.c \
                      Button.c        Callback.c      Clock.c \

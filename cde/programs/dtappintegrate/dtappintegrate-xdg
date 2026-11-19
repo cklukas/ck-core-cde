@@ -529,7 +529,7 @@ def run_index_once(trigger_reload: bool = True) -> int:
 
     sys_cat_dir = appman_dir / "XDG_System"
     sys_cat_dir.mkdir(parents=True, exist_ok=True)
-    for builtin_act in ("CkLaunch", "CkSoftwareCenter"):
+    for builtin_act in ("CkLaunch", "CkSoftwareCenter", "CkAdmin", "CkAdminDefaultApps", "CkAdminDateTime", "CkAdminFirmware"):
         bs = sys_cat_dir / builtin_act
         if not bs.exists():
             bs.write_text("", encoding="utf-8")

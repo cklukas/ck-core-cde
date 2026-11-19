@@ -71,26 +71,31 @@ typedef struct {
     const char *keysym_name;
     const char *media_action;
     const char *exec_cmd;
+    const char *tile_dir;
     unsigned int req_mods;
 } WmHwKeyBinding;
 
 static const WmHwKeyBinding g_hwKeyBindings[] = {
-    { "XF86AudioRaiseVolume",  "vol-up",         nullptr, 0 },
-    { "XF86AudioLowerVolume",  "vol-down",       nullptr, 0 },
-    { "XF86AudioMute",         "vol-mute",       nullptr, 0 },
-    { "XF86AudioMicMute",      "mic-mute",       nullptr, 0 },
-    { "XF86MonBrightnessUp",   "bright-up",      nullptr, 0 },
-    { "XF86MonBrightnessDown", "bright-down",    nullptr, 0 },
-    { "XF86KbdBrightnessUp",   "kbd-bright-up",  nullptr, 0 },
-    { "XF86KbdBrightnessDown", "kbd-bright-down",nullptr, 0 },
-    { "XF86AudioPlay",         "media-play",     nullptr, 0 },
-    { "XF86AudioPause",        "media-pause",    nullptr, 0 },
-    { "XF86AudioNext",         "media-next",     nullptr, 0 },
-    { "XF86AudioPrev",         "media-prev",     nullptr, 0 },
-    { "XF86AudioStop",         "media-stop",     nullptr, 0 },
-    { "Print",                 nullptr,          "ck-grab", 0 },
-    { "Print",                 nullptr,          "ck-grab --region --clipboard", ShiftMask },
-    { "l",                     nullptr,          "dtaction LockDisplay", Mod4Mask },
+    { "XF86AudioRaiseVolume",  "vol-up",         nullptr, nullptr, 0 },
+    { "XF86AudioLowerVolume",  "vol-down",       nullptr, nullptr, 0 },
+    { "XF86AudioMute",         "vol-mute",       nullptr, nullptr, 0 },
+    { "XF86AudioMicMute",      "mic-mute",       nullptr, nullptr, 0 },
+    { "XF86MonBrightnessUp",   "bright-up",      nullptr, nullptr, 0 },
+    { "XF86MonBrightnessDown", "bright-down",    nullptr, nullptr, 0 },
+    { "XF86KbdBrightnessUp",   "kbd-bright-up",  nullptr, nullptr, 0 },
+    { "XF86KbdBrightnessDown", "kbd-bright-down",nullptr, nullptr, 0 },
+    { "XF86AudioPlay",         "media-play",     nullptr, nullptr, 0 },
+    { "XF86AudioPause",        "media-pause",    nullptr, nullptr, 0 },
+    { "XF86AudioNext",         "media-next",     nullptr, nullptr, 0 },
+    { "XF86AudioPrev",         "media-prev",     nullptr, nullptr, 0 },
+    { "XF86AudioStop",         "media-stop",     nullptr, nullptr, 0 },
+    { "Print",                 nullptr,          "ck-grab", nullptr, 0 },
+    { "Print",                 nullptr,          "ck-grab --region --clipboard", nullptr, ShiftMask },
+    { "l",                     nullptr,          "dtaction LockDisplay", nullptr, Mod4Mask },
+    { "Left",                  nullptr,          nullptr, "left",  Mod4Mask },
+    { "Right",                 nullptr,          nullptr, "right", Mod4Mask },
+    { "Up",                    nullptr,          nullptr, "up",    Mod4Mask },
+    { "Down",                  nullptr,          nullptr, "down",  Mod4Mask },
 };
 
 static int
@@ -847,6 +852,14 @@ Boolean HandleEwmhSuperKey (XKeyEvent *keyEvent, Boolean isPress)
 		    memset (&ev, 0, sizeof(ev));
 		    ev.xkey = *keyEvent;
 		    F_Exec ((char *)g_hwKeyBindings[i].exec_cmd, nullptr, &ev);
+		    return True;
+		}
+		if (g_hwKeyBindings[i].tile_dir)
+		{
+		    XEvent ev;
+		    memset (&ev, 0, sizeof(ev));
+		    ev.xkey = *keyEvent;
+		    F_Tile_Window ((String)g_hwKeyBindings[i].tile_dir, wmGD.keyboardFocus, &ev);
 		    return True;
 		}
 	    }

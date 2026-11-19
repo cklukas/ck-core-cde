@@ -24,6 +24,7 @@
 #include <Xm/PushB.h>
 #include <Xm/PushBG.h>
 #include <Xm/RowColumn.h>
+#include <Xm/Scale.h>
 #include <Xm/SeparatoG.h>
 #include <Xm/ToggleB.h>
 #include <Xm/ToggleBG.h>
@@ -39,11 +40,16 @@
 #include "Protocol.h"
 #include "SaveRestore.h"
 
+#include <ctype.h>
+#include <limits.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <time.h>
+#include <unistd.h>
 
 #define MAX_DISP_OUTPUTS 16
 #define MAX_DISP_MODES   24
@@ -65,6 +71,7 @@ typedef struct {
     int width, height;   /* Unrotated mode pixels */
     int rotation;        /* 0, 90, 180, 270 */
     int dpi;             /* 96, 120, 144, 168, 192 */
+    bool vrr_enabled;    /* Per-output Variable Refresh Rate / Adaptive Sync */
     int mode_count;
     DispMode modes[MAX_DISP_MODES];
 #ifdef HAVE_XRANDR
@@ -80,6 +87,18 @@ typedef struct {
     DispOutputInfo outs[MAX_DISP_OUTPUTS];
     DispOutputInfo orig_outs[MAX_DISP_OUTPUTS];
     int orig_count;
+
+    /* Night Light & Ergonomics state */
+    bool nl_enabled;
+    int nl_mode;         /* 0=always, 1=schedule (20:00-06:00), 2=sunset */
+    int nl_temp_k;       /* 2700 .. 6500 */
+    int nl_start_min;
+    int nl_end_min;
+    bool orig_nl_enabled;
+    int orig_nl_mode;
+    int orig_nl_temp_k;
+    int orig_nl_start_min;
+    int orig_nl_end_min;
 
     /* Canvas drag transform state */
     double view_scale;
@@ -99,6 +118,7 @@ typedef struct {
     Widget mon_btn_rc;
     Widget mon_btns[MAX_DISP_OUTPUTS];
     Widget enable_toggle;
+    Widget vrr_toggle;
     Widget res_pulldown;
     Widget res_opt_menu;
     Widget res_btns[MAX_DISP_MODES];
@@ -107,6 +127,11 @@ typedef struct {
     Widget rot_btns[4];
     Widget dpi_opt_menu;
     Widget dpi_btns[5];
+    Widget ergo_tb;
+    Widget nl_toggle;
+    Widget nl_mode_opt_menu;
+    Widget nl_mode_btns[3];
+    Widget nl_temp_scale;
     bool updating_widgets;
 } DispDialogState;
 
@@ -129,6 +154,217 @@ static const char *const k_dpi_labels[5] = {
     "175% (168 DPI)",
     "200% (192 DPI)",
 };
+
+static const char *const k_nl_mode_ids[3] = { "always", "schedule", "sunset" };
+static const char *const k_nl_mode_labels[3] = {
+    "Always On",
+    "Night Schedule (20:00-06:00)",
+    "Sunset to Sunrise",
+};
+
+static int clamp_i(int v, int lo, int hi) {
+    if (v < lo) return lo;
+    if (v > hi) return hi;
+    return v;
+}
+
+static double clamp_d(double v, double lo, double hi) {
+    if (v < lo) return lo;
+    if (v > hi) return hi;
+    return v;
+}
+
+static void kelvin_to_rgb_mult(int temp_k, double *out_r, double *out_g, double *out_b) {
+    temp_k = clamp_i(temp_k, 2700, 6500);
+    if (temp_k >= 6500) {
+        *out_r = 1.0;
+        *out_g = 1.0;
+        *out_b = 1.0;
+        return;
+    }
+    double t = (double)temp_k / 100.0;
+    double ref_t = 65.0;
+    double g_raw = (99.4708025861 * log(t) - 161.1195681661) / 255.0;
+    double g_ref = (99.4708025861 * log(ref_t) - 161.1195681661) / 255.0;
+    double b_raw = (t <= 19.0) ? 0.0 : (138.5177312231 * log(t - 10.0) - 305.0447927307) / 255.0;
+    double b_ref = (138.5177312231 * log(ref_t - 10.0) - 305.0447927307) / 255.0;
+    double g = (g_ref > 0.01) ? clamp_d(g_raw / g_ref, 0.50, 1.0) : 1.0;
+    double b = (b_ref > 0.01) ? clamp_d(b_raw / b_ref, 0.20, 1.0) : 1.0;
+    if (b >= g) b = g - 0.02;
+    *out_r = 1.0;
+    *out_g = g;
+    *out_b = b;
+}
+
+static bool is_night_light_active_now(bool enabled, int mode_idx, int start_min, int end_min) {
+    if (!enabled) return false;
+    if (mode_idx == 0) return true; /* Always On */
+    int now_min = 0;
+    const char *ov = getenv("CK_NIGHT_LIGHT_TEST_MINUTES");
+    if (ov && ov[0]) {
+        now_min = clamp_i(atoi(ov), 0, 1439);
+    } else {
+        time_t now = time(nullptr);
+        struct tm ltm;
+        if (localtime_r(&now, &ltm)) now_min = ltm.tm_hour * 60 + ltm.tm_min;
+    }
+    int s = (mode_idx == 2) ? (19 * 60 + 30) : start_min;
+    int e = (mode_idx == 2) ? (6 * 60 + 30) : end_min;
+    s = ((s % 1440) + 1440) % 1440;
+    e = ((e % 1440) + 1440) % 1440;
+    if (s == e) return true;
+    if (s > e) return (now_min >= s || now_min < e);
+    return (now_min >= s && now_min < e);
+}
+
+static void ergonomics_file_path(char *out, size_t out_sz) {
+    const char *home = (style.home && style.home[0]) ? style.home : getenv("HOME");
+    if (!home || !home[0]) home = "/var/tmp";
+    char dt_dir[PATH_MAX];
+    snprintf(dt_dir, sizeof(dt_dir), "%s/.dt", home);
+    mkdir(dt_dir, 0755);
+    snprintf(out, out_sz, "%s/display_ergonomics.conf", dt_dir);
+}
+
+static void save_ergonomics_file(
+    bool nl_enabled, int nl_mode, int nl_temp_k, int nl_start_min, int nl_end_min,
+    const DispOutputInfo *arr, int count
+) {
+    char path[PATH_MAX], tmp[PATH_MAX + 32];
+    ergonomics_file_path(path, sizeof(path));
+    snprintf(tmp, sizeof(tmp), "%s.%d.tmp", path, (int)getpid());
+    FILE *fp = fopen(tmp, "w");
+    if (!fp) return;
+    int m = clamp_i(nl_mode, 0, 2);
+    fprintf(fp, "night_light_enabled=%d\n", nl_enabled ? 1 : 0);
+    fprintf(fp, "night_light_mode=%s\n", nl_enabled ? k_nl_mode_ids[m] : "off");
+    fprintf(fp, "night_light_schedule=%s\n", k_nl_mode_ids[m]);
+    fprintf(fp, "night_light_temp=%d\n", clamp_i(nl_temp_k, 2700, 6500));
+    fprintf(fp, "night_light_start_min=%d\n", nl_start_min);
+    fprintf(fp, "night_light_end_min=%d\n", nl_end_min);
+    for (int i = 0; i < count; ++i) {
+        if (arr[i].name[0]) {
+            fprintf(fp, "vrr.%s=%d\n", arr[i].name, arr[i].vrr_enabled ? 1 : 0);
+        }
+    }
+    if (fclose(fp) == 0) {
+        if (rename(tmp, path) != 0) unlink(tmp);
+    } else {
+        unlink(tmp);
+    }
+}
+
+static void load_ergonomics_into_state(void) {
+    g_disp.nl_enabled = false;
+    g_disp.nl_mode = 1; /* default Night Schedule (20:00-06:00) */
+    g_disp.nl_temp_k = 4000;
+    g_disp.nl_start_min = 20 * 60;
+    g_disp.nl_end_min = 6 * 60;
+
+    char path[PATH_MAX];
+    ergonomics_file_path(path, sizeof(path));
+    FILE *fp = fopen(path, "r");
+    if (fp) {
+        char line[256];
+        while (fgets(line, sizeof(line), fp)) {
+            char *nl = strpbrk(line, "\r\n");
+            if (nl) *nl = '\0';
+            char *p = line;
+            while (*p && isspace((unsigned char)*p)) p++;
+            if (!*p || *p == '#') continue;
+            char *eq = strchr(p, '=');
+            if (!eq) continue;
+            *eq = '\0';
+            const char *k = p;
+            const char *v = eq + 1;
+            if (strcmp(k, "night_light_enabled") == 0) {
+                g_disp.nl_enabled = (atoi(v) != 0);
+            } else if (strcmp(k, "night_light_mode") == 0 || strcmp(k, "night_light_schedule") == 0) {
+                if (strcmp(v, "always") == 0) g_disp.nl_mode = 0;
+                else if (strcmp(v, "schedule") == 0) g_disp.nl_mode = 1;
+                else if (strcmp(v, "sunset") == 0) g_disp.nl_mode = 2;
+            } else if (strcmp(k, "night_light_temp") == 0) {
+                g_disp.nl_temp_k = clamp_i(atoi(v), 2700, 6500);
+            } else if (strcmp(k, "night_light_start_min") == 0) {
+                g_disp.nl_start_min = clamp_i(atoi(v), 0, 1439);
+            } else if (strcmp(k, "night_light_end_min") == 0) {
+                g_disp.nl_end_min = clamp_i(atoi(v), 0, 1439);
+            } else if (strncmp(k, "vrr.", 4) == 0) {
+                for (int i = 0; i < g_disp.count; ++i) {
+                    if (strcmp(g_disp.outs[i].name, k + 4) == 0) {
+                        g_disp.outs[i].vrr_enabled = (atoi(v) != 0);
+                    }
+                }
+            }
+        }
+        fclose(fp);
+    }
+
+    /* Also sync live Wayland _DT_NIGHT_LIGHT_STATE / _DT_VRR_STATE if published */
+    if (style.display) {
+        Atom nl_a = XInternAtom(style.display, "_DT_NIGHT_LIGHT_STATE", True);
+        if (nl_a != None) {
+            Atom at = None;
+            int af = 0;
+            unsigned long ni = 0, rem = 0;
+            unsigned char *data = nullptr;
+            if (XGetWindowProperty(style.display, style.root, nl_a, 0, 512, False,
+                                   AnyPropertyType, &at, &af, &ni, &rem, &data) == Success && data) {
+                char buf[512];
+                size_t cl = ni < sizeof(buf) - 1 ? (size_t)ni : sizeof(buf) - 1;
+                memcpy(buf, data, cl);
+                buf[cl] = '\0';
+                XFree(data);
+                int en = 0, tk = 4000;
+                char mode[32] = {0};
+                if (sscanf(buf, "enabled=%d", &en) == 1) g_disp.nl_enabled = (en != 0);
+                const char *mp = strstr(buf, "mode=");
+                if (mp && sscanf(mp + 5, "%31s", mode) == 1) {
+                    if (strcmp(mode, "always") == 0) g_disp.nl_mode = 0;
+                    else if (strcmp(mode, "schedule") == 0) g_disp.nl_mode = 1;
+                    else if (strcmp(mode, "sunset") == 0) g_disp.nl_mode = 2;
+                }
+                const char *tp = strstr(buf, "temp=");
+                if (tp && sscanf(tp + 5, "%d", &tk) == 1) {
+                    g_disp.nl_temp_k = clamp_i(tk, 2700, 6500);
+                }
+            }
+        }
+        Atom vrr_a = XInternAtom(style.display, "_DT_VRR_STATE", True);
+        if (vrr_a != None) {
+            Atom at = None;
+            int af = 0;
+            unsigned long ni = 0, rem = 0;
+            unsigned char *data = nullptr;
+            if (XGetWindowProperty(style.display, style.root, vrr_a, 0, 512, False,
+                                   AnyPropertyType, &at, &af, &ni, &rem, &data) == Success && data) {
+                char buf[512];
+                size_t cl = ni < sizeof(buf) - 1 ? (size_t)ni : sizeof(buf) - 1;
+                memcpy(buf, data, cl);
+                buf[cl] = '\0';
+                XFree(data);
+                char *savep = nullptr;
+                for (char *tok = strtok_r(buf, ",", &savep); tok; tok = strtok_r(nullptr, ",", &savep)) {
+                    char *eq = strchr(tok, '=');
+                    if (!eq) continue;
+                    *eq = '\0';
+                    for (int i = 0; i < g_disp.count; ++i) {
+                        if (strcmp(g_disp.outs[i].name, tok) == 0) {
+                            g_disp.outs[i].vrr_enabled = (atoi(eq + 1) != 0);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    g_disp.orig_nl_enabled = g_disp.nl_enabled;
+    g_disp.orig_nl_mode = g_disp.nl_mode;
+    g_disp.orig_nl_temp_k = g_disp.nl_temp_k;
+    g_disp.orig_nl_start_min = g_disp.nl_start_min;
+    g_disp.orig_nl_end_min = g_disp.nl_end_min;
+    memcpy(g_disp.orig_outs, g_disp.outs, sizeof(g_disp.outs));
+}
 
 static int effective_w(const DispOutputInfo *o) {
     int rw = (o->rotation == 90 || o->rotation == 270) ? o->height : o->width;
@@ -293,7 +529,7 @@ static void query_outputs(void) {
                     o->rr_crtc = oi->crtc;
                     o->dpi = 96;
 
-                    /* Read XLibre per-output DPI property if set */
+                    /* Read XLibre per-output DPI & VariableRefresh properties if set */
                     Atom act_t = None;
                     int act_f = 0;
                     unsigned long nitems = 0, rem = 0;
@@ -305,6 +541,19 @@ static void query_outputs(void) {
                         if (act_f == 32 && nitems >= 1) {
                             int v = (int)(*(long *)pdata);
                             if (v >= 72 && v <= 384) o->dpi = v;
+                        }
+                        XFree(pdata);
+                    }
+                    Atom vrr_prop = XInternAtom(style.display, "VariableRefresh", True);
+                    if (vrr_prop == None) vrr_prop = XInternAtom(style.display, "_DT_VRR_ENABLED", True);
+                    if (vrr_prop != None &&
+                        XRRGetOutputProperty(
+                            style.display, res->outputs[i], vrr_prop, 0, 1, False, False,
+                            AnyPropertyType, &act_t, &act_f, &nitems, &rem, &pdata
+                        ) == Success && pdata) {
+                        if ((act_f == 32 && *(long *)pdata != 0) ||
+                            (act_f == 8 && pdata[0] != 0)) {
+                            o->vrr_enabled = true;
                         }
                         XFree(pdata);
                     }
@@ -366,6 +615,129 @@ static void query_outputs(void) {
     }
     memcpy(g_disp.orig_outs, g_disp.outs, sizeof(g_disp.outs));
     g_disp.orig_count = g_disp.count;
+    load_ergonomics_into_state();
+}
+
+static void apply_ergonomics(
+    bool nl_enabled, int nl_mode, int nl_temp_k, int nl_start_min, int nl_end_min,
+    const DispOutputInfo *arr, int count, bool persist_file
+) {
+    int m = clamp_i(nl_mode, 0, 2);
+    int temp_k = clamp_i(nl_temp_k, 2700, 6500);
+    const char *mode_str = nl_enabled ? k_nl_mode_ids[m] : "off";
+
+    if (persist_file) {
+        save_ergonomics_file(nl_enabled, m, temp_k, nl_start_min, nl_end_min, arr, count);
+    }
+
+    if (g_disp.is_wayland) {
+        char cmd[256];
+        snprintf(cmd, sizeof(cmd), "f.set_night_light %d %s %d %d %d",
+                 nl_enabled ? 1 : 0, mode_str, temp_k, nl_start_min, nl_end_min);
+        send_wayland_wm_request(cmd);
+        for (int i = 0; i < count; ++i) {
+            if (!arr[i].name[0]) continue;
+            snprintf(cmd, sizeof(cmd), "f.set_vrr %s %d",
+                     arr[i].name, arr[i].vrr_enabled ? 1 : 0);
+            send_wayland_wm_request(cmd);
+        }
+        return;
+    }
+
+#ifdef HAVE_XRANDR
+    bool active = is_night_light_active_now(nl_enabled, m, nl_start_min, nl_end_min);
+    double r_mult = 1.0, g_mult = 1.0, b_mult = 1.0;
+    if (active) {
+        kelvin_to_rgb_mult(temp_k, &r_mult, &g_mult, &b_mult);
+    }
+    int r_pm = (int)lround(r_mult * 1000.0);
+    int g_pm = (int)lround(g_mult * 1000.0);
+    int b_pm = (int)lround(b_mult * 1000.0);
+    bool any_vrr = false;
+
+    XRRScreenResources *res = XRRGetScreenResourcesCurrent(style.display, style.root);
+    if (res) {
+        for (int c = 0; c < res->ncrtc; ++c) {
+            int gsz = XRRGetCrtcGammaSize(style.display, res->crtcs[c]);
+            if (gsz > 1) {
+                XRRCrtcGamma *gam = XRRAllocGamma(gsz);
+                if (gam) {
+                    for (int gi = 0; gi < gsz; ++gi) {
+                        double base = ((double)gi / (double)(gsz - 1)) * 65535.0;
+                        gam->red[gi] = (unsigned short)clamp_i((int)lround(base * r_mult), 0, 65535);
+                        gam->green[gi] = (unsigned short)clamp_i((int)lround(base * g_mult), 0, 65535);
+                        gam->blue[gi] = (unsigned short)clamp_i((int)lround(base * b_mult), 0, 65535);
+                    }
+                    XRRSetCrtcGamma(style.display, res->crtcs[c], gam);
+                    XRRFreeGamma(gam);
+                }
+            }
+        }
+
+        Atom vrr_hw_atom = XInternAtom(style.display, "VariableRefresh", False);
+        Atom vrr_dt_atom = XInternAtom(style.display, "_DT_VRR_ENABLED", False);
+        for (int i = 0; i < count; ++i) {
+            if (arr[i].vrr_enabled) any_vrr = true;
+            if (arr[i].rr_output == None) continue;
+            long val = arr[i].vrr_enabled ? 1 : 0;
+            XRRChangeOutputProperty(
+                style.display, arr[i].rr_output, vrr_dt_atom, XA_INTEGER, 32,
+                PropModeReplace, (const unsigned char *)&val, 1
+            );
+            /* Also set driver VariableRefresh output property (XLibre / modesetting / amdgpu) */
+            int nprops = 0;
+            Atom *props = XRRListOutputProperties(style.display, arr[i].rr_output, &nprops);
+            bool has_hw_vrr = false;
+            if (props) {
+                for (int pi = 0; pi < nprops; ++pi) {
+                    if (props[pi] == vrr_hw_atom) {
+                        has_hw_vrr = true;
+                        break;
+                    }
+                }
+                XFree(props);
+            }
+            if (has_hw_vrr) {
+                unsigned char bval = (unsigned char)(arr[i].vrr_enabled ? 1 : 0);
+                XRRChangeOutputProperty(
+                    style.display, arr[i].rr_output, vrr_hw_atom, XA_INTEGER, 8,
+                    PropModeReplace, &bval, 1
+                );
+            } else {
+                XRRChangeOutputProperty(
+                    style.display, arr[i].rr_output, vrr_hw_atom, XA_INTEGER, 32,
+                    PropModeReplace, (const unsigned char *)&val, 1
+                );
+            }
+        }
+        XRRFreeScreenResources(res);
+    }
+
+    Atom nl_state_atom = XInternAtom(style.display, "_DT_NIGHT_LIGHT_STATE", False);
+    char state_buf[320];
+    int sn = snprintf(
+        state_buf, sizeof(state_buf),
+        "enabled=%d active=%d mode=%s temp=%d r_permille=%d g_permille=%d b_permille=%d vrr=%d",
+        nl_enabled ? 1 : 0, active ? 1 : 0, mode_str, temp_k, r_pm, g_pm, b_pm, any_vrr ? 1 : 0
+    );
+    if (sn > 0) {
+        XChangeProperty(style.display, style.root, nl_state_atom, XA_STRING, 8,
+                        PropModeReplace, (const unsigned char *)state_buf, sn);
+    }
+
+    Atom vrr_state_atom = XInternAtom(style.display, "_DT_VRR_STATE", False);
+    char vrr_buf[512];
+    int vp = 0;
+    vrr_buf[0] = '\0';
+    for (int i = 0; i < count; ++i) {
+        int n = snprintf(vrr_buf + vp, sizeof(vrr_buf) - (size_t)vp, "%s%s=%d",
+                         vp > 0 ? "," : "", arr[i].name, arr[i].vrr_enabled ? 1 : 0);
+        if (n > 0 && vp + n < (int)sizeof(vrr_buf)) vp += n;
+    }
+    XChangeProperty(style.display, style.root, vrr_state_atom, XA_STRING, 8,
+                    PropModeReplace, (const unsigned char *)vrr_buf, vp);
+    XSync(style.display, False);
+#endif
 }
 
 static void apply_outputs(const DispOutputInfo *arr, int count) {
@@ -799,6 +1171,62 @@ static void select_dpi_cb(Widget w, XtPointer client_data, XtPointer call_data) 
     }
 }
 
+static void toggle_vrr_cb(Widget w, XtPointer client_data, XtPointer call_data) {
+    (void)w;
+    (void)client_data;
+    if (g_disp.updating_widgets) return;
+    XmToggleButtonCallbackStruct *cbs = (XmToggleButtonCallbackStruct *)call_data;
+    g_disp.outs[g_disp.selected].vrr_enabled = (cbs && cbs->set);
+    apply_ergonomics(
+        g_disp.nl_enabled, g_disp.nl_mode, g_disp.nl_temp_k,
+        g_disp.nl_start_min, g_disp.nl_end_min,
+        g_disp.outs, g_disp.count, false
+    );
+}
+
+static void toggle_night_light_cb(Widget w, XtPointer client_data, XtPointer call_data) {
+    (void)w;
+    (void)client_data;
+    if (g_disp.updating_widgets) return;
+    XmToggleButtonCallbackStruct *cbs = (XmToggleButtonCallbackStruct *)call_data;
+    g_disp.nl_enabled = (cbs && cbs->set);
+    apply_ergonomics(
+        g_disp.nl_enabled, g_disp.nl_mode, g_disp.nl_temp_k,
+        g_disp.nl_start_min, g_disp.nl_end_min,
+        g_disp.outs, g_disp.count, false
+    );
+}
+
+static void select_nl_mode_cb(Widget w, XtPointer client_data, XtPointer call_data) {
+    (void)w;
+    (void)call_data;
+    if (g_disp.updating_widgets) return;
+    int midx = (int)(intptr_t)client_data;
+    if (midx >= 0 && midx < 3) {
+        g_disp.nl_mode = midx;
+        apply_ergonomics(
+            g_disp.nl_enabled, g_disp.nl_mode, g_disp.nl_temp_k,
+            g_disp.nl_start_min, g_disp.nl_end_min,
+            g_disp.outs, g_disp.count, false
+        );
+    }
+}
+
+static void change_nl_temp_cb(Widget w, XtPointer client_data, XtPointer call_data) {
+    (void)w;
+    (void)client_data;
+    if (g_disp.updating_widgets) return;
+    XmScaleCallbackStruct *cbs = (XmScaleCallbackStruct *)call_data;
+    if (cbs) {
+        g_disp.nl_temp_k = clamp_i(cbs->value, 2700, 6500);
+        apply_ergonomics(
+            g_disp.nl_enabled, g_disp.nl_mode, g_disp.nl_temp_k,
+            g_disp.nl_start_min, g_disp.nl_end_min,
+            g_disp.outs, g_disp.count, false
+        );
+    }
+}
+
 static void preset_layout_cb(Widget w, XtPointer client_data, XtPointer call_data) {
     (void)w;
     (void)call_data;
@@ -910,6 +1338,20 @@ static void update_controls_from_selected(void) {
         XtVaSetValues(g_disp.dpi_opt_menu, XmNmenuHistory, g_disp.dpi_btns[dpi_idx], NULL);
     }
 
+    if (g_disp.vrr_toggle) {
+        XmToggleButtonSetState(g_disp.vrr_toggle, o->vrr_enabled ? True : False, False);
+    }
+    if (g_disp.nl_toggle) {
+        XmToggleButtonSetState(g_disp.nl_toggle, g_disp.nl_enabled ? True : False, False);
+    }
+    int m_idx = clamp_i(g_disp.nl_mode, 0, 2);
+    if (g_disp.nl_mode_opt_menu && g_disp.nl_mode_btns[m_idx]) {
+        XtVaSetValues(g_disp.nl_mode_opt_menu, XmNmenuHistory, g_disp.nl_mode_btns[m_idx], NULL);
+    }
+    if (g_disp.nl_temp_scale) {
+        XmScaleSetValue(g_disp.nl_temp_scale, clamp_i(g_disp.nl_temp_k, 2700, 6500));
+    }
+
     update_summary_label();
     g_disp.updating_widgets = false;
 }
@@ -924,23 +1366,53 @@ static void dialog_button_cb(Widget w, XtPointer client_data, XtPointer call_dat
     case BTN_OK:
         normalize_layout_origin();
         apply_outputs(g_disp.outs, g_disp.count);
+        apply_ergonomics(
+            g_disp.nl_enabled, g_disp.nl_mode, g_disp.nl_temp_k,
+            g_disp.nl_start_min, g_disp.nl_end_min,
+            g_disp.outs, g_disp.count, true
+        );
         memcpy(g_disp.orig_outs, g_disp.outs, sizeof(g_disp.outs));
         g_disp.orig_count = g_disp.count;
+        g_disp.orig_nl_enabled = g_disp.nl_enabled;
+        g_disp.orig_nl_mode = g_disp.nl_mode;
+        g_disp.orig_nl_temp_k = g_disp.nl_temp_k;
+        g_disp.orig_nl_start_min = g_disp.nl_start_min;
+        g_disp.orig_nl_end_min = g_disp.nl_end_min;
         XtUnmanageChild(style.displayDialog);
         break;
 
     case BTN_APPLY:
         normalize_layout_origin();
         apply_outputs(g_disp.outs, g_disp.count);
+        apply_ergonomics(
+            g_disp.nl_enabled, g_disp.nl_mode, g_disp.nl_temp_k,
+            g_disp.nl_start_min, g_disp.nl_end_min,
+            g_disp.outs, g_disp.count, true
+        );
         memcpy(g_disp.orig_outs, g_disp.outs, sizeof(g_disp.outs));
         g_disp.orig_count = g_disp.count;
+        g_disp.orig_nl_enabled = g_disp.nl_enabled;
+        g_disp.orig_nl_mode = g_disp.nl_mode;
+        g_disp.orig_nl_temp_k = g_disp.nl_temp_k;
+        g_disp.orig_nl_start_min = g_disp.nl_start_min;
+        g_disp.orig_nl_end_min = g_disp.nl_end_min;
         draw_canvas_cb(g_disp.canvas, nullptr, nullptr);
         break;
 
     case BTN_CANCEL:
         memcpy(g_disp.outs, g_disp.orig_outs, sizeof(g_disp.outs));
         g_disp.count = g_disp.orig_count;
+        g_disp.nl_enabled = g_disp.orig_nl_enabled;
+        g_disp.nl_mode = g_disp.orig_nl_mode;
+        g_disp.nl_temp_k = g_disp.orig_nl_temp_k;
+        g_disp.nl_start_min = g_disp.orig_nl_start_min;
+        g_disp.nl_end_min = g_disp.orig_nl_end_min;
         apply_outputs(g_disp.orig_outs, g_disp.orig_count);
+        apply_ergonomics(
+            g_disp.orig_nl_enabled, g_disp.orig_nl_mode, g_disp.orig_nl_temp_k,
+            g_disp.orig_nl_start_min, g_disp.orig_nl_end_min,
+            g_disp.orig_outs, g_disp.orig_count, true
+        );
         XtUnmanageChild(style.displayDialog);
         break;
 
@@ -950,6 +1422,61 @@ static void dialog_button_cb(Widget w, XtPointer client_data, XtPointer call_dat
 
     default:
         break;
+    }
+}
+
+static void display_ipc_prop_eh(Widget w, XtPointer client_data, XEvent *ev, Boolean *cont) {
+    (void)client_data;
+    (void)cont;
+    if (!ev || ev->type != PropertyNotify || !style.display) return;
+    Atom ipc_atom = XInternAtom(style.display, "_DTSTYLE_DISPLAY_IPC", False);
+    if (ev->xproperty.atom != ipc_atom || ev->xproperty.state != PropertyNewValue) return;
+
+    Atom act = None;
+    int fmt = 0;
+    unsigned long ni = 0, rem = 0;
+    unsigned char *data = nullptr;
+    if (XGetWindowProperty(style.display, XtWindow(w), ipc_atom, 0, 512, True,
+                           AnyPropertyType, &act, &fmt, &ni, &rem, &data) != Success || !data) {
+        return;
+    }
+    char cmd[512];
+    size_t cl = ni < sizeof(cmd) - 1 ? (size_t)ni : sizeof(cmd) - 1;
+    memcpy(cmd, data, cl);
+    cmd[cl] = '\0';
+    XFree(data);
+
+    if (strncmp(cmd, "set-ergonomics", 14) == 0) {
+        int en = 1, tk = 3400, vrr = 1;
+        char mode[32] = "always";
+        if (sscanf(cmd + 14, "%d %31s %d %d", &en, mode, &tk, &vrr) >= 3) {
+            g_disp.nl_enabled = (en != 0);
+            if (strcmp(mode, "always") == 0) g_disp.nl_mode = 0;
+            else if (strcmp(mode, "schedule") == 0) g_disp.nl_mode = 1;
+            else if (strcmp(mode, "sunset") == 0) g_disp.nl_mode = 2;
+            g_disp.nl_temp_k = clamp_i(tk, 2700, 6500);
+            for (int i = 0; i < g_disp.count; ++i) {
+                g_disp.outs[i].vrr_enabled = (vrr != 0);
+            }
+            update_controls_from_selected();
+            apply_ergonomics(
+                g_disp.nl_enabled, g_disp.nl_mode, g_disp.nl_temp_k,
+                g_disp.nl_start_min, g_disp.nl_end_min,
+                g_disp.outs, g_disp.count, false
+            );
+        }
+    } else if (strcmp(cmd, "apply") == 0) {
+        DtDialogBoxCallbackStruct cbs = {0};
+        cbs.button_position = BTN_APPLY;
+        dialog_button_cb(style.displayDialog, nullptr, &cbs);
+    } else if (strcmp(cmd, "ok") == 0) {
+        DtDialogBoxCallbackStruct cbs = {0};
+        cbs.button_position = BTN_OK;
+        dialog_button_cb(style.displayDialog, nullptr, &cbs);
+    } else if (strcmp(cmd, "cancel") == 0) {
+        DtDialogBoxCallbackStruct cbs = {0};
+        cbs.button_position = BTN_CANCEL;
+        dialog_button_cb(style.displayDialog, nullptr, &cbs);
     }
 }
 
@@ -1095,7 +1622,6 @@ static void build_display_dialog(Widget shell) {
     XtSetArg(args[n], XmNtitleString, tb2_str); n++;
     XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET); n++;
     XtSetArg(args[n], XmNtopWidget, g_disp.canvas_tb); n++;
-    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM); n++;
     XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
     XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
     g_disp.settings_tb = _DtCreateTitleBox(form, "monitorSettingsTB", args, n);
@@ -1138,6 +1664,15 @@ static void build_display_dialog(Widget shell) {
     );
     XmStringFree(x_en);
     XtAddCallback(g_disp.enable_toggle, XmNvalueChangedCallback, toggle_enable_cb, nullptr);
+
+    XmString x_vrr = CMPSTR("Variable Refresh Rate (VRR)");
+    g_disp.vrr_toggle = XtVaCreateManagedWidget(
+        "vrrToggle", xmToggleButtonWidgetClass, row1,
+        XmNlabelString, x_vrr,
+        NULL
+    );
+    XmStringFree(x_vrr);
+    XtAddCallback(g_disp.vrr_toggle, XmNvalueChangedCallback, toggle_vrr_cb, nullptr);
 
     /* Row 2: Resolution + Rotation + Scale / HiDPI OptionMenus */
     Widget row2 = XtVaCreateManagedWidget(
@@ -1204,7 +1739,98 @@ static void build_display_dialog(Widget shell) {
     XmStringFree(x_dpi);
     XtManageChild(g_disp.dpi_opt_menu);
 
+    /* 3. Night Light & Adaptive Sync TitleBox */
+    XmString tb3_str = CMPSTR("Night Light & Eye Comfort");
+    n = 0;
+    XtSetArg(args[n], XmNtitleString, tb3_str); n++;
+    XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET); n++;
+    XtSetArg(args[n], XmNtopWidget, g_disp.settings_tb); n++;
+    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
+    g_disp.ergo_tb = _DtCreateTitleBox(form, "nightLightTB", args, n);
+    XmStringFree(tb3_str);
+    XtManageChild(g_disp.ergo_tb);
+
+    Widget ergo_rc = XtVaCreateManagedWidget(
+        "ergoRC", xmRowColumnWidgetClass, g_disp.ergo_tb,
+        XmNchildType, XmWORK_AREA,
+        XmNorientation, XmVERTICAL,
+        XmNspacing, 6,
+        XmNmarginWidth, 8,
+        XmNmarginHeight, 6,
+        NULL
+    );
+
+    Widget nl_row1 = XtVaCreateManagedWidget(
+        "nlRow1", xmRowColumnWidgetClass, ergo_rc,
+        XmNorientation, XmHORIZONTAL,
+        XmNspacing, 14,
+        NULL
+    );
+
+    XmString x_nl = CMPSTR("Enable Night Light");
+    g_disp.nl_toggle = XtVaCreateManagedWidget(
+        "nightLightToggle", xmToggleButtonWidgetClass, nl_row1,
+        XmNlabelString, x_nl,
+        NULL
+    );
+    XmStringFree(x_nl);
+    XtAddCallback(g_disp.nl_toggle, XmNvalueChangedCallback, toggle_night_light_cb, nullptr);
+
+    Widget nl_pd = XmCreatePulldownMenu(nl_row1, "nlModePD", nullptr, 0);
+    for (int i = 0; i < 3; ++i) {
+        XmString xs = CMPSTR((char *)k_nl_mode_labels[i]);
+        g_disp.nl_mode_btns[i] = XtVaCreateManagedWidget(
+            "nlModeItem", xmPushButtonGadgetClass, nl_pd,
+            XmNlabelString, xs,
+            NULL
+        );
+        XmStringFree(xs);
+        XtAddCallback(g_disp.nl_mode_btns[i], XmNactivateCallback, select_nl_mode_cb, (XtPointer)(intptr_t)i);
+    }
+    XmString x_nlm = CMPSTR("Schedule:");
+    n = 0;
+    XtSetArg(args[n], XmNlabelString, x_nlm); n++;
+    XtSetArg(args[n], XmNsubMenuId, nl_pd); n++;
+    g_disp.nl_mode_opt_menu = XmCreateOptionMenu(nl_row1, "nlModeOpt", args, n);
+    XmStringFree(x_nlm);
+    XtManageChild(g_disp.nl_mode_opt_menu);
+
+    XmString x_tk = CMPSTR("Color Temperature (2700 K Warm - 6500 K Daylight):");
+    g_disp.nl_temp_scale = XtVaCreateManagedWidget(
+        "nlTempScale", xmScaleWidgetClass, ergo_rc,
+        XmNtitleString, x_tk,
+        XmNorientation, XmHORIZONTAL,
+        XmNminimum, 2700,
+        XmNmaximum, 6500,
+        XmNvalue, 4000,
+        XmNshowValue, True,
+        XmNscaleMultiple, 100,
+        NULL
+    );
+    XmStringFree(x_tk);
+    XtAddCallback(g_disp.nl_temp_scale, XmNvalueChangedCallback, change_nl_temp_cb, nullptr);
+    XtAddCallback(g_disp.nl_temp_scale, XmNdragCallback, change_nl_temp_cb, nullptr);
+
+    XtAddEventHandler(
+        XtParent(style.displayDialog), PropertyChangeMask, False,
+        display_ipc_prop_eh, nullptr
+    );
+
     XtManageChild(form);
+}
+
+static void publish_display_dlg_window(void) {
+    if (!style.display || !style.displayDialog) return;
+    Widget sh = XtParent(style.displayDialog);
+    if (!sh || !XtIsRealized(sh)) return;
+    Window w = XtWindow(sh);
+    if (w == None) return;
+    Atom a = XInternAtom(style.display, "_DTSTYLE_DISPLAY_DLG_WIN", False);
+    XChangeProperty(style.display, style.root, a, XA_WINDOW, 32,
+                    PropModeReplace, (const unsigned char *)&w, 1);
+    XFlush(style.display);
 }
 
 void popup_displayBB(Widget shell) {
@@ -1214,12 +1840,15 @@ void popup_displayBB(Widget shell) {
         build_display_dialog(shell);
         update_controls_from_selected();
         XtManageChild(style.displayDialog);
+        XtRealizeWidget(XtParent(style.displayDialog));
+        publish_display_dlg_window();
         _DtTurnOffHourGlass(shell);
     } else {
         query_outputs();
         update_controls_from_selected();
         XtManageChild(style.displayDialog);
         if (XtIsRealized(style.displayDialog)) {
+            publish_display_dlg_window();
             raiseWindow(XtWindow(XtParent(style.displayDialog)));
             draw_canvas_cb(g_disp.canvas, nullptr, nullptr);
         }

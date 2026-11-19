@@ -29,6 +29,8 @@
  */
 
 #include "PrintJob.h"
+#include "CupsDiscovery.h"
+#include <stdlib.h>
 
 // Object Class Name
 const char *PRINTJOB = "PrintJob";
@@ -118,6 +120,11 @@ int PrintJob::CancelJob(BaseObj *obj, char **output, BaseObj * /*requestor*/)
    PrintJob *me = (PrintJob *) obj;
    const char *qname = (me->Parent() && me->Parent()->Name()) ? me->Parent()->Name() : "";
    const char *jnum = me->_jobNumber ? me->_jobNumber : "";
+   if (jnum[0] && DtCupsCancelJob(qname, atoi(jnum)))
+    {
+      if (output) *output = NULL;
+      return 0;
+    }
    size_t cmd_cap = strlen(qname) + strlen(jnum) + 32;
    char *command = new char[cmd_cap];
 

@@ -367,4 +367,48 @@ ACTION DtstyleBackdrop
         DESCRIPTION     Open the Style Manager Backdrop dialog.
 }
 
+ACTION CkAdmin
+{
+        LABEL           System Administration
+        ICON            Dtasys
+        ARG_COUNT       0
+        TYPE            COMMAND
+        WINDOW_TYPE     NO_STDIO
+        EXEC_STRING     ck-admin
+        DESCRIPTION     Open the CK Core System Administration panel (Default Applications, Date/Time & NTP, Firmware Updates).
+}
+
+ACTION CkAdminDefaultApps
+{
+        LABEL           Default Applications
+        ICON            Dtasys
+        ARG_COUNT       0
+        TYPE            COMMAND
+        WINDOW_TYPE     NO_STDIO
+        EXEC_STRING     ck-admin --tab default-apps
+        DESCRIPTION     Configure XDG MIME default applications (Web Browser, Mail, File Manager, Editor, PDF, Image Viewer).
+}
+
+ACTION CkAdminDateTime
+{
+        LABEL           Date, Time & NTP
+        ICON            Dtasys
+        ARG_COUNT       0
+        TYPE            COMMAND
+        WINDOW_TYPE     NO_STDIO
+        EXEC_STRING     ck-admin --tab datetime
+        DESCRIPTION     Configure system timezone and NTP synchronization via systemd-timedated.
+}
+
+ACTION CkAdminFirmware
+{
+        LABEL           Firmware Updates
+        ICON            Dtasys
+        ARG_COUNT       0
+        TYPE            COMMAND
+        WINDOW_TYPE     NO_STDIO
+        EXEC_STRING     ck-admin --tab firmware
+        DESCRIPTION     Inspect hardware firmware versions and available updates via fwupd.
+}
+
 XCOMM ######################## EOF ############################################

@@ -470,6 +470,53 @@ folder synchronization across both `CDE (Wayland)` and `CDE (X11 / XLibre)` (see
   via `Ctrl+Z`, and enables **Apply reviewed plan** in `dtfile_sync`
   (`check-dtwm-wayland-wp17.py`).
 
+## Night Light, Adaptive Sync (VRR), laptop lid/idle policy, keyboard tiling, and CUPS/admin tools (`WP-18`)
+
+`cde_power_display.c`, `dtstyle` (*Display & Monitors* and *Startup*), classic
+X11 `dtwm`, `dtprintinfo`, `ck-status`, and `ck-admin` provide unified display
+ergonomics, laptop power management, keyboard tiling, driverless printing, and
+system administration across both `CDE (Wayland)` and `CDE (X11 / XLibre)`:
+
+- **Night Light, Variable Refresh Rate & backlight persistence (`cde_power_display.c`, `dtstyle/Display.c`, `dtwm_media_ctl.c`):**
+  `dtstyle` *Monitors* adds a **Night Light & Eye Comfort** section (*Always
+  On*, *Night Schedule 20:00–06:00*, *Sunset to Sunrise*, and `2700 K`–`6500 K`
+  Planckian color-temperature scale) plus a per-monitor **Variable Refresh Rate
+  (VRR)** toggle persisted in `~/.dt/display_ergonomics.conf`. On Wayland,
+  `dtwm-wayland` advertises `zwlr_gamma_control_manager_v1`, programs 16-bit
+  hardware CRTC gamma LUTs (`wlr_output_state_set_gamma_lut`, with a
+  click-through warm scene buffer fallback on zero-gamma headless outputs), and
+  applies per-output adaptive sync (`wlr_output_state_set_adaptive_sync_enabled`).
+  On X11/XLibre, `dtstyle` and `ck-status` apply 16-bit RGB gamma ramps via
+  `XRRSetCrtcGamma` and set RandR `VariableRefresh` / `_DT_VRR_ENABLED` output
+  properties (reverting cleanly on **Cancel**). Display brightness changes via
+  `dtwm-media-ctl` persist to `~/.dt/backlight.conf` and restore automatically
+  at session login.
+- **Power profiles, idle auto-suspend & laptop lid clamshell policy (`ck-status`, `cde_power_display.c`):**
+  `ck-status` (*Power & Battery* tab) switches `power-saver` / `balanced` /
+  `performance` over `org.freedesktop.UPower.PowerProfiles`
+  (`net.hadess.PowerProfiles` and `/sys/firmware/acpi/platform_profile`
+  fallbacks) and persists separate AC/battery idle auto-suspend timeouts and
+  lid-close policy in `~/.config/ck-core/power-policy.conf`. Closing the laptop
+  lid (`WLR_SWITCH_TYPE_LID` on Wayland; `org.freedesktop.UPower` `LidIsClosed`
+  on X11) disables the internal `eDP`/`LVDS` panel in **Docked Clamshell** mode
+  when an external monitor is active without suspending, and invokes
+  `org.freedesktop.login1.Manager.Suspend` when undocked on battery.
+- **`Super+Arrow` half & quadrant keyboard tiling (`cde_power_display.c`, `WmFunction.c`, `WmEwmh.c`):**
+  `Super+Left/Right/Up/Down` (`f.tile_window left|right|up|down`) snaps the
+  active window to halves and quadrants of the usable workarea (honoring the
+  Front Panel strut), maximizes on repeated `Super+Up`, and restores the saved
+  pre-tile geometry on `Super+Down` identically in `dtwm-wayland` and X11
+  `dtwm`.
+- **CUPS / IPP Everywhere in `dtprintinfo` & `ck-admin` System Administration:**
+  `dtprintinfo` (`CupsDiscovery.C`) dynamically loads `libcups.so.2`
+  (`cupsGetDests2`, `cupsGetJobs2`, `cupsCancelJob`, plus `--cups-summary`) to
+  enumerate driverless IPP Everywhere queues and active print jobs without
+  legacy BSD `lpstat` parsing, while `ck-admin` (`CkAdmin` CDE action in
+  `System_Admin` and `dtstyle` *Startup*) provides an `XmTabStack` console for
+  XDG *Default Applications* (`~/.config/mimeapps.list`), *Date, Time & NTP*
+  (`org.freedesktop.timedate1`), and *Firmware Updates*
+  (`org.freedesktop.fwupd`).
+
 ## Readiness reporting, Ubuntu LTS APT packaging, and automated qualification
 
 Passing `--status-file PATH` writes `WAYLAND_DISPLAY`, `DISPLAY`, and `PID`
@@ -522,6 +569,13 @@ atomically once both the Wayland socket and rootless `Xwayland` are ready.
   bidirectional `inotify` XDG + `.Trash-$UID` Trash),
   `check-dtwm-wayland-wp17.py` (`WP-17` `dtfile` tabs, cancellable search,
   clipboard, undo, and Folder Sync execution),
+  `check-dtwm-wayland-wp18.py` (`WP-18` parallel dual Wayland + X11 `Xvfb`
+  verification of `dtstyle` `3400 K` Night Light gamma/warm scene tint + VRR +
+  `backlight.conf` persistence, `Super+Arrow` half/quadrant/restore window
+  tiling honoring Front Panel struts, `ck-status` PowerProfiles + docked
+  clamshell vs. battery lid suspend + idle auto-suspend, `dtprintinfo` CUPS IPP
+  Everywhere queue/job discovery, and `ck-admin` `mimeapps.list` / `timedate1` /
+  `fwupd` + `-session` restore),
   `check-dtwm-wayland-wp19.py` (`WP-19` parallel dual Wayland + X11 `Xvfb`
   verification of actionable `ck-tasks` process `SIGKILL`/`renice`/live network
   & per-core charts/`systemd1` D-Bus control, `ck-view` PNG/JPEG/WebP/SVG/TIFF/XPM

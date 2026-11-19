@@ -38,6 +38,9 @@ fi
 if [ -x /usr/dt/bin/cde-color-sync ]; then
     /usr/dt/bin/cde-color-sync --daemon >/dev/null 2>&1 &
 fi
+if [ -x /usr/dt/bin/dtwm-media-ctl ]; then
+    /usr/dt/bin/dtwm-media-ctl bright-restore >/dev/null 2>&1 || true
+fi
 if command -v gnome-keyring-daemon >/dev/null 2>&1; then
     eval "$(gnome-keyring-daemon --start --components=secrets,ssh 2>/dev/null)" || true
     export SSH_AUTH_SOCK

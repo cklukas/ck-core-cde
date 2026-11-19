@@ -44,6 +44,9 @@
 #include <X11/Xlib.h>
 #include <Xm/MwmUtil.h>
 #include <errno.h>
+#include <stdlib.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 #include <Xm/Xm.h>
 #include <Xm/XmP.h>
@@ -109,6 +112,33 @@ static void ButtonCB(
                         Widget w,
                         XtPointer client_data,
                         XtPointer call_data) ;
+
+static void LaunchCkAdminCB(Widget w, XtPointer client_data, XtPointer call_data)
+{
+    const char *tab = (const char *)client_data;
+    (void)w;
+    (void)call_data;
+    pid_t pid = fork();
+    if (pid == 0) {
+        if (fork() == 0) {
+            setsid();
+            if (tab && tab[0]) {
+                execlp("ck-admin", "ck-admin", "--tab", tab, (char *)nullptr);
+                execl(CDE_INSTALLATION_TOP "/bin/ck-admin", "ck-admin", "--tab", tab, (char *)nullptr);
+                execl("/usr/local/bin/ck-admin", "ck-admin", "--tab", tab, (char *)nullptr);
+            } else {
+                execlp("ck-admin", "ck-admin", (char *)nullptr);
+                execl(CDE_INSTALLATION_TOP "/bin/ck-admin", "ck-admin", (char *)nullptr);
+                execl("/usr/local/bin/ck-admin", "ck-admin", (char *)nullptr);
+            }
+            _exit(127);
+        }
+        _exit(0);
+    } else if (pid > 0) {
+        int st = 0;
+        (void)waitpid(pid, &st, 0);
+    }
+}
 
 
 /*+++++++++++++++++++++++++++++++++++++++*/
@@ -202,10 +232,12 @@ BuildStartup(
   XmString         string;
   int              count = 0;
   int              count2 = 0;
-  Widget           widget_list[5], 
+  Widget           widget_list[6], 
                    widget_list2[3], 
                    modeForm,
-                   shutdownRC;
+                   shutdownRC,
+                   adminBox,
+                   adminRC;
 
   startup.dlg = nullptr;
 
@@ -395,7 +427,6 @@ BuildStartup(
   XtSetArg(args[n], XmNtopWidget,  widget_list[count-1]);  n++;
   XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM);  n++;
   XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM);  n++;
-  XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM);  n++;
   XtSetArg(args[n], XmNmarginHeight, LB_MARGIN_HEIGHT);  n++;
   XtSetArg(args[n], XmNmarginWidth, LB_MARGIN_WIDTH);  n++;
   XtSetArg(args[n], XmNnavigationType, XmTAB_GROUP); n++;  
@@ -404,6 +435,47 @@ BuildStartup(
   widget_list[count++] = startup.setHome = 
     XmCreatePushButtonGadget(startup.startupForm,"setPB", args, n);
   XmStringFree(string);
+  XtAddCallback(startup.setHome, XmNactivateCallback,
+		SetHomeSession, style.startupDialog);
+
+  /* System Administration quick-launch box (Default Apps, Date/Time, Firmware) */
+  n = 0;
+  XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET); n++;
+  XtSetArg(args[n], XmNtopWidget, startup.setHome); n++;
+  XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
+  XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
+  XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM); n++;
+  XtSetArg(args[n], XmNmarginHeight, style.verticalSpacing); n++;
+  XtSetArg(args[n], XmNmarginWidth, style.horizontalSpacing); n++;
+  string = CMPSTR("System & Desktop Defaults:");
+  XtSetArg(args[n], XmNtitleString, string); n++;
+  widget_list[count++] = adminBox =
+    _DtCreateTitleBox(startup.startupForm, "adminBox", args, n);
+  XmStringFree(string);
+
+  adminRC = XtVaCreateManagedWidget(
+    "adminRC", xmRowColumnWidgetClass, adminBox,
+    XmNorientation, XmHORIZONTAL,
+    XmNspacing, 6,
+    NULL
+  );
+  {
+    static const struct { const char *lbl; const char *tab; } k_adm[] = {
+      { "Default Apps...", "default-apps" },
+      { "Date & Time...",  "datetime" },
+      { "Firmware...",     "firmware" },
+    };
+    for (int ai = 0; ai < 3; ++ai) {
+      XmString bxs = CMPSTR((char *)k_adm[ai].lbl);
+      Widget ab = XtVaCreateManagedWidget(
+        "adminBtn", xmPushButtonGadgetClass, adminRC,
+        XmNlabelString, bxs,
+        NULL
+      );
+      XmStringFree(bxs);
+      XtAddCallback(ab, XmNactivateCallback, LaunchCkAdminCB, (XtPointer)k_adm[ai].tab);
+    }
+  }
   
   XtAddCallback(style.startupDialog, XmNmapCallback, MapStartup, shell);
   XtAddCallback(style.startupDialog, XmNmapCallback, LayoutCB, shell);
@@ -413,8 +485,6 @@ BuildStartup(
 		SetHomeCB, nullptr);
   XtAddCallback(startup.modeYesTgl, XmNvalueChangedCallback, 
 		SetConfirmCB, nullptr);
-  XtAddCallback( widget_list[count-1], XmNactivateCallback, 
-		SetHomeSession, style.startupDialog);
   
   XtManageChild(modeForm);
   XtManageChild(startup.startupForm);

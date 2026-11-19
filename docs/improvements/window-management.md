@@ -21,6 +21,10 @@ selection visible and supports pointer hover and pinning. It is enabled by the
 ## Movement and focus
 
 - snap feedback previews half-screen and quadrant placement while moving;
+- `Super+Left` / `Super+Right` / `Super+Up` / `Super+Down` (`f.tile_window
+  left|right|up|down`) tiles the active window to halves and quadrants of the
+  usable workarea (honoring the Front Panel strut), maximizes on repeated
+  `Super+Up`, and restores the saved pre-tile geometry on `Super+Down`;
 - holding Shift aligns movement and resize to the desktop grid;
 - double-clicking a title bar maximizes or restores the window; and
 - clicking the desktop clears the active-window focus.
@@ -40,8 +44,9 @@ application:
   and display a non-focus-stealing `336×84` 3D-beveled CDE OSD gauge;
 - `XF86MonBrightnessUp`, `XF86MonBrightnessDown`, `XF86KbdBrightnessUp`, and
   `XF86KbdBrightnessDown` adjust `/sys/class/backlight` and keyboard LEDs (with
-  `org.freedesktop.login1.Session.SetBrightness` fallback and a 5% minimum
-  display brightness floor);
+  `org.freedesktop.login1.Session.SetBrightness` fallback, a 5% minimum
+  display brightness floor, and `~/.dt/backlight.conf` persistence restored on
+  session startup);
 - `XF86AudioPlay`, `XF86AudioPause`, `XF86AudioNext`, `XF86AudioPrev`, and
   `XF86AudioStop` dispatch MPRIS (`org.mpris.MediaPlayer2.Player`) transport
   commands; and

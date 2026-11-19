@@ -87,6 +87,7 @@ extern Boolean F_Refresh_Win (String args, ClientData *pCD, XEvent *event);
 extern Boolean F_Set_Behavior (String args, ClientData *pCD, XEvent *event);
 extern Boolean F_Set_Context (String args, ClientData *pCD, XEvent *event);
 extern void Do_Set_Behavior (Boolean dummy);
+extern Boolean F_Tile_Window (String args, ClientData *pCD, XEvent *event);
 extern Boolean F_Title (String args, ClientData *pCD, XEvent *event);
 extern Boolean F_Screen (String args, ClientData *pCD, XEvent *event);
 extern Boolean F_Toggle_Front_Panel (String args, ClientData *pCD, 

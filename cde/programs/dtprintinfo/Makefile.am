@@ -11,7 +11,7 @@ AM_CPPFLAGS = \
 	-I$(builddir)/objects/PrintObj -I$(srcdir)/objects/PrintObj \
 	-DKORNSHELL=\"$(KSH)\"
 
-dtprintinfo_LDADD = $(DTCLIENTLIBS) $(XTOOLLIB)
+dtprintinfo_LDADD = $(DTCLIENTLIBS) $(XTOOLLIB) -ldl
 
 UTIL_SRC = util/Invoke.C util/Invoke.h util/Privilege.h util/Process.C util/Process.h
 
@@ -39,6 +39,7 @@ LIBUI_SRC = libUI/BaseUI.C libUI/BaseUI.h libUI/MotifUI/Application.C	\
 	libUI/MotifUI/Icon.c libUI/MotifUI/WorkArea.c
 
 OBJ_SRC = objects/BaseObj.C objects/BaseObj.h				\
+	objects/PrintObj/CupsDiscovery.C objects/PrintObj/CupsDiscovery.h \
 	objects/PrintObj/ParseJobs.C objects/PrintObj/PrintSubSys.C	\
 	objects/PrintObj/ParseJobs.h objects/PrintObj/PrintSubSys.h	\
 	objects/PrintObj/PrintJob.C objects/PrintObj/Queue.C		\

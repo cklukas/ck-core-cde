@@ -208,7 +208,7 @@ flowchart TD
   - **Enable Validated *Synchronize Folders* Execution:** Complete transactional conflict execution and enable **Apply** in `dtfile`'s `ck-core-fs-lib` Folder Comparison dialog.
 - **Parallel Wayland + X11 Acceptance Gate**: Parallel Wayland and X11 `dtfile` + ASan/UBSan `ck-core-fs-lib` suites verify tab navigation, cancellable `Ctrl+F` search, cross-toolkit `Ctrl+C`/`Ctrl+V` file paste (tested against both native Wayland and X11 peers), `Ctrl+Z` undo, and *Synchronize Folders* Apply execution.
 
-### [ ] WP-18 — Night Light, VRR, Laptop Lid/Suspend Policy, Keyboard Tiling & CUPS / System Admin Tools
+### [x] WP-18 — Night Light, VRR, Laptop Lid/Suspend Policy, Keyboard Tiling & CUPS / System Admin Tools
 - **Closes**: `GAP-SYS-04`, `GAP-SYS-06`, `GAP-SHELL-03`
 - **Repos**: `ck-core-cde` (`cde/programs/dtwm/`, `cde/programs/dtwm/wayland/`, `cde/programs/dtstyle/`, `cde/programs/dtprintinfo/`), `ck-core-apps` (`src/ck-status/`)
 - **Dual Wayland + X11 Scope**:

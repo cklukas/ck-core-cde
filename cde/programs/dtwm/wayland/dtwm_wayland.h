@@ -149,6 +149,7 @@ typedef struct DtwmServer DtwmServer;
 typedef struct DtwmView DtwmView;
 typedef struct DtwmForeignToplevel DtwmForeignToplevel;
 typedef struct DtwmImeState DtwmImeState;
+typedef struct DtwmPowerDisplayState DtwmPowerDisplayState;
 
 struct DtwmView {
     struct wl_list link; /* DtwmServer.views */
@@ -172,6 +173,9 @@ struct DtwmView {
     int client_w, client_h;
     int saved_x, saved_y, saved_w, saved_h;
     bool has_saved_geom;
+    int tile_state;
+    int tile_saved_x, tile_saved_y, tile_saved_w, tile_saved_h;
+    bool has_tile_saved_geom;
     bool has_pending_geom;
     bool pending_pos_set;
     bool resize_inflight;
@@ -248,9 +252,11 @@ typedef struct {
     struct wlr_output *wlr_output;
     uint32_t output_idx;
     int dpi;
+    bool vrr_enabled;
     struct wlr_scene_rect *bg_rect;
     struct wlr_scene_rect *lock_bg_rect;
     struct wlr_scene_buffer *backdrop_buf;
+    struct wlr_scene_buffer *night_light_buf;
     struct wl_listener frame;
     struct wl_listener request_state;
     struct wl_listener destroy;
@@ -332,6 +338,7 @@ struct DtwmServer {
     struct wlr_export_dmabuf_manager_v1 *export_dmabuf_mgr;
     struct wlr_foreign_toplevel_manager_v1 *foreign_toplevel_mgr;
     DtwmImeState *ime;
+    DtwmPowerDisplayState *power_display;
     struct wl_listener output_mgr_apply;
     struct wl_listener output_mgr_test;
     struct wl_listener output_power_set_mode;
@@ -659,12 +666,14 @@ void dtwm_restore_view_focus(DtwmServer *server, DtwmView *view);
 void dtwm_open_window_menu_for_view(DtwmServer *server, DtwmView *view, int x, int y);
 void dtwm_view_set_maximized(DtwmView *view, bool maximized);
 void dtwm_view_set_minimized(DtwmView *view, bool minimized);
+void dtwm_view_apply_geometry(DtwmView *view, int x, int y, int client_w, int client_h);
 void dtwm_view_close(DtwmView *view);
 
 /* cde_output_mgmt.c */
 void dtwm_output_mgmt_init(DtwmServer *server);
 void dtwm_output_mgmt_finish(DtwmServer *server);
 void dtwm_output_mgmt_sync(DtwmServer *server);
+void dtwm_output_mgmt_after_reconfigure(DtwmServer *server);
 void dtwm_output_mgmt_publish_x11(DtwmServer *server);
 bool dtwm_output_mgmt_handle_wm_request(DtwmServer *server, const char *cmd);
 void dtwm_foreign_toplevel_sync(DtwmView *view);
@@ -682,5 +691,18 @@ bool dtwm_ime_forward_key(
     const struct wlr_keyboard_key_event *ev
 );
 bool dtwm_ime_forward_modifiers(DtwmServer *server, struct wlr_keyboard *wlr_kbd);
+
+/* cde_power_display.c */
+void dtwm_kelvin_to_rgb(int temp_k, double *out_r, double *out_g, double *out_b);
+void dtwm_power_display_init(DtwmServer *server);
+void dtwm_power_display_finish(DtwmServer *server);
+void dtwm_power_display_on_xwayland_ready(DtwmServer *server);
+void dtwm_power_display_on_new_output(DtwmServer *server, DtwmOutput *output);
+void dtwm_power_display_on_output_destroy(DtwmServer *server, DtwmOutput *output);
+void dtwm_power_display_sync_outputs(DtwmServer *server);
+void dtwm_power_display_on_new_input(DtwmServer *server, struct wlr_input_device *dev);
+void dtwm_power_display_notify_activity(DtwmServer *server);
+bool dtwm_power_display_handle_wm_request(DtwmServer *server, const char *cmd);
+bool dtwm_power_display_handle_keybinding(DtwmServer *server, uint32_t mods, uint32_t keysym);
 
 #endif /* DTWM_WAYLAND_H */

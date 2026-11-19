@@ -1037,6 +1037,7 @@ static void handle_dt_wm_request_item(DtwmServer *server, const char *cmd) {
     if (!*cmd) return;
     if (dtwm_hw_handle_wm_request(server, cmd)) return;
     if (dtwm_output_mgmt_handle_wm_request(server, cmd)) return;
+    if (dtwm_power_display_handle_wm_request(server, cmd)) return;
 
     if (strncmp(cmd, "f.change_backdrop", 17) == 0 && isspace((unsigned char)cmd[17])) {
         char path[512] = {0};
@@ -1524,13 +1525,13 @@ void dtwm_server_apply_appearance_profile(DtwmServer *server, DtwmAppearanceProf
     spawn_color_sync_for_profile(server, profile);
 }
 
-static void xcb_drain_dt_wm_requests(DtwmServer *server) {
-    if (!server->xcb_conn || server->xcb_wm_win == XCB_WINDOW_NONE) return;
+static void xcb_drain_dt_wm_requests(DtwmServer *server, xcb_window_t req_win) {
+    if (!server->xcb_conn || req_win == XCB_WINDOW_NONE) return;
     /* Atomically read & delete _DT_WM_REQUEST (same pattern as classic dtwm WmIPC.c) */
     xcb_get_property_cookie_t ck = xcb_get_property(
         server->xcb_conn,
         1, /* delete = True */
-        server->xcb_wm_win,
+        req_win,
         server->atom_wm_request,
         XCB_GET_PROPERTY_TYPE_ANY,
         0,
@@ -1806,10 +1807,10 @@ static int handle_xcb_event_fd(int fd, uint32_t mask, void *data) {
         uint8_t rt = ev->response_type & ~0x80u;
         if (rt == XCB_PROPERTY_NOTIFY) {
             xcb_property_notify_event_t *pev = (xcb_property_notify_event_t *)ev;
-            if (pev->window == server->xcb_wm_win &&
+            if ((pev->window == server->xcb_wm_win || pev->window == server->xcb_root) &&
                 pev->atom == server->atom_wm_request &&
                 pev->state == XCB_PROPERTY_NEW_VALUE) {
-                xcb_drain_dt_wm_requests(server);
+                xcb_drain_dt_wm_requests(server, pev->window);
             } else if (pev->window == server->xcb_root &&
                        pev->atom == XCB_ATOM_RESOURCE_MANAGER &&
                        pev->state == XCB_PROPERTY_NEW_VALUE) {

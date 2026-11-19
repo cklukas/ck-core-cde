@@ -29,6 +29,42 @@
   with notes and piano keys, a control tile with speaker, note and keys, and
   a keyboard synthesizer, each in 16, 32 and 48 pixels in the symbolic CDE
   icon colors, with dithered fills, lit and shaded edges.
+- Deliver **WP-18 — Night Light, VRR, Laptop Lid/Suspend Policy, Keyboard Tiling
+  & CUPS / System Admin Tools** across both `CDE (Wayland)` and
+  `CDE (X11 / XLibre)` (`cde/programs/dtwm/wayland/cde_power_display.c`,
+  `cde/programs/dtwm/`, `cde/programs/dtstyle/Display.c`,
+  `cde/programs/dtstyle/Startup.c`, `cde/programs/dtprintinfo/`,
+  `cde/programs/types/`, `cde/programs/dtappintegrate/dtappintegrate-xdg`,
+  `cde/programs/dtlogin/config/Xsession.src`, `cde/debian/Xsession.wayland`,
+  `cde/programs/localized/C/config/sys.dtwmrc.tmsg`,
+  `cde/programs/dtwm/tests/check-dtwm-wayland-wp18.py`, `wayland_work_plan.md`,
+  `docs/improvements/wayland.md`, `docs/improvements/window-management.md`):
+  - Add Night Light (`2700 K`–`6500 K` Planckian curve with *Always On*, *Night
+    Schedule 20:00–06:00*, and *Sunset to Sunrise*) and per-monitor **Variable
+    Refresh Rate (VRR)** controls to `dtstyle` *Monitors*
+    (`~/.dt/display_ergonomics.conf`), driving `wlr-gamma-control-unstable-v1`,
+    16-bit hardware gamma LUTs (`wlr_output_state_set_gamma_lut`), headless
+    click-through warm scene tinting, and `wlr_output` adaptive sync on
+    `dtwm-wayland`, and `XRRSetCrtcGamma` + RandR `VariableRefresh` /
+    `_DT_VRR_ENABLED` output properties (with **Cancel** revert) on X11; persist
+    display brightness in `~/.dt/backlight.conf` via `dtwm-media-ctl` and
+    restore on Wayland/X11 session startup.
+  - Enforce laptop lid-close (`WLR_SWITCH_TYPE_LID` on Wayland; `ck-status
+    --daemon` `UPower` + RandR on X11) and AC/battery idle auto-suspend policies
+    from `~/.config/ck-core/power-policy.conf`—disabling the internal laptop
+    panel in docked multi-monitor clamshell mode without suspending and invoking
+    `org.freedesktop.login1.Manager.Suspend` on single-panel battery lid-close
+    or idle timeout.
+  - Implement `Super+Left/Right/Up/Down` (`f.tile_window left|right|up|down`)
+    half and quadrant keyboard window tiling with maximize promotion, pre-tile
+    geometry restoration, and Front Panel strut avoidance in both `dtwm-wayland`
+    and classic X11 `dtwm` (`WmFunction.c`, `WmEwmh.c`, `sys.dtwmrc.tmsg`).
+  - Add dynamic `libcups.so.2` (`cupsGetDests2`, `cupsGetJobs2`,
+    `cupsCancelJob`, `--cups-summary`) driverless CUPS / IPP Everywhere queue
+    and job discovery to `dtprintinfo` (`CupsDiscovery.{h,C}`), wire CDE
+    `System_Admin` actions and `dtstyle` *Startup* launch buttons for
+    `ck-admin`, and verify both sessions concurrently in
+    `check-dtwm-wayland-wp18.py`.
 - Fix multi-window `dtfile` menu activation (press-drag-release and click) and
   flush Wayland pointer button-release frames before focus re-entry, bumping
   `.ckgit/motif-revision` to `8678b6f184cffe87b80f7578270179f96de61759`

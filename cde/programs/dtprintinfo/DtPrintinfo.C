@@ -36,6 +36,7 @@ extern "C" {
 
 // Object headers
 #include "PrintSubSys.h"
+#include "CupsDiscovery.h"
 
 // Message header
 #include "dtprintinfomsg.h"
@@ -79,6 +80,17 @@ int main(int argc, char **argv)
    if (dtprintinfo_cat == NULL) {
       dtprintinfo_cat = (nl_catd) -1;
    }
+
+   if (argc > 1 && (!STRCMP(argv[1], "--cups-summary") || !STRCMP(argv[1], "-cups-summary")))
+    {
+      return DtCupsPrintSummary();
+    }
+   if (argc > 2 && !STRCMP(argv[1], "--cups-cancel"))
+    {
+      const char *dest = argv[2];
+      int jid = (argc > 3) ? atoi(argv[3]) : atoi(argv[2]);
+      return DtCupsCancelJob(dest, jid) ? 0 : 1;
+    }
 
    if (argc > 1 && !STRCMP(argv[1], "-help"))
     {

@@ -89,6 +89,10 @@
 /usr/dt/config/types/tools/System_Admin/ConvertDtwmrc 0555  hp/rivers/types/action
 /usr/dt/config/types/tools/System_Admin/ReloadActions  0555  hp/rivers/types/action
 /usr/dt/config/types/tools/System_Admin/Sam	     	0555  hp/rivers/types/action
+/usr/dt/config/types/tools/System_Admin/CkAdmin		0555  hp/rivers/types/action
+/usr/dt/config/types/tools/System_Admin/CkAdminDefaultApps	0555  hp/rivers/types/action
+/usr/dt/config/types/tools/System_Admin/CkAdminDateTime	0555  hp/rivers/types/action
+/usr/dt/config/types/tools/System_Admin/CkAdminFirmware	0555  hp/rivers/types/action
 
 
 

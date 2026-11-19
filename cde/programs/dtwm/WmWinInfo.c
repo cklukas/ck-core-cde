@@ -342,6 +342,12 @@ GetClientInfo (WmScreenData *pSD, Window clientWindow, long manageFlags)
     pCD->snapRestoreWidth = 0;
     pCD->snapRestoreHeight = 0;
     pCD->snapRestoreValid = False;
+    pCD->tileState = 0;
+    pCD->tileSavedX = 0;
+    pCD->tileSavedY = 0;
+    pCD->tileSavedW = 0;
+    pCD->tileSavedH = 0;
+    pCD->tileSavedValid = False;
 
     for (i = 0; i < STRETCH_COUNT; ++i) pCD->clientStretchWin[i] = (Window)0L;
 

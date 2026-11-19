@@ -1746,6 +1746,12 @@ typedef struct _ClientData
     int		snapRestoreWidth;		/* restore width after snap */
     int		snapRestoreHeight;		/* restore height after snap */
     Boolean	snapRestoreValid;		/* restore size on move */
+    int		tileState;			/* keyboard Super+Arrow tile zone */
+    int		tileSavedX;			/* pre-tile outer frame X */
+    int		tileSavedY;			/* pre-tile outer frame Y */
+    int		tileSavedW;			/* pre-tile client width */
+    int		tileSavedH;			/* pre-tile client height */
+    Boolean	tileSavedValid;			/* pre-tile geometry saved */
     XPoint	clientOffset;			/* frame to client window */
     XmString	clientTitle;			/* WM_NAME field */
     Window	clientFrameWin;			/* top-level, frame window */

@@ -30,6 +30,7 @@
 
 #include "PrintSubSys.h"
 #include "Queue.h"
+#include "CupsDiscovery.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -63,6 +64,18 @@ PrintSubSystem::~PrintSubSystem()
 
 void PrintSubSystem::InitChildren()
 {
+   DtCupsPrinter cups_printers[DT_CUPS_MAX_PRINTERS];
+   bool used_cups = false;
+   int n_cups = DtCupsDiscoverPrinters(cups_printers, DT_CUPS_MAX_PRINTERS, &used_cups);
+   if (n_cups > 0 || (getenv("CK_CUPS_MOCK_FILE") && getenv("CK_CUPS_MOCK_FILE")[0]))
+    {
+      for (int i = 0; i < n_cups; ++i)
+       {
+         new Queue(this, cups_printers[i].name);
+       }
+      return;
+    }
+
    char *std_out = NULL;
    if (RunCommand(LIST_QUEUES, &std_out))
     {

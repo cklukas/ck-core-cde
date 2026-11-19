@@ -527,6 +527,10 @@ void dtwm_view_set_minimized(DtwmView *view, bool minimized) {
     if (view) view_set_minimized(view, minimized);
 }
 
+void dtwm_view_apply_geometry(DtwmView *view, int x, int y, int client_w, int client_h) {
+    if (view) view_apply_geometry(view, x, y, client_w, client_h);
+}
+
 void dtwm_view_close(DtwmView *view) {
     view_close(view);
 }
@@ -900,6 +904,7 @@ static void begin_interactive(DtwmView *view, DtwmCursorMode mode, uint32_t edge
     close_window_menu(server);
     dismiss_open_client_popups(server, dtwm_now_msec());
     hide_wireframe_outline(server);
+    view->tile_state = 0;
     view->resize_inflight = false;
     view->has_queued_resize = false;
     server->grabbed_view = view;
@@ -2399,6 +2404,9 @@ static bool handle_compositor_keybinding(DtwmServer *server, uint32_t mods, xkb_
         spawn_session_helper(server, "dtaction", "LockDisplay", nullptr);
         return true;
     }
+    if (dtwm_power_display_handle_keybinding(server, mods, sym)) {
+        return true;
+    }
 
     if (((mods & WLR_MODIFIER_ALT) && sym == XKB_KEY_F2) ||
         ((mods & WLR_MODIFIER_LOGO) && sym == XKB_KEY_space)) {
@@ -2724,6 +2732,9 @@ static void handle_new_input(struct wl_listener *listener, void *data) {
         server_add_pointer(server, wlr_pointer_from_input_device(dev), false);
         dtwm_hw_apply_input_device(server, dev);
         break;
+    case WLR_INPUT_DEVICE_SWITCH:
+        dtwm_power_display_on_new_input(server, dev);
+        break;
     default:
         break;
     }
@@ -2839,6 +2850,7 @@ static void handle_output_destroy(struct wl_listener *listener, void *data) {
     wl_list_remove(&output->request_state.link);
     wl_list_remove(&output->destroy.link);
     wl_list_remove(&output->link);
+    dtwm_power_display_on_output_destroy(server, output);
     if (output->backdrop_buf) {
         wlr_scene_node_destroy(&output->backdrop_buf->node);
     }
@@ -2924,6 +2936,7 @@ static void handle_new_output(struct wl_listener *listener, void *data) {
     dtwm_sync_xwayland_randr_dpi(server);
     dtwm_lock_sync_outputs(server);
     dtwm_output_mgmt_sync(server);
+    dtwm_power_display_on_new_output(server, output);
 
     wlr_xcursor_manager_load(server->cursor_mgr, wlr_output->scale);
 }
@@ -4165,6 +4178,7 @@ static void handle_xwayland_ready(struct wl_listener *listener, void *data) {
     dtwm_xdnd_on_xwayland_ready(server);
     dtwm_lock_on_xwayland_ready(server);
     dtwm_output_mgmt_publish_x11(server);
+    dtwm_power_display_on_xwayland_ready(server);
     if (server->greeter_mode && server->xcb_conn) {
         /* Grant local root (dtlogin session manager, xrdb, dtgreet) access via
          * ServerInterpreted SI:localuser:root without opening XWayland to other users. */
@@ -4363,6 +4377,7 @@ int main(int argc, char **argv) {
     dtwm_lock_init(&server);
     dtwm_output_mgmt_init(&server);
     dtwm_ime_init(&server);
+    dtwm_power_display_init(&server);
     server.greeter_mode = greeter_mode;
     if (greeter_mode || no_panel) {
         server.show_front_panel = false;
@@ -4513,6 +4528,7 @@ cleanup:
         server.xwayland = nullptr;
     }
     wl_display_destroy_clients(server.wl_display);
+    dtwm_power_display_finish(&server);
     dtwm_ime_finish(&server);
     dtwm_output_mgmt_finish(&server);
     dtwm_lock_finish(&server);

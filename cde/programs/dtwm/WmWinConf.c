@@ -1498,6 +1498,7 @@ void CompleteFrameConfig (ClientData *pcd, XEvent *pev)
 	if (pcd)
 	{
 	    pcd->snapRestoreValid = False;
+	    pcd->tileState = 0;
 	}
 
     }

@@ -434,6 +434,83 @@ static bool find_sysfs_backlight(bool is_kbd, char *out_dir, size_t out_sz, char
     return found;
 }
 
+static void backlight_conf_path(char *out, size_t out_sz) {
+    const char *home = getenv("HOME");
+    if (!home || !home[0]) home = "/var/tmp";
+    char dt_dir[PATH_MAX];
+    snprintf(dt_dir, sizeof(dt_dir), "%s/.dt", home);
+    mkdir(dt_dir, 0755);
+    snprintf(out, out_sz, "%s/backlight.conf", dt_dir);
+}
+
+static void save_backlight_conf(int pct, const char *devname) {
+    char path[PATH_MAX], tmp[PATH_MAX + 32];
+    backlight_conf_path(path, sizeof(path));
+    snprintf(tmp, sizeof(tmp), "%s.%d.tmp", path, (int)getpid());
+    FILE *fp = fopen(tmp, "w");
+    if (!fp) return;
+    fprintf(fp, "brightness_pct=%d\n", clamp_int(pct, 5, 100));
+    if (devname && devname[0]) {
+        fprintf(fp, "device=%s\n", devname);
+    }
+    if (fclose(fp) == 0) {
+        if (rename(tmp, path) != 0) unlink(tmp);
+    } else {
+        unlink(tmp);
+    }
+}
+
+static bool load_backlight_conf(int *out_pct) {
+    char path[PATH_MAX];
+    backlight_conf_path(path, sizeof(path));
+    FILE *fp = fopen(path, "r");
+    if (!fp) return false;
+    char line[128];
+    bool ok = false;
+    while (fgets(line, sizeof(line), fp)) {
+        int val = 0;
+        if (sscanf(line, "brightness_pct=%d", &val) == 1) {
+            *out_pct = clamp_int(val, 5, 100);
+            ok = true;
+            break;
+        }
+    }
+    fclose(fp);
+    return ok;
+}
+
+static void apply_exact_backlight_pct(int target_pct) {
+    target_pct = clamp_int(target_pct, 5, 100);
+    char bdir[PATH_MAX] = {0}, devname[256] = {0};
+    if (find_sysfs_backlight(false, bdir, sizeof(bdir), devname, sizeof(devname))) {
+        char curp[PATH_MAX], maxp[PATH_MAX];
+        snprintf(curp, sizeof(curp), "%s/brightness", bdir);
+        snprintf(maxp, sizeof(maxp), "%s/max_brightness", bdir);
+        int maxv = 0;
+        if (read_int_file(maxp, &maxv) && maxv > 0) {
+            int target_raw = clamp_int((int)lround(((double)target_pct / 100.0) * (double)maxv), 1, maxv);
+            if (!write_int_file(curp, target_raw) && has_prog_in_path("dbus-send")) {
+                char subsys_arg[64], name_arg[300], val_arg[64];
+                snprintf(subsys_arg, sizeof(subsys_arg), "string:backlight");
+                snprintf(name_arg, sizeof(name_arg), "string:%s", devname);
+                snprintf(val_arg, sizeof(val_arg), "uint32:%d", target_raw);
+                char *av[] = {
+                    "dbus-send", "--system", "--print-reply=literal",
+                    "--dest=org.freedesktop.login1",
+                    "/org/freedesktop/login1/session/auto",
+                    "org.freedesktop.login1.Session.SetBrightness",
+                    subsys_arg, name_arg, val_arg, NULL
+                };
+                (void)run_capture(av, NULL, 0);
+            }
+        }
+    }
+    char sdir[PATH_MAX], bfile[PATH_MAX];
+    state_dir_path(sdir, sizeof(sdir));
+    snprintf(bfile, sizeof(bfile), "%s/brightness", sdir);
+    (void)write_int_file(bfile, target_pct);
+}
+
 static void handle_brightness_action(bool is_kbd, int delta_pct, bool get_only) {
     const char *kind = is_kbd ? "kbd_brightness" : "brightness";
     const char *prefix = is_kbd ? "Keyboard Light" : "Brightness";
@@ -472,6 +549,9 @@ static void handle_brightness_action(bool is_kbd, int delta_pct, bool get_only) 
                     (void)run_capture(av, NULL, 0);
                 }
                 pct = clamp_int((int)lround(((double)target_raw * 100.0) / (double)maxv), 0, 100);
+                if (!is_kbd) {
+                    save_backlight_conf(pct, devname);
+                }
             }
             printf("OSD|%s|%d|0|%s: %d%%\n", kind, pct, prefix, pct);
             return;
@@ -483,11 +563,15 @@ static void handle_brightness_action(bool is_kbd, int delta_pct, bool get_only) 
     state_dir_path(sdir, sizeof(sdir));
     snprintf(bfile, sizeof(bfile), "%s/%s", sdir, is_kbd ? "kbd_brightness" : "brightness");
     int pct = is_kbd ? 50 : 80;
+    if (!is_kbd) (void)load_backlight_conf(&pct);
     (void)read_int_file(bfile, &pct);
     pct = clamp_int(pct, min_pct, 100);
     if (!get_only) {
         pct = clamp_int(pct + delta_pct, min_pct, 100);
         (void)write_int_file(bfile, pct);
+        if (!is_kbd) {
+            save_backlight_conf(pct, "virtual");
+        }
     }
     printf("OSD|%s|%d|0|%s: %d%%\n", kind, pct, prefix, pct);
 }
@@ -559,6 +643,17 @@ int main(int argc, char **argv) {
         handle_brightness_action(false, -(step > 0 ? step : 10), false);
     } else if (strcmp(act, "bright-get") == 0) {
         handle_brightness_action(false, 0, true);
+    } else if (strcmp(act, "bright-restore") == 0) {
+        int saved_pct = 0;
+        if (load_backlight_conf(&saved_pct)) {
+            apply_exact_backlight_pct(saved_pct);
+            printf("OSD|brightness|%d|0|Brightness: %d%%\n", saved_pct, saved_pct);
+        }
+    } else if (strcmp(act, "bright-set") == 0 && argc >= 3) {
+        int target_pct = clamp_int(atoi(argv[2]), 5, 100);
+        apply_exact_backlight_pct(target_pct);
+        save_backlight_conf(target_pct, "manual");
+        printf("OSD|brightness|%d|0|Brightness: %d%%\n", target_pct, target_pct);
     } else if (strcmp(act, "kbd-bright-up") == 0) {
         handle_brightness_action(true, step > 0 ? step : 25, false);
     } else if (strcmp(act, "kbd-bright-down") == 0) {
