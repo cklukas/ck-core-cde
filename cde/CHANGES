@@ -1,4 +1,10 @@
 2026-11-19
+- Add icons for MIDI files and the sound applications
+  (`cde/programs/icons/Dtmidi.{t,m,l}.pm`, `Fpsound.{t,m,l}.pm`,
+  `Fpmidi.{t,m,l}.pm`, `cde/programs/icons/Makefile.am`): a document sheet
+  with notes and piano keys, a control tile with speaker, note and keys, and
+  a keyboard synthesizer, each in 16, 32 and 48 pixels in the symbolic CDE
+  icon colors, with dithered fills, lit and shaded edges.
 - Fix multi-window `dtfile` menu activation (press-drag-release and click) and
   flush Wayland pointer button-release frames before focus re-entry, bumping
   `.ckgit/motif-revision` to `8678b6f184cffe87b80f7578270179f96de61759`
