@@ -51,6 +51,7 @@
 #include "WmFunction.h"
 #include "WmGraphics.h"
 #include "WmIDecor.h"
+#include "WmIPlace.h"
 #include "WmIconBox.h"
 #include "WmImage.h"
 #include "WmInstantTitle.h"
@@ -956,41 +957,52 @@ void WithdrawWindow (ClientData *pCD)
 	    DeleteClientFromList (pCD->pSD->pActiveWS, pCD);
 	}
 	ResetWithdrawnFocii (pCD);
-	if (pCD->clientState & MINIMIZED_STATE)
+	if (wmGD.iconAutoPlace && (!(P_ICON_BOX(pCD))))
 	{
-	    if (wmGD.iconAutoPlace && (!(P_ICON_BOX(pCD))))
+	    WmWorkspaceData *pWsTmp;
+	    WsClientData *pWsc;
+	    int j;
+
+	    /*
+	     * Clean up icon placement data in all inhabited workspaces
+	     * (covering both minimized and open-window desktop icons) and
+	     * pack subsequent auto-placed icons up cleanly.
+	     */
+	    for (j = 0; j < pCD->numInhabited; j++)
 	    {
-		WmWorkspaceData *pWsTmp;
-		WsClientData *pWsc;
-		int j;
+		pWsc = &(pCD->pWsList[j]);
 
-		/* 
-		 * Clean up icon placement data in all inhabited
-		 * workspaces
-		 */
-		for (j = 0; j< pCD->numInhabited; j++)
+		if (pWsc->iconPlace != NO_ICON_PLACE)
 		{
-		    pWsc = &(pCD->pWsList[j]);
-
-		    if (pWsc->iconPlace != NO_ICON_PLACE)
+		    if ((pWsTmp = GetWorkspaceData(pCD->pSD, pWsc->wsID)))
 		    {
-			if ((pWsTmp=GetWorkspaceData(pCD->pSD, pWsc->wsID)))
+			if (pWsc->iconPlace >= 0 &&
+			    pWsc->iconPlace < pWsTmp->IPData.totalPlaces &&
+			    pWsTmp->IPData.placeList[pWsc->iconPlace].pCD == pCD)
 			{
-			  pWsTmp->IPData.placeList[pWsc->iconPlace].pCD 
-			      = nullptr;
+			    pWsTmp->IPData.placeList[pWsc->iconPlace].pCD = nullptr;
 			}
+			PackWorkspaceRootIcons (pWsTmp);
 		    }
+		    pWsc->iconPlace = NO_ICON_PLACE;
 		}
 	    }
+	}
+	if ((pCD->clientState & ~UNSEEN_STATE) == MINIMIZED_STATE)
+	{
 	    if (ICON_FRAME_WIN(pCD))
 	    {
 		XUnmapWindow (DISPLAY, ICON_FRAME_WIN(pCD));
 	    }
 	    XFlush (DISPLAY);
 	}
-	else if ((pCD->clientState == NORMAL_STATE) ||
-		 (pCD->clientState == MAXIMIZED_STATE))
+	else if (((pCD->clientState & ~UNSEEN_STATE) == NORMAL_STATE) ||
+		 ((pCD->clientState & ~UNSEEN_STATE) == MAXIMIZED_STATE))
 	{
+	    if (pCD->pSD->showOpenWindowIcons && ICON_FRAME_WIN(pCD))
+	    {
+		XUnmapWindow (DISPLAY, ICON_FRAME_WIN(pCD));
+	    }
 	    XUnmapWindow (DISPLAY, pCD->clientFrameWin);
 	    XFlush (DISPLAY);
 	}

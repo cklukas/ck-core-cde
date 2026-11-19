@@ -1989,7 +1989,9 @@ static void execute_menu_action(DtwmServer *server, int idx) {
     }
     switch (idx) {
     case 0: /* Restore */
-        if (v->maximized) {
+        if (v->minimized) {
+            focus_view(server, v, nullptr);
+        } else if (v->maximized) {
             view_set_maximized(v, false);
         }
         break;
@@ -2015,6 +2017,9 @@ static void execute_menu_action(DtwmServer *server, int idx) {
         view_set_minimized(v, true);
         break;
     case 4: /* Maximize */
+        if (v->minimized) {
+            focus_view(server, v, nullptr);
+        }
         if (!v->maximized) {
             view_set_maximized(v, true);
         }

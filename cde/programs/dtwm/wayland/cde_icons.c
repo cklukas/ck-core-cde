@@ -58,6 +58,73 @@ typedef struct {
 
 static struct wl_list g_pending_xdg_icons;
 
+/* Invariant desktop / Icon Box ordering lists (decoupled from MRU server->views Z-order) */
+typedef struct {
+    struct wl_list map_link;  /* g_mapped_views: chronological window map order */
+    struct wl_list icon_link; /* g_icon_views: stable desktop / Icon Box slot order */
+    DtwmView *view;
+    bool in_icon_order;
+} DtwmIconOrderEntry;
+
+static struct wl_list g_mapped_views;
+static struct wl_list g_icon_views;
+static bool g_icon_lists_initialized = false;
+
+static void ensure_icon_lists_init(void) {
+    if (!g_icon_lists_initialized) {
+        wl_list_init(&g_mapped_views);
+        wl_list_init(&g_icon_views);
+        g_icon_lists_initialized = true;
+    }
+}
+
+static DtwmIconOrderEntry *find_icon_order_entry(const DtwmView *view) {
+    if (!view) return nullptr;
+    ensure_icon_lists_init();
+    DtwmIconOrderEntry *entry;
+    wl_list_for_each(entry, &g_mapped_views, map_link) {
+        if (entry->view == view) {
+            return entry;
+        }
+    }
+    return nullptr;
+}
+
+static void record_mapped_view_order(DtwmView *view) {
+    if (!view || !view->mapped) return;
+    if (find_icon_order_entry(view)) return;
+    DtwmIconOrderEntry *entry = calloc(1, sizeof(*entry));
+    if (!entry) return;
+    entry->view = view;
+    entry->in_icon_order = false;
+    wl_list_init(&entry->icon_link);
+    wl_list_insert(g_mapped_views.prev, &entry->map_link);
+}
+
+static void remove_view_from_icon_order(const DtwmView *view) {
+    DtwmIconOrderEntry *entry = find_icon_order_entry(view);
+    if (!entry) return;
+    if (entry->in_icon_order) {
+        wl_list_remove(&entry->icon_link);
+        wl_list_init(&entry->icon_link);
+        entry->in_icon_order = false;
+    }
+    wl_list_remove(&entry->map_link);
+    free(entry);
+}
+
+static void prune_open_views_from_icon_order(void) {
+    ensure_icon_lists_init();
+    DtwmIconOrderEntry *entry, *tmp;
+    wl_list_for_each_safe(entry, tmp, &g_icon_views, icon_link) {
+        if (!entry->view || !entry->view->minimized) {
+            wl_list_remove(&entry->icon_link);
+            wl_list_init(&entry->icon_link);
+            entry->in_icon_order = false;
+        }
+    }
+}
+
 static DtwmView *find_xdg_view(DtwmServer *server, struct wlr_xdg_toplevel *toplevel) {
     DtwmView *v;
     wl_list_for_each(v, &server->views, link) {
@@ -1939,9 +2006,78 @@ static void render_icon_box_frame(DtwmServer *server, int total_content_h, int w
     wlr_buffer_drop(buf);
 }
 
+static bool is_transient_child_view(const DtwmView *view) {
+    if (!view) return false;
+    if (view->kind == DTWM_VIEW_XWAYLAND && view->xwayland_surface &&
+        view->xwayland_surface->parent != nullptr) {
+        return true;
+    }
+    if (view->kind == DTWM_VIEW_XDG && view->xdg_toplevel &&
+        view->xdg_toplevel->parent != nullptr) {
+        return true;
+    }
+    return false;
+}
+
+static bool is_icon_order_eligible_base(const DtwmView *view) {
+    if (!view || !view->mapped || !view->server) return false;
+    if (view->server->greeter_mode) return false;
+    if (view->is_desktop_pin || view->is_swallowed || view->is_subpanel || view->is_lock_dialog) {
+        return false;
+    }
+    if (view->kind == DTWM_VIEW_XWAYLAND && view->xwayland_surface &&
+        view->xwayland_surface->override_redirect) {
+        return false;
+    }
+    return true;
+}
+
+static void sync_icon_order_entries(DtwmServer *server) {
+    if (!server) return;
+    ensure_icon_lists_init();
+
+    /* Ensure any already-mapped view is tracked in chronological map order */
+    DtwmView *mv;
+    wl_list_for_each_reverse(mv, &server->views, link) {
+        if (mv->mapped) {
+            record_mapped_view_order(mv);
+        }
+    }
+
+    DtwmIconOrderEntry *entry, *tmp;
+    wl_list_for_each_safe(entry, tmp, &g_mapped_views, map_link) {
+        DtwmView *v = entry->view;
+        if (!v || !v->mapped) {
+            if (entry->in_icon_order) {
+                wl_list_remove(&entry->icon_link);
+                wl_list_init(&entry->icon_link);
+            }
+            wl_list_remove(&entry->map_link);
+            free(entry);
+            continue;
+        }
+        if (!is_icon_order_eligible_base(v) || (is_transient_child_view(v) && !v->minimized)) {
+            if (entry->in_icon_order) {
+                wl_list_remove(&entry->icon_link);
+                wl_list_init(&entry->icon_link);
+                entry->in_icon_order = false;
+            }
+            continue;
+        }
+        bool want_slot = v->is_panel
+                             ? (v->minimized || (server->show_open_window_icons && !server->use_icon_box))
+                             : (v->minimized || server->show_open_window_icons || server->use_icon_box);
+        if (want_slot && !entry->in_icon_order) {
+            wl_list_insert(g_icon_views.prev, &entry->icon_link);
+            entry->in_icon_order = true;
+        }
+    }
+}
+
 void dtwm_icons_relayout(DtwmServer *server) {
     if (!server) return;
     ensure_icon_box_scene_nodes(server);
+    sync_icon_order_entries(server);
 
     struct wlr_box ubox;
     dtwm_get_usable_output_box(server, 1, 1, &ubox);
@@ -1991,9 +2127,17 @@ void dtwm_icons_relayout(DtwmServer *server) {
         int cols = (well_w - 12) / col_w;
         if (cols < 1) cols = 1;
 
-        int count = 0;
         DtwmView *v;
-        wl_list_for_each_reverse(v, &server->views, link) {
+        wl_list_for_each(v, &server->views, link) {
+            if (!should_show_desktop_icon(v) || v->is_panel) {
+                dtwm_icons_update_view(v);
+            }
+        }
+
+        int count = 0;
+        DtwmIconOrderEntry *entry;
+        wl_list_for_each(entry, &g_icon_views, icon_link) {
+            v = entry->view;
             if (should_show_desktop_icon(v) && !v->is_panel) {
                 count++;
             }
@@ -2009,7 +2153,8 @@ void dtwm_icons_relayout(DtwmServer *server) {
         render_icon_box_frame(server, content_h, well_h);
 
         int slot = 0;
-        wl_list_for_each_reverse(v, &server->views, link) {
+        wl_list_for_each(entry, &g_icon_views, icon_link) {
+            v = entry->view;
             if (!should_show_desktop_icon(v) || v->is_panel) {
                 dtwm_icons_update_view(v);
                 continue;
@@ -2077,10 +2222,18 @@ void dtwm_icons_relayout(DtwmServer *server) {
     int max_cols = (gbox.width - edge_pad_x * 2) / col_w;
     if (max_cols < 1) max_cols = 1;
 
+    DtwmView *v;
+    wl_list_for_each(v, &server->views, link) {
+        if (!should_show_desktop_icon(v)) {
+            dtwm_icons_update_view(v);
+        }
+    }
+
     /* Check whether FrontPanel occupies the bottom-left corner slot (matching X11 UI.c XmNiconY) */
     bool panel_in_bottom_left = false;
-    DtwmView *v;
-    wl_list_for_each_reverse(v, &server->views, link) {
+    DtwmIconOrderEntry *entry;
+    wl_list_for_each(entry, &g_icon_views, icon_link) {
+        v = entry->view;
         if (v->is_panel && should_show_desktop_icon(v)) {
             panel_in_bottom_left = true;
             break;
@@ -2104,7 +2257,8 @@ void dtwm_icons_relayout(DtwmServer *server) {
     }
 
     int slot = 0;
-    wl_list_for_each_reverse(v, &server->views, link) {
+    wl_list_for_each(entry, &g_icon_views, icon_link) {
+        v = entry->view;
         if (!should_show_desktop_icon(v)) {
             dtwm_icons_update_view(v);
             continue;
@@ -2418,6 +2572,7 @@ void dtwm_icons_on_view_map(DtwmView *view) {
     if (view->frame_tree) {
         wlr_scene_node_set_enabled(&view->frame_tree->node, dtwm_view_visible_on_current_ws(view));
     }
+    record_mapped_view_order(view);
     dtwm_icons_relayout(view->server);
 }
 
@@ -2425,6 +2580,7 @@ void dtwm_icons_on_view_unmap_or_destroy(DtwmView *view, bool destroying) {
     if (!view || !view->server) return;
     DtwmServer *server = view->server;
     dtwm_anim_cancel_for_view(server, view);
+    remove_view_from_icon_order(view);
     if (server->swallowed_clock_view == view) {
         server->swallowed_clock_view = nullptr;
         dtwm_update_front_panel(server);
@@ -2535,6 +2691,9 @@ void dtwm_icons_invalidate_theme_icons(DtwmServer *server) {
 void dtwm_icons_set_open_window_icons(DtwmServer *server, bool enabled) {
     if (!server || server->show_open_window_icons == enabled) return;
     server->show_open_window_icons = enabled;
+    if (!enabled && !server->use_icon_box) {
+        prune_open_views_from_icon_order();
+    }
     publish_icon_sizes_and_settings(server);
     dtwm_icons_relayout(server);
 }
@@ -2543,6 +2702,9 @@ void dtwm_icons_set_use_icon_box(DtwmServer *server, bool enabled) {
     if (!server || server->use_icon_box == enabled) return;
     server->use_icon_box = enabled;
     server->icon_box_scroll_y = 0;
+    if (!enabled && !server->show_open_window_icons) {
+        prune_open_views_from_icon_order();
+    }
     publish_icon_sizes_and_settings(server);
     dtwm_icons_relayout(server);
     if (enabled && server->icon_box_tree) {
@@ -2831,6 +2993,9 @@ void dtwm_icons_on_xwayland_ready(DtwmServer *server) {
 
 void dtwm_icons_init(DtwmServer *server) {
     wl_list_init(&g_pending_xdg_icons);
+    wl_list_init(&g_mapped_views);
+    wl_list_init(&g_icon_views);
+    g_icon_lists_initialized = true;
     server->show_open_window_icons = true;
     server->icon_placement = DTWM_ICON_PLACE_TOP_LEFT;
     server->icon_placement_margin = -1;
@@ -2849,6 +3014,17 @@ void dtwm_icons_finish(DtwmServer *server) {
         if (pend->surface) cairo_surface_destroy(pend->surface);
         wl_list_remove(&pend->link);
         free(pend);
+    }
+    if (g_icon_lists_initialized) {
+        DtwmIconOrderEntry *entry, *etmp;
+        wl_list_for_each_safe(entry, etmp, &g_mapped_views, map_link) {
+            if (entry->in_icon_order) {
+                wl_list_remove(&entry->icon_link);
+            }
+            wl_list_remove(&entry->map_link);
+            free(entry);
+        }
+        g_icon_lists_initialized = false;
     }
     if (server->toplevel_icon_global) {
         wl_global_destroy(server->toplevel_icon_global);

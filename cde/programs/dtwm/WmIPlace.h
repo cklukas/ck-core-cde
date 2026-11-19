@@ -36,4 +36,5 @@ extern void CvtIconPlaceToPosition (IconPlacementData *pIPD, int place, int *pX,
 extern int FindIconPlace (ClientData *pCD, IconPlacementData *pIPD, int x, int y);
 extern int CvtIconPositionToPlace (IconPlacementData *pIPD, int x, int y);
 extern void PackRootIcons (void);
+extern void PackWorkspaceRootIcons (WmWorkspaceData *pWS);
 extern void MoveIconInfo (IconPlacementData *pIPD, int p1, int p2);

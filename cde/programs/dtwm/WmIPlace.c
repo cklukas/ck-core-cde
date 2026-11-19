@@ -43,6 +43,7 @@
 #include "WmError.h"
 #include "WmIDecor.h"
 #include "WmIconBox.h"
+#include "WmProperty.h"
 #include "WmWinConf.h"
 #include "WmWrkspace.h"
 
@@ -815,72 +816,103 @@ int CvtIconPositionToPlace (IconPlacementData *pIPD, int x, int y)
  *
  *************************************<->***********************************/
 
-void PackRootIcons (void)
+static Boolean IsPinnedRootIcon (const ClientData *pCD)
+{
+    if (!pCD)
+    {
+	return False;
+    }
+    if ((pCD->dtwmBehaviors & DtWM_BEHAVIOR_PANEL) ||
+	(pCD->iconFlags & ICON_HINTS_POSITION))
+    {
+	return True;
+    }
+    return False;
+}
+
+void PackWorkspaceRootIcons (WmWorkspaceData *pWS)
 {
     int iOld, iNew;
     ClientData *pCD;
-    ClientData *pCD_active;
-    int hasActiveText = 1;
+    ClientData *pCD_active = nullptr;
+    int hasActiveText = 0;
     WsClientData *pWsc;
+    Boolean isActiveWs;
 
-    /* 
-     * find context of the activeIconTextWin to get pCD and then 
-     * if it is the same as this client, hide it.
-     */
-
-    if (XFindContext (DISPLAY, ACTIVE_PSD->activeIconTextWin,
-			wmGD.windowContextType, (caddr_t *)&pCD_active))
+    if (!pWS || !pWS->pSD || !wmGD.iconAutoPlace || !pWS->IPData.placeList)
     {
-	hasActiveText = 0;
+	return;
     }
 
-    /* 
-     *  Traverse the list and pack them together
-     */
-
-    if (wmGD.iconAutoPlace)
+    isActiveWs = (pWS == pWS->pSD->pActiveWS);
+    if (isActiveWs &&
+	!XFindContext (DISPLAY, pWS->pSD->activeIconTextWin,
+		       wmGD.windowContextType, (caddr_t *)&pCD_active))
     {
-	for (iOld = iNew = 0; iOld < ACTIVE_WS->IPData.totalPlaces; 
-	    iOld++, iNew++)
+	hasActiveText = 1;
+    }
+
+    iNew = 0;
+    for (iOld = 0; iOld < pWS->IPData.totalPlaces; iOld++)
+    {
+	pCD = pWS->IPData.placeList[iOld].pCD;
+	if (!pCD || IsPinnedRootIcon (pCD))
 	{
-	    if (ACTIVE_WS->IPData.placeList[iOld].pCD == nullptr)
+	    continue;
+	}
+
+	while (iNew < iOld &&
+	       pWS->IPData.placeList[iNew].pCD != nullptr)
+	{
+	    iNew++;
+	}
+
+	if (iNew < iOld && pWS->IPData.placeList[iNew].pCD == nullptr)
+	{
+	    pWS->IPData.placeList[iNew].pCD = pCD;
+	    pWS->IPData.placeList[iNew].theWidget =
+		pWS->IPData.placeList[iOld].theWidget;
+	    pWS->IPData.placeList[iOld].pCD = nullptr;
+	    pWS->IPData.placeList[iOld].theWidget = nullptr;
+
+	    pWsc = GetWsClientData (pWS, pCD);
+	    if (pWsc)
 	    {
-		/* advance to next non-null entry */
-		while (++iOld < ACTIVE_WS->IPData.totalPlaces && 
-		       !ACTIVE_WS->IPData.placeList[iOld].pCD)
-		    ;
-	    }
-
-	    if (iOld < ACTIVE_WS->IPData.totalPlaces && iOld != iNew)
-	    {
-		/* move the icon from its old place to the new place */
-
-		MoveIconInfo (&ACTIVE_WS->IPData, iOld, iNew);
-
-		pCD = ACTIVE_WS->IPData.placeList[iNew].pCD;
-		pWsc = GetWsClientData (ACTIVE_WS, pCD);
 		pWsc->iconPlace = iNew;
-		CvtIconPlaceToPosition (&ACTIVE_WS->IPData, 
+		CvtIconPlaceToPosition (&pWS->IPData,
 		    pWsc->iconPlace, &pWsc->iconX, &pWsc->iconY);
 
-		if (hasActiveText && (pCD == pCD_active))
+		if (isActiveWs && pWsc->iconFrameWin)
 		{
-		    /* hide activeIconTextWin first */
-		    HideActiveIconText ((WmScreenData *)nullptr);
-		    XMoveWindow (DISPLAY, pWsc->iconFrameWin, pWsc->iconX, 
-			     pWsc->iconY);
-		    UpdateOpenIconIndicator (pCD, False, -1);
-		    ShowActiveIconText (pCD);
-		}
-		else
-		{
-		    XMoveWindow (DISPLAY, pWsc->iconFrameWin, pWsc->iconX, 
-			     pWsc->iconY);
-		    UpdateOpenIconIndicator (pCD, False, -1);
+		    if (hasActiveText && (pCD == pCD_active))
+		    {
+			HideActiveIconText ((WmScreenData *)nullptr);
+			XMoveWindow (DISPLAY, pWsc->iconFrameWin,
+				     pWsc->iconX, pWsc->iconY);
+			UpdateOpenIconIndicator (pCD, False, -1);
+			ShowActiveIconText (pCD);
+		    }
+		    else
+		    {
+			XMoveWindow (DISPLAY, pWsc->iconFrameWin,
+				     pWsc->iconX, pWsc->iconY);
+			UpdateOpenIconIndicator (pCD, False, -1);
+		    }
+		    UpdateNetWmIconGeometry (pCD);
 		}
 	    }
+	    iNew++;
+	}
+	else if (iNew == iOld)
+	{
+	    iNew++;
 	}
     }
+}
+
+void PackRootIcons (void)
+{
+    PackWorkspaceRootIcons (ACTIVE_WS);
 } /* END OF FUNCTION PackRootIcons */
 
 

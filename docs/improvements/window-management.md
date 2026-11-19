@@ -38,7 +38,9 @@ selection visible and supports pointer hover and pinning. It is enabled by the
   `Wireframe` on [Wayland (`dtwm-wayland`)](wayland.md).
 
 Open-window desktop icons complement these controls by keeping running
-applications represented on their workspace.
+applications represented on their workspace in a stable order across minimize,
+restore, and focus changes, while compacting subsequent icons when a window is
+closed.
 
 ## Hardware keys, 3D bevel OSD and touchpad gestures
 

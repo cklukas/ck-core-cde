@@ -1,4 +1,21 @@
 2026-11-19
+- Preserve desktop and Icon Box icon ordering across window minimize, restore,
+  and focus changes in both `dtwm-wayland` and X11 `dtwm`, and pack remaining
+  auto-placed icons cleanly when a window is closed
+  (`cde/programs/dtwm/wayland/cde_icons.c`,
+  `cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `cde/programs/dtwm/{WmIPlace.h,WmIPlace.c,WmManage.c}`,
+  `cde/programs/dtwm/Makefile.am`,
+  `cde/programs/dtwm/tests/check-dtwm-icon-order.py`,
+  `docs/improvements/window-management.md`):
+  - Track desktop and Icon Box slots in `dtwm-wayland` using a dedicated
+    chronological icon-order list decoupled from the MRU `server->views`
+    Z-order list, and unminimize minimized targets when **Restore** or
+    **Maximize** is selected from the window menu.
+  - Release root auto-placement slots on window withdrawal across all client
+    states (including open `NORMAL_STATE` windows when `showOpenWindowIcons`
+    is enabled) in X11 `dtwm`, and compact subsequent non-pinned workspace
+    icons up while preserving pinned Front Panel icon placement.
 - Fix an intermittent `dtwm-wayland` compositor abort (`SIGABRT` in
   `wlr_scene_buffer_set_source_box`: `box->x >= 0 && box->y >= 0 && box->width >= 0 && box->height >= 0`)
   during **Bevel Morph** minimize and restore animations when IEEE-754 FMA
