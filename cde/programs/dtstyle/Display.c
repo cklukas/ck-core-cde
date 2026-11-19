@@ -6,9 +6,12 @@
  */
 
 #define _GNU_SOURCE
+#include <X11/Shell.h>
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
+#include <X11/Xutil.h>
 #include <Xm/MwmUtil.h>
+#include <dlfcn.h>
 
 #ifdef HAVE_XRANDR
 #include <X11/extensions/Xrandr.h>
@@ -133,6 +136,15 @@ typedef struct {
     Widget nl_mode_btns[3];
     Widget nl_temp_scale;
     bool updating_widgets;
+
+    /* On-screen monitor identification overlay badges (X11/XLibre & Wayland) */
+    Widget ident_shells[MAX_DISP_OUTPUTS];
+    Widget ident_canvases[MAX_DISP_OUTPUTS];
+    cairo_surface_t *ident_bg_surfs[MAX_DISP_OUTPUTS];
+    bool ident_popped[MAX_DISP_OUTPUTS];
+    int ident_last_x[MAX_DISP_OUTPUTS];
+    int ident_last_y[MAX_DISP_OUTPUTS];
+    bool ident_atexit_registered;
 } DispDialogState;
 
 static DispDialogState g_disp = {0};
@@ -836,6 +848,341 @@ static void apply_outputs(const DispOutputInfo *arr, int count) {
 }
 
 /* -------------------------------------------------------------------------
+ * On-Screen Monitor Identification Corner Number Overlays (Wayland & X11)
+ * ------------------------------------------------------------------------- */
+#define IDENT_BADGE_SZ     136
+#define IDENT_BADGE_MARGIN  28
+
+static bool g_x11_getimage_err = false;
+static int ignore_getimage_xerr(Display *dpy, XErrorEvent *ev) {
+    (void)dpy;
+    (void)ev;
+    g_x11_getimage_err = true;
+    return 0;
+}
+
+static unsigned int extract_mask_byte(unsigned long px, unsigned long mask) {
+    if (mask == 0) return 0;
+    int shift = 0;
+    unsigned long m = mask;
+    while ((m & 1UL) == 0UL) {
+        m >>= 1;
+        shift++;
+    }
+    unsigned long v = (px & mask) >> shift;
+    if (m >= 255UL) return (unsigned int)(v & 0xffUL);
+    if (m == 0UL) return 0;
+    return (unsigned int)((v * 255UL) / m);
+}
+
+static cairo_surface_t *capture_x11_root_patch(int rx, int ry, int rw, int rh) {
+    if (!style.display || rw <= 0 || rh <= 0) return nullptr;
+    int scr_w = DisplayWidth(style.display, style.screenNum);
+    int scr_h = DisplayHeight(style.display, style.screenNum);
+    if (rx < 0 || ry < 0 || rx + rw > scr_w || ry + rh > scr_h) return nullptr;
+
+    XSync(style.display, False);
+    g_x11_getimage_err = false;
+    XErrorHandler prev = XSetErrorHandler(ignore_getimage_xerr);
+    XImage *img = XGetImage(style.display, style.root, rx, ry, (unsigned int)rw, (unsigned int)rh, AllPlanes, ZPixmap);
+    XSync(style.display, False);
+    XSetErrorHandler(prev);
+    if (!img || g_x11_getimage_err) {
+        if (img) XDestroyImage(img);
+        return nullptr;
+    }
+
+    Visual *vis = DefaultVisual(style.display, style.screenNum);
+    unsigned long rmask = img->red_mask ? img->red_mask : (vis ? vis->red_mask : 0xff0000UL);
+    unsigned long gmask = img->green_mask ? img->green_mask : (vis ? vis->green_mask : 0x00ff00UL);
+    unsigned long bmask = img->blue_mask ? img->blue_mask : (vis ? vis->blue_mask : 0x0000ffUL);
+
+    cairo_surface_t *surf = cairo_image_surface_create(CAIRO_FORMAT_RGB24, rw, rh);
+    if (cairo_surface_status(surf) == CAIRO_STATUS_SUCCESS) {
+        unsigned char *dst = cairo_image_surface_get_data(surf);
+        int stride = cairo_image_surface_get_stride(surf);
+        for (int y = 0; y < rh; ++y) {
+            uint32_t *row = (uint32_t *)(dst + y * stride);
+            for (int x = 0; x < rw; ++x) {
+                unsigned long px = XGetPixel(img, x, y);
+                unsigned int r = extract_mask_byte(px, rmask);
+                unsigned int g = extract_mask_byte(px, gmask);
+                unsigned int b = extract_mask_byte(px, bmask);
+                row[x] = (0xffU << 24) | (r << 16) | (g << 8) | b;
+            }
+        }
+        cairo_surface_mark_dirty(surf);
+    }
+    XDestroyImage(img);
+    return surf;
+}
+
+static void apply_x11_click_through_shape(Window win) {
+    if (!style.display || win == None) return;
+    typedef void (*XShapeCombineRectanglesFn)(
+        Display *, Window, int, int, int, XRectangle *, int, int, int
+    );
+    static bool s_resolved = false;
+    static XShapeCombineRectanglesFn s_shape_fn = nullptr;
+    if (!s_resolved) {
+        s_resolved = true;
+        s_shape_fn = (XShapeCombineRectanglesFn)dlsym(RTLD_DEFAULT, "XShapeCombineRectangles");
+        if (!s_shape_fn) {
+            void *h = dlopen("libXext.so.6", RTLD_LAZY | RTLD_LOCAL);
+            if (h) s_shape_fn = (XShapeCombineRectanglesFn)dlsym(h, "XShapeCombineRectangles");
+        }
+    }
+    if (s_shape_fn) {
+        /* ShapeInput = 2, ShapeSet = 0, Unsorted = 0: empty input region -> 100% click-through */
+        s_shape_fn(style.display, win, 2, 0, 0, nullptr, 0, 0, 0);
+    }
+}
+
+static void draw_x11_ident_badge_cb(Widget w, XtPointer client_data, XtPointer call_data) {
+    (void)call_data;
+    if (!w || !XtIsRealized(w) || !style.display) return;
+    int idx = (int)(intptr_t)client_data;
+    if (idx < 0 || idx >= MAX_DISP_OUTPUTS) return;
+
+    const int sz = IDENT_BADGE_SZ;
+    Visual *vis = DefaultVisual(style.display, style.screenNum);
+    cairo_surface_t *xsurf = cairo_xlib_surface_create(style.display, XtWindow(w), vis, sz, sz);
+    cairo_t *cr = cairo_create(xsurf);
+
+    /* Composite over captured underlying desktop/window pixels for genuine translucency on X11 */
+    if (g_disp.ident_bg_surfs[idx]) {
+        cairo_set_source_surface(cr, g_disp.ident_bg_surfs[idx], 0.0, 0.0);
+        cairo_paint(cr);
+    } else {
+        cairo_set_source_rgb(cr, 0.22, 0.28, 0.34);
+        cairo_paint(cr);
+    }
+
+    cairo_set_source_rgba(cr, 0.09, 0.13, 0.17, 0.68);
+    cairo_rectangle(cr, 0.0, 0.0, sz, sz);
+    cairo_fill(cr);
+
+    /* 3D CDE mitered bevel */
+    cairo_set_line_width(cr, 2.0);
+    cairo_set_source_rgba(cr, 0.88, 0.92, 0.96, 0.56);
+    cairo_move_to(cr, 1.0, sz - 1.0);
+    cairo_line_to(cr, 1.0, 1.0);
+    cairo_line_to(cr, sz - 1.0, 1.0);
+    cairo_stroke(cr);
+
+    cairo_set_source_rgba(cr, 0.03, 0.05, 0.07, 0.74);
+    cairo_move_to(cr, sz - 1.0, 1.0);
+    cairo_line_to(cr, sz - 1.0, sz - 1.0);
+    cairo_line_to(cr, 1.0, sz - 1.0);
+    cairo_stroke(cr);
+
+    bool sel = (idx == g_disp.selected);
+    if (sel) {
+        cairo_set_source_rgba(cr, 0.98, 0.78, 0.26, 0.88);
+        cairo_set_line_width(cr, 2.5);
+        cairo_rectangle(cr, 4.25, 4.25, sz - 8.5, sz - 8.5);
+        cairo_stroke(cr);
+    }
+
+    char num_str[16];
+    snprintf(num_str, sizeof(num_str), "%d", idx + 1);
+    const char *oname = (idx < g_disp.orig_count) ? g_disp.orig_outs[idx].name : "";
+
+    cairo_select_font_face(cr, "sans-serif", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+    cairo_set_font_size(cr, 78.0);
+    cairo_text_extents_t ext = {0};
+    cairo_text_extents(cr, num_str, &ext);
+    double nx = (sz - ext.width) * 0.5 - ext.x_bearing;
+    double ny = (oname && oname[0]) ? 86.0 : 94.0;
+
+    cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 0.62);
+    cairo_move_to(cr, nx + 2.5, ny + 2.5);
+    cairo_show_text(cr, num_str);
+
+    cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 0.92);
+    cairo_move_to(cr, nx, ny);
+    cairo_show_text(cr, num_str);
+
+    if (oname && oname[0]) {
+        cairo_set_font_size(cr, 13.0);
+        cairo_text_extents_t lext = {0};
+        cairo_text_extents(cr, oname, &lext);
+        double lx = (sz - lext.width) * 0.5 - lext.x_bearing;
+        if (lx < 8.0) lx = 8.0;
+        double ly = sz - 14.0;
+
+        cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 0.55);
+        cairo_move_to(cr, lx + 1.0, ly + 1.0);
+        cairo_show_text(cr, oname);
+
+        if (sel) cairo_set_source_rgba(cr, 0.99, 0.85, 0.42, 0.94);
+        else     cairo_set_source_rgba(cr, 0.86, 0.92, 0.96, 0.88);
+        cairo_move_to(cr, lx, ly);
+        cairo_show_text(cr, oname);
+    }
+
+    cairo_destroy(cr);
+    cairo_surface_destroy(xsurf);
+}
+
+static void publish_x11_ident_state(const char *state_str) {
+    if (!style.display || !state_str) return;
+    Atom a = XInternAtom(style.display, "_DT_MONITOR_IDENTIFY_STATE", False);
+    XChangeProperty(
+        style.display, style.root, a, XA_STRING, 8, PropModeReplace,
+        (const unsigned char *)state_str, (int)strlen(state_str)
+    );
+    XFlush(style.display);
+}
+
+static void sync_monitor_identify_overlays(bool show) {
+    if (!style.display) return;
+
+    if (g_disp.is_wayland) {
+        if (!show || g_disp.count <= 0) {
+            send_wayland_wm_request("f.identify_outputs 0");
+            return;
+        }
+        char cmd[512];
+        int pos = snprintf(cmd, sizeof(cmd), "f.identify_outputs 1 %d", g_disp.selected + 1);
+        for (int i = 0; i < g_disp.count; ++i) {
+            if (!g_disp.outs[i].name[0]) continue;
+            int n = snprintf(
+                cmd + pos, sizeof(cmd) - (size_t)pos, " %s=%d",
+                g_disp.outs[i].name, i + 1
+            );
+            if (n > 0 && pos + n < (int)sizeof(cmd)) pos += n;
+        }
+        send_wayland_wm_request(cmd);
+        return;
+    }
+
+    if (!show || g_disp.orig_count <= 0) {
+        for (int i = 0; i < MAX_DISP_OUTPUTS; ++i) {
+            if (g_disp.ident_shells[i] && g_disp.ident_popped[i]) {
+                XtPopdown(g_disp.ident_shells[i]);
+                g_disp.ident_popped[i] = false;
+            }
+            if (g_disp.ident_bg_surfs[i]) {
+                cairo_surface_destroy(g_disp.ident_bg_surfs[i]);
+                g_disp.ident_bg_surfs[i] = nullptr;
+            }
+        }
+        publish_x11_ident_state("active=0");
+        return;
+    }
+
+    char state_buf[1024];
+    int sp = snprintf(state_buf, sizeof(state_buf), "active=1 selected=%d", g_disp.selected + 1);
+    int shown = 0;
+
+    for (int i = 0; i < MAX_DISP_OUTPUTS; ++i) {
+        if (i >= g_disp.orig_count || !g_disp.orig_outs[i].enabled) {
+            if (g_disp.ident_shells[i] && g_disp.ident_popped[i]) {
+                XtPopdown(g_disp.ident_shells[i]);
+                g_disp.ident_popped[i] = false;
+            }
+            continue;
+        }
+
+        const DispOutputInfo *o = &g_disp.orig_outs[i];
+        int ow = effective_w(o);
+        int oh = effective_h(o);
+        int bx = o->x + ow - IDENT_BADGE_SZ - IDENT_BADGE_MARGIN;
+        int by = o->y + IDENT_BADGE_MARGIN;
+        if (bx < o->x + 4) bx = o->x + 4;
+        if (by + IDENT_BADGE_SZ > o->y + oh - 4) by = o->y + 4;
+
+        bool moved = (!g_disp.ident_popped[i] ||
+                      g_disp.ident_last_x[i] != bx ||
+                      g_disp.ident_last_y[i] != by);
+        if (moved) {
+            if (g_disp.ident_shells[i] && g_disp.ident_popped[i]) {
+                XtPopdown(g_disp.ident_shells[i]);
+                g_disp.ident_popped[i] = false;
+                XSync(style.display, False);
+            }
+            if (g_disp.ident_bg_surfs[i]) {
+                cairo_surface_destroy(g_disp.ident_bg_surfs[i]);
+                g_disp.ident_bg_surfs[i] = nullptr;
+            }
+            g_disp.ident_bg_surfs[i] = capture_x11_root_patch(bx, by, IDENT_BADGE_SZ, IDENT_BADGE_SZ);
+        }
+
+        if (!g_disp.ident_shells[i] && style.displayDialog) {
+            char sname[32];
+            snprintf(sname, sizeof(sname), "monIdentShell%d", i + 1);
+            g_disp.ident_shells[i] = XtVaCreatePopupShell(
+                sname, overrideShellWidgetClass, XtParent(style.displayDialog),
+                XmNx, (Position)bx,
+                XmNy, (Position)by,
+                XmNwidth, (Dimension)IDENT_BADGE_SZ,
+                XmNheight, (Dimension)IDENT_BADGE_SZ,
+                XmNborderWidth, 0,
+                XmNsaveUnder, True,
+                NULL
+            );
+            g_disp.ident_canvases[i] = XtVaCreateManagedWidget(
+                "monIdentCanvas", xmDrawingAreaWidgetClass, g_disp.ident_shells[i],
+                XmNwidth, (Dimension)IDENT_BADGE_SZ,
+                XmNheight, (Dimension)IDENT_BADGE_SZ,
+                XmNmarginWidth, 0,
+                XmNmarginHeight, 0,
+                NULL
+            );
+            XtAddCallback(
+                g_disp.ident_canvases[i], XmNexposeCallback,
+                draw_x11_ident_badge_cb, (XtPointer)(intptr_t)i
+            );
+            XtRealizeWidget(g_disp.ident_shells[i]);
+            apply_x11_click_through_shape(XtWindow(g_disp.ident_shells[i]));
+        } else if (g_disp.ident_shells[i] && moved) {
+            XtVaSetValues(
+                g_disp.ident_shells[i],
+                XmNx, (Position)bx,
+                XmNy, (Position)by,
+                NULL
+            );
+        }
+
+        if (g_disp.ident_shells[i]) {
+            if (!g_disp.ident_popped[i]) {
+                XtPopup(g_disp.ident_shells[i], XtGrabNone);
+                g_disp.ident_popped[i] = true;
+            }
+            g_disp.ident_last_x[i] = bx;
+            g_disp.ident_last_y[i] = by;
+            if (XtIsRealized(g_disp.ident_shells[i])) {
+                XRaiseWindow(style.display, XtWindow(g_disp.ident_shells[i]));
+                draw_x11_ident_badge_cb(g_disp.ident_canvases[i], (XtPointer)(intptr_t)i, nullptr);
+            }
+            shown++;
+
+            if (sp > 0 && sp + 96 < (int)sizeof(state_buf)) {
+                sp += snprintf(
+                    state_buf + sp, sizeof(state_buf) - (size_t)sp,
+                    " %s=%d@%d,%d%s",
+                    o->name[0] ? o->name : "OUT",
+                    i + 1, bx, by,
+                    (i == g_disp.selected) ? ":selected" : ""
+                );
+            }
+        }
+    }
+
+    if (sp > 0 && sp + 32 < (int)sizeof(state_buf)) {
+        snprintf(state_buf + sp, sizeof(state_buf) - (size_t)sp, " count=%d", shown);
+    }
+    publish_x11_ident_state(state_buf);
+}
+
+static void cleanup_ident_on_exit(void) {
+    if (style.display) {
+        sync_monitor_identify_overlays(false);
+    }
+}
+
+/* -------------------------------------------------------------------------
  * Monitor Arrangement Canvas Rendering & Interactive Mouse Drag
  * ------------------------------------------------------------------------- */
 static void update_controls_from_selected(void);
@@ -965,6 +1312,34 @@ static void draw_canvas_cb(Widget w, XtPointer client_data, XtPointer call_data)
         }
         cairo_fill(cr);
 
+        /* Matching top-right semi-transparent corner numeral badge inside preview */
+        if (rw >= 64.0 && rh >= 44.0) {
+            double bsz = fmin(28.0, fmax(18.0, rh * 0.30));
+            double bx = rx + rw - bsz - 6.0;
+            double by = ry + 11.0;
+            cairo_set_source_rgba(cr, 0.09, 0.13, 0.17, 0.62);
+            cairo_rectangle(cr, bx, by, bsz, bsz);
+            cairo_fill(cr);
+            if (sel) {
+                cairo_set_source_rgba(cr, 0.98, 0.78, 0.26, 0.85);
+            } else {
+                cairo_set_source_rgba(cr, 0.88, 0.92, 0.96, 0.45);
+            }
+            cairo_set_line_width(cr, 1.0);
+            cairo_rectangle(cr, bx + 0.5, by + 0.5, bsz - 1.0, bsz - 1.0);
+            cairo_stroke(cr);
+
+            char cnum[16];
+            snprintf(cnum, sizeof(cnum), "%d", i + 1);
+            cairo_select_font_face(cr, "sans-serif", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+            cairo_set_font_size(cr, bsz * 0.68);
+            cairo_text_extents_t cext = {0};
+            cairo_text_extents(cr, cnum, &cext);
+            cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 0.92);
+            cairo_move_to(cr, bx + (bsz - cext.width) * 0.5 - cext.x_bearing, by + bsz * 0.76);
+            cairo_show_text(cr, cnum);
+        }
+
         /* Monitor index badge + name + mode/DPI caption */
         char line1[96], line2[96];
         snprintf(line1, sizeof(line1), "%d: %s%s", i + 1, o->name, o->enabled ? "" : " (OFF)");
@@ -1072,6 +1447,7 @@ static void canvas_pointer_eh(Widget w, XtPointer client_data, XEvent *ev, Boole
             }
             update_controls_from_selected();
             draw_canvas_cb(w, nullptr, nullptr);
+            sync_monitor_identify_overlays(true);
         }
     } else if (ev->type == MotionNotify && g_disp.dragging) {
         int idx = g_disp.drag_idx;
@@ -1108,6 +1484,7 @@ static void select_mon_btn_cb(Widget w, XtPointer client_data, XtPointer call_da
         g_disp.selected = idx;
         update_controls_from_selected();
         draw_canvas_cb(g_disp.canvas, nullptr, nullptr);
+        sync_monitor_identify_overlays(true);
     }
 }
 
@@ -1235,6 +1612,7 @@ static void preset_layout_cb(Widget w, XtPointer client_data, XtPointer call_dat
         query_outputs();
         update_controls_from_selected();
         draw_canvas_cb(g_disp.canvas, nullptr, nullptr);
+        sync_monitor_identify_overlays(true);
         return;
     }
 
@@ -1378,6 +1756,7 @@ static void dialog_button_cb(Widget w, XtPointer client_data, XtPointer call_dat
         g_disp.orig_nl_temp_k = g_disp.nl_temp_k;
         g_disp.orig_nl_start_min = g_disp.nl_start_min;
         g_disp.orig_nl_end_min = g_disp.nl_end_min;
+        sync_monitor_identify_overlays(false);
         XtUnmanageChild(style.displayDialog);
         break;
 
@@ -1397,6 +1776,7 @@ static void dialog_button_cb(Widget w, XtPointer client_data, XtPointer call_dat
         g_disp.orig_nl_start_min = g_disp.nl_start_min;
         g_disp.orig_nl_end_min = g_disp.nl_end_min;
         draw_canvas_cb(g_disp.canvas, nullptr, nullptr);
+        sync_monitor_identify_overlays(true);
         break;
 
     case BTN_CANCEL:
@@ -1413,6 +1793,7 @@ static void dialog_button_cb(Widget w, XtPointer client_data, XtPointer call_dat
             g_disp.orig_nl_start_min, g_disp.orig_nl_end_min,
             g_disp.orig_outs, g_disp.orig_count, true
         );
+        sync_monitor_identify_overlays(false);
         XtUnmanageChild(style.displayDialog);
         break;
 
@@ -1821,6 +2202,22 @@ static void build_display_dialog(Widget shell) {
     XtManageChild(form);
 }
 
+static void display_unmap_cb(Widget w, XtPointer client_data, XtPointer call_data) {
+    (void)w;
+    (void)client_data;
+    (void)call_data;
+    sync_monitor_identify_overlays(false);
+}
+
+static void display_shell_structure_eh(Widget w, XtPointer client_data, XEvent *ev, Boolean *cont) {
+    (void)w;
+    (void)client_data;
+    (void)cont;
+    if (ev && (ev->type == UnmapNotify || ev->type == DestroyNotify)) {
+        sync_monitor_identify_overlays(false);
+    }
+}
+
 static void publish_display_dlg_window(void) {
     if (!style.display || !style.displayDialog) return;
     Widget sh = XtParent(style.displayDialog);
@@ -1834,14 +2231,24 @@ static void publish_display_dlg_window(void) {
 }
 
 void popup_displayBB(Widget shell) {
+    if (!g_disp.ident_atexit_registered) {
+        atexit(cleanup_ident_on_exit);
+        g_disp.ident_atexit_registered = true;
+    }
     if (style.displayDialog == nullptr) {
         _DtTurnOnHourGlass(shell);
         query_outputs();
         build_display_dialog(shell);
+        XtAddCallback(style.displayDialog, XmNunmapCallback, display_unmap_cb, nullptr);
+        XtAddEventHandler(
+            XtParent(style.displayDialog), StructureNotifyMask, False,
+            display_shell_structure_eh, nullptr
+        );
         update_controls_from_selected();
         XtManageChild(style.displayDialog);
         XtRealizeWidget(XtParent(style.displayDialog));
         publish_display_dlg_window();
+        sync_monitor_identify_overlays(true);
         _DtTurnOffHourGlass(shell);
     } else {
         query_outputs();
@@ -1851,6 +2258,7 @@ void popup_displayBB(Widget shell) {
             publish_display_dlg_window();
             raiseWindow(XtWindow(XtParent(style.displayDialog)));
             draw_canvas_cb(g_disp.canvas, nullptr, nullptr);
+            sync_monitor_identify_overlays(true);
         }
     }
 }

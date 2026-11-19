@@ -150,6 +150,7 @@ int main(void) {
 X11_OUT_PROP_C = r"""
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
+#include <X11/Xutil.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -157,6 +158,55 @@ int main(int argc, char **argv) {
     Display *dpy = XOpenDisplay(NULL);
     if (!dpy) return 1;
     Window root = DefaultRootWindow(dpy);
+
+    if (argc >= 2 && strcmp(argv[1], "--get-ident") == 0) {
+        Atom ia = XInternAtom(dpy, "_DT_MONITOR_IDENTIFY_STATE", True);
+        Atom at = None; int af = 0; unsigned long n = 0, r = 0; unsigned char *d = NULL;
+        if (ia != None && XGetWindowProperty(dpy, root, ia, 0, 1024, False, AnyPropertyType, &at, &af, &n, &r, &d) == Success && d) {
+            fwrite(d, 1, n, stdout);
+            XFree(d);
+        }
+        XCloseDisplay(dpy);
+        return 0;
+    }
+
+    if (argc >= 3 && strcmp(argv[1], "--dlg-ipc") == 0) {
+        Atom da = XInternAtom(dpy, "_DTSTYLE_DISPLAY_DLG_WIN", True);
+        Atom at = None; int af = 0; unsigned long n = 0, r = 0; unsigned char *p = NULL;
+        if (da != None && XGetWindowProperty(dpy, root, da, 0, 1, False, XA_WINDOW, &at, &af, &n, &r, &p) == Success && p && n >= 1) {
+            Window dlg = *(Window *)p;
+            XFree(p);
+            Atom ipc = XInternAtom(dpy, "_DTSTYLE_DISPLAY_IPC", False);
+            XChangeProperty(dpy, dlg, ipc, XA_STRING, 8, PropModeReplace, (const unsigned char *)argv[2], (int)strlen(argv[2]));
+            XSync(dpy, False);
+        }
+        XCloseDisplay(dpy);
+        return 0;
+    }
+
+    if (argc >= 2 && strcmp(argv[1], "--probe-x11-corner") == 0) {
+        int scr = DefaultScreen(dpy);
+        int sw = DisplayWidth(dpy, scr);
+        int rx = sw - 136 - 28;
+        int ry = 28;
+        XImage *img = XGetImage(dpy, root, rx, ry, 136, 136, AllPlanes, ZPixmap);
+        if (!img) { XCloseDisplay(dpy); return 2; }
+        int white_px = 0, mid_px = 0;
+        for (int y = 0; y < 136; ++y) {
+            for (int x = 0; x < 136; ++x) {
+                unsigned long px = XGetPixel(img, x, y);
+                int rr = (px >> 16) & 0xff;
+                int gg = (px >> 8) & 0xff;
+                int bb = px & 0xff;
+                if (rr > 215 && gg > 215 && bb > 215) white_px++;
+                else if (rr > 10 && rr < 140 && bb > 15 && bb < 160) mid_px++;
+            }
+        }
+        XDestroyImage(img);
+        printf("WHITE=%d MID=%d\n", white_px, mid_px);
+        XCloseDisplay(dpy);
+        return 0;
+    }
 
     if (argc >= 2) {
         Atom mwm = XInternAtom(dpy, "_MOTIF_WM_INFO", True);
@@ -182,6 +232,11 @@ int main(int argc, char **argv) {
     return 0;
 }
 """
+
+
+def count_bright_white_rgb(img: Image.Image) -> int:
+    raw = img.convert("RGB").tobytes()
+    return sum(1 for i in range(0, len(raw), 3) if raw[i] > 215 and raw[i + 1] > 215 and raw[i + 2] > 215)
 
 
 def main() -> int:
@@ -330,12 +385,34 @@ def main() -> int:
             if dtstyle_bin.is_file() and "Style Manager - Display & Monitors" not in probe_out:
                 raise SystemExit(f"zwlr_foreign_toplevel_manager_v1 did not report Display & Monitors dialog:\n{probe_out}")
 
-            # Capture primary monitor screenshot showing Style Manager + Display & Monitors dialog
+            # Capture primary & secondary monitor screenshots showing Style Manager + corner screen numbers 1 & 2
             shot = work / "wp10-dtstyle-monitors.png"
+            shot1 = work / "wp10-dtstyle-head1.png"
             subprocess.run(["grim", "-o", "HEADLESS-2", str(shot)], env=c_env, check=True)
+            subprocess.run(["grim", "-o", "HEADLESS-1", str(shot1)], env=c_env, check=True)
             with Image.open(shot) as im:
                 if im.size != (1280, 900):
                     raise SystemExit(f"unexpected HEADLESS-2 screenshot size: {im.size}")
+                if dtstyle_bin.is_file():
+                    crop2 = im.crop((im.width - 164, 28, im.width - 28, 164))
+                    white2 = count_bright_white_rgb(crop2)
+                    if white2 < 120:
+                        raise SystemExit(f"expected corner screen number glyph on HEADLESS-2, got white_px={white2}")
+            if dtstyle_bin.is_file():
+                ident_state = subprocess.check_output([str(xprop_bin), "--get-ident"], env=c_env, text=True)
+                if "active=1" not in ident_state or "HEADLESS-1=" not in ident_state or "HEADLESS-2=" not in ident_state or "count=2" not in ident_state:
+                    raise SystemExit(f"expected active dual-monitor _DT_MONITOR_IDENTIFY_STATE, got:\n{ident_state}")
+                with Image.open(shot1) as im1:
+                    # HEADLESS-1 was scaled to 1.5x earlier, so grim image is physical mode size
+                    sc1 = im1.width / (im1.width / 1.5)
+                    bx0 = max(0, int(round(im1.width - 164 * sc1)))
+                    by0 = int(round(28 * sc1))
+                    bx1 = max(bx0 + 10, int(round(im1.width - 28 * sc1)))
+                    by1 = min(im1.height, int(round(164 * sc1)))
+                    crop1 = im1.crop((bx0, by0, bx1, by1))
+                    white1 = count_bright_white_rgb(crop1)
+                    if white1 < 120:
+                        raise SystemExit(f"expected corner screen number glyph on HEADLESS-1, got white_px={white1}")
 
             # 3. Verify live dtstyle IPC rotation (90 deg) + custom mode (1440x900 @ 96 DPI -> 900x1440 logical!)
             subprocess.run(
@@ -358,6 +435,64 @@ def main() -> int:
             probe_scaled = subprocess.check_output([str(probe_bin)], env=c_env, text=True)
             if "450x720" not in probe_scaled:
                 raise SystemExit(f"expected 200% scaled 450x720 logical size on HEADLESS-1:\n{probe_scaled}")
+
+            # 3c. Verify closing Display & Monitors dialog clears Wayland corner overlays immediately
+            if dtstyle_bin.is_file():
+                subprocess.run([str(xprop_bin), "--dlg-ipc", "cancel"], env=c_env, check=True)
+                time.sleep(0.4)
+                ident_closed = subprocess.check_output([str(xprop_bin), "--get-ident"], env=c_env, text=True)
+                if ident_closed.strip() != "active=0":
+                    raise SystemExit(f"expected active=0 after closing Display dialog, got: {ident_closed!r}")
+                shot_closed = work / "wp10-dtstyle-closed.png"
+                subprocess.run(["grim", "-o", "HEADLESS-2", str(shot_closed)], env=c_env, check=True)
+                with Image.open(shot_closed) as imc:
+                    cropc = imc.crop((imc.width - 164, 28, imc.width - 28, 164))
+                    whitec = count_bright_white_rgb(cropc)
+                    if whitec > 20:
+                        raise SystemExit(f"Wayland corner number badge remained after close (white_px={whitec})")
+
+            # 3d. Verify X11 / XLibre corner screen-number overlay window under Xvfb
+            if dtstyle_bin.is_file() and shutil.which("Xvfb"):
+                x11_disp = ":94"
+                p_xvfb = subprocess.Popen(
+                    ["Xvfb", x11_disp, "-screen", "0", "1280x900x24", "-nolisten", "tcp"],
+                    env=env,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    start_new_session=True,
+                )
+                procs.append(p_xvfb)
+                time.sleep(0.8)
+                x11_env = {**env, "DISPLAY": x11_disp, "XDG_SESSION_TYPE": "x11"}
+                x11_env.pop("WAYLAND_DISPLAY", None)
+                # Paint a distinctive desktop root color so semi-transparent blend is verifiable
+                if shutil.which("xsetroot"):
+                    subprocess.run(["xsetroot", "-solid", "#3c6e8c"], env=x11_env, check=False)
+                p_dtstyle_x11 = subprocess.Popen(
+                    [str(dtstyle_bin), "-display_dialog", "-geometry", "+36+28"],
+                    env=x11_env,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    start_new_session=True,
+                )
+                procs.append(p_dtstyle_x11)
+                x11_ident = ""
+                for _ in range(30):
+                    x11_ident = subprocess.check_output([str(xprop_bin), "--get-ident"], env=x11_env, text=True)
+                    if "active=1" in x11_ident:
+                        break
+                    time.sleep(0.1)
+                if "active=1" not in x11_ident or "count=1" not in x11_ident:
+                    raise SystemExit(f"X11 Display dialog did not activate corner screen-number overlay: {x11_ident!r}")
+                time.sleep(0.2)
+                x11_px = subprocess.check_output([str(xprop_bin), "--probe-x11-corner"], env=x11_env, text=True)
+                if "WHITE=0" in x11_px:
+                    raise SystemExit(f"X11 corner screen-number overlay missing white digit pixels: {x11_px}")
+                subprocess.run([str(xprop_bin), "--dlg-ipc", "cancel"], env=x11_env, check=True)
+                time.sleep(0.3)
+                x11_ident_after = subprocess.check_output([str(xprop_bin), "--get-ident"], env=x11_env, text=True)
+                if x11_ident_after.strip() != "active=0":
+                    raise SystemExit(f"X11 corner screen-number overlay did not clear on close: {x11_ident_after!r}")
 
             # 4. Verify xdg-desktop-portal-wlr connects to dtwm-wayland + PipeWire and registers D-Bus portal backend
             wlr_portal_paths = (

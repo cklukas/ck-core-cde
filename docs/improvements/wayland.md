@@ -299,6 +299,13 @@ panel instrumentation:
   Wayland it reads `_DT_WAYLAND_OUTPUTS` and applies live changes via
   `f.set_output_layout`; on X11/XLibre it drives `libXrandr`
   (`XRRGetScreenResourcesCurrent` / `XRRSetCrtcConfig` and per-output `DPI`).
+  While the dialog is open, a semi-transparent, click-through 3D-beveled corner
+  badge displaying each monitor's large number (`1`, `2`, `3`, ...) and output
+  name (matching the corner badge in the virtual monitor arrangement canvas,
+  with a gold highlight rim on the selected monitor) appears at the top-right
+  of every active screen on both Wayland (`f.identify_outputs` in
+  `layer_overlay_tree`) and X11/XLibre (`ShapeInput` `overrideShell` overlays),
+  and disappears automatically when the dialog closes.
 - **Standard Wayland output & portal protocols (`cde_output_mgmt.c`):**
   `dtwm-wayland` exposes `zwlr_output_manager_v1` (enabling `wlr-randr` and
   `kanshi`), `zwlr_output_power_manager_v1`, `zxdg_output_manager_v1`,

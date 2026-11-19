@@ -1,4 +1,19 @@
 2026-11-19
+- Show semi-transparent corner screen-identification numbers (`1`, `2`, `3`, ...)
+  on every active display while **Style Manager - Display & Monitors** is open,
+  across both Wayland and X11 / XLibre (`cde/programs/dtwm/wayland/cde_output_mgmt.c`,
+  `cde/programs/dtstyle/Display.c`,
+  `cde/programs/dtwm/tests/check-dtwm-wayland-wp10.py`):
+  - On Wayland (`f.identify_outputs`), `dtwm-wayland` renders HiDPI-scaled,
+    click-through (`point_accepts_input = false`) semi-transparent 3D-beveled
+    corner badges in `layer_overlay_tree` showing each output's number and name
+    (with a gold selection rim on the currently selected monitor matching the
+    virtual monitor preview, automatic reposition/rescale on **Apply**, and
+    automatic watchdog cleanup if `dtstyle` closes).
+  - On X11 / XLibre, `dtstyle` pops up click-through (`ShapeInput`)
+    `overrideShell` corner badges composited over captured root pixels for
+    each active RandR output, and dismisses them automatically when the dialog
+    closes.
 - Add `CkBrowser` (`Web Browser`, `ck-browser`) and CK Core application actions
   to curated Application Manager folders, auto-gray uninstalled package-registry
   icons with a bottom-right royal-blue download arrow badge (`↓`) wired to
