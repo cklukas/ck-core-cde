@@ -428,7 +428,7 @@ StartMsgServer(void)
     smGD.requests2Handle = 0;
     if (status == TT_OK) {
 	smGD.requests2Handle = tt_pattern_create();
-	tt_pattern_category_set( smGD.requests2Handle, TT_HANDLE );
+	tt_pattern_category_set( smGD.requests2Handle, TT_HANDLE_PUSH );
 	tt_pattern_class_add( smGD.requests2Handle, TT_REQUEST );
 	tt_pattern_scope_add( smGD.requests2Handle, TT_SESSION );
 	sessId = tt_default_session();

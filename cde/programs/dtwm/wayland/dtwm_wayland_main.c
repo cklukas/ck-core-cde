@@ -1697,7 +1697,17 @@ static xcb_window_t find_live_dtsession_window_xcb(DtwmServer *server) {
     xcb_get_window_attributes_reply_t *arep = xcb_get_window_attributes_reply(server->xcb_conn, ack, nullptr);
     if (!arep) return XCB_WINDOW_NONE;
     free(arep);
-    return sm_win;
+
+    xcb_atom_t sm_state = intern_xcb_atom_now(server->xcb_conn, "_DT_SM_STATE_INFO", true);
+    if (sm_state == XCB_ATOM_NONE) return XCB_WINDOW_NONE;
+    xcb_get_property_cookie_t sck = xcb_get_property(
+        server->xcb_conn, 0, sm_win, sm_state, sm_state, 0, 16
+    );
+    xcb_get_property_reply_t *srep = xcb_get_property_reply(server->xcb_conn, sck, nullptr);
+    if (!srep) return XCB_WINDOW_NONE;
+    bool has_state = xcb_get_property_value_length(srep) > 0;
+    free(srep);
+    return has_state ? sm_win : XCB_WINDOW_NONE;
 }
 
 static bool has_live_ttsession_prop_xcb(DtwmServer *server) {

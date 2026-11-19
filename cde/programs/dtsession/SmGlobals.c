@@ -2542,6 +2542,11 @@ SmExit (
 	  smXSMP.saveState.shutdown &&
 	  !smXSMP.saveState.shutdownCanceled)
 	XSMPExit ();
+      if (smGD.loggingOut && smGD.display && XaVsmInfo != None)
+	{
+	  XDeleteProperty (smGD.display, RootWindow(smGD.display, 0), XaVsmInfo);
+	  XFlush (smGD.display);
+	}
       SmWaylandShutdown ();
       _exit(exitStatus);
     }

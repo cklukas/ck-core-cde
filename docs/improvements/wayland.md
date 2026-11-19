@@ -220,12 +220,20 @@ across native Wayland and XWayland clients simultaneously:
 `cde_session_lock.c`, and `dtstyle` integrate CDE's session lifecycle, screen
 lock, and Style Manager controls natively with Wayland:
 
-- **`dtsession --wayland` session bootstrap:** Starts `dtwm-wayland` if
-  `WAYLAND_DISPLAY` is not yet active, ensures `ttsession -s` is running with
-  `_SUN_TT_SESSION` mirrored into `TT_SESSION` for both Wayland and XWayland
-  clients, loads `xrdb` resources and the CDE Color Server (`InitializeDtcolor`),
-  skips X11 `dtwm` fork while keeping XSMP and session restore active, and
-  terminates a managed `dtwm-wayland` instance cleanly on logout;
+- **`dtsession --wayland` session bootstrap and logout lifecycle:** Starts
+  `dtwm-wayland` if `WAYLAND_DISPLAY` is not yet active, ensures `ttsession -s`
+  is running with `_SUN_TT_SESSION` mirrored into `TT_SESSION` for both Wayland
+  and XWayland clients, loads `xrdb` resources and the CDE Color Server
+  (`InitializeDtcolor`), skips X11 `dtwm` fork while keeping XSMP and session
+  restore active, and terminates `dtwm-wayland` cleanly on logout whether
+  `dtwm-wayland` was spawned by `dtsession` (`SIGTERM`) or started externally
+  before `dtsession --wayland` (`_DT_WM_REQUEST` `f.quit_mwm`). `dtsession`
+  registers its `XSession_Exit` handler with `TT_HANDLE_PUSH` priority while
+  `dtwm-panel` provides a `TT_HANDLE` fallback (verifying live
+  `_DT_SM_WINDOW_INFO` window state), so `ExitSession` from the Front Panel,
+  Workspace Menu, or `dtaction ExitSession` exits cleanly without
+  `TT_ERR_NO_MATCH` even in standalone `dtwm-wayland` sessions or if `dtsession`
+  exited prematurely;
 - **`ext-session-lock-v1` and `ext-idle-notify-v1` screen lock:**
   `dtwm-wayland` implements `ext_session_lock_manager_v1` and
   `ext_idle_notifier_v1`, disabling all non-lock desktop/application/overlay
@@ -653,10 +661,12 @@ atomically once both the Wayland socket and rootless `Xwayland` are ready.
   auto-heal, stationary-click `wl_pointer` focus restoration, and post-modeset
   HiDPI two-click + press-drag-release menu activation),
   `check-dtwm-wayland-busy-light.py` (Front Panel `CONTROL Busy` `Fplite` /
-  `FpliteY` blink activation and automatic clear on client map), and
+  `FpliteY` blink activation and automatic clear on client map),
   `check-dtappintegrate-curated.py` (Application Manager installed vs.
-  auto-gray + blue download arrow badge vs. hidden stub curation) run
-  automatically under `make check`.
+  auto-gray + blue download arrow badge vs. hidden stub curation), and
+  `check-dtwm-wayland-exit-session.py` (`f.quit_mwm`, external-compositor
+  `dtsession --wayland` logout, and degraded/standalone `XSession_Exit`
+  fallback) run automatically under `make check`.
 - **Signed Ubuntu LTS `.deb` and APT repository qualification (`WP-08`):**
   `scripts/build-ubuntu-debs.py --verify-install` packages `ck-core-motif9`,
   `ck-core-fs-lib`, `ck-core-cde`, `ck-core-dtlogin`, and `ck-core-apps` into a

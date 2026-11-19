@@ -24,6 +24,7 @@ EXTRA_DIST = tests/check-property-readers.py tests/property-client.c \
              tests/check-dtwm-wayland-menus.py \
              tests/check-dtwm-wayland-busy-light.py \
              tests/check-dtappintegrate-curated.py \
+             tests/check-dtwm-wayland-exit-session.py \
              wayland/protocols/wlr-layer-shell-unstable-v1.xml \
              wayland/protocols/wlr-output-power-management-unstable-v1.xml \
              wayland/protocols/wlr-foreign-toplevel-management-unstable-v1.xml \
@@ -58,6 +59,7 @@ if BUILD_DTWM_WAYLAND
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp20.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-menus.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-busy-light.py --compositor ./dtwm-wayland
+	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-exit-session.py --compositor ./dtwm-wayland
 endif
 
 noinst_DATA = sys.dtwmrc Dtwm.defs
@@ -146,7 +148,7 @@ dtwm_panel_SOURCES = wayland/WmFpWayland.c \
                      DataBaseLoad.c  PanelS.c        Parse.c \
                      PopupMenu.c     Session.c       UI.c \
                      WmFP.c          WmParse.c
-dtwm_panel_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)
+dtwm_panel_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir) -DDTWM_WAYLAND_PANEL=1
 dtwm_panel_LDADD = $(DTCLIENTLIBS) $(XTOOLLIB) $(XCURSORLIB)
 if SOLARIS
 dtwm_panel_LDADD += -lintl -lresolv

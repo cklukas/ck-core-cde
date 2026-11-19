@@ -745,9 +745,59 @@ void SmWaylandReleaseSessionLock(void) {
     wl_display_roundtrip(g_smwl.wl_dpy);
 }
 
+static int ignore_smwl_x_error(Display *dpy, XErrorEvent *ev) {
+    (void)dpy;
+    (void)ev;
+    return 0;
+}
+
+static void request_external_compositor_quit(void) {
+    Display *dpy = g_smwl.x_dpy ? g_smwl.x_dpy : smGD.display;
+    Boolean opened_local = False;
+    if (!dpy) {
+        dpy = XOpenDisplay(nullptr);
+        opened_local = (dpy != nullptr) ? True : False;
+    }
+    if (!dpy) return;
+
+    int (*prev_handler)(Display *, XErrorEvent *) = XSetErrorHandler(ignore_smwl_x_error);
+    Window root = DefaultRootWindow(dpy);
+    Atom mwm_info = XInternAtom(dpy, "_MOTIF_WM_INFO", True);
+    Atom wm_req = XInternAtom(dpy, "_DT_WM_REQUEST", False);
+    if (mwm_info != None && wm_req != None) {
+        Atom actual = None;
+        int fmt = 0;
+        unsigned long nitems = 0, after = 0;
+        unsigned char *data = nullptr;
+        Window wm_win = None;
+        if (XGetWindowProperty(dpy, root, mwm_info, 0, 2, False, mwm_info,
+                               &actual, &fmt, &nitems, &after, &data) == Success && data) {
+            if (fmt == 32 && nitems >= 2) {
+                const long *vals = (const long *)data;
+                wm_win = (Window)vals[1];
+            }
+            XFree(data);
+        }
+        if (wm_win != None) {
+            static const char quit_cmd[] = "f.quit_mwm";
+            XChangeProperty(dpy, wm_win, wm_req, XA_STRING, 8, PropModeAppend,
+                            (const unsigned char *)quit_cmd, (int)sizeof(quit_cmd));
+            XSync(dpy, False);
+        }
+    }
+    XSetErrorHandler(prev_handler);
+
+    if (opened_local) {
+        XCloseDisplay(dpy);
+    }
+}
+
 void SmWaylandShutdown(void) {
     if (g_smwl.active_lock) {
         SmWaylandReleaseSessionLock();
+    }
+    if (g_smwl.compositor_pid <= 0 && SmWaylandActive() && smGD.loggingOut) {
+        request_external_compositor_quit();
     }
     if (g_smwl.idle_notif) {
         ext_idle_notification_v1_destroy(g_smwl.idle_notif);

@@ -73,6 +73,10 @@
 #include "WmResParse.h"
 #include "WmFunction.h"
 
+#ifdef DTWM_WAYLAND_PANEL
+extern void WmFpWaylandInvokeExitSession(Widget w);
+#endif
+
 
 /************************************************************************
  *
@@ -1712,6 +1716,12 @@ PushCB (Widget    w,
 			WmDtHelpMode();
                         unpost_subpanel = False;
                      }
+#ifdef DTWM_WAYLAND_PANEL
+                     else if (strcmp (push_action->action_name, "ExitSession") == 0)
+                     {
+                        WmFpWaylandInvokeExitSession (panel.shell);
+                     }
+#endif
                      else
                      {
                         DtActionInvoke (panel.shell, 

@@ -287,6 +287,32 @@
     `ck-status` native Motif WPA2-PSK + WPA-Enterprise (`802.1X` PEAP/MSCHAPv2)
     Wi-Fi onboarding, VPN activation with `SecretAgent.GetSecrets`, BlueZ
     `Agent1` (`RequestConfirmation`) pairing/trust/forget, and MPRIS transport.
+- Terminate externally-started `dtwm-wayland` compositors cleanly on `dtsession --wayland`
+  logout and handle degraded / standalone Wayland `ExitSession` requests without
+  `TT_ERR_NO_MATCH` (`cde/programs/dtsession/SmCommun.c`,
+  `cde/programs/dtsession/SmGlobals.c`, `cde/programs/dtsession/SmUI.c`,
+  `cde/programs/dtsession/SmWayland.c`, `cde/programs/dtwm/Makefile.am`,
+  `cde/programs/dtwm/Callback.c`, `cde/programs/dtwm/wayland/WmFpWayland.c`,
+  `cde/programs/dtwm/wayland/cde_accessibility.c`,
+  `cde/programs/dtwm/wayland/cde_workspace.c`,
+  `cde/programs/dtwm/wayland/dtwm_wayland.h`,
+  `cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `cde/programs/dtwm/tests/check-dtwm-wayland-exit-session.py`,
+  `docs/improvements/wayland.md`):
+  - Implement `f.quit_mwm` in `dtwm-wayland`'s `_DT_WM_REQUEST` handler, clear
+    `_DT_SM_WINDOW_INFO` on logout, and send `f.quit_mwm` from
+    `SmWaylandShutdown()` whenever `dtsession` completes logout against a
+    pre-existing `dtwm-wayland` compositor (`compositor_pid == 0`), so
+    `dtsession` no longer exits while leaving `dtwm-wayland`, `dtwm-panel`, and
+    `ttsession` orphaned.
+  - Register `dtsession`'s ToolTalk session-manager pattern as `TT_HANDLE_PUSH`
+    and add a lower-priority `TT_HANDLE` fallback for `XSession_Exit` (plus direct
+    `ExitSession` fallback in `dtwm-panel` and the root Workspace Menu) that
+    verifies both live `_DT_SM_WINDOW_INFO` window existence and
+    `_DT_SM_STATE_INFO` ownership (preventing recycled XWayland XIDs from
+    masquerading as `dtsession`) and cleanly terminates `dtwm-wayland` when
+    `dtsession` is absent or has already exited, while detaching backend
+    listeners cleanly if the `wlroots` seat/DRM backend closes first.
 - Redraw `DtHelp` TOC and topic display areas cleanly across live Style Manager
   color palette and appearance-profile changes without requiring a manual window
   resize (`cde/include/DtI/DisplayAreaP.h`, `cde/lib/DtHelp/Callbacks.c`,

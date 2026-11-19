@@ -1138,6 +1138,11 @@ static void handle_dt_wm_request_item(DtwmServer *server, const char *cmd) {
         dtwm_begin_move_panel(server);
         return;
     }
+    if (strncmp(cmd, "f.quit_mwm", 10) == 0 &&
+        (cmd[10] == '\0' || isspace((unsigned char)cmd[10]))) {
+        wl_display_terminate(server->wl_display);
+        return;
+    }
     if (strncmp(cmd, "f.restart", 9) == 0) {
         if (server->panel_pid > 0) {
             kill(server->panel_pid, SIGTERM);

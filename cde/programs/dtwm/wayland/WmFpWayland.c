@@ -28,6 +28,7 @@
 #include <Dt/MacrosP.h>
 #include <Dt/Message.h>
 #include <Dt/MsgLog.h>
+#include <Dt/SessionM.h>
 #include <Dt/SvcTT.h>
 #include <Dt/Wsm.h>
 #include <Dt/WsmM.h>
@@ -779,11 +780,13 @@ static void fp_menu_minimize_cb(Widget w, XtPointer client_data, XtPointer call_
     F_Minimize(nullptr, &g_panelClientData, nullptr);
 }
 
+void WmFpWaylandInvokeExitSession(Widget w);
+
 static void fp_menu_exit_cb(Widget w, XtPointer client_data, XtPointer call_data) {
     (void)w;
     (void)client_data;
     (void)call_data;
-    DtActionInvoke(panel.shell, "ExitSession", nullptr, 0, nullptr, nullptr, nullptr, 1, nullptr, nullptr);
+    WmFpWaylandInvokeExitSession(panel.shell);
 }
 
 Boolean F_Post_FpMenu(String args, ClientData *pCD, XEvent *event) {
@@ -992,6 +995,85 @@ static void emit_tt_workspace_modified(int screen_num, Atom ws_atom, int reason)
     tt_message_destroy(msg);
 }
 
+static bool g_smXerrTrapped = false;
+
+static int trap_sm_x_error(Display *dpy, XErrorEvent *ev) {
+    (void)dpy;
+    (void)ev;
+    g_smXerrTrapped = true;
+    return 0;
+}
+
+static bool is_dtsession_alive(Display *dpy, Window *out_sm_win) {
+    if (out_sm_win) *out_sm_win = None;
+    if (!dpy) return false;
+    Window sm_win = None;
+    if (_DtGetSmWindow(dpy, DefaultRootWindow(dpy), &sm_win) != Success || sm_win == None) {
+        return false;
+    }
+    XWindowAttributes wa;
+    SmStateInfo sm_state;
+    memset(&wa, 0, sizeof(wa));
+    memset(&sm_state, 0, sizeof(sm_state));
+    g_smXerrTrapped = false;
+    int (*prev)(Display *, XErrorEvent *) = XSetErrorHandler(trap_sm_x_error);
+    Status ok = XGetWindowAttributes(dpy, sm_win, &wa);
+    Status state_ok = ok ? _DtGetSmState(dpy, sm_win, &sm_state) : BadWindow;
+    XSync(dpy, False);
+    XSetErrorHandler(prev);
+    if (!ok || state_ok != Success || g_smXerrTrapped) {
+        return false;
+    }
+    if (out_sm_win) *out_sm_win = sm_win;
+    return true;
+}
+
+static void fallback_exit_without_tt_sm(Display *dpy) {
+    if (!dpy) return;
+    Window sm_win = None;
+    if (is_dtsession_alive(dpy, &sm_win) && sm_win != None) {
+        Atom proto = XInternAtom(dpy, _XA_DT_SM_WM_PROTOCOL, False);
+        Atom exit_a = XInternAtom(dpy, _XA_DT_WM_EXIT_SESSION, False);
+        if (proto != None && exit_a != None) {
+            XClientMessageEvent ev;
+            memset(&ev, 0, sizeof(ev));
+            ev.type = ClientMessage;
+            ev.window = sm_win;
+            ev.message_type = proto;
+            ev.format = 32;
+            ev.data.l[0] = (long)exit_a;
+            ev.data.l[1] = (long)CurrentTime;
+            g_smXerrTrapped = false;
+            int (*prev)(Display *, XErrorEvent *) = XSetErrorHandler(trap_sm_x_error);
+            XSendEvent(dpy, sm_win, False, NoEventMask, (XEvent *)&ev);
+            XSync(dpy, False);
+            XSetErrorHandler(prev);
+            if (!g_smXerrTrapped) {
+                return;
+            }
+        }
+    }
+    send_dt_wm_request(dpy, "f.quit_mwm");
+}
+
+static Tt_callback_action exit_session_tt_reply_cb(Tt_message m, Tt_pattern p) {
+    (void)p;
+    Tt_state st = tt_message_state(m);
+    if (st == TT_HANDLED) {
+        tttk_message_destroy(m);
+        return TT_CALLBACK_PROCESSED;
+    }
+    if (st == TT_FAILED) {
+        Tt_status status = tt_message_status(m);
+        tttk_message_destroy(m);
+        if (status != TT_DESKTOP_ECANCELED) {
+            fallback_exit_without_tt_sm(wmGD.display);
+        }
+        return TT_CALLBACK_PROCESSED;
+    }
+    return TT_CALLBACK_CONTINUE;
+}
+
 static Tt_callback_action wayland_wsm_tt_request_cb(Tt_message m, Tt_pattern p) {
     (void)p;
     if (tt_message_state(m) != TT_SENT) {
@@ -1092,6 +1174,13 @@ static Tt_callback_action wayland_wsm_tt_notice_cb(Tt_message m, Tt_pattern p) {
             XFlush(wmGD.display);
         }
         handled = true;
+    } else if (strcmp(op, "XSession_Exit") == 0) {
+        /* Fallback when dtsession's TT_HANDLE_PUSH handler is absent */
+        tt_free(op);
+        tt_message_reply(m);
+        tt_message_destroy(m);
+        fallback_exit_without_tt_sm(dpy);
+        return TT_CALLBACK_PROCESSED;
     }
 
     tt_free(op);
@@ -1156,6 +1245,7 @@ static void register_wayland_wsm_tooltalk_handlers(Widget topShell) {
     tt_pattern_op_add(pat, "DtWorkspace_Delete");
     tt_pattern_op_add(pat, "DtPanel_Restore");
     tt_pattern_op_add(pat, "GetWsmClients");
+    tt_pattern_op_add(pat, "XSession_Exit");
     tt_pattern_callback_add(pat, wayland_wsm_tt_request_cb);
     Tt_status notice_st = tt_pattern_register(notice_pat);
     Tt_status req_st = tt_pattern_register(pat);
@@ -1170,6 +1260,32 @@ static void register_wayland_wsm_tooltalk_handlers(Widget topShell) {
         tt_pattern_destroy(notice_pat);
         tt_pattern_destroy(pat);
     }
+}
+
+void WmFpWaylandInvokeExitSession(Widget w) {
+    Display *dpy = wmGD.display ? wmGD.display : (w ? XtDisplay(w) : nullptr);
+    if (!dpy) return;
+    if (!is_dtsession_alive(dpy, nullptr)) {
+        send_dt_wm_request(dpy, "f.quit_mwm");
+        return;
+    }
+    Widget shell = w ? w : panel.shell;
+    if (!g_ttWsmRegistered && shell) {
+        ensure_ttsession_running(dpy, nullptr);
+        register_wayland_wsm_tooltalk_handlers(shell);
+    }
+    if (shell && _DtSvcInitToolTalk(shell) == TT_OK) {
+        Tt_message req = tttk_message_create(
+            nullptr, TT_REQUEST, TT_SESSION, nullptr, "XSession_Exit", exit_session_tt_reply_cb
+        );
+        if (tt_ptr_error(req) == TT_OK && req) {
+            if (tt_message_send(req) == TT_OK) {
+                return;
+            }
+            tttk_message_destroy(req);
+        }
+    }
+    fallback_exit_without_tt_sm(dpy);
 }
 
 static void retry_tt_wsm_timer_cb(XtPointer client_data, XtIntervalId *id) {

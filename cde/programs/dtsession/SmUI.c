@@ -1285,6 +1285,7 @@ ImmediateExit(
 	    StartEtc(True);    /* run sessionexit */
 	}
 
+	smGD.loggingOut = True;
 	_DtReleaseLock(smGD.display, SM_RUNNING_LOCK);
 	SM_EXIT(0);
     }
