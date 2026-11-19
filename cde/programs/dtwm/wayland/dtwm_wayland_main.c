@@ -3799,6 +3799,40 @@ static void xwayland_request_configure(struct wl_listener *listener, void *data)
         wlr_xwayland_surface_configure(xs, (int16_t)nx, (int16_t)ny, nw, nh);
         return;
     }
+    if (view->is_panel) {
+        if (ev->mask & XCB_CONFIG_WINDOW_WIDTH) view->client_w = ev->width;
+        if (ev->mask & XCB_CONFIG_WINDOW_HEIGHT) view->client_h = ev->height;
+        dtwm_update_front_panel(view->server);
+        dtwm_icons_relayout(view->server);
+        return;
+    }
+    if (view->is_subpanel && !view->subpanel_torn_off) {
+        int outer_w = 0, outer_h = 0;
+        if (ev->mask & XCB_CONFIG_WINDOW_WIDTH) view->client_w = ev->width;
+        if (ev->mask & XCB_CONFIG_WINDOW_HEIGHT) view->client_h = ev->height;
+        dtwm_view_outer_size(view, &outer_w, &outer_h);
+        if (ev->mask & XCB_CONFIG_WINDOW_X) view->x = ev->x;
+        struct wlr_output *pout = wlr_output_layout_output_at(
+            view->server->output_layout, view->server->panel_x + 8, view->server->panel_y
+        );
+        if (pout) {
+            struct wlr_box obox = {0};
+            wlr_output_layout_get_box(view->server->output_layout, pout, &obox);
+            if (obox.width > 0) {
+                if (view->x + outer_w > obox.x + obox.width) view->x = obox.x + obox.width - outer_w;
+                if (view->x < obox.x) view->x = obox.x;
+            }
+        }
+        int py = (view->server->panel_h > 0) ? view->server->panel_y : 640;
+        view->y = py - outer_h;
+        if (view->y < 0) view->y = 0;
+        if (view->frame_tree) {
+            wlr_scene_node_set_position(&view->frame_tree->node, view->x, view->y);
+        }
+        sync_xwayland_client_pos(view);
+        dtwm_view_update_frame(view);
+        return;
+    }
     int l, t, r, b;
     dtwm_view_insets(view, &l, &t, &r, &b);
     int nx = (ev->mask & XCB_CONFIG_WINDOW_X) ? (ev->x - l) : view->x;

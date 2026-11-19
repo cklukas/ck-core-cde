@@ -1343,13 +1343,23 @@ int main(int argc, char **argv) {
     if (g_mwmWin != None) {
         XSelectInput(dpy, g_mwmWin, PropertyChangeMask);
     }
-    XSelectInput(dpy, g_fpScreen.rootWindow, SubstructureNotifyMask | PropertyChangeMask);
+    XSelectInput(
+        dpy, g_fpScreen.rootWindow,
+        StructureNotifyMask | SubstructureNotifyMask | PropertyChangeMask
+    );
     scan_existing_embedded_clients(dpy);
     watch_trash_window_events(dpy);
 
     while (!XtAppGetExitFlag(wmGD.mwmAppContext)) {
         XEvent ev;
         XtAppNextEvent(wmGD.mwmAppContext, &ev);
+        if (ev.type == ConfigureNotify && ev.xconfigure.window == g_fpScreen.rootWindow) {
+            Screen *scr = ScreenOfDisplay(dpy, g_fpScreen.screen);
+            if (scr && ev.xconfigure.width > 0 && ev.xconfigure.height > 0) {
+                scr->width = ev.xconfigure.width;
+                scr->height = ev.xconfigure.height;
+            }
+        }
         if (ev.type == PropertyNotify &&
             ev.xproperty.window == g_fpScreen.rootWindow &&
             ev.xproperty.state == PropertyNewValue) {

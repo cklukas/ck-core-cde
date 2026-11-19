@@ -1,4 +1,13 @@
 2026-11-19
+- Keep the docked CDE Front Panel (`dtwm-panel`) and subpanels anchored to the
+  active Wayland output's logical geometry across HiDPI output scale/mode
+  changes (`cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `cde/programs/dtwm/wayland/WmFpWayland.c`):
+  - Re-center `panel_view` via `dtwm_update_front_panel()` on Xwayland
+    `ConfigureRequest` events (such as embedded control attachment) instead of
+    applying stale pre-scale X11 root coordinates, clamp docked subpanels to
+    the output box, and refresh `Screen` width/height in `dtwm-panel` on root
+    `ConfigureNotify`.
 - Adopt beveled, checkerboard-dithered 16-color CDE toolbar icons and bump
   `.ckgit/motif-revision` to `d8be57337d3da67b958ced1f567b1820e2459912`
   (`cde/programs/icons/toolbar/`, `cde/programs/icons/Makefile.am`,
