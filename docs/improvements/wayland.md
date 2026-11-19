@@ -266,7 +266,11 @@ panel instrumentation:
   `Desktop Style` (`Style`), providing one-click access to *System Status &
   Tray* (`CkStatus`), *Power & Battery* (`CkPower`), *Network & Wi-Fi*
   (`CkNetwork`), *Bluetooth* (`CkBluetooth`), *Audio Mixer* (`CkMixer`),
-  *Sound & MIDI* (`CkSound`), and *Monitors & Display* (`DtstyleDisplay`).
+  *Sound & MIDI* (`CkSound`), and *Monitors & Display* (`DtstyleDisplay`);
+  Style Manager (`dtstyle`) also exposes a top-level **Sound** (`Fpsound`)
+  launcher alongside **Beep** (which now offers a live **Test** button and
+  selectable **Classic Beep (Tone)** or **General MIDI Note** system bells
+  backed by `~/.dt/beep.conf` across both `dtwm-wayland` and `dtwm`).
   Right-clicking any subpanel item and
   choosing **Copy To Main Panel** immediately updates the main Front Panel and
   persists `~/.dt/sessions/dtwmfp.session` (saved both on customization and on

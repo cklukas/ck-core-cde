@@ -13,11 +13,15 @@
     non-Sun `AUDIO_AU`, `AUDIO_SND`, and `AUDIO_WAV` types to `DisplayAudio`
     instead of `dterror.ds`.
   - Register `CkSound` (`ICON Fpsound`) and `CkMidi` (`ICON Fpmidi`) actions,
-    expose *Sound & MIDI* in Front Panel `SystemSubpanel` and `Media_Tools`
-    Application Manager, add a **Sound & MIDI...** launcher button inside
-    `dtstyle` **Beep** when `ck-sound` is installed, and auto-start
-    `ck-midi --daemon` at session login when `virtual_port=1` is enabled in
-    `~/.config/ck-core/midi.conf`.
+    expose *Sound & MIDI* in Front Panel `SystemSubpanel`, Application Manager
+    `Media_Tools` (`Sound_and_Video`), and as a top-level **Sound** (`Fpsound`)
+    component on the `dtstyle` Style Manager toolbar when `ck-sound` is
+    installed; extend `dtstyle` **Beep** (`Audio.c`) with a live **Test**
+    button, **Classic Beep (Tone)** vs. **MIDI Note** mode + GM **Instrument**
+    selector (`~/.dt/beep.conf`), and audible `XkbBellNotify` /
+    `xdg_system_bell_v1` synthesis in both `dtwm-wayland` and `dtwm`; and
+    auto-start `ck-midi --daemon` at session login when `virtual_port=1` is
+    enabled in `~/.config/ck-core/midi.conf`.
 - Correct the gray values in the front-panel status icons
   (`cde/programs/icons/Fpbt.{t,m,l}.pm`, `Fpdisp.{t,m,l}.pm`,
   `Fpnet.{t,m,l}.pm`, `Fppower.{t,m,l}.pm`, `Fpstatus.{t,m,l}.pm`,

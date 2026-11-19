@@ -477,6 +477,18 @@ ProcessComponentList(
    {
        resString = XtNewString (style.xrdb.componentList);
    }
+   if (strstr(resString, SOUND_COMP) == nullptr &&
+       strstr(resString, BEEP) != nullptr &&
+       hasCkSoundInstalled())
+   {
+       const char *beepPos = strstr(resString, BEEP);
+       size_t prefixLen = (size_t)(beepPos - resString) + strlen(BEEP);
+       char *withSound = XtMalloc(strlen(resString) + strlen(SOUND_COMP) + 2);
+       memcpy(withSound, resString, prefixLen);
+       sprintf(withSound + prefixLen, " %s%s", SOUND_COMP, resString + prefixLen);
+       XtFree(resString);
+       resString = withSound;
+   }
    resString2 = resString;
    len = strlen(resString);
    string = strtok(resString, " ");
@@ -534,6 +546,24 @@ ProcessComponentList(
       {
           cmp_string = CMPSTR(GETMESSAGE(4, 32, "Beep"));
 	  dtIcon = _DtGetIconFileName(style.screen, BEEP_ICON, nullptr, nullptr, 0);	  
+          helpTag = HELP_AUDIO_BUTTON;
+      }
+
+      else if (strcmp(string, SOUND_COMP) == 0)
+      {
+          if (!hasCkSoundInstalled())
+          {
+              s += strlen(string) + 1;
+              if (resString + s >= resString2 + len)
+                  string = nullptr;
+              else
+                  string = strtok(resString + s, " ");
+              continue;
+          }
+          cmp_string = CMPSTR("Sound");
+          dtIcon = _DtGetIconFileName(style.screen, SOUND_ICON, nullptr, nullptr, DtLARGE);
+          if (dtIcon == nullptr)
+              dtIcon = _DtGetIconFileName(style.screen, SOUND_ICON, nullptr, nullptr, 0);
           helpTag = HELP_AUDIO_BUTTON;
       }
 
@@ -731,6 +761,9 @@ activateCB(
   
   else if (strcmp(cd, BEEP) == 0)
     popup_audioBB(style.shell);
+
+  else if (strcmp(cd, SOUND_COMP) == 0)
+    popup_soundMidi();
             
   else if (strcmp(cd, SCREEN) == 0)
     popup_screenBB(style.shell);

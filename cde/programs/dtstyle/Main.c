@@ -336,6 +336,9 @@ openStartupDialogByName(Widget shell, const char *name)
         Customize(shell);
     } else if (strncmp(name, "Accessibility", 13) == 0) {
         popup_accessibilityBB(shell);
+    } else if (strncmp(name, "Beep", 4) == 0 || strncmp(name, "Audio", 5) == 0) {
+        extern void popup_audioBB(Widget);
+        popup_audioBB(shell);
     }
 }
 
@@ -553,6 +556,12 @@ malloc_trace(0);
                 strcmp(argv[ai], "--accessibility") == 0) {
                 openDisplayDialogOnStart = True;
                 s_startupDialogName = "Accessibility";
+                continue;
+            }
+            if (strcmp(argv[ai], "-beep") == 0 ||
+                strcmp(argv[ai], "--beep") == 0) {
+                openDisplayDialogOnStart = True;
+                s_startupDialogName = "Beep";
                 continue;
             }
             if ((strcmp(argv[ai], "-apply-accessibility") == 0 ||

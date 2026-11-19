@@ -45,6 +45,8 @@
 
 
 extern void popup_audioBB( Widget shell) ;
+extern void popup_soundMidi( void ) ;
+extern Boolean hasCkSoundInstalled( void ) ;
 extern void restoreAudio( Widget shell, XrmDatabase db) ;
 extern void saveAudio( int fd) ;
 

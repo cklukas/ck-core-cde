@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "WmGlobal.h"
@@ -1411,6 +1412,52 @@ LoadX11AccessibilityConf (WmScreenData *pSD)
     }
 }
 
+static void
+RingX11AudibleBell (const XkbBellNotifyEvent *bellEv)
+{
+    static uint64_t lastBellMs = 0;
+    struct timespec ts = {0, 0};
+    uint64_t nowMs;
+    const char *dis = getenv ("DTWM_DISABLE_AUDIBLE_BELL");
+    const char *home;
+    Boolean haveConf = False;
+    char cmd[256];
+    XEvent ev;
+
+    if (dis && strcmp (dis, "1") == 0)
+	return;
+    if (bellEv && bellEv->percent == 0)
+	return;
+
+    clock_gettime (CLOCK_MONOTONIC, &ts);
+    nowMs = (uint64_t)ts.tv_sec * 1000ULL + (uint64_t)(ts.tv_nsec / 1000000L);
+    if (nowMs - lastBellMs < 75ULL)
+	return;
+    lastBellMs = nowMs;
+
+    home = getenv ("HOME");
+    if (home && home[0])
+    {
+	char confPath[1024];
+	snprintf (confPath, sizeof(confPath), "%s/.dt/beep.conf", home);
+	haveConf = (access (confPath, R_OK) == 0) ? True : False;
+    }
+
+    if (haveConf || !bellEv)
+    {
+	snprintf (cmd, sizeof(cmd), "ck-sound --bell");
+    }
+    else
+    {
+	int pct = bellEv->percent <= 100 ? (int)bellEv->percent : 50;
+	int pitch = (bellEv->pitch >= 50 && bellEv->pitch <= 9000) ? (int)bellEv->pitch : 400;
+	int dur = (bellEv->duration >= 40 && bellEv->duration <= 2500) ? (int)bellEv->duration : 100;
+	snprintf (cmd, sizeof(cmd), "ck-sound --bell %d %d %d", pct, pitch, dur);
+    }
+    memset (&ev, 0, sizeof(ev));
+    F_Exec (cmd, nullptr, &ev);
+}
+
 Boolean
 HandleEwmhXkbEvent (XEvent *event)
 {
@@ -1433,6 +1480,7 @@ HandleEwmhXkbEvent (XEvent *event)
     if (xkbev->any.xkb_type == XkbBellNotify)
     {
 	TriggerX11VisualBell (pSD);
+	RingX11AudibleBell (&xkbev->bell);
 	return True;
     }
     if (xkbev->any.xkb_type == XkbStateNotify)

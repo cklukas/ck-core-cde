@@ -249,7 +249,7 @@ XtResource resources[] = {
   },
   {"componentList", "ComponentList", XtRString, sizeof(String) ,
         XtOffset(ApplicationDataPtr, componentList), XmRImmediate, 
-        "Color Font Backdrop Keyboard Mouse Audio Screen Display Dtwm Startup Accessibility"
+        "Color Font Backdrop Keyboard Mouse Beep Sound Screen Display Dtwm Startup Accessibility"
   },
   {"imServerHosts", "ImServerHosts", XmRXmStringTable, sizeof(XmStringTable) ,
         XtOffset(ApplicationDataPtr, imServerHosts), XmRImmediate, 

@@ -13,7 +13,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <sys/wait.h>
 #include <time.h>
+#include <unistd.h>
 
 #include <wlr/render/pass.h>
 #include <wlr/render/swapchain.h>
@@ -385,6 +387,87 @@ void dtwm_a11y_trigger_visual_bell(DtwmServer *server) {
     }
 }
 
+static void dtwm_ring_audible_bell(DtwmServer *server, const xcb_generic_event_t *xkb_ev) {
+    if (!server) return;
+    const char *dis = getenv("DTWM_DISABLE_AUDIBLE_BELL");
+    if (dis && strcmp(dis, "1") == 0) return;
+
+    /* Rate-limit audible bells to at most one every 75 ms */
+    static uint64_t last_bell_ms = 0;
+    struct timespec ts = {0, 0};
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    uint64_t now_ms = (uint64_t)ts.tv_sec * 1000ULL + (uint64_t)(ts.tv_nsec / 1000000L);
+    if (now_ms - last_bell_ms < 75ULL) return;
+    last_bell_ms = now_ms;
+
+    int pct = server->bell_percent > 0 ? server->bell_percent : 50;
+    int pitch = server->bell_pitch > 0 ? server->bell_pitch : 400;
+    int dur_ms = server->bell_duration > 0 ? server->bell_duration : 100;
+
+    if (xkb_ev) {
+        const uint8_t *raw = (const uint8_t *)xkb_ev;
+        uint8_t ev_pct = raw[11];
+        int16_t ev_pitch = 0, ev_dur = 0;
+        memcpy(&ev_pitch, raw + 12, sizeof(int16_t));
+        memcpy(&ev_dur, raw + 14, sizeof(int16_t));
+        if (ev_pct == 0) return; /* Explicitly muted bell */
+        if (ev_pct <= 100) pct = (int)ev_pct;
+        if (ev_pitch >= 50 && ev_pitch <= 9000) pitch = (int)ev_pitch;
+        if (ev_dur >= 40 && ev_dur <= 2500) dur_ms = (int)ev_dur;
+    } else if (server->bell_percent == 0) {
+        return;
+    }
+
+    static const char *const candidates[] = {
+        "/usr/local/bin/ck-sound",
+        "/usr/dt/bin/ck-sound",
+        "/usr/bin/ck-sound",
+        nullptr,
+    };
+    const char *cksound_bin = nullptr;
+    for (int i = 0; candidates[i]; ++i) {
+        if (access(candidates[i], X_OK) == 0) {
+            cksound_bin = candidates[i];
+            break;
+        }
+    }
+
+    const char *home = getenv("HOME");
+    bool have_beep_conf = false;
+    if (home && home[0]) {
+        char conf_path[1024];
+        snprintf(conf_path, sizeof(conf_path), "%s/.dt/beep.conf", home);
+        have_beep_conf = (access(conf_path, R_OK) == 0);
+    }
+
+    pid_t pid = fork();
+    if (pid == 0) {
+        if (fork() == 0) {
+            setsid();
+            if (cksound_bin) {
+                if (have_beep_conf) {
+                    char *argv[] = { (char *)cksound_bin, (char *)"--bell", nullptr };
+                    execv(cksound_bin, argv);
+                } else {
+                    char pct_s[16], pitch_s[16], dur_s[16];
+                    snprintf(pct_s, sizeof(pct_s), "%d", pct);
+                    snprintf(pitch_s, sizeof(pitch_s), "%d", pitch);
+                    snprintf(dur_s, sizeof(dur_s), "%d", dur_ms);
+                    char *argv[] = { (char *)cksound_bin, (char *)"--bell", pct_s, pitch_s, dur_s, nullptr };
+                    execv(cksound_bin, argv);
+                }
+            } else {
+                execlp("ck-sound", "ck-sound", "--bell", (char *)nullptr);
+            }
+            _exit(0);
+        }
+        _exit(0);
+    }
+    if (pid > 0) {
+        waitpid(pid, nullptr, 0);
+    }
+}
+
 static void xdg_bell_destroy_req(struct wl_client *client, struct wl_resource *resource) {
     (void)client;
     wl_resource_destroy(resource);
@@ -397,6 +480,7 @@ static void xdg_bell_ring_req(
     (void)surface;
     DtwmServer *server = wl_resource_get_user_data(resource);
     dtwm_a11y_trigger_visual_bell(server);
+    dtwm_ring_audible_bell(server, nullptr);
 }
 
 static const struct xdg_system_bell_v1_interface xdg_bell_impl = {
@@ -503,6 +587,7 @@ bool dtwm_a11y_handle_xcb_event(DtwmServer *server, xcb_generic_event_t *ev) {
     uint8_t rt = ev->response_type & 0x7fu;
     if (rt == server->a11y->xkb_first_event && ev->pad0 == 8 /* XkbBellNotify */) {
         dtwm_a11y_trigger_visual_bell(server);
+        dtwm_ring_audible_bell(server, ev);
         return true;
     }
     return false;

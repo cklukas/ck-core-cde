@@ -26,7 +26,7 @@ XCOMM include "Dt"
 !###
 !# componentList specifies the buttons that appear in the Style Manager. 
 !# The last button I18N is locale dependent.
-Dtstyle*componentList:  Color Font Backdrop Keyboard Mouse Beep Screen Display Dtwm Startup Accessibility %|nls-6-#I18N#|
+Dtstyle*componentList:  Color Font Backdrop Keyboard Mouse Beep Sound Screen Display Dtwm Startup Accessibility %|nls-6-#I18N#|
 
 !# The Style Manager may be oriented vertically by commenting out this line
 Dtstyle*mainRC.orientation:         HORIZONTAL
