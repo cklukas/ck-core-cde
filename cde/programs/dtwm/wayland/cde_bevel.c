@@ -922,12 +922,20 @@ struct wlr_buffer *dtwm_render_anim_bevel_frame(
     }
 
     bool is_minmax_icon = (kind == DTWM_ANIM_KIND_MINIMIZE || kind == DTWM_ANIM_KIND_RESTORE);
-    /* icon_blend: 0.0 = full window state, 1.0 = compact icon tile state */
-    double icon_blend = 0.0;
+    /* icon_prox: 0.0 = full window position, 1.0 = desktop icon slot position */
+    double icon_prox = 0.0;
     if (kind == DTWM_ANIM_KIND_MINIMIZE) {
-        icon_blend = progress;
+        icon_prox = progress;
     } else if (kind == DTWM_ANIM_KIND_RESTORE) {
-        icon_blend = 1.0 - progress;
+        icon_prox = 1.0 - progress;
+    }
+    /* Condense titlebar and frame bevel into the icon bezel only near the icon [0.60 .. 0.95] */
+    double icon_blend = 0.0;
+    if (is_minmax_icon) {
+        double t = (icon_prox - 0.60) / 0.35;
+        if (t < 0.0) t = 0.0;
+        if (t > 1.0) t = 1.0;
+        icon_blend = t * t * (3.0 - 2.0 * t);
     }
 
     int render_h = h;

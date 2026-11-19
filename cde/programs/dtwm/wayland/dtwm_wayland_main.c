@@ -451,8 +451,89 @@ DtwmAnimStyle dtwm_parse_anim_style(const char *val) {
     return DTWM_ANIM_STYLE_AUTO;
 }
 
+DtwmAnimSpeed dtwm_parse_anim_speed(const char *val) {
+    if (!val) return DTWM_ANIM_SPEED_STANDARD;
+    while (*val && isspace((unsigned char)*val)) val++;
+    char buf[32] = {0};
+    size_t i = 0;
+    while (val[i] && !isspace((unsigned char)val[i]) && i + 1 < sizeof(buf)) {
+        char ch = (char)tolower((unsigned char)val[i]);
+        buf[i] = (ch == '-') ? '_' : ch;
+        i++;
+    }
+    buf[i] = '\0';
+
+    if (strcmp(buf, "very_quick") == 0 || strcmp(buf, "veryquick") == 0 ||
+        strcmp(buf, "fast") == 0 || strcmp(buf, "quick") == 0) {
+        return DTWM_ANIM_SPEED_VERY_QUICK;
+    }
+    if (strcmp(buf, "slow") == 0 || strcmp(buf, "slower") == 0) {
+        return DTWM_ANIM_SPEED_SLOW;
+    }
+    return DTWM_ANIM_SPEED_STANDARD;
+}
+
+static double anim_smoothstep(double edge0, double edge1, double x) {
+    if (edge1 <= edge0) {
+        return (x >= edge1) ? 1.0 : 0.0;
+    }
+    double t = (x - edge0) / (edge1 - edge0);
+    if (t < 0.0) t = 0.0;
+    if (t > 1.0) t = 1.0;
+    return t * t * (3.0 - 2.0 * t);
+}
+
+static int anim_latch_duration_ms(DtwmAnimSpeed speed) {
+    switch (speed) {
+    case DTWM_ANIM_SPEED_VERY_QUICK:
+        return 32;
+    case DTWM_ANIM_SPEED_SLOW:
+        return 70;
+    case DTWM_ANIM_SPEED_STANDARD:
+    default:
+        return 48;
+    }
+}
+
+static int anim_flight_duration_ms(DtwmAnimSpeed speed, DtwmAnimStyle style, DtwmAnimKind kind) {
+    bool is_max = (kind == DTWM_ANIM_KIND_MAXIMIZE || kind == DTWM_ANIM_KIND_UNMAXIMIZE);
+    switch (speed) {
+    case DTWM_ANIM_SPEED_VERY_QUICK:
+        if (is_max) {
+            return (style == DTWM_ANIM_STYLE_TITLEBAR) ? 90 : 95;
+        }
+        if (kind == DTWM_ANIM_KIND_MINIMIZE) {
+            return (style == DTWM_ANIM_STYLE_BEVEL)
+                       ? 125
+                       : ((style == DTWM_ANIM_STYLE_TITLEBAR) ? 105 : 110);
+        }
+        return (style == DTWM_ANIM_STYLE_BEVEL)
+                   ? 120
+                   : ((style == DTWM_ANIM_STYLE_TITLEBAR) ? 105 : 110);
+
+    case DTWM_ANIM_SPEED_SLOW:
+        if (is_max) {
+            return (style == DTWM_ANIM_STYLE_TITLEBAR) ? 320 : 350;
+        }
+        if (kind == DTWM_ANIM_KIND_MINIMIZE) {
+            return (style == DTWM_ANIM_STYLE_BEVEL) ? 460 : 400;
+        }
+        return (style == DTWM_ANIM_STYLE_BEVEL) ? 430 : 380;
+
+    case DTWM_ANIM_SPEED_STANDARD:
+    default:
+        if (is_max) {
+            return (style == DTWM_ANIM_STYLE_TITLEBAR) ? 185 : 200;
+        }
+        if (kind == DTWM_ANIM_KIND_MINIMIZE) {
+            return (style == DTWM_ANIM_STYLE_BEVEL) ? 260 : 225;
+        }
+        return (style == DTWM_ANIM_STYLE_BEVEL) ? 240 : 215;
+    }
+}
+
 DtwmAnimStyle dtwm_resolve_anim_style(const DtwmServer *server, bool is_maximize) {
-    if (!server || server->greeter_mode || server->session_locked) {
+    if (!server || server->greeter_mode || server->session_locked || server->reduced_motion) {
         return DTWM_ANIM_STYLE_NONE;
     }
     DtwmAnimStyle raw = is_maximize ? server->maximize_anim_style : server->minimize_anim_style;
@@ -521,16 +602,17 @@ static void finish_or_cancel_anim(DtwmServer *server, bool allow_latch) {
         server->anim_kind == DTWM_ANIM_KIND_MINIMIZE &&
         server->anim_active_style == DTWM_ANIM_STYLE_BEVEL &&
         v && v->mapped && v->minimized) {
+        int latch_ms = anim_latch_duration_ms(server->anim_speed);
         clear_anim_scene_nodes(server);
         server->anim_in_latch_phase = true;
         server->anim_hides_view_frame = false;
         server->anim_start_ns = dtwm_now_nsec();
-        server->anim_duration_ms = 32;
+        server->anim_duration_ms = latch_ms;
         v->icon_latched = true;
         dtwm_icons_update_view(v);
         schedule_all_outputs_frame(server);
         if (server->anim_timer) {
-            wl_event_source_timer_update(server->anim_timer, 34);
+            wl_event_source_timer_update(server->anim_timer, latch_ms + 2);
         }
         return;
     }
@@ -607,9 +689,18 @@ static void step_window_anim(DtwmServer *server, uint64_t now_ns) {
     if (raw_t < 0.0) raw_t = 0.0;
     if (raw_t > 1.0) raw_t = 1.0;
 
-    /* Decisive workstation quartic/cubic ease-out without rubbery overshoot */
-    double exp_pow = (server->anim_kind == DTWM_ANIM_KIND_MINIMIZE) ? 3.2 : 4.0;
-    double u = 1.0 - pow(1.0 - raw_t, exp_pow);
+    /* Balanced Hermite + cubic ease-out: responsive immediately on click while
+     * keeping mid-flight window travel clearly observable across the workspace */
+    bool is_minmax_ease = (server->anim_kind == DTWM_ANIM_KIND_MINIMIZE ||
+                           server->anim_kind == DTWM_ANIM_KIND_RESTORE);
+    double u;
+    if (is_minmax_ease) {
+        double herm = raw_t * raw_t * (3.0 - 2.0 * raw_t);
+        double ease_out = 1.0 - pow(1.0 - raw_t, 2.3);
+        u = 0.35 * herm + 0.65 * ease_out;
+    } else {
+        u = 1.0 - pow(1.0 - raw_t, 2.8);
+    }
 
     int x = (int)lround(server->anim_from_box.x +
                         (server->anim_to_box.x - server->anim_from_box.x) * u);
@@ -735,19 +826,24 @@ static void step_window_anim(DtwmServer *server, uint64_t now_ns) {
         if (server->anim_trail_buf) {
             wlr_scene_node_set_enabled(&server->anim_trail_buf->node, false);
         }
-        double icon_blend = 0.0;
+        /* icon_prox: 0.0 at full window, 1.0 at desktop icon slot.
+         * Keep the live window surface crisp for most of the flight and crossfade
+         * symmetrically into/from the icon image only near the icon [0.68 .. 0.96]. */
+        double icon_prox = 0.0;
         if (kind == DTWM_ANIM_KIND_MINIMIZE) {
-            icon_blend = u;
+            icon_prox = u;
         } else if (kind == DTWM_ANIM_KIND_RESTORE) {
-            icon_blend = 1.0 - u;
+            icon_prox = 1.0 - u;
         }
+        double frame_condense = is_minmax_icon ? anim_smoothstep(0.60, 0.95, icon_prox) : 0.0;
+        double crop_blend = is_minmax_icon ? anim_smoothstep(0.55, 0.95, icon_prox) : 0.0;
 
-        int b_side = (int)lround((1.0 - icon_blend) * DTWM_BORDER_WIDTH + icon_blend * 2.0);
+        int b_side = (int)lround((1.0 - frame_condense) * DTWM_BORDER_WIDTH + frame_condense * 2.0);
         if (b_side < 2) b_side = 2;
         bool has_title = (!view || (view->decorated && view->has_title));
         int b_top = has_title
-                        ? (int)lround((1.0 - icon_blend) * (DTWM_BORDER_WIDTH + DTWM_TITLE_HEIGHT) +
-                                      icon_blend * 2.0)
+                        ? (int)lround((1.0 - frame_condense) * (DTWM_BORDER_WIDTH + DTWM_TITLE_HEIGHT) +
+                                      frame_condense * 2.0)
                         : b_side;
         if (b_top < b_side) b_top = b_side;
         if (b_side * 2 >= w - 4) b_side = 2;
@@ -756,20 +852,15 @@ static void step_window_anim(DtwmServer *server, uint64_t now_ns) {
         int in_w = w - 2 * b_side;
         int in_h = h - b_top - b_side;
 
-        /* 1. Client surface layer with aspect-preserving crop & smooth crossfade */
+        /* 1. Client surface layer: stays 100% opaque until near the icon (icon_prox >= 0.70) */
         if (server->anim_client_buf && server->anim_client_src_w > 0 &&
             server->anim_client_src_h > 0 && in_w >= 4 && in_h >= 4) {
-            double c_alpha = 1.0;
-            if (is_minmax_icon) {
-                c_alpha = 1.0 - (icon_blend - 0.22) / 0.63;
-                if (c_alpha < 0.0) c_alpha = 0.0;
-                if (c_alpha > 1.0) c_alpha = 1.0;
-            }
+            double c_alpha = is_minmax_icon ? (1.0 - anim_smoothstep(0.70, 0.96, icon_prox)) : 1.0;
             if (c_alpha > 0.02) {
                 double sw = (double)server->anim_client_src_w;
                 double sh = (double)server->anim_client_src_h;
                 struct wlr_fbox sbox = {.x = 0.0, .y = 0.0, .width = sw, .height = sh};
-                if (is_minmax_icon && sw > 8.0 && sh > 8.0 && in_w > 0 && in_h > 0) {
+                if (is_minmax_icon && crop_blend > 0.001 && sw > 8.0 && sh > 8.0 && in_w > 0 && in_h > 0) {
                     double dst_aspect = (double)in_w / (double)in_h;
                     double src_aspect = sw / sh;
                     double crop_w = sw, crop_h = sh;
@@ -778,9 +869,9 @@ static void step_window_anim(DtwmServer *server, uint64_t now_ns) {
                     } else {
                         crop_h = sw / dst_aspect;
                     }
-                    /* Blend smoothly between full window view and aspect-matched center crop */
-                    double cw = sw * (1.0 - icon_blend) + crop_w * icon_blend;
-                    double ch = sh * (1.0 - icon_blend) + crop_h * icon_blend;
+                    /* Blend smoothly between full window view and aspect-matched center crop near icon */
+                    double cw = sw * (1.0 - crop_blend) + crop_w * crop_blend;
+                    double ch = sh * (1.0 - crop_blend) + crop_h * crop_blend;
                     sbox.x = (sw - cw) * 0.5;
                     sbox.y = (sh - ch) * 0.5;
                     sbox.width = cw;
@@ -798,11 +889,9 @@ static void step_window_anim(DtwmServer *server, uint64_t now_ns) {
             wlr_scene_node_set_enabled(&server->anim_client_buf->node, false);
         }
 
-        /* 2. CDE Desktop Icon tile crossfade layer (aligned so img_box matches w x h at icon end) */
+        /* 2. CDE Desktop Icon tile crossfade layer (fades in/out only near the icon [0.68 .. 0.94]) */
         if (server->anim_icon_buf && is_minmax_icon && view) {
-            double i_alpha = (icon_blend - 0.28) / 0.62;
-            if (i_alpha < 0.0) i_alpha = 0.0;
-            if (i_alpha > 1.0) i_alpha = 1.0;
+            double i_alpha = anim_smoothstep(0.68, 0.94, icon_prox);
             if (i_alpha > 0.02) {
                 int img_dim = server->large_icons ? 96 : 48;
                 int img_box = img_dim + 8;
@@ -893,15 +982,7 @@ static void start_window_anim(
     server->anim_start_ns = dtwm_now_nsec();
     server->anim_in_latch_phase = false;
 
-    if (is_max) {
-        server->anim_duration_ms = (style == DTWM_ANIM_STYLE_TITLEBAR) ? 90 : 95;
-    } else if (kind == DTWM_ANIM_KIND_MINIMIZE) {
-        server->anim_duration_ms =
-            (style == DTWM_ANIM_STYLE_BEVEL) ? 125 : ((style == DTWM_ANIM_STYLE_TITLEBAR) ? 105 : 110);
-    } else {
-        server->anim_duration_ms =
-            (style == DTWM_ANIM_STYLE_BEVEL) ? 120 : ((style == DTWM_ANIM_STYLE_TITLEBAR) ? 105 : 110);
-    }
+    server->anim_duration_ms = anim_flight_duration_ms(server->anim_speed, style, kind);
 
     server->anim_client_src_w = 0;
     server->anim_client_src_h = 0;
@@ -5106,6 +5187,7 @@ int main(int argc, char **argv) {
     server.legacy_animate_minimize = true;
     server.minimize_anim_style = DTWM_ANIM_STYLE_AUTO;
     server.maximize_anim_style = DTWM_ANIM_STYLE_AUTO;
+    server.anim_speed = DTWM_ANIM_SPEED_STANDARD;
     server.show_task_switcher = true;
     server.double_click_ms = 500;
     server.cursor_size = 24;

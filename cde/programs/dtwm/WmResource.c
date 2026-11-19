@@ -1446,6 +1446,15 @@ XtResource wmScreenResources[] =
 	XtRString,
 	(XtPointer)"auto"
     },
+    {
+	WmNanimationSpeed,
+	WmCAnimationSpeed,
+	XtRString,
+	sizeof (String),
+	XtOffsetOf (WmScreenData, animationSpeed),
+	XtRString,
+	(XtPointer)"standard"
+    },
 
     {
 	WmNmoveOpaque,
@@ -5044,6 +5053,7 @@ ProcessScreenResources (WmScreenData *pSD, unsigned char *screenName)
 						 pSD->animateMinimizeRestore);
 	pSD->maxAnimMode = WmResolveX11AnimMode (pSD->maximizeAnimation, True,
 						 pSD->animateMinimizeRestore);
+	pSD->animSpeedMode = WmResolveX11AnimSpeed (pSD->animationSpeed);
     }
 
 
@@ -5943,8 +5953,10 @@ SetStdScreenResourceValues (WmScreenData *pSD)
     pSD->animateMinimizeRestore = False;
     pSD->minimizeAnimation = nullptr;
     pSD->maximizeAnimation = nullptr;
+    pSD->animationSpeed = nullptr;
     pSD->minAnimMode = WM_ANIM_NONE;
     pSD->maxAnimMode = WM_ANIM_NONE;
+    pSD->animSpeedMode = WM_ANIM_SPEED_STANDARD;
 
 } /* END OF FUNCTION SetStdScreenResourceValues */
 
@@ -5988,6 +6000,39 @@ WmResolveX11AnimMode (const char *style, Boolean isMaximize, Boolean animateMini
 	return WM_ANIM_NONE;
     }
     return animateMinimizeRestore ? WM_ANIM_WIREFRAME : WM_ANIM_NONE;
+}
+
+unsigned char
+WmResolveX11AnimSpeed (const char *speed)
+{
+    char buf[32];
+    size_t i = 0;
+
+    if (speed != nullptr)
+    {
+	while (*speed && isspace((unsigned char)*speed))
+	{
+	    speed++;
+	}
+	while (speed[i] != '\0' && !isspace((unsigned char)speed[i]) && i + 1 < sizeof(buf))
+	{
+	    char ch = (char)tolower((unsigned char)speed[i]);
+	    buf[i] = (ch == '-') ? '_' : ch;
+	    i++;
+	}
+    }
+    buf[i] = '\0';
+
+    if (strcmp(buf, "very_quick") == 0 || strcmp(buf, "veryquick") == 0 ||
+	strcmp(buf, "fast") == 0 || strcmp(buf, "quick") == 0)
+    {
+	return WM_ANIM_SPEED_VERY_QUICK;
+    }
+    if (strcmp(buf, "slow") == 0 || strcmp(buf, "slower") == 0)
+    {
+	return WM_ANIM_SPEED_SLOW;
+    }
+    return WM_ANIM_SPEED_STANDARD;
 }
 
 

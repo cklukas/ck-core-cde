@@ -29,11 +29,13 @@ selection visible and supports pointer hover and pinning. It is enabled by the
 - double-clicking a title bar maximizes or restores the window;
 - clicking the desktop clears the active-window focus; and
 - **Style Manager → Window** configures **Minimize / Restore Animation**
-  (`Dtwm*minimizeAnimation`) and **Maximize / Restore Animation**
-  (`Dtwm*maximizeAnimation`) dynamically for the active backend — offering
-  `None`, `Wireframe` (minimize default), and `Titlebar` on X11 `dtwm` (maximize
-  default `None`), and `None`, `Bevel Morph` / `Bevel Glide` (default),
-  `Titlebar Shuttle`, and `Wireframe` on [Wayland (`dtwm-wayland`)](wayland.md).
+  (`Dtwm*minimizeAnimation`), **Maximize / Restore Animation**
+  (`Dtwm*maximizeAnimation`), and **Animation Speed** (`Dtwm*animationSpeed`:
+  `Very Quick`, `Standard` [default], and `Slow`) dynamically for the active
+  backend — offering `None`, `Wireframe` (minimize default), and `Titlebar` on
+  X11 `dtwm` (maximize default `None`), and `None`, `Bevel Morph` / `Bevel Glide`
+  (default, with late symmetric near-icon crossfade), `Titlebar Shuttle`, and
+  `Wireframe` on [Wayland (`dtwm-wayland`)](wayland.md).
 
 Open-window desktop icons complement these controls by keeping running
 applications represented on their workspace.

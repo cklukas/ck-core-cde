@@ -22,9 +22,18 @@ typedef int Boolean;
 #define DTWM_UI_ANIM_WIREFRAME 3
 #define DTWM_UI_ANIM_COUNT     4
 
+#define DTWM_UI_SPEED_VERY_QUICK 0
+#define DTWM_UI_SPEED_STANDARD   1
+#define DTWM_UI_SPEED_SLOW       2
+#define DTWM_UI_SPEED_COUNT      3
+
 #define WM_ANIM_NONE      0u
 #define WM_ANIM_WIREFRAME 1u
 #define WM_ANIM_TITLEBAR  2u
+
+#define WM_ANIM_SPEED_VERY_QUICK 0u
+#define WM_ANIM_SPEED_STANDARD   1u
+#define WM_ANIM_SPEED_SLOW       2u
 
 /* @@EXTRACTED@@ */
 
@@ -99,10 +108,38 @@ static void test_serialization_and_bounds(void)
     assert(strlen(small) == sizeof(small) - 1);
 }
 
+static void test_speed_resolution_and_serialization(void)
+{
+    /* Unset, empty, auto, or unknown defaults to Standard */
+    assert(DtstyleResolveWindowAnimSpeed(nullptr) == DTWM_UI_SPEED_STANDARD);
+    assert(DtstyleResolveWindowAnimSpeed("") == DTWM_UI_SPEED_STANDARD);
+    assert(DtstyleResolveWindowAnimSpeed("standard") == DTWM_UI_SPEED_STANDARD);
+    assert(DtstyleResolveWindowAnimSpeed("auto") == DTWM_UI_SPEED_STANDARD);
+
+    assert(WmResolveX11AnimSpeed(nullptr) == WM_ANIM_SPEED_STANDARD);
+    assert(WmResolveX11AnimSpeed("Standard") == WM_ANIM_SPEED_STANDARD);
+
+    /* Very Quick & Slow aliases, case/hyphen normalization */
+    assert(DtstyleResolveWindowAnimSpeed("very_quick") == DTWM_UI_SPEED_VERY_QUICK);
+    assert(DtstyleResolveWindowAnimSpeed("  Very-Quick  ") == DTWM_UI_SPEED_VERY_QUICK);
+    assert(DtstyleResolveWindowAnimSpeed("quick") == DTWM_UI_SPEED_VERY_QUICK);
+    assert(DtstyleResolveWindowAnimSpeed("slow") == DTWM_UI_SPEED_SLOW);
+    assert(DtstyleResolveWindowAnimSpeed("  SLOW  ") == DTWM_UI_SPEED_SLOW);
+
+    assert(WmResolveX11AnimSpeed("very_quick") == WM_ANIM_SPEED_VERY_QUICK);
+    assert(WmResolveX11AnimSpeed("very-quick") == WM_ANIM_SPEED_VERY_QUICK);
+    assert(WmResolveX11AnimSpeed("slow") == WM_ANIM_SPEED_SLOW);
+
+    assert(strcmp(anim_speed_to_token(DTWM_UI_SPEED_VERY_QUICK), "very_quick") == 0);
+    assert(strcmp(anim_speed_to_token(DTWM_UI_SPEED_STANDARD), "standard") == 0);
+    assert(strcmp(anim_speed_to_token(DTWM_UI_SPEED_SLOW), "slow") == 0);
+}
+
 int main(void)
 {
     test_wayland_defaults_and_choices();
     test_x11_defaults_and_roaming_fallback();
     test_serialization_and_bounds();
+    test_speed_resolution_and_serialization();
     return 0;
 }

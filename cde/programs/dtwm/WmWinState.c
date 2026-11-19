@@ -243,11 +243,21 @@ AnimateWindowRect (WmScreenData *pSD, const WmAnimRect *startRect,
     {
         if (startH > 28) startH = 26;
         if (endH > 28) endH = 26;
-        totalUsec = 140000L;
+        if (pSD->animSpeedMode == WM_ANIM_SPEED_VERY_QUICK)
+            totalUsec = 95000L;
+        else if (pSD->animSpeedMode == WM_ANIM_SPEED_SLOW)
+            totalUsec = 310000L;
+        else
+            totalUsec = 175000L;
     }
     else
     {
-        totalUsec = 200000L;
+        if (pSD->animSpeedMode == WM_ANIM_SPEED_VERY_QUICK)
+            totalUsec = 120000L;
+        else if (pSD->animSpeedMode == WM_ANIM_SPEED_SLOW)
+            totalUsec = 380000L;
+        else
+            totalUsec = 220000L;
     }
 
     dx = endRect->x - startRect->x;
@@ -260,16 +270,18 @@ AnimateWindowRect (WmScreenData *pSD, const WmAnimRect *startRect,
     if (abs(dw) > maxDelta) maxDelta = abs(dw);
     if (abs(dh) > maxDelta) maxDelta = abs(dh);
 
-    steps = maxDelta / 25;
+    steps = maxDelta / ((pSD->animSpeedMode == WM_ANIM_SPEED_SLOW) ? 18 : 25);
     if (animMode == WM_ANIM_TITLEBAR)
     {
+        int maxSteps = (pSD->animSpeedMode == WM_ANIM_SPEED_SLOW) ? 40 : 28;
         if (steps < 8) steps = 8;
-        if (steps > 28) steps = 28;
+        if (steps > maxSteps) steps = maxSteps;
     }
     else
     {
+        int maxSteps = (pSD->animSpeedMode == WM_ANIM_SPEED_SLOW) ? 60 : 50;
         if (steps < 10) steps = 10;
-        if (steps > 50) steps = 50;
+        if (steps > maxSteps) steps = maxSteps;
     }
 
     for (i = 0; i <= steps; i++)

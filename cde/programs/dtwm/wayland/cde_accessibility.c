@@ -191,14 +191,7 @@ static void apply_reduced_motion(DtwmServer *server, bool reduced) {
     if (!server) return;
     server->reduced_motion = reduced;
     if (reduced) {
-        server->anim_step = 0;
-        if (server->anim_timer) {
-            wl_event_source_timer_update(server->anim_timer, 0);
-        }
-        if (server->anim_buf) {
-            wlr_scene_buffer_set_buffer(server->anim_buf, nullptr);
-            wlr_scene_node_set_enabled(&server->anim_buf->node, false);
-        }
+        dtwm_anim_cancel_all(server);
     }
 }
 

@@ -1307,8 +1307,10 @@ InitWmScreen (WmScreenData *pSD, int sNum)
     pSD->animateMinimizeRestore = False;
     pSD->minimizeAnimation = nullptr;
     pSD->maximizeAnimation = nullptr;
+    pSD->animationSpeed = nullptr;
     pSD->minAnimMode = WM_ANIM_NONE;
     pSD->maxAnimMode = WM_ANIM_NONE;
+    pSD->animSpeedMode = WM_ANIM_SPEED_STANDARD;
     pSD->showTaskSwitcher = False;
     pSD->taskSwitchWin = None;
     pSD->taskSwitchActive = False;

@@ -39,23 +39,27 @@ framing or interaction rules.
 - Double-clicking a title bar or pressing the Maximize button toggles
   maximize/restore, and double-clicking the top-left Window Menu button (`[ - ]`)
   closes the window;
-- **Backend-aware minimize/restore and maximize/restore animations (`Dtwm*minimizeAnimation` and `Dtwm*maximizeAnimation`):**
+- **Backend-aware minimize/restore and maximize/restore animations (`Dtwm*minimizeAnimation`, `Dtwm*maximizeAnimation`, and `Dtwm*animationSpeed`):**
   `dtwm-wayland` drives window transitions from per-output vsync frame callbacks
   with mid-flight reversal and unmap/lock cancellation. **Style Manager → Window**
   dynamically detects Wayland vs. X11 and exposes the matching choices for each
-  backend:
+  backend together with an **Animation Speed** selector (`Very Quick`, `Standard`
+  [default], and `Slow`, live-configurable via `Dtwm*animationSpeed` or
+  `f.set_animation_speed`):
   - **Wayland (`dtwm-wayland`):** **Bevel Morph** / **Bevel Glide** (`bevel`,
     default — zero-copy live client surface morph framed by crisp unscaled `2px`
-    Motif bevels, a subtle mid-flight `3×3` CAD hairline, crossfade into the
-    desktop icon tile, and a `32 ms` mechanical Motif bevel latch on arrival),
+    Motif bevels and a subtle mid-flight `3×3` CAD hairline that keeps the live
+    window surface crisp across the workspace and symmetrically crossfades
+    into/from the desktop icon tile only near the icon, finishing with a
+    mechanical Motif bevel latch on arrival),
     **Titlebar Shuttle** (`titlebar` — detached 3D CDE title bar gliding into the
     icon tile or maximized bounds), **Wireframe** (`wireframe` — palette-tinted
     `3×3` CAD wireframe with phosphor decay trail), and **None** (`none`);
   - **X11 (`dtwm`):** **Wireframe** (`wireframe`, minimize default), **Titlebar**
     (`titlebar`, flying caption-bar outline), and **None** (`none`, maximize
-    default), preserving legacy `Dtwm*animateMinimizeRestore` compatibility and
-    automatically falling back when roaming `$HOME` between Wayland and X11
-    sessions;
+    default), honoring `Dtwm*animationSpeed`, preserving legacy
+    `Dtwm*animateMinimizeRestore` compatibility, and automatically falling back
+    when roaming `$HOME` between Wayland and X11 sessions;
 - Clicking or dragging a window title bar, frame border, window button, native
   Wayland surface, or desktop background dismisses any open client popup or
   Motif menu (`XmMenuShell` / `xdg_popup`), while holding a mouse button during

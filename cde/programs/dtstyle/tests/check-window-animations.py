@@ -53,8 +53,11 @@ def main() -> int:
         [
             extract_c_function(dtwm_ui_src, "static const char *\nanim_style_to_token("),
             extract_c_function(dtwm_ui_src, "static int\nDtstyleResolveWindowAnimStyle("),
+            extract_c_function(dtwm_ui_src, "static const char *\nanim_speed_to_token("),
+            extract_c_function(dtwm_ui_src, "static int\nDtstyleResolveWindowAnimSpeed("),
             extract_c_function(dtwm_ui_src, "static void\nappend_dtwm_res("),
             extract_c_function(wm_res_src, "unsigned char\nWmResolveX11AnimMode ("),
+            extract_c_function(wm_res_src, "unsigned char\nWmResolveX11AnimSpeed ("),
         ]
     )
 

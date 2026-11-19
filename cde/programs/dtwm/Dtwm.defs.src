@@ -274,6 +274,7 @@ Dtwm*useAsyncGeometry:			      True
 !# Dtwm*animateMinimizeRestore: True
 !# Dtwm*minimizeAnimation:      auto
 !# Dtwm*maximizeAnimation:      auto
+!# Dtwm*animationSpeed:         standard
 !# Dtwm*iconClick:			False
 !# Dtwm*interactivePlacement:		True
 

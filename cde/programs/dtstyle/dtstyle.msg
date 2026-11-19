@@ -640,6 +640,10 @@ $ Messages 13-16 are replacements for messages 5-8
 27 Titlebar Shuttle
 28 Titlebar
 29 Wireframe
+30 Animation Speed:
+31 Very Quick
+32 Standard
+33 Slow
 
 $set 19
 $ The set 19 contains messages for the I18N dialog

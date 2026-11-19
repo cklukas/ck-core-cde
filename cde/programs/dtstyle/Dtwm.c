@@ -136,6 +136,11 @@ static void ReadIconImageMaximum(XrmDatabase db, const char *name,
 #define DTWM_UI_ANIM_WIREFRAME 3
 #define DTWM_UI_ANIM_COUNT     4
 
+#define DTWM_UI_SPEED_VERY_QUICK 0
+#define DTWM_UI_SPEED_STANDARD   1
+#define DTWM_UI_SPEED_SLOW       2
+#define DTWM_UI_SPEED_COUNT      3
+
 typedef struct {
     Widget      pictLabel;
     Widget      systemDefault;
@@ -151,6 +156,9 @@ typedef struct {
     Widget      maxAnimPD;
     Widget      maxAnimOM;
     Widget      maxAnimBtns[DTWM_UI_ANIM_COUNT];
+    Widget      animSpeedPD;
+    Widget      animSpeedOM;
+    Widget      animSpeedBtns[DTWM_UI_SPEED_COUNT];
     Widget      showTaskSwitcherTG;
     Widget      iconPlacementTB;
     Widget      useIconBoxRC;
@@ -170,8 +178,10 @@ typedef struct {
     int         origMoveOpaque;
     int         origMinAnimStyle;
     int         origMaxAnimStyle;
+    int         origAnimSpeed;
     int         curMinAnimStyle;
     int         curMaxAnimStyle;
+    int         curAnimSpeed;
     int         origShowTaskSwitcher;
     int         origUseIconBox;
     Boolean     origIncreaseIconSize;
@@ -265,6 +275,50 @@ DtstyleResolveWindowAnimStyle(const char *raw_style,
                : DTWM_UI_ANIM_WIREFRAME;
 }
 
+static const char *
+anim_speed_to_token(int speed_idx)
+{
+    switch (speed_idx)
+    {
+        case DTWM_UI_SPEED_VERY_QUICK: return "very_quick";
+        case DTWM_UI_SPEED_SLOW:       return "slow";
+        case DTWM_UI_SPEED_STANDARD:
+        default:                       return "standard";
+    }
+}
+
+static int
+DtstyleResolveWindowAnimSpeed(const char *raw_speed)
+{
+    char buf[32];
+    size_t i = 0;
+
+    if (raw_speed != nullptr)
+    {
+        while (*raw_speed && isspace((unsigned char)*raw_speed))
+            raw_speed++;
+        while (raw_speed[i] != '\0' && !isspace((unsigned char)raw_speed[i]) &&
+               i + 1 < sizeof(buf))
+        {
+            char ch = (char)tolower((unsigned char)raw_speed[i]);
+            buf[i] = (ch == '-') ? '_' : ch;
+            i++;
+        }
+    }
+    buf[i] = '\0';
+
+    if (strcmp(buf, "very_quick") == 0 || strcmp(buf, "veryquick") == 0 ||
+        strcmp(buf, "fast") == 0 || strcmp(buf, "quick") == 0)
+    {
+        return DTWM_UI_SPEED_VERY_QUICK;
+    }
+    if (strcmp(buf, "slow") == 0 || strcmp(buf, "slower") == 0)
+    {
+        return DTWM_UI_SPEED_SLOW;
+    }
+    return DTWM_UI_SPEED_STANDARD;
+}
+
 static void
 append_dtwm_res(char *dst, size_t dst_sz, const char *fmt, ...)
 {
@@ -316,6 +370,29 @@ set_widget_label_str(Widget w, const char *text)
 }
 
 static void
+sync_anim_speed_sensitivity(void)
+{
+    if (!dtwm.animSpeedOM)
+        return;
+    XtSetSensitive(
+        dtwm.animSpeedOM,
+        (dtwm.curMinAnimStyle != DTWM_UI_ANIM_NONE ||
+         dtwm.curMaxAnimStyle != DTWM_UI_ANIM_NONE)
+            ? True
+            : False);
+}
+
+static void
+set_anim_speed_selection(int speed_idx)
+{
+    if (speed_idx < 0 || speed_idx >= DTWM_UI_SPEED_COUNT)
+        speed_idx = DTWM_UI_SPEED_STANDARD;
+    dtwm.curAnimSpeed = speed_idx;
+    if (dtwm.animSpeedOM && dtwm.animSpeedBtns[speed_idx])
+        XtVaSetValues(dtwm.animSpeedOM, XmNmenuHistory, dtwm.animSpeedBtns[speed_idx], NULL);
+}
+
+static void
 set_anim_menu_selection(Boolean is_max, int style_idx)
 {
     if (style_idx < 0 || style_idx >= DTWM_UI_ANIM_COUNT)
@@ -335,6 +412,7 @@ set_anim_menu_selection(Boolean is_max, int style_idx)
         if (dtwm.minAnimOM && dtwm.minAnimBtns[style_idx])
             XtVaSetValues(dtwm.minAnimOM, XmNmenuHistory, dtwm.minAnimBtns[style_idx], NULL);
     }
+    sync_anim_speed_sensitivity();
 }
 
 static void
@@ -388,6 +466,7 @@ minAnimSelectCB(Widget w, XtPointer client_data, XtPointer call_data)
     (void)w;
     (void)call_data;
     dtwm.curMinAnimStyle = (int)(intptr_t)client_data;
+    sync_anim_speed_sensitivity();
 }
 
 static void
@@ -396,6 +475,15 @@ maxAnimSelectCB(Widget w, XtPointer client_data, XtPointer call_data)
     (void)w;
     (void)call_data;
     dtwm.curMaxAnimStyle = (int)(intptr_t)client_data;
+    sync_anim_speed_sensitivity();
+}
+
+static void
+animSpeedSelectCB(Widget w, XtPointer client_data, XtPointer call_data)
+{
+    (void)w;
+    (void)call_data;
+    dtwm.curAnimSpeed = (int)(intptr_t)client_data;
 }
 
 static void
@@ -408,6 +496,7 @@ commit_orig_dtwm_values(void)
     dtwm.origMoveOpaque = XmToggleButtonGadgetGetState(dtwm.moveOpaqueTG);
     dtwm.origMinAnimStyle = dtwm.curMinAnimStyle;
     dtwm.origMaxAnimStyle = dtwm.curMaxAnimStyle;
+    dtwm.origAnimSpeed = dtwm.curAnimSpeed;
     dtwm.origShowTaskSwitcher = XmToggleButtonGadgetGetState(dtwm.showTaskSwitcherTG);
     dtwm.origUseIconBox = XmToggleButtonGadgetGetState(dtwm.iconBoxTG);
     dtwm.origIncreaseIconSize = XmToggleButtonGadgetGetState(dtwm.increaseIconSizeTG);
@@ -717,8 +806,16 @@ getDtwmValues(void)
         dtwm.origMaxAnimStyle = DtstyleResolveWindowAnimStyle(
             max_style_buf, wayland_mode, True, has_legacy_min, legacy_min_enabled);
 
+        {
+            char speed_buf[64] = "";
+            query_dtwm_string_lower(live_db, db, "animationSpeed",
+                                    "AnimationSpeed", speed_buf, sizeof(speed_buf));
+            dtwm.origAnimSpeed = DtstyleResolveWindowAnimSpeed(speed_buf);
+        }
+
         set_anim_menu_selection(False, dtwm.origMinAnimStyle);
         set_anim_menu_selection(True, dtwm.origMaxAnimStyle);
+        set_anim_speed_selection(dtwm.origAnimSpeed);
     }
 
     /* Get ShowTaskSwitcher value */
@@ -1020,6 +1117,35 @@ build_dtwmDlg(
     dtwm.maxAnimOM = XmCreateOptionMenu(windowFocusForm, "maxAnimOM", args, n);
     XmStringFree(string);
 
+    dtwm.animSpeedPD = XmCreatePulldownMenu(windowFocusForm, "animSpeedPD", nullptr, 0);
+    {
+        const char *speed_labels[DTWM_UI_SPEED_COUNT] = {
+            (char *)GETMESSAGE(18, 31, "Very Quick"),
+            (char *)GETMESSAGE(18, 32, "Standard"),
+            (char *)GETMESSAGE(18, 33, "Slow"),
+        };
+        for (i = 0; i < DTWM_UI_SPEED_COUNT; i++)
+        {
+            string = CMPSTR((char *)speed_labels[i]);
+            dtwm.animSpeedBtns[i] = XtVaCreateManagedWidget(
+                "animSpeedItem", xmPushButtonGadgetClass, dtwm.animSpeedPD,
+                XmNlabelString, string,
+                NULL);
+            XmStringFree(string);
+            XtAddCallback(dtwm.animSpeedBtns[i], XmNactivateCallback,
+                          animSpeedSelectCB, (XtPointer)(intptr_t)i);
+        }
+    }
+    n = 0;
+    string = CMPSTR((char *)GETMESSAGE(18, 30, "Animation Speed:"));
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    XtSetArg(args[n], XmNsubMenuId, dtwm.animSpeedPD); n++;
+    XtSetArg(args[n], XmNnavigationType, XmTAB_GROUP); n++;
+    XtSetArg(args[n], XmNmarginWidth, 0); n++;
+    XtSetArg(args[n], XmNmarginHeight, 0); n++;
+    dtwm.animSpeedOM = XmCreateOptionMenu(windowFocusForm, "animSpeedOM", args, n);
+    XmStringFree(string);
+
     n = 0;
     string = CMPSTR((char *)GETMESSAGE(18, 21, "Show Task Switcher on Alt+Tab"));
     XtSetArg(args[n], XmNnavigationType, XmTAB_GROUP); n++;
@@ -1105,6 +1231,7 @@ build_dtwmDlg(
     XtManageChild(dtwm.moveOpaqueTG);
     XtManageChild(dtwm.minAnimOM);
     XtManageChild(dtwm.maxAnimOM);
+    XtManageChild(dtwm.animSpeedOM);
     XtManageChild(dtwm.showTaskSwitcherTG);
 
     XtManageChild(dtwm.useIconBoxRC);
@@ -1266,10 +1393,22 @@ formLayoutCB(
     XtSetArg(args[n], XmNrightOffset,        0);  n++;
     XtSetValues (dtwm.maxAnimOM, args, n);
 
-    /* Show Task Switcher TG */
+    /* Animation Speed OM */
     n=0;
     XtSetArg(args[n], XmNtopAttachment,      XmATTACH_WIDGET);       n++;
     XtSetArg(args[n], XmNtopWidget,          dtwm.maxAnimOM);        n++;
+    XtSetArg(args[n], XmNtopOffset,          style.verticalSpacing-3); n++;
+    XtSetArg(args[n], XmNbottomAttachment,   XmATTACH_NONE);         n++;
+    XtSetArg(args[n], XmNleftAttachment,     XmATTACH_FORM);         n++;
+    XtSetArg(args[n], XmNleftOffset,         0);  n++;
+    XtSetArg(args[n], XmNrightAttachment,    XmATTACH_FORM);         n++;
+    XtSetArg(args[n], XmNrightOffset,        0);  n++;
+    XtSetValues (dtwm.animSpeedOM, args, n);
+
+    /* Show Task Switcher TG */
+    n=0;
+    XtSetArg(args[n], XmNtopAttachment,      XmATTACH_WIDGET);       n++;
+    XtSetArg(args[n], XmNtopWidget,          dtwm.animSpeedOM);      n++;
     XtSetArg(args[n], XmNtopOffset,          style.verticalSpacing-3); n++;
     XtSetArg(args[n], XmNbottomAttachment,   XmATTACH_FORM);         n++;
     XtSetArg(args[n], XmNbottomOffset,       style.verticalSpacing); n++;
@@ -1383,6 +1522,7 @@ systemDefaultCB(
         refresh_anim_menus_for_backend(wayland_mode);
         set_anim_menu_selection(False, wayland_mode ? DTWM_UI_ANIM_BEVEL : DTWM_UI_ANIM_WIREFRAME);
         set_anim_menu_selection(True, wayland_mode ? DTWM_UI_ANIM_BEVEL : DTWM_UI_ANIM_NONE);
+        set_anim_speed_selection(DTWM_UI_SPEED_STANDARD);
     }
 
     /* ShowTaskSwitcher: True */
@@ -1478,6 +1618,14 @@ ButtonCB(
 	  append_dtwm_res(dtwmRes, sizeof(dtwmRes),
 			  "Dtwm*maximizeAnimation: %s\n",
 			  anim_style_to_token(dtwm.curMaxAnimStyle));
+	  changeFlag = 1;
+	}
+
+      if (dtwm.curAnimSpeed != dtwm.origAnimSpeed)
+	{
+	  append_dtwm_res(dtwmRes, sizeof(dtwmRes),
+			  "Dtwm*animationSpeed: %s\n",
+			  anim_speed_to_token(dtwm.curAnimSpeed));
 	  changeFlag = 1;
 	}
 
@@ -1596,6 +1744,7 @@ ButtonCB(
 
       set_anim_menu_selection(False, dtwm.origMinAnimStyle);
       set_anim_menu_selection(True, dtwm.origMaxAnimStyle);
+      set_anim_speed_selection(dtwm.origAnimSpeed);
 
       XmToggleButtonGadgetSetState (dtwm.showTaskSwitcherTG,
 				    dtwm.origShowTaskSwitcher ? True : False , True);
@@ -1811,6 +1960,7 @@ cancelWarnCB(
 
   set_anim_menu_selection(False, dtwm.origMinAnimStyle);
   set_anim_menu_selection(True, dtwm.origMaxAnimStyle);
+  set_anim_speed_selection(dtwm.origAnimSpeed);
 
   XmToggleButtonGadgetSetState (dtwm.showTaskSwitcherTG,
 				dtwm.origShowTaskSwitcher ? True : False , True);

@@ -1049,6 +1049,10 @@ static void handle_dt_wm_request_item(DtwmServer *server, const char *cmd) {
         server->maximize_anim_style = dtwm_parse_anim_style(cmd + 25);
         return;
     }
+    if (strncmp(cmd, "f.set_animation_speed", 21) == 0 && isspace((unsigned char)cmd[21])) {
+        server->anim_speed = dtwm_parse_anim_speed(cmd + 22);
+        return;
+    }
 
     if (strncmp(cmd, "f.change_backdrop", 17) == 0 && isspace((unsigned char)cmd[17])) {
         char path[512] = {0};
@@ -1672,6 +1676,8 @@ static void sync_xcb_resource_manager_profile(DtwmServer *server) {
                     server->minimize_anim_style = dtwm_parse_anim_style(val);
                 } else if (xrdb_key_matches(line, klen, "maximizeAnimation")) {
                     server->maximize_anim_style = dtwm_parse_anim_style(val);
+                } else if (xrdb_key_matches(line, klen, "animationSpeed")) {
+                    server->anim_speed = dtwm_parse_anim_speed(val);
                 } else if (xrdb_key_matches(line, klen, "showTaskSwitcher")) {
                     server->show_task_switcher = parse_xrdb_bool(val, server->show_task_switcher);
                 } else if (xrdb_key_matches(line, klen, "useIconBox")) {

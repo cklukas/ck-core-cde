@@ -1232,12 +1232,18 @@ typedef struct _WmScreenData
 #define WM_ANIM_WIREFRAME	1u
 #define WM_ANIM_TITLEBAR	2u
 
+#define WM_ANIM_SPEED_VERY_QUICK	0u
+#define WM_ANIM_SPEED_STANDARD		1u
+#define WM_ANIM_SPEED_SLOW		2u
+
     Boolean	doubleIconSize;		/* resource */
     Boolean	animateMinimizeRestore;	/* resource */
     String	minimizeAnimation;	/* resource */
     String	maximizeAnimation;	/* resource */
+    String	animationSpeed;		/* resource */
     unsigned char minAnimMode;
     unsigned char maxAnimMode;
+    unsigned char animSpeedMode;
     Boolean	showTaskSwitcher;	/* resource */
     Pixmap	builtinIconPixmap;
     int		iconWidth;

@@ -154,6 +154,12 @@ typedef enum {
 } DtwmAnimStyle;
 
 typedef enum {
+    DTWM_ANIM_SPEED_VERY_QUICK = 0,
+    DTWM_ANIM_SPEED_STANDARD = 1,
+    DTWM_ANIM_SPEED_SLOW = 2,
+} DtwmAnimSpeed;
+
+typedef enum {
     DTWM_ANIM_KIND_NONE = 0,
     DTWM_ANIM_KIND_MINIMIZE,
     DTWM_ANIM_KIND_RESTORE,
@@ -402,6 +408,7 @@ struct DtwmServer {
     bool legacy_animate_minimize;
     DtwmAnimStyle minimize_anim_style;
     DtwmAnimStyle maximize_anim_style;
+    DtwmAnimSpeed anim_speed;
     bool show_task_switcher;
 
     /* Interactive CDE Icon Box window state (when use_icon_box is enabled) */
@@ -728,6 +735,7 @@ void dtwm_view_set_minimized(DtwmView *view, bool minimized);
 void dtwm_view_apply_geometry(DtwmView *view, int x, int y, int client_w, int client_h);
 void dtwm_view_close(DtwmView *view);
 DtwmAnimStyle dtwm_parse_anim_style(const char *val);
+DtwmAnimSpeed dtwm_parse_anim_speed(const char *val);
 DtwmAnimStyle dtwm_resolve_anim_style(const DtwmServer *server, bool is_maximize);
 void dtwm_anim_cancel_all(DtwmServer *server);
 void dtwm_anim_cancel_for_view(DtwmServer *server, DtwmView *view);

@@ -534,20 +534,22 @@ def main() -> int:
                 apps_summary = f"live dynamic icons animated ({ha[:10]} -> {hb[:10]}), swallowed fpclock + 48->96px verified"
 
             # 4. Verify Wayland window minimize/restore & maximize/unmaximize animation styles
-            # (bevel default, titlebar, wireframe, none), mid-flight reversal, and unmap safety!
+            # (bevel default, titlebar, wireframe, none), animationSpeed presets (very_quick,
+            # standard, slow), late near-icon symmetric crossfade, mid-flight reversal, and unmap safety!
             for style in ("bevel", "titlebar", "wireframe", "none"):
                 xrdb_payload = (
                     f"Dtwm*minimizeAnimation: {style}\n"
                     f"Dtwm*maximizeAnimation: {style}\n"
+                    f"Dtwm*animationSpeed: very_quick\n"
                     f"Dtwm*animateMinimizeRestore: {'False' if style == 'none' else 'True'}\n"
                 )
                 subprocess.run([str(x11_bin), "xrdb", xrdb_payload], env=c_env, check=True)
                 time.sleep(0.08)
 
                 subprocess.run(["wlrctl", "toplevel", "minimize", "title:WaylandIconApp"], env=c_env, check=True)
-                time.sleep(0.22 if style != "none" else 0.05)
+                time.sleep(0.24 if style != "none" else 0.05)
                 subprocess.run(["wlrctl", "toplevel", "focus", "title:WaylandIconApp"], env=c_env, check=True)
-                time.sleep(0.20 if style != "none" else 0.05)
+                time.sleep(0.22 if style != "none" else 0.05)
 
                 subprocess.run(["wlrctl", "toplevel", "maximize", "title:WaylandIconApp"], env=c_env, check=True)
                 time.sleep(0.18 if style != "none" else 0.05)
@@ -558,21 +560,60 @@ def main() -> int:
                 subprocess.run(["wlrctl", "pointer", "click", "left"], env=c_env, check=True)
                 time.sleep(0.18 if style != "none" else 0.05)
 
-            # Mid-flight reversal & mid-flight client unmap/destroy under default Bevel Morph
+            # Verify Slow speed preset (460ms minimize / 430ms restore) & symmetric late near-icon fade:
+            # At ~130ms into a 460ms minimize (and ~210ms into a 430ms restore), the mid-flight window
+            # must still render its live #243448 client surface rather than fading early into the icon!
             subprocess.run(
                 [
                     str(x11_bin),
                     "xrdb",
-                    "Dtwm*minimizeAnimation: bevel\nDtwm*maximizeAnimation: bevel\nDtwm*animateMinimizeRestore: True\n",
+                    "Dtwm*minimizeAnimation: bevel\nDtwm*maximizeAnimation: bevel\n"
+                    "Dtwm*animationSpeed: slow\nDtwm*animateMinimizeRestore: True\n",
+                ],
+                env=c_env,
+                check=True,
+            )
+            time.sleep(0.08)
+            subprocess.run(["wlrctl", "toplevel", "minimize", "title:WaylandIconApp"], env=c_env, check=True)
+            time.sleep(0.13)
+            shot_mid_min = work / "wp04-anim-mid-minimize.png"
+            subprocess.run(["grim", str(shot_mid_min)], env=c_env, check=True)
+            time.sleep(0.48)
+            with Image.open(shot_mid_min) as im_mm:
+                mid_min_client_px = count_near_rgb_in_crop(im_mm, (0, 0, out1_w, out_h), (0x24, 0x34, 0x48), tol=16)
+                if mid_min_client_px < 800:
+                    raise SystemExit(
+                        f"expected live #243448 window surface during mid-flight Bevel Morph minimize before near-icon zone, got {mid_min_client_px}px"
+                    )
+
+            subprocess.run(["wlrctl", "toplevel", "focus", "title:WaylandIconApp"], env=c_env, check=True)
+            time.sleep(0.21)
+            shot_mid_res = work / "wp04-anim-mid-restore.png"
+            subprocess.run(["grim", str(shot_mid_res)], env=c_env, check=True)
+            time.sleep(0.35)
+            with Image.open(shot_mid_res) as im_mr:
+                mid_res_client_px = count_near_rgb_in_crop(im_mr, (0, 0, out1_w, out_h), (0x24, 0x34, 0x48), tol=16)
+                if mid_res_client_px < 1500:
+                    raise SystemExit(
+                        f"expected live #243448 window surface during mid-flight Bevel Morph restore after leaving near-icon zone, got {mid_res_client_px}px"
+                    )
+
+            # Switch to Standard speed (default) and verify mid-flight reversal & mid-flight client unmap/destroy
+            subprocess.run(
+                [
+                    str(x11_bin),
+                    "xrdb",
+                    "Dtwm*minimizeAnimation: bevel\nDtwm*maximizeAnimation: bevel\n"
+                    "Dtwm*animationSpeed: standard\nDtwm*animateMinimizeRestore: True\n",
                 ],
                 env=c_env,
                 check=True,
             )
             time.sleep(0.06)
             subprocess.run(["wlrctl", "toplevel", "minimize", "title:WaylandIconApp"], env=c_env, check=True)
-            time.sleep(0.03)
+            time.sleep(0.06)
             subprocess.run(["wlrctl", "toplevel", "focus", "title:WaylandIconApp"], env=c_env, check=True)
-            time.sleep(0.20)
+            time.sleep(0.32)
 
             p_ephemeral = subprocess.Popen(
                 [str(wl_ic_bin), "EphemeralAnimWin"],

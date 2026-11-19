@@ -1,4 +1,16 @@
 2026-11-19
+- Refine Wayland **Bevel Morph** window-to-icon crossfade timing so minimize and
+  restore keep the live window surface crisp across the workspace and transition
+  into/from the icon tile symmetrically only near the icon, and add an
+  **Animation Speed** (`Dtwm*animationSpeed`: **Very Quick**, **Standard**
+  [default], **Slow**) selector across `Style Manager - Window`, `dtwm-wayland`,
+  and classic X11 `dtwm` (`cde/programs/dtstyle/Dtwm.c`,
+  `cde/programs/dtstyle/dtstyle.msg`,
+  `cde/programs/dtstyle/tests/check-window-animations.{c,py}`,
+  `cde/programs/dtwm/{WmResNames.h,WmGlobal.h,WmInitWs.c,WmResource.h,WmResource.c,WmWinState.c,Dtwm.defs.src}`,
+  `cde/programs/dtwm/wayland/{dtwm_wayland.h,cde_accessibility.c,cde_bevel.c,cde_workspace.c,dtwm_wayland_main.c}`,
+  `cde/programs/dtwm/tests/check-dtwm-wayland-icons.py`,
+  `docs/improvements/wayland.md`, `docs/improvements/window-management.md`).
 - Wire **`ck-video`** (`CkVideo`, `Video Player`) as the default CDE video
   helper in `dtopen_video`, register `CkVideo` in Application Manager
   `Media_Tools`, add symbolic `Fpvideo.{t,m,l}.pm` and `Dtvideo.{t,m,l}.pm`
