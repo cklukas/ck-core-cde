@@ -1,4 +1,16 @@
 2026-11-19
+- Wire the Front Panel activity indicator light (`CONTROL Busy`, `Fplite` /
+  `FpliteY`) and busy cursor under Wayland (`cde/programs/dtwm/wayland/WmFpWayland.c`,
+  `cde/programs/dtwm/wayland/cde_workspace.c`,
+  `cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `cde/programs/dtwm/wayland/dtwm_wayland.h`,
+  `cde/programs/dtwm/tests/check-dtwm-wayland-busy-light.py`): register the
+  ToolTalk `TT_NOTICE` observer (`DtActivity_Beginning`, `DtActivity_Began`,
+  `DtTypes_Reloaded`) in `dtwm-panel`, trigger `_DT_PANEL_BUSY_START_SEQ` for
+  direct compositor desktop menu launches, and automatically clear the busy
+  indicator via `_DT_PANEL_BUSY_STOP_SEQ` / `WmStopWaiting` once a launched
+  native Wayland (`xdg_toplevel`), XWayland, or embedded Front Panel client
+  maps.
 - Keep `dtpad`'s line-number gutter synchronized during scrollbar arrow, trough,
   thumb-drag, and mouse-wheel scrolling without requiring a click back into the
   text pane, using double-buffered pixmap rendering (`cde/programs/dtpad/padTabs.c`).

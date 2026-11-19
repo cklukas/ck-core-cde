@@ -1863,6 +1863,8 @@ void dtwm_workspaces_on_xwayland_ready(DtwmServer *server) {
     server->atom_ws_hints = intern_atom_sync(server->xcb_conn, "_DT_WORKSPACE_HINTS");
     server->atom_ws_presence = intern_atom_sync(server->xcb_conn, "_DT_WORKSPACE_PRESENCE");
     server->atom_wm_request = intern_atom_sync(server->xcb_conn, "_DT_WM_REQUEST");
+    server->atom_panel_busy_start_seq = intern_atom_sync(server->xcb_conn, "_DT_PANEL_BUSY_START_SEQ");
+    server->atom_panel_busy_stop_seq = intern_atom_sync(server->xcb_conn, "_DT_PANEL_BUSY_STOP_SEQ");
     server->atom_ws_all = intern_atom_sync(server->xcb_conn, "all");
 
     /* Unmapped child of root for _MOTIF_WM_INFO (_DtGetMwmWindow checks parent == root) */
@@ -1950,6 +1952,32 @@ void dtwm_workspaces_on_xwayland_view_map(DtwmView *view) {
     );
     xcb_apply_client_ws_hints(view);
     xcb_sync_view_presence(view);
+}
+
+void dtwm_notify_panel_busy_start(DtwmServer *server) {
+    if (!server || !server->xcb_conn || server->xcb_wm_win == XCB_NONE ||
+        server->atom_panel_busy_start_seq == XCB_NONE) {
+        return;
+    }
+    uint32_t seq = ++server->panel_busy_start_seq;
+    xcb_change_property(
+        server->xcb_conn, XCB_PROP_MODE_REPLACE, server->xcb_wm_win,
+        server->atom_panel_busy_start_seq, XCB_ATOM_CARDINAL, 32, 1, &seq
+    );
+    xcb_flush(server->xcb_conn);
+}
+
+void dtwm_notify_panel_busy_stop(DtwmServer *server) {
+    if (!server || !server->xcb_conn || server->xcb_wm_win == XCB_NONE ||
+        server->atom_panel_busy_stop_seq == XCB_NONE) {
+        return;
+    }
+    uint32_t seq = ++server->panel_busy_stop_seq;
+    xcb_change_property(
+        server->xcb_conn, XCB_PROP_MODE_REPLACE, server->xcb_wm_win,
+        server->atom_panel_busy_stop_seq, XCB_ATOM_CARDINAL, 32, 1, &seq
+    );
+    xcb_flush(server->xcb_conn);
 }
 
 /* --- Native Wayland ext-workspace-v1 Protocol Implementation --- */

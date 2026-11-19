@@ -95,7 +95,11 @@ Wayland and XWayland clients:
   `Callback.c`, `PanelS.c`, `PopupMenu.c`, and `Session.c`) on the primary
   output with full `.fp` database loading (`/usr/dt/appconfig/types/C/dtwm.fp`
   and `~/.dt/types/*.fp`), slide-up subpanels (`DtWM_BEHAVIOR_SUBPANEL`),
-  `DtActionInvoke` controls, `Ctrl+Alt+1..8` and `Ctrl+Alt+Left/Right`
+  `DtActionInvoke` controls, live `CONTROL Busy` activity-indicator blinking
+  (`Fplite` ↔ `FpliteY` + busy watch cursor driven by ToolTalk
+  `DtActivity_Beginning` / `DtActivity_Began` notices, compositor launcher
+  spawns, and automatic completion turn-off when a new native Wayland or
+  XWayland top-level window maps), `Ctrl+Alt+1..8` and `Ctrl+Alt+Left/Right`
   shortcuts, and bottom strut reservation (`dtwm_get_usable_output_box`)
   respected by maximized and edge-snapped windows (`--no-panel` and `--greeter`
   hide the panel when needed).

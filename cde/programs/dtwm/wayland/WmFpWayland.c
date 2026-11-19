@@ -81,10 +81,22 @@ static Atom g_atomSunTtSession = None;
 static Atom g_atomTtSession = None;
 static Atom g_atomTrashWin = None;
 static Atom g_atomSubpanelTorn = None;
+static Atom g_atomPanelBusyStartSeq = None;
+static Atom g_atomPanelBusyStopSeq = None;
 static Window g_watchedTrashWin = None;
 
 extern void WorkspaceModifyCB(Widget, Atom, int, XtPointer);
 extern void SubpanelUnmapCB(Widget, XtPointer, XtPointer);
+extern void UpdateFileTypeControlFields(void);
+
+void WmStopWaiting(void) {
+    if (wmGD.dtSD) {
+        WmFrontPanelSetBusy(False);
+        if (wmGD.display) {
+            XFlush(wmGD.display);
+        }
+    }
+}
 
 /* --- Append _DT_WM_REQUEST command to dtwm-wayland's WSM window --- */
 static Window find_mwm_window(Display *dpy) {
@@ -430,7 +442,7 @@ static void ensure_cde_search_paths(const char *argv0) {
     ensure_appmanager_gathered();
 }
 
-static void ensure_ttsession_running(Display *dpy) {
+static void ensure_ttsession_running(Display *dpy, const char *argv0) {
     if (!dpy) return;
     if (getenv("TT_SESSION") && getenv("TT_SESSION")[0]) return;
 
@@ -455,8 +467,29 @@ static void ensure_ttsession_running(Display *dpy) {
         }
     }
 
+    char build_tt_bin[PATH_MAX] = {0};
     const char *tt_bin = CDE_INSTALLATION_TOP "/bin/ttsession";
     struct stat st;
+    if ((stat(tt_bin, &st) != 0 || !(st.st_mode & S_IXUSR)) && argv0) {
+        char resolved[PATH_MAX];
+        if (realpath(argv0, resolved)) {
+            char *slash = strrchr(resolved, '/');
+            if (slash) {
+                *slash = '\0';
+                static const char *const tt_rels[2] = {
+                    "../../lib/tt/bin/ttsession/ttsession",
+                    "../../../lib/tt/bin/ttsession/ttsession"
+                };
+                for (int r = 0; r < 2; ++r) {
+                    snprintf(build_tt_bin, sizeof(build_tt_bin), "%s/%s", resolved, tt_rels[r]);
+                    if (stat(build_tt_bin, &st) == 0 && (st.st_mode & S_IXUSR)) {
+                        tt_bin = build_tt_bin;
+                        break;
+                    }
+                }
+            }
+        }
+    }
     if (stat(tt_bin, &st) != 0 || !(st.st_mode & S_IXUSR)) {
         return;
     }
@@ -598,6 +631,7 @@ static bool try_embed_x11_window(Display *dpy, Window win) {
             XMoveResizeWindow(dpy, win, ecd->x, ecd->y, w, h);
             XMapWindow(dpy, win);
             XFlush(dpy);
+            WmStopWaiting();
             matched = true;
             break;
         }
@@ -668,7 +702,15 @@ Boolean F_Action(String actionName, ClientData *pCD, XEvent *event) {
     (void)pCD;
     (void)event;
     if (!actionName || !panel.shell) return False;
-    DtActionInvoke(panel.shell, actionName, nullptr, 0, nullptr, nullptr, nullptr, 1, nullptr, nullptr);
+    WmActionArg *ap = (WmActionArg *)actionName;
+    if (!ap->actionName || !ap->actionName[0]) return False;
+    if (!g_ttWsmRegistered && wmGD.dtSD) {
+        WmFrontPanelSetBusy(True);
+    }
+    DtActionInvoke(
+        panel.shell, ap->actionName, ap->aap, ap->numArgs,
+        ap->szExecParms, nullptr, nullptr, 1, nullptr, nullptr
+    );
     return True;
 }
 
@@ -800,15 +842,8 @@ Boolean F_Push_Recall(String args, ClientData *pCD, XEvent *event) {
         }
     }
 
-    if (prp->wmFunc == F_Action && prp->pArgs) {
-        WmActionArg *ap = (WmActionArg *)prp->pArgs;
-        if (ap->actionName && ap->actionName[0]) {
-            DtActionInvoke(
-                panel.shell, ap->actionName, ap->aap, ap->numArgs,
-                nullptr, nullptr, nullptr, 1, nullptr, nullptr
-            );
-            return True;
-        }
+    if (prp->wmFunc && prp->pArgs) {
+        return prp->wmFunc(prp->pArgs, pCD, event);
     }
     return False;
 }
@@ -1026,6 +1061,47 @@ static Tt_callback_action wayland_wsm_tt_request_cb(Tt_message m, Tt_pattern p) 
     return TT_CALLBACK_PROCESSED;
 }
 
+static Tt_callback_action wayland_wsm_tt_notice_cb(Tt_message m, Tt_pattern p) {
+    (void)p;
+    if (tt_message_state(m) != TT_SENT) {
+        return TT_CALLBACK_CONTINUE;
+    }
+    char *op = tt_message_op(m);
+    if (tt_ptr_error(op) != TT_OK || !op) {
+        return TT_CALLBACK_CONTINUE;
+    }
+
+    bool handled = false;
+    if (strcmp(op, "DtActivity_Began") == 0) {
+        WmStopWaiting();
+        handled = true;
+    } else if (strcmp(op, "DtActivity_Beginning") == 0) {
+        if (wmGD.dtSD) {
+            WmFrontPanelSetBusy(True);
+            if (wmGD.display) {
+                XFlush(wmGD.display);
+            }
+        }
+        handled = true;
+    } else if (strcmp(op, "DtTypes_Reloaded") == 0) {
+        WmFrontPanelSetBusy(True);
+        DtDbLoad();
+        UpdateFileTypeControlFields();
+        WmFrontPanelSetBusy(False);
+        if (wmGD.display) {
+            XFlush(wmGD.display);
+        }
+        handled = true;
+    }
+
+    tt_free(op);
+    if (!handled) {
+        return TT_CALLBACK_CONTINUE;
+    }
+    tt_message_destroy(m);
+    return TT_CALLBACK_PROCESSED;
+}
+
 static SwitchData *find_panel_switch_data(void) {
     for (int i = 0; i < panel.box_data_count; ++i) {
         if (panel.box_data[i] && panel.box_data[i]->switch_data) {
@@ -1047,11 +1123,27 @@ static void register_wayland_wsm_tooltalk_handlers(Widget topShell) {
     if (tt_ptr_error(sess) != TT_OK || !sess) {
         return;
     }
-    Tt_pattern pat = tt_pattern_create();
-    if (tt_ptr_error(pat) != TT_OK) {
+    Tt_pattern notice_pat = tt_pattern_create();
+    if (tt_ptr_error(notice_pat) != TT_OK) {
         tt_free(sess);
         return;
     }
+    Tt_pattern pat = tt_pattern_create();
+    if (tt_ptr_error(pat) != TT_OK) {
+        tt_pattern_destroy(notice_pat);
+        tt_free(sess);
+        return;
+    }
+    tt_pattern_category_set(notice_pat, TT_OBSERVE);
+    tt_pattern_scope_add(notice_pat, TT_SESSION);
+    tt_pattern_session_add(notice_pat, sess);
+    tt_pattern_class_add(notice_pat, TT_NOTICE);
+    tt_pattern_state_add(notice_pat, TT_SENT);
+    tt_pattern_op_add(notice_pat, "DtActivity_Beginning");
+    tt_pattern_op_add(notice_pat, "DtActivity_Began");
+    tt_pattern_op_add(notice_pat, "DtTypes_Reloaded");
+    tt_pattern_callback_add(notice_pat, wayland_wsm_tt_notice_cb);
+
     tt_pattern_category_set(pat, TT_HANDLE);
     tt_pattern_scope_add(pat, TT_SESSION);
     tt_pattern_session_add(pat, sess);
@@ -1065,13 +1157,18 @@ static void register_wayland_wsm_tooltalk_handlers(Widget topShell) {
     tt_pattern_op_add(pat, "DtPanel_Restore");
     tt_pattern_op_add(pat, "GetWsmClients");
     tt_pattern_callback_add(pat, wayland_wsm_tt_request_cb);
-    if (tt_pattern_register(pat) == TT_OK) {
+    Tt_status notice_st = tt_pattern_register(notice_pat);
+    Tt_status req_st = tt_pattern_register(pat);
+    if (notice_st == TT_OK && req_st == TT_OK) {
         g_ttWsmRegistered = true;
         /* Also re-register WorkspaceModifyCB on ToolTalk if WmPanelistShow ran before ttsession */
         SwitchData *sw = find_panel_switch_data();
         if (sw && panel.shell) {
             DtWsmAddWorkspaceModifiedCallback(panel.shell, WorkspaceModifyCB, (XtPointer)sw);
         }
+    } else {
+        tt_pattern_destroy(notice_pat);
+        tt_pattern_destroy(pat);
     }
 }
 
@@ -1091,6 +1188,18 @@ static void retry_tt_wsm_timer_cb(XtPointer client_data, XtIntervalId *id) {
 }
 
 static void sync_panel_workspaces_from_x11(Display *dpy, Atom changed_atom) {
+    if (changed_atom == g_atomPanelBusyStartSeq) {
+        if (wmGD.dtSD) {
+            WmFrontPanelSetBusy(True);
+            XFlush(dpy);
+        }
+        return;
+    }
+    if (changed_atom == g_atomPanelBusyStopSeq) {
+        WmStopWaiting();
+        return;
+    }
+
     SwitchData *sw = find_panel_switch_data();
     if (!sw || !panel.shell) return;
     Window root = DefaultRootWindow(dpy);
@@ -1274,7 +1383,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    ensure_ttsession_running(dpy);
+    ensure_ttsession_running(dpy, argv[0]);
     bootstrap_color_server_if_needed(dpy, profile);
 
     Widget topShell = XtVaAppCreateShell(
@@ -1340,6 +1449,8 @@ int main(int argc, char **argv) {
     g_atomTtSession = XInternAtom(dpy, "TT_SESSION", False);
     g_atomTrashWin = XInternAtom(dpy, "_DT_TRASH_WINDOW", False);
     g_atomSubpanelTorn = XInternAtom(dpy, "_DT_SUBPANEL_TORN_OFF", False);
+    g_atomPanelBusyStartSeq = XInternAtom(dpy, "_DT_PANEL_BUSY_START_SEQ", False);
+    g_atomPanelBusyStopSeq = XInternAtom(dpy, "_DT_PANEL_BUSY_STOP_SEQ", False);
     if (g_mwmWin != None) {
         XSelectInput(dpy, g_mwmWin, PropertyChangeMask);
     }
@@ -1363,6 +1474,12 @@ int main(int argc, char **argv) {
         if (ev.type == PropertyNotify &&
             ev.xproperty.window == g_fpScreen.rootWindow &&
             ev.xproperty.state == PropertyNewValue) {
+            if (g_mwmWin == None) {
+                g_mwmWin = find_mwm_window(dpy);
+                if (g_mwmWin != None) {
+                    XSelectInput(dpy, g_mwmWin, PropertyChangeMask);
+                }
+            }
             if (ev.xproperty.atom == g_atomTrashWin) {
                 watch_trash_window_events(dpy);
             }
@@ -1389,7 +1506,13 @@ int main(int argc, char **argv) {
             sync_panel_workspaces_from_x11(dpy, ev.xproperty.atom);
         } else if (ev.type == MapNotify && ev.xmap.window != g_fpScreen.rootWindow) {
             register_all_subpanel_contexts();
-            try_embed_x11_window(dpy, ev.xmap.window);
+            bool embedded = try_embed_x11_window(dpy, ev.xmap.window);
+            if (!embedded && g_mwmWin == None &&
+                ev.xmap.event == g_fpScreen.rootWindow && !ev.xmap.override_redirect &&
+                ev.xmap.window != g_colorSrvWin &&
+                XtWindowToWidget(dpy, ev.xmap.window) == nullptr) {
+                WmStopWaiting();
+            }
             WmFpUpdateTrashOpenIcon(dpy);
         } else if (ev.type == UnmapNotify && ev.xunmap.event == g_fpScreen.rootWindow) {
             WmFpUpdateTrashOpenIcon(dpy);

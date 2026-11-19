@@ -966,6 +966,11 @@ static void spawn_desktop_command(DtwmServer *server, const char *prog, const ch
     if (!server || !prog || !prog[0]) {
         return;
     }
+    const char *base = strrchr(prog, '/');
+    base = base ? base + 1 : prog;
+    if (strcmp(base, "dtaction") != 0) {
+        dtwm_notify_panel_busy_start(server);
+    }
     pid_t pid = fork();
     if (pid < 0) {
         return;
@@ -2974,6 +2979,7 @@ static void xdg_toplevel_map(struct wl_listener *listener, void *data) {
     dtwm_view_update_frame(view);
     dtwm_icons_on_view_map(view);
     dtwm_foreign_toplevel_sync(view);
+    dtwm_notify_panel_busy_stop(view->server);
     if (dtwm_view_visible_on_current_ws(view)) {
         focus_view(view->server, view, view->xdg_toplevel->base->surface);
     }
@@ -3635,6 +3641,7 @@ static void xwayland_map(struct wl_listener *listener, void *data) {
     sync_xwayland_client_pos(view);
     dtwm_view_update_frame(view);
     dtwm_foreign_toplevel_sync(view);
+    dtwm_notify_panel_busy_stop(view->server);
     if (dtwm_view_visible_on_current_ws(view)) {
         focus_view(view->server, view, xs->surface);
     }
