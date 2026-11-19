@@ -101,7 +101,7 @@ extern XmWidgetExtData _XmGetWidgetExtData(
 #define KEYBOARD_ICON "DtKeybd"
 #define MOUSE_ICON    "DtMouse"
 #define BEEP_ICON     "DtBeep"
-#define SOUND_ICON    "Fpsound"
+#define SOUND_ICON    "DtSound"
 #define SCREEN_ICON   "DtScrn"
 #define DISPLAY_ICON  "DtDisplay"
 #define DTWM_ICON     "DtDtwm"

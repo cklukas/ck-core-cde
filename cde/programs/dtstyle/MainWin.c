@@ -561,9 +561,7 @@ ProcessComponentList(
               continue;
           }
           cmp_string = CMPSTR("Sound");
-          dtIcon = _DtGetIconFileName(style.screen, SOUND_ICON, nullptr, nullptr, DtLARGE);
-          if (dtIcon == nullptr)
-              dtIcon = _DtGetIconFileName(style.screen, SOUND_ICON, nullptr, nullptr, 0);
+          dtIcon = _DtGetIconFileName(style.screen, SOUND_ICON, nullptr, nullptr, 0);
           helpTag = HELP_AUDIO_BUTTON;
       }
 

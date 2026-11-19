@@ -863,7 +863,7 @@ Dtmidi.l.pm                     Dtmidi.m.pm \
 Dtmidi.t.pm                     Fpmidi.l.pm \
 Fpmidi.m.pm                     Fpmidi.t.pm \
 Fpsound.l.pm                    Fpsound.m.pm \
-Fpsound.t.pm
+Fpsound.t.pm                    DtSound.pm
 
 # Toolbar icons, installed as $(icondir)/toolbar/<size>/<icon-name>.png
 nobase_dist_icon_DATA = \

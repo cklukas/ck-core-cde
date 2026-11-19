@@ -1,6 +1,6 @@
 /* XPM */
 static char * DtDisplay [] = {
-"48 48 15 1 0 0",
+"48 37 15 1 0 0",
 "  c none m none s none",
 "$ s topShadowColor m white c #bdbdbdbdbdbd",
 "* s bottomShadowColor m black c #636363636363",
@@ -16,9 +16,6 @@ static char * DtDisplay [] = {
 "D s iconGray4 m white c #949494949494",
 "H s iconGray6 m black c #636363636363",
 "J s iconGray7 m black c #424242424242",
-"                                                ",
-"                                                ",
-"                                                ",
 "                                                ",
 "                                                ",
 "                                                ",
@@ -54,13 +51,5 @@ static char * DtDisplay [] = {
 "                          DDDDDDDD              ",
 "                       HHHHHHHHHHHHHHH          ",
 "                       HHHHHHHHHHHHHHH          ",
-"                                                ",
-"                                                ",
-"                                                ",
-"                                                ",
-"                                                ",
-"                                                ",
-"                                                ",
-"                                                ",
 "                                                ",
 "                                                "};
