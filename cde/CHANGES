@@ -1,4 +1,13 @@
 2026-11-19
+- Adopt beveled, checkerboard-dithered 16-color CDE toolbar icons and bump
+  `.ckgit/motif-revision` to `d8be57337d3da67b958ced1f567b1820e2459912`
+  (`cde/programs/icons/toolbar/`, `cde/programs/icons/Makefile.am`,
+  `.ckgit/motif-revision`):
+  - Verify `nobase_dist_icon_DATA` installation to
+    `$(CDE_INSTALLATION_TOP)/appconfig/icons/C/toolbar/<size>/` and pick up CK
+    Core Motif first-`Expose` insensitive gadget pixmap caching and colored
+    background preservation for disabled toolbar/search buttons in `dtfile` and
+    `dtpad`.
 - Integrate and verify the 16-color CDE toolbar icon assets (`16x16`–`48x48`)
   in **`dtpad`** and **`dtfile`**, and bump `.ckgit/motif-revision` to
   `4aece8f9daecbbb6b1fc847026a036e2dcc383f3` (`cde/programs/icons/Makefile.am`,
