@@ -64,11 +64,32 @@ typedef struct {
     struct wl_list icon_link; /* g_icon_views: stable desktop / Icon Box slot order */
     DtwmView *view;
     bool in_icon_order;
+    int desktop_slot[DTWM_MAX_WORKSPACES];
+    bool desktop_user_placed[DTWM_MAX_WORKSPACES];
 } DtwmIconOrderEntry;
+
+typedef struct {
+    bool active;
+    bool dragging;
+    bool in_icon_box;
+    bool was_focused_on_press;
+    bool ib_was_active_on_press;
+    DtwmView *view;
+    double press_lx;
+    double press_ly;
+    int orig_node_x;
+    int orig_node_y;
+    int target_slot;
+    int grid_origin_x;
+    int grid_origin_y;
+    struct wlr_scene_buffer *grid_buf;
+    struct wlr_scene_buffer *slot_buf;
+} DtwmIconDragState;
 
 static struct wl_list g_mapped_views;
 static struct wl_list g_icon_views;
 static bool g_icon_lists_initialized = false;
+static DtwmIconDragState g_icon_drag;
 
 static void ensure_icon_lists_init(void) {
     if (!g_icon_lists_initialized) {
@@ -76,6 +97,27 @@ static void ensure_icon_lists_init(void) {
         wl_list_init(&g_icon_views);
         g_icon_lists_initialized = true;
     }
+}
+
+static void hide_icon_drag_overlays(void) {
+    if (g_icon_drag.grid_buf) {
+        wlr_scene_buffer_set_buffer(g_icon_drag.grid_buf, nullptr);
+        wlr_scene_node_set_enabled(&g_icon_drag.grid_buf->node, false);
+    }
+    if (g_icon_drag.slot_buf) {
+        wlr_scene_buffer_set_buffer(g_icon_drag.slot_buf, nullptr);
+        wlr_scene_node_set_enabled(&g_icon_drag.slot_buf->node, false);
+    }
+}
+
+static void cancel_icon_drag_for_view(const DtwmView *view) {
+    if (!g_icon_drag.active) return;
+    if (view && g_icon_drag.view != view) return;
+    hide_icon_drag_overlays();
+    g_icon_drag.active = false;
+    g_icon_drag.dragging = false;
+    g_icon_drag.view = nullptr;
+    g_icon_drag.target_slot = -1;
 }
 
 static DtwmIconOrderEntry *find_icon_order_entry(const DtwmView *view) {
@@ -97,11 +139,31 @@ static void record_mapped_view_order(DtwmView *view) {
     if (!entry) return;
     entry->view = view;
     entry->in_icon_order = false;
+    for (int w = 0; w < DTWM_MAX_WORKSPACES; ++w) {
+        entry->desktop_slot[w] = -1;
+        entry->desktop_user_placed[w] = false;
+    }
     wl_list_init(&entry->icon_link);
     wl_list_insert(g_mapped_views.prev, &entry->map_link);
 }
 
+static void reset_all_desktop_slots(bool clear_user_placed) {
+    ensure_icon_lists_init();
+    DtwmIconOrderEntry *entry;
+    wl_list_for_each(entry, &g_mapped_views, map_link) {
+        for (int w = 0; w < DTWM_MAX_WORKSPACES; ++w) {
+            if (clear_user_placed || !entry->desktop_user_placed[w]) {
+                entry->desktop_slot[w] = -1;
+                if (clear_user_placed) {
+                    entry->desktop_user_placed[w] = false;
+                }
+            }
+        }
+    }
+}
+
 static void remove_view_from_icon_order(const DtwmView *view) {
+    cancel_icon_drag_for_view(view);
     DtwmIconOrderEntry *entry = find_icon_order_entry(view);
     if (!entry) return;
     if (entry->in_icon_order) {
@@ -111,6 +173,8 @@ static void remove_view_from_icon_order(const DtwmView *view) {
     }
     wl_list_remove(&entry->map_link);
     free(entry);
+    /* Compact remaining auto-placed desktop icons while preserving manually placed ones */
+    reset_all_desktop_slots(false);
 }
 
 static void prune_open_views_from_icon_order(void) {
@@ -121,8 +185,13 @@ static void prune_open_views_from_icon_order(void) {
             wl_list_remove(&entry->icon_link);
             wl_list_init(&entry->icon_link);
             entry->in_icon_order = false;
+            for (int w = 0; w < DTWM_MAX_WORKSPACES; ++w) {
+                entry->desktop_slot[w] = -1;
+                entry->desktop_user_placed[w] = false;
+            }
         }
     }
+    reset_all_desktop_slots(false);
 }
 
 static DtwmView *find_xdg_view(DtwmServer *server, struct wlr_xdg_toplevel *toplevel) {
@@ -1531,7 +1600,8 @@ static bool should_show_desktop_icon(const DtwmView *view) {
     }
     if (!view->minimized) {
         if (view->kind == DTWM_VIEW_XWAYLAND && view->xwayland_surface &&
-            view->xwayland_surface->parent != nullptr) {
+            view->xwayland_surface->parent != nullptr &&
+            view->xwayland_surface->parent->surface != nullptr) {
             return false;
         }
         if (view->kind == DTWM_VIEW_XDG && view->xdg_toplevel &&
@@ -2009,7 +2079,8 @@ static void render_icon_box_frame(DtwmServer *server, int total_content_h, int w
 static bool is_transient_child_view(const DtwmView *view) {
     if (!view) return false;
     if (view->kind == DTWM_VIEW_XWAYLAND && view->xwayland_surface &&
-        view->xwayland_surface->parent != nullptr) {
+        view->xwayland_surface->parent != nullptr &&
+        view->xwayland_surface->parent->surface != nullptr) {
         return true;
     }
     if (view->kind == DTWM_VIEW_XDG && view->xdg_toplevel &&
@@ -2056,12 +2127,15 @@ static void sync_icon_order_entries(DtwmServer *server) {
             free(entry);
             continue;
         }
-        if (!is_icon_order_eligible_base(v) || (is_transient_child_view(v) && !v->minimized)) {
+        if (!is_icon_order_eligible_base(v)) {
             if (entry->in_icon_order) {
                 wl_list_remove(&entry->icon_link);
                 wl_list_init(&entry->icon_link);
                 entry->in_icon_order = false;
             }
+            continue;
+        }
+        if (is_transient_child_view(v) && !v->minimized) {
             continue;
         }
         bool want_slot = v->is_panel
@@ -2072,6 +2146,186 @@ static void sync_icon_order_entries(DtwmServer *server) {
             entry->in_icon_order = true;
         }
     }
+}
+
+typedef struct {
+    struct wlr_box fbox;
+    struct wlr_box gbox;
+    int frame_w;
+    int frame_h;
+    int indicator_extra;
+    int edge_pad_x;
+    int edge_pad_y;
+    int col_w;
+    int row_h;
+    int max_rows;
+    int max_cols;
+    int col0_rows;
+    int total_slots;
+    bool horiz_primary;
+    bool right_side;
+    bool bottom_side;
+    bool panel_in_bottom_left;
+} DtwmDesktopGridMetrics;
+
+static bool is_pinned_bottom_left_icon(const DtwmView *v, const struct wlr_box *fbox) {
+    if (!v || !fbox) return false;
+    return v->is_panel ||
+           (v->has_icon_pos_hint && v->icon_hint_y > fbox->height * 3 / 4 && v->icon_hint_x <= 64);
+}
+
+static void compute_desktop_grid_metrics(DtwmServer *server, DtwmDesktopGridMetrics *gm) {
+    memset(gm, 0, sizeof(*gm));
+    struct wlr_box ubox;
+    dtwm_get_usable_output_box(server, 1, 1, &ubox);
+    gm->fbox = ubox;
+    wlr_output_layout_get_box(server->output_layout, nullptr, &gm->fbox);
+    if (gm->fbox.width <= 0 || gm->fbox.height <= 0) {
+        gm->fbox = ubox;
+    }
+
+    int img_dim = server->large_icons ? 96 : 48;
+    gm->frame_w = img_dim + 12;
+    gm->frame_h = (img_dim + 11) + (server->large_icons ? 24 : 21);
+    gm->indicator_extra =
+        server->show_open_window_icons ? (DTWM_OPEN_ICON_BAR_GAP + DTWM_OPEN_ICON_BAR_WIDTH) : 0;
+
+    int gap = (server->icon_placement_margin >= 0 && server->icon_placement_margin <= 128)
+                  ? server->icon_placement_margin
+                  : 8;
+    gm->edge_pad_x = gap > 8 ? gap : 12;
+    gm->edge_pad_y = gap > 8 ? gap : 6;
+    gm->col_w = gm->frame_w + gm->indicator_extra + (gap > 6 ? gap : 10);
+    gm->row_h = gm->frame_h + (gap > 4 ? gap : 6);
+
+    bool side_clears_panel =
+        !server->show_front_panel ||
+        (gm->fbox.width >= DTWM_PANEL_WIDTH + 2 * (gm->col_w + gm->edge_pad_x + 8));
+    gm->gbox = side_clears_panel ? gm->fbox : ubox;
+
+    gm->max_rows = (gm->gbox.height - gm->edge_pad_y * 2) / gm->row_h;
+    if (gm->max_rows < 1) gm->max_rows = 1;
+    gm->max_cols = (gm->gbox.width - gm->edge_pad_x * 2) / gm->col_w;
+    if (gm->max_cols < 1) gm->max_cols = 1;
+
+    DtwmIconOrderEntry *entry;
+    wl_list_for_each(entry, &g_icon_views, icon_link) {
+        DtwmView *v = entry->view;
+        if (v && v->is_panel && should_show_desktop_icon(v)) {
+            gm->panel_in_bottom_left = true;
+            break;
+        }
+    }
+
+    DtwmIconPlacement place = server->icon_placement;
+    gm->horiz_primary =
+        (place == DTWM_ICON_PLACE_LEFT_TOP || place == DTWM_ICON_PLACE_LEFT_BOTTOM ||
+         place == DTWM_ICON_PLACE_RIGHT_TOP || place == DTWM_ICON_PLACE_RIGHT_BOTTOM);
+    gm->right_side =
+        (place == DTWM_ICON_PLACE_TOP_RIGHT || place == DTWM_ICON_PLACE_RIGHT_TOP ||
+         place == DTWM_ICON_PLACE_BOTTOM_RIGHT || place == DTWM_ICON_PLACE_RIGHT_BOTTOM);
+    gm->bottom_side =
+        (place == DTWM_ICON_PLACE_BOTTOM_LEFT || place == DTWM_ICON_PLACE_LEFT_BOTTOM ||
+         place == DTWM_ICON_PLACE_BOTTOM_RIGHT || place == DTWM_ICON_PLACE_RIGHT_BOTTOM);
+
+    gm->col0_rows = gm->max_rows;
+    if (gm->panel_in_bottom_left && !gm->horiz_primary && !gm->right_side && !gm->bottom_side &&
+        gm->col0_rows > 1) {
+        gm->col0_rows--;
+    }
+
+    if (!gm->horiz_primary && !gm->right_side && !gm->bottom_side) {
+        gm->total_slots = gm->col0_rows + (gm->max_cols > 1 ? (gm->max_cols - 1) * gm->max_rows : 0);
+    } else {
+        gm->total_slots = gm->max_cols * gm->max_rows;
+    }
+    if (gm->total_slots < 1) gm->total_slots = 1;
+}
+
+static void desktop_slot_to_xy(
+    const DtwmDesktopGridMetrics *gm, int slot, int *out_x, int *out_y
+) {
+    int col = 0, row = 0;
+    if (slot < 0) slot = 0;
+    if (gm->horiz_primary) {
+        col = slot % gm->max_cols;
+        row = slot / gm->max_cols;
+    } else if (!gm->right_side && !gm->bottom_side && slot < gm->col0_rows) {
+        col = 0;
+        row = slot;
+    } else if (!gm->right_side && !gm->bottom_side) {
+        int rem = slot - gm->col0_rows;
+        col = 1 + (rem / gm->max_rows);
+        row = rem % gm->max_rows;
+    } else {
+        col = slot / gm->max_rows;
+        row = slot % gm->max_rows;
+    }
+
+    if (gm->right_side) {
+        *out_x = gm->gbox.x + gm->gbox.width - gm->edge_pad_x - (col + 1) * gm->col_w +
+                 (gm->col_w - (gm->frame_w + gm->indicator_extra));
+    } else {
+        *out_x = gm->gbox.x + gm->edge_pad_x + col * gm->col_w;
+    }
+    if (gm->bottom_side) {
+        *out_y = gm->gbox.y + gm->gbox.height - gm->edge_pad_y - gm->frame_h - row * gm->row_h;
+    } else {
+        *out_y = gm->gbox.y + gm->edge_pad_y + row * gm->row_h;
+    }
+}
+
+static bool is_desktop_slot_occupied(
+    const DtwmDesktopGridMetrics *gm, uint32_t ws, int slot, const DtwmView *exclude_view
+) {
+    if (ws >= DTWM_MAX_WORKSPACES || slot < 0) return false;
+    DtwmIconOrderEntry *entry;
+    wl_list_for_each(entry, &g_icon_views, icon_link) {
+        DtwmView *v = entry->view;
+        if (!v || v == exclude_view || !should_show_desktop_icon(v) ||
+            is_pinned_bottom_left_icon(v, &gm->fbox)) {
+            continue;
+        }
+        if (entry->desktop_slot[ws] == slot) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static int find_first_free_desktop_slot(
+    const DtwmDesktopGridMetrics *gm, uint32_t ws, const DtwmView *exclude_view
+) {
+    for (int s = 0; s < gm->total_slots; ++s) {
+        if (!is_desktop_slot_occupied(gm, ws, s, exclude_view)) {
+            return s;
+        }
+    }
+    return gm->total_slots;
+}
+
+static int find_nearest_free_desktop_slot(
+    const DtwmDesktopGridMetrics *gm, uint32_t ws, const DtwmView *moving_view, double cx, double cy
+) {
+    int best_slot = -1;
+    double best_d2 = 1e30;
+    for (int s = 0; s < gm->total_slots; ++s) {
+        if (is_desktop_slot_occupied(gm, ws, s, moving_view)) {
+            continue;
+        }
+        int sx = 0, sy = 0;
+        desktop_slot_to_xy(gm, s, &sx, &sy);
+        double scx = (double)sx + (double)gm->frame_w * 0.5;
+        double scy = (double)sy + (double)gm->frame_h * 0.5;
+        double dx = cx - scx;
+        double dy = cy - scy;
+        double d2 = dx * dx + dy * dy;
+        if (d2 < best_d2) {
+            best_d2 = d2;
+            best_slot = s;
+        }
+    }
+    return best_slot;
 }
 
 void dtwm_icons_relayout(DtwmServer *server) {
@@ -2177,7 +2431,10 @@ void dtwm_icons_relayout(DtwmServer *server) {
                              (ly + v->icon_box_h <= well_y + well_h + 2 || row == 0);
             v->icon_clipped_out = !in_bounds;
             if (v->desktop_icon_buf) {
-                wlr_scene_node_set_position(&v->desktop_icon_buf->node, lx, ly);
+                if (!(g_icon_drag.active && g_icon_drag.dragging && g_icon_drag.in_icon_box &&
+                      g_icon_drag.view == v)) {
+                    wlr_scene_node_set_position(&v->desktop_icon_buf->node, lx, ly);
+                }
                 wlr_scene_node_set_enabled(&v->desktop_icon_buf->node, in_bounds);
             }
             publish_client_icon_geometry(v);
@@ -2193,34 +2450,8 @@ void dtwm_icons_relayout(DtwmServer *server) {
         server->icon_box_resizing = false;
     }
 
-    struct wlr_box fbox = ubox;
-    wlr_output_layout_get_box(server->output_layout, nullptr, &fbox);
-    if (fbox.width <= 0 || fbox.height <= 0) {
-        fbox = ubox;
-    }
-
-    int frame_w = img_dim + 12;
-    int frame_h = (img_dim + 11) + (server->large_icons ? 24 : 21);
-    int indicator_extra =
-        server->show_open_window_icons ? (DTWM_OPEN_ICON_BAR_GAP + DTWM_OPEN_ICON_BAR_WIDTH) : 0;
-
-    int gap = (server->icon_placement_margin >= 0 && server->icon_placement_margin <= 128)
-                  ? server->icon_placement_margin
-                  : 8;
-    int edge_pad_x = gap > 8 ? gap : 12;
-    int edge_pad_y = gap > 8 ? gap : 6;
-    int col_w = frame_w + indicator_extra + (gap > 6 ? gap : 10);
-    int row_h = frame_h + (gap > 4 ? gap : 6);
-
-    /* Use full monitor height for left/right edge columns when Front Panel doesn't reach corners */
-    bool side_clears_panel =
-        !server->show_front_panel || (fbox.width >= DTWM_PANEL_WIDTH + 2 * (col_w + edge_pad_x + 8));
-    struct wlr_box gbox = side_clears_panel ? fbox : ubox;
-
-    int max_rows = (gbox.height - edge_pad_y * 2) / row_h;
-    if (max_rows < 1) max_rows = 1;
-    int max_cols = (gbox.width - edge_pad_x * 2) / col_w;
-    if (max_cols < 1) max_cols = 1;
+    DtwmDesktopGridMetrics gm;
+    compute_desktop_grid_metrics(server, &gm);
 
     DtwmView *v;
     wl_list_for_each(v, &server->views, link) {
@@ -2229,34 +2460,38 @@ void dtwm_icons_relayout(DtwmServer *server) {
         }
     }
 
-    /* Check whether FrontPanel occupies the bottom-left corner slot (matching X11 UI.c XmNiconY) */
-    bool panel_in_bottom_left = false;
+    uint32_t ws = server->current_workspace < DTWM_MAX_WORKSPACES ? server->current_workspace : 0u;
     DtwmIconOrderEntry *entry;
+
+    /* Validate existing slots on current workspace (clamping out-of-range slots after output resize) */
     wl_list_for_each(entry, &g_icon_views, icon_link) {
         v = entry->view;
-        if (v->is_panel && should_show_desktop_icon(v)) {
-            panel_in_bottom_left = true;
-            break;
+        if (!v || !should_show_desktop_icon(v) || is_pinned_bottom_left_icon(v, &gm.fbox)) {
+            continue;
+        }
+        int s = entry->desktop_slot[ws];
+        if (s >= gm.total_slots) {
+            entry->desktop_slot[ws] = -1;
+            entry->desktop_user_placed[ws] = false;
+        } else if (s >= 0 && is_desktop_slot_occupied(&gm, ws, s, v)) {
+            /* Keep user-placed owner if another entry collided */
+            if (!entry->desktop_user_placed[ws]) {
+                entry->desktop_slot[ws] = -1;
+            }
         }
     }
 
-    DtwmIconPlacement place = server->icon_placement;
-    bool horiz_primary =
-        (place == DTWM_ICON_PLACE_LEFT_TOP || place == DTWM_ICON_PLACE_LEFT_BOTTOM ||
-         place == DTWM_ICON_PLACE_RIGHT_TOP || place == DTWM_ICON_PLACE_RIGHT_BOTTOM);
-    bool right_side =
-        (place == DTWM_ICON_PLACE_TOP_RIGHT || place == DTWM_ICON_PLACE_RIGHT_TOP ||
-         place == DTWM_ICON_PLACE_BOTTOM_RIGHT || place == DTWM_ICON_PLACE_RIGHT_BOTTOM);
-    bool bottom_side =
-        (place == DTWM_ICON_PLACE_BOTTOM_LEFT || place == DTWM_ICON_PLACE_LEFT_BOTTOM ||
-         place == DTWM_ICON_PLACE_BOTTOM_RIGHT || place == DTWM_ICON_PLACE_RIGHT_BOTTOM);
-
-    int col0_rows = max_rows;
-    if (panel_in_bottom_left && !horiz_primary && !right_side && !bottom_side && col0_rows > 1) {
-        col0_rows--; /* Reserve bottom-left slot for FrontPanel ("One") */
+    /* Assign lowest free grid slot to any unassigned icon in chronological/icon-order sequence */
+    wl_list_for_each(entry, &g_icon_views, icon_link) {
+        v = entry->view;
+        if (!v || !should_show_desktop_icon(v) || is_pinned_bottom_left_icon(v, &gm.fbox)) {
+            continue;
+        }
+        if (entry->desktop_slot[ws] < 0) {
+            entry->desktop_slot[ws] = find_first_free_desktop_slot(&gm, ws, v);
+        }
     }
 
-    int slot = 0;
     wl_list_for_each(entry, &g_icon_views, icon_link) {
         v = entry->view;
         if (!should_show_desktop_icon(v)) {
@@ -2270,47 +2505,23 @@ void dtwm_icons_relayout(DtwmServer *server) {
         }
 
         int tile_x = 0, tile_y = 0;
-        if (v->is_panel || (v->has_icon_pos_hint && v->icon_hint_y > fbox.height * 3 / 4 && v->icon_hint_x <= 64)) {
+        if (is_pinned_bottom_left_icon(v, &gm.fbox)) {
             /* FrontPanel (UI.c XmNiconY = display_height): bottom-left corner beside Front Panel */
-            tile_x = gbox.x + edge_pad_x;
-            tile_y = gbox.y + gbox.height - frame_h - 4;
-            if (tile_y < gbox.y + edge_pad_y) tile_y = gbox.y + edge_pad_y;
+            tile_x = gm.gbox.x + gm.edge_pad_x;
+            tile_y = gm.gbox.y + gm.gbox.height - gm.frame_h - 4;
+            if (tile_y < gm.gbox.y + gm.edge_pad_y) tile_y = gm.gbox.y + gm.edge_pad_y;
         } else {
-            int col = 0, row = 0;
-            if (horiz_primary) {
-                col = slot % max_cols;
-                row = slot / max_cols;
-            } else if (!right_side && !bottom_side && slot < col0_rows) {
-                col = 0;
-                row = slot;
-            } else if (!right_side && !bottom_side) {
-                int rem = slot - col0_rows;
-                col = 1 + (rem / max_rows);
-                row = rem % max_rows;
-            } else {
-                col = slot / max_rows;
-                row = slot % max_rows;
-            }
-
-            if (right_side) {
-                tile_x = gbox.x + gbox.width - edge_pad_x - (col + 1) * col_w +
-                         (col_w - (frame_w + indicator_extra));
-            } else {
-                tile_x = gbox.x + edge_pad_x + col * col_w;
-            }
-            if (bottom_side) {
-                tile_y = gbox.y + gbox.height - edge_pad_y - frame_h - row * row_h;
-            } else {
-                tile_y = gbox.y + edge_pad_y + row * row_h;
-            }
-            slot++;
+            desktop_slot_to_xy(&gm, entry->desktop_slot[ws], &tile_x, &tile_y);
         }
 
         v->icon_x = tile_x;
         v->icon_y = tile_y;
         v->icon_clipped_out = false;
         if (v->desktop_icon_buf) {
-            wlr_scene_node_set_position(&v->desktop_icon_buf->node, tile_x, tile_y);
+            if (!(g_icon_drag.active && g_icon_drag.dragging && !g_icon_drag.in_icon_box &&
+                  g_icon_drag.view == v)) {
+                wlr_scene_node_set_position(&v->desktop_icon_buf->node, tile_x, tile_y);
+            }
             wlr_scene_node_set_enabled(&v->desktop_icon_buf->node, true);
         }
         publish_client_icon_geometry(v);
@@ -2653,8 +2864,16 @@ void dtwm_icons_set_placement(DtwmServer *server, const char *spec) {
     }
     if (next != server->icon_placement) {
         server->icon_placement = next;
+        reset_all_desktop_slots(true);
         dtwm_icons_relayout(server);
     }
+}
+
+void dtwm_icons_pack(DtwmServer *server) {
+    if (!server) return;
+    cancel_icon_drag_for_view(nullptr);
+    reset_all_desktop_slots(true);
+    dtwm_icons_relayout(server);
 }
 
 void dtwm_icons_refresh_focus_indicators(DtwmServer *server) {
@@ -2806,6 +3025,359 @@ static void toggle_icon_box_maximize(DtwmServer *server) {
     dtwm_icons_relayout(server);
 }
 
+static void cairo_rounded_rect_path(cairo_t *cr, double x, double y, double w, double h, double r) {
+    if (r < 0.0) r = 0.0;
+    if (r * 2.0 > w) r = w * 0.5;
+    if (r * 2.0 > h) r = h * 0.5;
+    const double deg = M_PI / 180.0;
+    cairo_new_sub_path(cr);
+    cairo_arc(cr, x + w - r, y + r, r, -90.0 * deg, 0.0);
+    cairo_arc(cr, x + w - r, y + h - r, r, 0.0, 90.0 * deg);
+    cairo_arc(cr, x + r, y + h - r, r, 90.0 * deg, 180.0 * deg);
+    cairo_arc(cr, x + r, y + r, r, 180.0 * deg, 270.0 * deg);
+    cairo_close_path(cr);
+}
+
+static struct wlr_buffer *render_icon_slot_highlight_buffer(
+    const DtwmServer *server, int cell_w, int cell_h
+) {
+    if (cell_w < 16 || cell_h < 16) return nullptr;
+    cairo_t *cr = nullptr;
+    cairo_surface_t *surf = nullptr;
+    struct wlr_buffer *buf = dtwm_cairo_buffer_begin(cell_w, cell_h, &cr, &surf);
+    if (!buf) return nullptr;
+
+    cairo_save(cr);
+    cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+    cairo_paint(cr);
+    cairo_restore(cr);
+
+    const DtwmColorSet *acs = &server->palette.active;
+    double r = fmax(3.0, (double)cell_w * 0.05);
+    double ring = 4.0; /* Matches X11 WmWinConf.c ICON_SLOT_HIGHLIGHT_WIDTH = 4 */
+
+    cairo_set_fill_rule(cr, CAIRO_FILL_RULE_EVEN_ODD);
+    cairo_rounded_rect_path(cr, 0.0, 0.0, cell_w, cell_h, r);
+    cairo_rounded_rect_path(
+        cr, ring, ring, cell_w - 2.0 * ring, cell_h - 2.0 * ring, fmax(1.0, r - ring)
+    );
+    cairo_set_source_rgba(cr, acs->bg.r, acs->bg.g, acs->bg.b, 0.92);
+    cairo_fill(cr);
+
+    cairo_set_line_width(cr, 1.0);
+    cairo_rounded_rect_path(cr, 0.5, 0.5, cell_w - 1.0, cell_h - 1.0, r);
+    cairo_set_source_rgba(cr, acs->top_shadow.r, acs->top_shadow.g, acs->top_shadow.b, 0.95);
+    cairo_stroke(cr);
+
+    cairo_rounded_rect_path(
+        cr,
+        ring - 0.5,
+        ring - 0.5,
+        cell_w - 2.0 * (ring - 0.5),
+        cell_h - 2.0 * (ring - 0.5),
+        fmax(1.0, r - ring + 0.5)
+    );
+    cairo_set_source_rgba(
+        cr, acs->bottom_shadow.r, acs->bottom_shadow.g, acs->bottom_shadow.b, 0.90
+    );
+    cairo_stroke(cr);
+
+    dtwm_cairo_buffer_finish(cr, surf);
+    return buf;
+}
+
+static struct wlr_buffer *render_desktop_grid_overlay_buffer(
+    DtwmServer *server, const DtwmDesktopGridMetrics *gm, struct wlr_box *out_box
+) {
+    struct wlr_box obox = gm->gbox;
+    struct wlr_output *wout =
+        wlr_output_layout_output_at(server->output_layout, server->cursor->x, server->cursor->y);
+    if (wout) {
+        wlr_output_layout_get_box(server->output_layout, wout, &obox);
+    }
+    if (obox.width <= 32 || obox.height <= 32) return nullptr;
+    *out_box = obox;
+
+    cairo_t *cr = nullptr;
+    cairo_surface_t *surf = nullptr;
+    struct wlr_buffer *buf = dtwm_cairo_buffer_begin(obox.width, obox.height, &cr, &surf);
+    if (!buf) return nullptr;
+
+    cairo_save(cr);
+    cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+    cairo_paint(cr);
+    cairo_restore(cr);
+
+    const DtwmColorSet *ics = &server->palette.inactive;
+    double dashes[2] = {4.0, 4.0};
+    cairo_set_dash(cr, dashes, 2, 0.0);
+    cairo_set_line_width(cr, 1.0);
+
+    int cell_w = gm->frame_w + gm->indicator_extra + 8;
+    int cell_h = gm->frame_h + 8;
+    double rad = fmax(3.0, (double)cell_w * 0.05);
+
+    for (int s = 0; s < gm->total_slots; ++s) {
+        int sx = 0, sy = 0;
+        desktop_slot_to_xy(gm, s, &sx, &sy);
+        int cx = sx - 4 - obox.x;
+        int cy = sy - 4 - obox.y;
+        if (cx + cell_w < 0 || cy + cell_h < 0 || cx >= obox.width || cy >= obox.height) {
+            continue;
+        }
+        cairo_rounded_rect_path(cr, cx + 1.5, cy + 1.5, cell_w - 2.0, cell_h - 2.0, rad);
+        cairo_set_source_rgba(
+            cr, ics->bottom_shadow.r, ics->bottom_shadow.g, ics->bottom_shadow.b, 0.34
+        );
+        cairo_stroke(cr);
+
+        cairo_rounded_rect_path(cr, cx + 0.5, cy + 0.5, cell_w - 2.0, cell_h - 2.0, rad);
+        cairo_set_source_rgba(cr, ics->top_shadow.r, ics->top_shadow.g, ics->top_shadow.b, 0.42);
+        cairo_stroke(cr);
+    }
+
+    dtwm_cairo_buffer_finish(cr, surf);
+    return buf;
+}
+
+static void begin_icon_press_candidate(DtwmServer *server, DtwmView *view, bool in_icon_box) {
+    if (!server || !view || !view->desktop_icon_buf) return;
+    cancel_icon_drag_for_view(nullptr);
+    g_icon_drag.active = true;
+    g_icon_drag.dragging = false;
+    g_icon_drag.in_icon_box = in_icon_box;
+    g_icon_drag.was_focused_on_press = (server->focused_view == view);
+    g_icon_drag.ib_was_active_on_press = server->icon_box_active;
+    g_icon_drag.view = view;
+    g_icon_drag.press_lx = server->cursor->x;
+    g_icon_drag.press_ly = server->cursor->y;
+    g_icon_drag.orig_node_x = view->desktop_icon_buf->node.x;
+    g_icon_drag.orig_node_y = view->desktop_icon_buf->node.y;
+    g_icon_drag.target_slot = -1;
+}
+
+bool dtwm_icons_handle_drag_motion(DtwmServer *server) {
+    if (!server || !g_icon_drag.active) return false;
+    DtwmView *v = g_icon_drag.view;
+    if (!v || !v->mapped || !v->desktop_icon_buf || !should_show_desktop_icon(v)) {
+        cancel_icon_drag_for_view(nullptr);
+        return false;
+    }
+
+    double dx = server->cursor->x - g_icon_drag.press_lx;
+    double dy = server->cursor->y - g_icon_drag.press_ly;
+    if (!g_icon_drag.dragging) {
+        if (dx * dx + dy * dy < 25.0) {
+            return true;
+        }
+        /* FrontPanel corner icon is pinned (matching X11 IsPinnedRootIcon) */
+        if (v->is_panel) {
+            return true;
+        }
+        g_icon_drag.dragging = true;
+        if (g_icon_drag.in_icon_box) {
+            if (server->icon_box_tree) {
+                if (!g_icon_drag.slot_buf) {
+                    g_icon_drag.slot_buf = wlr_scene_buffer_create(server->icon_box_tree, nullptr);
+                } else if (g_icon_drag.slot_buf->node.parent != server->icon_box_tree) {
+                    wlr_scene_node_reparent(&g_icon_drag.slot_buf->node, server->icon_box_tree);
+                }
+                int cw = v->icon_w + 8;
+                int ch = v->icon_h + 8;
+                struct wlr_buffer *sbuf = render_icon_slot_highlight_buffer(server, cw, ch);
+                if (sbuf && g_icon_drag.slot_buf) {
+                    wlr_scene_buffer_set_buffer(g_icon_drag.slot_buf, sbuf);
+                    wlr_buffer_drop(sbuf);
+                }
+            }
+        } else if (server->desktop_icon_tree) {
+            DtwmDesktopGridMetrics gm;
+            compute_desktop_grid_metrics(server, &gm);
+            struct wlr_box gbox_ov = {0};
+            struct wlr_buffer *gbuf = render_desktop_grid_overlay_buffer(server, &gm, &gbox_ov);
+            if (gbuf) {
+                if (!g_icon_drag.grid_buf) {
+                    g_icon_drag.grid_buf = wlr_scene_buffer_create(server->desktop_icon_tree, nullptr);
+                } else if (g_icon_drag.grid_buf->node.parent != server->desktop_icon_tree) {
+                    wlr_scene_node_reparent(&g_icon_drag.grid_buf->node, server->desktop_icon_tree);
+                }
+                if (g_icon_drag.grid_buf) {
+                    g_icon_drag.grid_origin_x = gbox_ov.x;
+                    g_icon_drag.grid_origin_y = gbox_ov.y;
+                    wlr_scene_buffer_set_buffer(g_icon_drag.grid_buf, gbuf);
+                    wlr_scene_node_set_position(
+                        &g_icon_drag.grid_buf->node, gbox_ov.x, gbox_ov.y
+                    );
+                    wlr_scene_node_set_enabled(&g_icon_drag.grid_buf->node, true);
+                    wlr_scene_node_raise_to_top(&g_icon_drag.grid_buf->node);
+                }
+                wlr_buffer_drop(gbuf);
+            }
+            if (!g_icon_drag.slot_buf) {
+                g_icon_drag.slot_buf = wlr_scene_buffer_create(server->desktop_icon_tree, nullptr);
+            } else if (g_icon_drag.slot_buf->node.parent != server->desktop_icon_tree) {
+                wlr_scene_node_reparent(&g_icon_drag.slot_buf->node, server->desktop_icon_tree);
+            }
+            int cw = gm.frame_w + gm.indicator_extra + 8;
+            int ch = gm.frame_h + 8;
+            struct wlr_buffer *sbuf = render_icon_slot_highlight_buffer(server, cw, ch);
+            if (sbuf && g_icon_drag.slot_buf) {
+                wlr_scene_buffer_set_buffer(g_icon_drag.slot_buf, sbuf);
+                wlr_buffer_drop(sbuf);
+            }
+        }
+        if (g_icon_drag.slot_buf) {
+            wlr_scene_node_raise_to_top(&g_icon_drag.slot_buf->node);
+        }
+        wlr_scene_node_raise_to_top(&v->desktop_icon_buf->node);
+    }
+
+    int nx = g_icon_drag.orig_node_x + (int)lround(dx);
+    int ny = g_icon_drag.orig_node_y + (int)lround(dy);
+    wlr_scene_node_set_position(&v->desktop_icon_buf->node, nx, ny);
+
+    if (g_icon_drag.in_icon_box) {
+        int img_dim = server->large_icons ? 96 : 48;
+        int frame_w = img_dim + 12;
+        int frame_h = (img_dim + 11) + (server->large_icons ? 24 : 21);
+        int cw = server->icon_box_w - 2 * DTWM_BORDER_WIDTH;
+        int well_x = DTWM_BORDER_WIDTH + 5;
+        int well_y = DTWM_BORDER_WIDTH + DTWM_TITLE_HEIGHT + 5;
+        int well_w = cw - 10 - 20;
+        if (well_w < 80) well_w = 80;
+        int col_w = frame_w + 12;
+        int row_h = frame_h + 10;
+        int cols = (well_w - 12) / col_w;
+        if (cols < 1) cols = 1;
+
+        int count = 0;
+        DtwmIconOrderEntry *entry;
+        wl_list_for_each(entry, &g_icon_views, icon_link) {
+            if (should_show_desktop_icon(entry->view) && !entry->view->is_panel) {
+                count++;
+            }
+        }
+        if (count < 1) count = 1;
+        int col = ((nx + frame_w / 2) - (well_x + 8)) / col_w;
+        if (col < 0) col = 0;
+        if (col >= cols) col = cols - 1;
+        int row = ((ny + server->icon_box_scroll_y + frame_h / 2) - (well_y + 6)) / row_h;
+        if (row < 0) row = 0;
+        int slot = row * cols + col;
+        if (slot >= count) slot = count - 1;
+        g_icon_drag.target_slot = slot;
+        if (g_icon_drag.slot_buf) {
+            int hx = well_x + 8 + (slot % cols) * col_w - 4;
+            int hy = well_y + 6 + (slot / cols) * row_h - server->icon_box_scroll_y - 4;
+            wlr_scene_node_set_position(&g_icon_drag.slot_buf->node, hx, hy);
+            wlr_scene_node_set_enabled(&g_icon_drag.slot_buf->node, true);
+        }
+    } else {
+        DtwmDesktopGridMetrics gm;
+        compute_desktop_grid_metrics(server, &gm);
+        uint32_t ws = server->current_workspace < DTWM_MAX_WORKSPACES ? server->current_workspace : 0u;
+        double cx = (double)nx + (double)gm.frame_w * 0.5;
+        double cy = (double)ny + (double)gm.frame_h * 0.5;
+        int slot = find_nearest_free_desktop_slot(&gm, ws, v, cx, cy);
+        g_icon_drag.target_slot = slot;
+        if (g_icon_drag.slot_buf && slot >= 0) {
+            int sx = 0, sy = 0;
+            desktop_slot_to_xy(&gm, slot, &sx, &sy);
+            wlr_scene_node_set_position(&g_icon_drag.slot_buf->node, sx - 4, sy - 4);
+            wlr_scene_node_set_enabled(&g_icon_drag.slot_buf->node, true);
+        }
+    }
+    return true;
+}
+
+bool dtwm_icons_handle_desktop_button(
+    DtwmServer *server, DtwmView *icon_v, uint32_t btn, bool pressed
+) {
+    if (!server || btn != BTN_LEFT) return false;
+    if (pressed) {
+        if (!icon_v) return false;
+        begin_icon_press_candidate(server, icon_v, false);
+        return true;
+    }
+    if (!g_icon_drag.active) {
+        return false;
+    }
+
+    DtwmView *v = g_icon_drag.view;
+    bool was_dragging = g_icon_drag.dragging;
+    bool in_box = g_icon_drag.in_icon_box;
+    bool was_focused = g_icon_drag.was_focused_on_press;
+    bool ib_was_active = g_icon_drag.ib_was_active_on_press;
+    int target_slot = g_icon_drag.target_slot;
+    cancel_icon_drag_for_view(nullptr);
+
+    if (!v || !v->mapped) {
+        dtwm_icons_relayout(server);
+        return true;
+    }
+
+    if (!was_dragging) {
+        if (in_box) {
+            server->icon_box_active = false;
+            if (v->minimized) {
+                dtwm_view_set_minimized(v, false);
+                dtwm_restore_view_focus(server, v);
+            } else if (was_focused) {
+                dtwm_view_set_minimized(v, true);
+            } else {
+                if (ib_was_active) {
+                    dtwm_icons_relayout(server);
+                }
+                dtwm_restore_view_focus(server, v);
+            }
+        } else {
+            if (!v->minimized && server->show_open_window_icons && was_focused) {
+                dtwm_view_set_minimized(v, true);
+            } else {
+                if (v->minimized) {
+                    dtwm_view_set_minimized(v, false);
+                }
+                dtwm_restore_view_focus(server, v);
+            }
+        }
+        return true;
+    }
+
+    /* Commit icon drag to target grid slot */
+    DtwmIconOrderEntry *moved = find_icon_order_entry(v);
+    if (moved && target_slot >= 0) {
+        if (in_box) {
+            if (moved->in_icon_order) {
+                wl_list_remove(&moved->icon_link);
+                int idx = 0;
+                bool inserted = false;
+                DtwmIconOrderEntry *cur;
+                wl_list_for_each(cur, &g_icon_views, icon_link) {
+                    if (!should_show_desktop_icon(cur->view) || cur->view->is_panel) {
+                        continue;
+                    }
+                    if (idx == target_slot) {
+                        wl_list_insert(cur->icon_link.prev, &moved->icon_link);
+                        inserted = true;
+                        break;
+                    }
+                    idx++;
+                }
+                if (!inserted) {
+                    wl_list_insert(g_icon_views.prev, &moved->icon_link);
+                }
+            }
+        } else if (!v->is_panel) {
+            uint32_t ws =
+                server->current_workspace < DTWM_MAX_WORKSPACES ? server->current_workspace : 0u;
+            moved->desktop_slot[ws] = target_slot;
+            moved->desktop_user_placed[ws] = true;
+        }
+    }
+    dtwm_icons_relayout(server);
+    return true;
+}
+
 bool dtwm_icon_box_handle_button(DtwmServer *server, uint32_t btn, bool pressed, uint32_t t_ms) {
     if (!server) return false;
     if (!pressed) {
@@ -2822,10 +3394,6 @@ bool dtwm_icon_box_handle_button(DtwmServer *server, uint32_t btn, bool pressed,
     }
 
     wlr_scene_node_raise_to_top(&server->icon_box_tree->node);
-    if (!server->icon_box_active) {
-        server->icon_box_active = true;
-        dtwm_icons_relayout(server);
-    }
 
     DtwmFramePart part = dtwm_icon_box_part_at(server, server->cursor->x, server->cursor->y);
     if (part == DTWM_PART_CLIENT) {
@@ -2833,16 +3401,17 @@ bool dtwm_icon_box_handle_button(DtwmServer *server, uint32_t btn, bool pressed,
         if (iv) {
             if (btn == BTN_LEFT) {
                 server->icon_box_active = false;
-                if (iv->minimized) {
-                    dtwm_view_set_minimized(iv, false);
-                }
-                dtwm_restore_view_focus(server, iv);
+                begin_icon_press_candidate(server, iv, true);
             } else if (btn == BTN_RIGHT) {
                 dtwm_open_window_menu_for_view(
                     server, iv, (int)server->cursor->x, (int)server->cursor->y
                 );
             }
             return true;
+        }
+        if (!server->icon_box_active) {
+            server->icon_box_active = true;
+            dtwm_icons_relayout(server);
         }
         /* Check scrollbar up/down arrow clicks on right edge of Icon Box */
         double rel_x = server->cursor->x - server->icon_box_x;
@@ -2854,6 +3423,11 @@ bool dtwm_icon_box_handle_button(DtwmServer *server, uint32_t btn, bool pressed,
             dtwm_icon_box_handle_axis(server, (rel_y < mid_y) ? -15.0 : 15.0, (rel_y < mid_y) ? -1 : 1);
         }
         return true;
+    }
+
+    if (!server->icon_box_active && !(btn == BTN_LEFT && part == DTWM_PART_BTN_MENU)) {
+        server->icon_box_active = true;
+        dtwm_icons_relayout(server);
     }
 
     if (btn == BTN_LEFT) {
@@ -3009,6 +3583,15 @@ void dtwm_icons_init(DtwmServer *server) {
 }
 
 void dtwm_icons_finish(DtwmServer *server) {
+    cancel_icon_drag_for_view(nullptr);
+    if (g_icon_drag.grid_buf) {
+        wlr_scene_node_destroy(&g_icon_drag.grid_buf->node);
+        g_icon_drag.grid_buf = nullptr;
+    }
+    if (g_icon_drag.slot_buf) {
+        wlr_scene_node_destroy(&g_icon_drag.slot_buf->node);
+        g_icon_drag.slot_buf = nullptr;
+    }
     DtwmPendingXdgIcon *pend, *tmp;
     wl_list_for_each_safe(pend, tmp, &g_pending_xdg_icons, link) {
         if (pend->surface) cairo_surface_destroy(pend->surface);

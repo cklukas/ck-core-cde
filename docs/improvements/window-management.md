@@ -37,10 +37,14 @@ selection visible and supports pointer hover and pinning. It is enabled by the
   (default, with late symmetric near-icon crossfade), `Titlebar Shuttle`, and
   `Wireframe` on [Wayland (`dtwm-wayland`)](wayland.md).
 
-Open-window desktop icons complement these controls by keeping running
-applications represented on their workspace in a stable order across minimize,
-restore, and focus changes, while compacting subsequent icons when a window is
-closed.
+Open-window desktop icons and the optional **Icon Box** (`Dtwm*useIconBox:
+True`) keep running applications in invariant mental-map order across minimize,
+restore, maximize, and focus changes on both X11 and Wayland. Desktop icons can
+be dragged freely to any unoccupied placement-grid cell with a visual grid and
+4-pixel rounded slot highlight (`f.pack_icons` / **Clean Up Icons** packs
+manually placed icons back in sequence), while closing a window compacts
+auto-placed icons cleanly and Icon Box resize or maximize/restore reflows rows
+and columns without scrambling icon order.
 
 ## Hardware keys, 3D bevel OSD and touchpad gestures
 

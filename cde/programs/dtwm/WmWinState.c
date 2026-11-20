@@ -972,6 +972,14 @@ void ConfigureNewState (ClientData *pcd)
 
     SendConfigureNotify (pcd);
 
+    if ((pcd->clientFlags & ICON_BOX) && pcd->thisIconBox)
+    {
+	XSync (DISPLAY, False);
+	CheckIconBoxResize (pcd, CWWidth | CWHeight,
+			    pcd->maxConfig ? pcd->maxWidth : pcd->clientWidth,
+			    pcd->maxConfig ? pcd->maxHeight : pcd->clientHeight);
+    }
+
     /*
      * Force repaint if size doesn't change to update frame appearance.
      */

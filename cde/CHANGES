@@ -1,4 +1,13 @@
 2026-11-20
+- Add interactive desktop icon grid dragging with placement-grid and target-slot
+  highlights in `dtwm-wayland`, preserve manually placed desktop icon slots across
+  minimize/restore/maximize and sibling window closes, and preserve mental-map
+  Icon Box ordering across client minimize/maximize/restore, Icon Box resize and
+  maximize/restore, and window close in both `dtwm` (X11) and `dtwm-wayland`
+  (`cde/programs/dtwm/{WmCEvent.c,WmGlobal.h,WmIPlace.c,WmIconBox.c,WmWinConf.c,WmWinState.c}`,
+  `cde/programs/dtwm/wayland/{cde_icons.c,cde_workspace.c,dtwm_wayland.h,dtwm_wayland_main.c}`,
+  `cde/programs/dtwm/tests/check-dtwm-icon-order.py`,
+  `docs/improvements/window-management.md`).
 - Update pinned CK Core Motif ABI 9 revision to `e6e7d9226871` so live palette
   switches from pure black or white palettes (such as `HighContrast`) back to
   Classic 3D-beveled palettes clear `50_foreground` shadow-dither pixmaps on

@@ -860,6 +860,11 @@ void PackWorkspaceRootIcons (WmWorkspaceData *pWS)
 	{
 	    continue;
 	}
+	pWsc = GetWsClientData (pWS, pCD);
+	if (pWsc && pWsc->iconUserPlaced)
+	{
+	    continue;
+	}
 
 	while (iNew < iOld &&
 	       pWS->IPData.placeList[iNew].pCD != nullptr)
@@ -912,7 +917,25 @@ void PackWorkspaceRootIcons (WmWorkspaceData *pWS)
 
 void PackRootIcons (void)
 {
-    PackWorkspaceRootIcons (ACTIVE_WS);
+    int i;
+    WmWorkspaceData *pWS = ACTIVE_WS;
+
+    if (pWS && pWS->IPData.placeList)
+    {
+	for (i = 0; i < pWS->IPData.totalPlaces; i++)
+	{
+	    ClientData *pCD = pWS->IPData.placeList[i].pCD;
+	    if (pCD && !IsPinnedRootIcon (pCD))
+	    {
+		WsClientData *pWsc = GetWsClientData (pWS, pCD);
+		if (pWsc)
+		{
+		    pWsc->iconUserPlaced = False;
+		}
+	    }
+	}
+    }
+    PackWorkspaceRootIcons (pWS);
 } /* END OF FUNCTION PackRootIcons */
 
 

@@ -2477,14 +2477,19 @@ void HandleCConfigureRequest (ClientData *pCD, XConfigureRequestEvent *configure
 	(mask & (CWX | CWY | CWWidth | CWHeight | CWBorderWidth)))
     {
 	if (pCD->maxConfig) {
-	    ProcessNewConfiguration (pCD,
-		(mask & CWX) ? configureRequest->x : pCD->maxX,
-		(mask & CWY) ? configureRequest->y : pCD->maxY,
-		(unsigned int) ((mask & CWWidth) ? 
-		    configureRequest->width : pCD->maxWidth),
-		(unsigned int) ((mask & CWHeight) ? 
-		    configureRequest->height : pCD->maxHeight),
-		True /*client request*/);
+	    if (pCD->clientFlags & ICON_BOX) {
+		SendConfigureNotify (pCD);
+	    }
+	    else {
+		ProcessNewConfiguration (pCD,
+		    (mask & CWX) ? configureRequest->x : pCD->maxX,
+		    (mask & CWY) ? configureRequest->y : pCD->maxY,
+		    (unsigned int) ((mask & CWWidth) ?
+			configureRequest->width : pCD->maxWidth),
+		    (unsigned int) ((mask & CWHeight) ?
+			configureRequest->height : pCD->maxHeight),
+		    True /*client request*/);
+	    }
 	}
 	else {
 	    int xOff, yOff;

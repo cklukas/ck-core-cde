@@ -1948,7 +1948,7 @@ static void execute_root_menu_action(DtwmServer *server, int idx) {
         spawn_desktop_command(server, CDE_INSTALLATION_TOP "/bin/dtstyle", nullptr);
         break;
     case 6: /* Clean Up Icons */
-        dtwm_icons_relayout(server);
+        dtwm_icons_pack(server);
         break;
     case 7: /* Shuffle Up */
         shuffle_workspace_up(server);
@@ -2453,6 +2453,9 @@ static void process_cursor_motion(DtwmServer *server, uint32_t time_msec) {
         return;
     }
 
+    if (dtwm_icons_handle_drag_motion(server)) {
+        return;
+    }
     if (dtwm_icon_box_handle_motion(server)) {
         return;
     }
@@ -2664,6 +2667,9 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
 
     if (ev->state == WL_POINTER_BUTTON_STATE_RELEASED) {
         server->subpanel_drag_candidate = nullptr;
+        if (dtwm_icons_handle_desktop_button(server, nullptr, btn, false)) {
+            return;
+        }
         if (dtwm_icon_box_handle_button(server, btn, false, t_ms)) {
             return;
         }
@@ -2786,20 +2792,17 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
         dismiss_open_client_popups(server, t_ms);
         close_docked_subpanels(server);
         if (dtwm_icon_box_is_topmost_at(server, server->cursor->x, server->cursor->y)) {
-            clear_active_focus(server);
             (void)dtwm_icon_box_handle_button(server, btn, true, t_ms);
+            if (server->icon_box_active) {
+                clear_active_focus(server);
+            }
             return;
         }
         dtwm_icon_box_deactivate(server);
         DtwmView *icon_v = dtwm_icons_view_at(server, server->cursor->x, server->cursor->y);
         if (icon_v) {
             if (btn == BTN_LEFT) {
-                if (!icon_v->minimized && server->show_open_window_icons &&
-                    server->focused_view == icon_v) {
-                    view_set_minimized(icon_v, true);
-                } else {
-                    focus_view(server, icon_v, nullptr);
-                }
+                (void)dtwm_icons_handle_desktop_button(server, icon_v, btn, true);
             } else if (btn == BTN_RIGHT) {
                 open_window_menu(server, icon_v, (int)server->cursor->x, (int)server->cursor->y);
             }

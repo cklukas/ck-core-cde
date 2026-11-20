@@ -84,6 +84,7 @@
 #include "WmPanelP.h"  /* for typedef in WmManage.h */
 #include "WmManage.h"
 #include "WmMenu.h"
+#include "WmProperty.h"
 #include "WmResParse.h"
 #include "WmResource.h"
 #include "WmWinInfo.h"
@@ -1963,6 +1964,8 @@ Boolean InsertIconIntoBox (IconBoxData *pIBD, ClientData *pCD)
 		XtUnmanageChild (iconWidget);
 	    }
 
+	    UpdateNetWmIconGeometry (pCD);
+
 	    rval = True;
 	}
     } 
@@ -2190,6 +2193,11 @@ void DeleteIconFromBox (IconBoxData *pIBD, ClientData *pCD)
 
     XtDestroyWidget (theChild);
 
+    /* Compact remaining icons in-place so closing a window preserves icon ordering */
+    RealignIconList (pIBD,
+		     pIBD->IPD.placementCols > 0 ? pIBD->IPD.placementCols : 1,
+		     pIBD->IPD.placementRows > 0 ? pIBD->IPD.placementRows : 1);
+
     /* update last row and col */
 
     SetNewBounds (pIBD);
@@ -2311,15 +2319,45 @@ void ResetIconBoxMaxSize (ClientData *pCD, Widget bBoardWidget)
     Arg getArgs[3]; 
     Dimension newWidth = 0;
     Dimension newHeight = 0;
+    int maxColsWidth = 0;
+    int maxRowsHeight = 0;
+    int screenMaxW, screenMaxH;
+
+    if (!pCD || pCD->maxConfig)
+    {
+	return;
+    }
 
     i=0;
     XtSetArg (getArgs[i], XmNwidth, (XtArgVal) &newWidth ); i++;
     XtSetArg (getArgs[i], XmNheight, (XtArgVal) &newHeight ); i++;
     XtGetValues (bBoardWidget, getArgs, i);
 
+    if (pCD->thisIconBox && pCD->thisIconBox->numberOfIcons > 0)
+    {
+	maxColsWidth = pCD->thisIconBox->numberOfIcons * pCD->widthInc;
+	maxRowsHeight = pCD->thisIconBox->numberOfIcons * pCD->heightInc;
+    }
+    screenMaxW = DisplayWidth (DISPLAY, SCREEN_FOR_CLIENT(pCD)) -
+		 (2 * pCD->clientOffset.x) - pCD->baseWidth;
+    screenMaxH = DisplayHeight (DISPLAY, SCREEN_FOR_CLIENT(pCD)) -
+		 pCD->clientOffset.x - pCD->clientOffset.y - pCD->baseHeight;
+    if (maxColsWidth > screenMaxW)
+	maxColsWidth = screenMaxW;
+    if (maxRowsHeight > screenMaxH)
+	maxRowsHeight = screenMaxH;
+    if ((int)newWidth < maxColsWidth)
+	newWidth = (Dimension)maxColsWidth;
+    if ((int)newHeight < maxRowsHeight &&
+	!(pCD->thisIconBox &&
+	  (pCD->thisIconBox->IPD.iconPlacement & ICON_PLACE_LEFT_PRIMARY)))
+	newHeight = (Dimension)maxRowsHeight;
+
     pCD->oldMaxWidth = pCD->maxWidth = newWidth + pCD->baseWidth;
+    pCD->maxWidthLimit = pCD->maxWidth;
 
     pCD->oldMaxHeight = pCD->maxHeight = newHeight + pCD->baseHeight;
+    pCD->maxHeightLimit = pCD->maxHeight;
 
     pCD->maxX = pCD->clientX;
     pCD->maxY = pCD->clientY;
@@ -2464,35 +2502,18 @@ void CheckIconBoxResize (ClientData *pCD, unsigned int changedValues, int newWid
     
     if (changedValues & CWWidth) 
     {
-	/*
-	 * There was a change in Width, see if we need to change the
-	 * bulletin board
-	 */
-	if (newWidth > (int) oldWidth)
+	if (newWidth < pCD->widthInc)
 	{
-	    newCols = newWidth / pCD->widthInc;
-	    XtSetArg (setArgs[i], XmNwidth, (XtArgVal) newWidth ); i++;
+	    newWidth = pCD->widthInc;
 	}
-	
-	if (newWidth < (int) oldWidth)
+	newCols = newWidth / pCD->widthInc;
+	if (newCols < 1)
 	{
-	    if ((!strcmp(pSD->iconBoxSBDisplayPolicy, szvertical)) &&
-		(newWidth / pCD->widthInc < pIBD->lastCol + 1))
-	    {
-		XtSetArg (setArgs[i], XmNwidth, (XtArgVal) newWidth ); i++;
-		newCols = newWidth / pCD->widthInc;
-		packVert = True;
-	    }
-	    else if (newWidth / pCD->widthInc < pIBD->lastCol + 1)
-	    {
-		newWidth = (pIBD->lastCol +1) * pCD->widthInc;
-		XtSetArg (setArgs[i], XmNwidth, (XtArgVal) newWidth ); i++;
-	    }
-	    else
-	    {
-		newCols = newWidth / pCD->widthInc;
-		XtSetArg (setArgs[i], XmNwidth, (XtArgVal) newWidth ); i++;
-	    }
+	    newCols = 1;
+	}
+	if (newWidth != (int) oldWidth)
+	{
+	    XtSetArg (setArgs[i], XmNwidth, (XtArgVal) newWidth ); i++;
 	}
     }
     else
@@ -2502,42 +2523,35 @@ void CheckIconBoxResize (ClientData *pCD, unsigned int changedValues, int newWid
 	
     if (changedValues & CWHeight) 
     {
-	/*
-	 * There was a change in Height, see if we need to change the
-	 * bulletin board
-	 */
-	if (newHeight > (int) oldHeight)
+	if (newHeight < pCD->heightInc)
 	{
-	    newRows = newHeight / pCD->heightInc;
-	    XtSetArg (setArgs[i], XmNheight, (XtArgVal) newHeight ); i++;
+	    newHeight = pCD->heightInc;
 	}
-
-	if (newHeight < (int) oldHeight)
+	newRows = newHeight / pCD->heightInc;
+	if (newRows < 1)
 	{
-	    if ((!strcmp(pSD->iconBoxSBDisplayPolicy, szhorizontal)) &&
-                (newHeight / pCD->heightInc < pIBD->lastRow + 1))
-	    {
-		XtSetArg (setArgs[i], XmNheight, (XtArgVal) newHeight ); i++;
-		newRows = newHeight / pCD->heightInc;
-		packHorz = True;		
-	    }
-	    else if (newHeight / pCD->heightInc < pIBD->lastRow + 1)
-	    {
-		newHeight = (pIBD->lastRow + 1) * pCD->heightInc;
-		XtSetArg (setArgs[i], XmNheight, (XtArgVal) newHeight ); i++;
-	    }
-	    else
-	    {
-		newRows = newHeight / pCD->heightInc;
-		XtSetArg (setArgs[i], XmNheight, (XtArgVal) newHeight ); i++;
-	    }
+	    newRows = 1;
+	}
+	if (newHeight != (int) oldHeight)
+	{
+	    XtSetArg (setArgs[i], XmNheight, (XtArgVal) newHeight ); i++;
 	}
     }
     else
     {
 	newHeight = oldHeight;
     }
+    (void)packVert;
+    (void)packHorz;
+    (void)pSD;
     
+    if (pIBD->shellWidget)
+    {
+	Arg shArgs[1];
+	XtSetArg (shArgs[0], XmNallowShellResize, (XtArgVal)False);
+	XtSetValues (pIBD->shellWidget, shArgs, 1);
+    }
+
     if ( i >0   &&   ExpandVirtualSpace(pIBD, newWidth, newHeight))
     {
 	XtSetValues (pIBD->bBoardWidget, setArgs, i);
@@ -2545,24 +2559,24 @@ void CheckIconBoxResize (ClientData *pCD, unsigned int changedValues, int newWid
 
     RealignIconList (pIBD, newCols, newRows);
 
-    pIPD->placementCols = newCols;
-    pIPD->placementRows = newRows;
-    
-    ResetIconBoxMaxSize(pCD, pIBD->bBoardWidget);
-    
-    /*
-     * Pack the icon box if there are icons that can no longer
-     * be scrolled to due to iconBoxSBDisplayPolicy.
-     */
-    if (packVert)
+    /* Ensure bulletin board encompasses all reflowed rows and columns */
     {
-	PackIconBox (pIBD, packVert, False , newWidth, 0);
-    }
-    else if (packHorz)
-    {
-	PackIconBox (pIBD, False, packHorz , 0, newHeight);
+	int reqW = (MAX(pIPD->placementCols, pIBD->lastCol + 1)) * pCD->widthInc;
+	int reqH = (MAX(pIPD->placementRows, pIBD->lastRow + 1)) * pCD->heightInc;
+	if (reqW != newWidth || reqH != newHeight)
+	{
+	    i = 0;
+	    XtSetArg (setArgs[i], XmNwidth, (XtArgVal) reqW); i++;
+	    XtSetArg (setArgs[i], XmNheight, (XtArgVal) reqH); i++;
+	    if (ExpandVirtualSpace(pIBD, reqW, reqH))
+	    {
+		XtSetValues (pIBD->bBoardWidget, setArgs, i);
+	    }
+	}
     }
 
+    ResetIconBoxMaxSize(pCD, pIBD->bBoardWidget);
+    ResetArrowButtonIncrements (pCD);
 
 } /* END OF FUNCTION CheckIconBoxResize */
 
@@ -2827,6 +2841,7 @@ void PackIconBox (IconBoxData *pIBD, Boolean packVert, Boolean packHorz, int pas
 		    XtMoveWidget (pII_2->theWidget, newX, newY);
 		    UpdateOpenIconIndicator (pII_2->pCD, False, -1);
 		}
+		UpdateNetWmIconGeometry (pII_2->pCD);
 	    }
 	}
 
@@ -2938,82 +2953,116 @@ void PackIconBox (IconBoxData *pIBD, Boolean packVert, Boolean packHorz, int pas
 
 void RealignIconList (IconBoxData *pIBD, int newCols, int newRows)
 {
-    int c1, c2, ix1, ix2;
-    int oldRows, oldCols;
-    IconPlacementData  ipdNew;
+    int ixRead, ixWrite, oldTotal, nIcons, slot;
+    int newX, newY;
     IconInfo *pII;
+    ClientData *pCD_active = nullptr;
+    int hasActiveText = 0;
+    WmWorkspaceData *pWS;
+    WsClientData *pWsc;
 
-    /* 
-     * create new icon placement data for ease of calling conversion 
-     * routines.
-     */
-    ipdNew.onRootWindow = pIBD->IPD.onRootWindow;
-    ipdNew.iconPlacement = pIBD->IPD.iconPlacement;
-    ipdNew.placementRows = newRows;
-    ipdNew.placementCols = newCols;
-    ipdNew.iPlaceW = pIBD->IPD.iPlaceW;
-    ipdNew.iPlaceH = pIBD->IPD.iPlaceH;
-    ipdNew.placeList = pIBD->IPD.placeList;
-    ipdNew.totalPlaces = pIBD->IPD.totalPlaces;
+    if (!pIBD || !pIBD->IPD.placeList)
+    {
+	return;
+    }
 
-    oldRows = pIBD->IPD.placementRows;
-    oldCols = pIBD->IPD.placementCols;
+    if (newCols < 1) newCols = 1;
+    if (newRows < 1) newRows = 1;
 
     /*
-     * Use the new organization and placement discipline to
-     * determine how to move the icon info data around.
+     * Compact non-null entries in-place to preserve invariant linear icon
+     * order across Icon Box resize, maximize, restore, and client close.
      */
-    if (((oldRows < newRows) && 
-	 (pIBD->IPD.iconPlacement & ICON_PLACE_TOP_PRIMARY)) ||
-	((oldCols < newCols) && 
-	 (pIBD->IPD.iconPlacement & ICON_PLACE_LEFT_PRIMARY)))
-    { 
-    /* 
-     * work backwards 
-     */
-	for (ix1 = pIBD->IPD.totalPlaces - 1, 
-		 pII = &pIBD->IPD.placeList[ix1]; ix1 >= 0; ix1--, pII--)
+    oldTotal = pIBD->IPD.totalPlaces;
+    ixWrite = 0;
+    for (ixRead = 0; ixRead < oldTotal; ixRead++)
+    {
+	if (pIBD->IPD.placeList[ixRead].pCD != nullptr)
 	{
-	    if (pII->pCD != nullptr)
+	    if (ixWrite != ixRead)
 	    {
-		CvtIconPlaceToPosition (&pIBD->IPD, ix1, &c1, &c2);
-		ix2 = CvtIconPositionToPlace (&ipdNew, c1, c2);
-		if (ix1 != ix2)
-		{ 
-		    MoveIconInfo (&pIBD->IPD, ix1, ix2);
-		} 
+		pIBD->IPD.placeList[ixWrite] = pIBD->IPD.placeList[ixRead];
+		pIBD->IPD.placeList[ixRead].pCD = nullptr;
+		pIBD->IPD.placeList[ixRead].theWidget = nullptr;
 	    }
+	    ixWrite++;
 	}
     }
-    else 
-    if (((oldRows > newRows) && 
-	 (pIBD->IPD.iconPlacement & ICON_PLACE_TOP_PRIMARY)) ||
-	((oldCols > newCols) && 
-	 (pIBD->IPD.iconPlacement & ICON_PLACE_LEFT_PRIMARY)))
+    nIcons = ixWrite;
+
+    if (pIBD->IPD.iconPlacement & ICON_PLACE_LEFT_PRIMARY)
     {
-	/* 
-	 * work forwards 
-	 */
-	for (ix1 = 0, pII = &pIBD->IPD.placeList[ix1]; 
-		ix1 < pIBD->IPD.totalPlaces; ix1++, pII++)
+	int rowsNeeded = (nIcons > 0) ? ((nIcons + newCols - 1) / newCols) : 1;
+	if (rowsNeeded > newRows)
 	{
-	    if (pII->pCD != nullptr)
+	    newRows = rowsNeeded;
+	}
+    }
+    else
+    {
+	int colsNeeded = (nIcons > 0) ? ((nIcons + newRows - 1) / newRows) : 1;
+	if (colsNeeded > newCols)
+	{
+	    newCols = colsNeeded;
+	}
+    }
+
+    if (newCols * newRows > pIBD->IPD.totalPlaces)
+    {
+	(void)ExtendIconList (pIBD, (newCols * newRows) - pIBD->IPD.totalPlaces);
+    }
+
+    pIBD->IPD.placementCols = newCols;
+    pIBD->IPD.placementRows = newRows;
+
+    if (pIBD->pCD_iconBox &&
+	(ICON_DECORATION(pIBD->pCD_iconBox) & ICON_ACTIVE_LABEL_PART) &&
+	!XFindContext (DISPLAY, pIBD->pCD_iconBox->pSD->activeIconTextWin,
+		       wmGD.windowContextType, (caddr_t *)&pCD_active))
+    {
+	hasActiveText = 1;
+    }
+
+    for (slot = 0; slot < nIcons; slot++)
+    {
+	pII = &pIBD->IPD.placeList[slot];
+	if (!pII->pCD)
+	{
+	    continue;
+	}
+	pWS = GetWorkspaceData (pII->pCD->pSD, pIBD->wsID);
+	pWsc = pWS ? GetWsClientData (pWS, pII->pCD) : nullptr;
+	if (!pWsc)
+	{
+	    continue;
+	}
+
+	pWsc->iconPlace = slot;
+	CvtIconPlaceToPosition (&pIBD->IPD, slot, &newX, &newY);
+	if (newX != pWsc->iconX || newY != pWsc->iconY)
+	{
+	    pWsc->iconX = newX;
+	    pWsc->iconY = newY;
+	    if (pII->theWidget)
 	    {
-		CvtIconPlaceToPosition (&pIBD->IPD, ix1, &c1, &c2);
-		ix2 = CvtIconPositionToPlace (&ipdNew, c1, c2);
-		if (ix1 != ix2)
+		if (hasActiveText && (pII->pCD == pCD_active))
 		{
-		    MoveIconInfo (&pIBD->IPD, ix1, ix2);
+		    HideActiveIconText ((WmScreenData *)nullptr);
+		    XtMoveWidget (pII->theWidget, newX, newY);
+		    UpdateOpenIconIndicator (pII->pCD, False, -1);
+		    ShowActiveIconText (pII->pCD);
+		}
+		else
+		{
+		    XtMoveWidget (pII->theWidget, newX, newY);
+		    UpdateOpenIconIndicator (pII->pCD, False, -1);
 		}
 	    }
 	}
+	UpdateNetWmIconGeometry (pII->pCD);
     }
 
-    /* 
-     * update info in placement structure to reflect new reality
-     */
-    pIBD->IPD.placementRows = newRows;
-    pIBD->IPD.placementCols = newCols;
+    SetNewBounds (pIBD);
 
 } /* END OF FUNCTION RealignIconList */
 
@@ -3055,6 +3104,10 @@ void SetNewBounds (IconBoxData *pIBD)
 
     for (i = 0; i < cw->composite.num_children; i++)
     {
+        if (children[i]->core.being_destroyed)
+        {
+	    continue;
+        }
         if (children[i]->core.x > X)
         {
 	    X = children[i]->core.x;
@@ -3153,6 +3206,7 @@ void ShowClientIconState (ClientData *pCD, int newState)
 	(newState == MINIMIZED_STATE || pCD->pSD->showOpenWindowIcons))
     {
 	IconExposureProc (pCD, True);
+	UpdateNetWmIconGeometry (pCD);
     }
 
 } /* END FUNCTION ShowClientIconState */

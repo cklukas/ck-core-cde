@@ -1631,6 +1631,7 @@ void CompleteFrameConfig (ClientData *pcd, XEvent *pev)
 			     * Move the icon to the new place.
 			     */
 			    MoveIconInfo (pIPD, ICON_PLACE(pcd), place);
+			    pcd->pWsList[pcd->currentWsc].iconUserPlaced = True;
 			    CvtIconPlaceToPosition (pIPD, place, &ICON_X(pcd), 
 						    &ICON_Y(pcd));
 

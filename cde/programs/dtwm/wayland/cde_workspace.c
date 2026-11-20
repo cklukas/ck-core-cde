@@ -1105,6 +1105,10 @@ static void handle_dt_wm_request_item(DtwmServer *server, const char *cmd) {
         }
         return;
     }
+    if (strncmp(cmd, "f.pack_icons", 12) == 0) {
+        dtwm_icons_pack(server);
+        return;
+    }
     if (strncmp(cmd, "f.set_open_window_icons", 23) == 0) {
         int val = 1;
         if (sscanf(cmd + 23, "%d", &val) == 1) {

@@ -1938,6 +1938,7 @@ typedef struct _WsClientData
 {
     WorkspaceID	wsID;			/* workspace identifier */
     int		iconPlace;		/* icon placment index */
+    Boolean	iconUserPlaced;		/* manually dragged to grid slot */
     int		iconX;
     int		iconY;
     Window	iconFrameWin;

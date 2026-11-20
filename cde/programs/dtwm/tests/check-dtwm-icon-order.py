@@ -19,25 +19,171 @@ from PIL import Image
 
 
 X11_COLOR_CLIENT_C = r"""
+#include <linux/input-event-codes.h>
 #include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
+#include <wayland-client-core.h>
+#include <wayland-client-protocol.h>
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <X11/extensions/XTest.h>
 
+extern const struct wl_interface zwlr_virtual_pointer_v1_interface;
+static const struct wl_interface *vptr_mgr_types[] = {
+    &wl_seat_interface, &zwlr_virtual_pointer_v1_interface,
+};
+static const struct wl_message vptr_mgr_requests[] = {
+    { "create_virtual_pointer", "?on", vptr_mgr_types },
+};
+static const struct wl_interface zwlr_virtual_pointer_manager_v1_interface = {
+    "zwlr_virtual_pointer_manager_v1", 1, 1, vptr_mgr_requests, 0, NULL,
+};
+static const struct wl_interface *vptr_null_types[] = { NULL, NULL, NULL, NULL, NULL };
+static const struct wl_message vptr_requests[] = {
+    { "motion", "uff", vptr_null_types },
+    { "motion_absolute", "uuuuu", vptr_null_types },
+    { "button", "uuu", vptr_null_types },
+    { "axis", "uuf", vptr_null_types },
+    { "frame", "", vptr_null_types },
+    { "axis_source", "u", vptr_null_types },
+    { "axis_stop", "uu", vptr_null_types },
+    { "axis_discrete", "uufi", vptr_null_types },
+    { "destroy", "", vptr_null_types },
+};
+const struct wl_interface zwlr_virtual_pointer_v1_interface = {
+    "zwlr_virtual_pointer_v1", 1, 9, vptr_requests, 0, NULL,
+};
+
+typedef struct {
+    struct wl_seat *seat;
+    struct wl_proxy *vptr_mgr;
+} WlDragState;
+
+static void on_wl_global(void *data, struct wl_registry *reg, uint32_t name,
+                         const char *iface, uint32_t ver) {
+    WlDragState *st = (WlDragState *)data;
+    (void)ver;
+    if (strcmp(iface, wl_seat_interface.name) == 0 && !st->seat) {
+        st->seat = (struct wl_seat *)wl_registry_bind(reg, name, &wl_seat_interface, 1);
+    } else if (strcmp(iface, "zwlr_virtual_pointer_manager_v1") == 0 && !st->vptr_mgr) {
+        st->vptr_mgr = (struct wl_proxy *)wl_registry_bind(
+            reg, name, &zwlr_virtual_pointer_manager_v1_interface, 1);
+    }
+}
+static void on_wl_global_rem(void *d, struct wl_registry *r, uint32_t n) { (void)d; (void)r; (void)n; }
+static const struct wl_registry_listener wl_reg_l = { on_wl_global, on_wl_global_rem };
+
+static uint32_t mono_ms(void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (uint32_t)(ts.tv_sec * 1000u + (uint32_t)(ts.tv_nsec / 1000000L));
+}
+
+static int g_xerr = 0;
+static int ignore_xerr(Display *d, XErrorEvent *e) { (void)d; (void)e; g_xerr = 1; return 0; }
+static Window find_iconbox_rec(Display *dpy, Window w, int depth) {
+    if (depth > 4) return None;
+    if (depth > 0) {
+        XWindowAttributes wa;
+        if (!XGetWindowAttributes(dpy, w, &wa) || wa.map_state != IsViewable) return None;
+    }
+    XClassHint ch = {NULL, NULL};
+    int match = 0;
+    if (XGetClassHint(dpy, w, &ch)) {
+        if (ch.res_name && strcasecmp(ch.res_name, "iconbox") == 0) match = 1;
+        if (ch.res_name) XFree(ch.res_name);
+        if (ch.res_class) XFree(ch.res_class);
+    }
+    if (!match) {
+        char *wname = NULL;
+        if (XFetchName(dpy, w, &wname) && wname) {
+            if (strcmp(wname, "Icons") == 0) match = 1;
+            XFree(wname);
+        }
+    }
+    if (match) return w;
+    Window r = None, p = None, *ch_list = NULL;
+    unsigned int n = 0;
+    if (!XQueryTree(dpy, w, &r, &p, &ch_list, &n) || !ch_list) return None;
+    Window found = None;
+    for (unsigned int i = 0; i < n && found == None; ++i) {
+        found = find_iconbox_rec(dpy, ch_list[i], depth + 1);
+    }
+    XFree(ch_list);
+    return found;
+}
 static volatile sig_atomic_t g_stop = 0;
 static void on_sig(int s) { (void)s; g_stop = 1; }
 
 int main(int argc, char **argv) {
     if (argc < 2) return 2;
+    const char *mode = argv[1];
+
+    if (strcmp(mode, "wl_drag") == 0 && argc >= 8) {
+        uint32_t x0 = (uint32_t)strtoul(argv[2], NULL, 0);
+        uint32_t y0 = (uint32_t)strtoul(argv[3], NULL, 0);
+        uint32_t x1 = (uint32_t)strtoul(argv[4], NULL, 0);
+        uint32_t y1 = (uint32_t)strtoul(argv[5], NULL, 0);
+        uint32_t ow = (uint32_t)strtoul(argv[6], NULL, 0);
+        uint32_t oh = (uint32_t)strtoul(argv[7], NULL, 0);
+        const char *mid_shot = (argc > 8) ? argv[8] : NULL;
+
+        struct wl_display *wdpy = wl_display_connect(NULL);
+        if (!wdpy) return 3;
+        WlDragState st = {0};
+        struct wl_registry *reg = wl_display_get_registry(wdpy);
+        wl_registry_add_listener(reg, &wl_reg_l, &st);
+        wl_display_roundtrip(wdpy);
+        if (!st.seat || !st.vptr_mgr) return 4;
+        struct wl_proxy *vp = wl_proxy_marshal_flags(
+            st.vptr_mgr, 0, &zwlr_virtual_pointer_v1_interface, 1, 0, st.seat, NULL);
+        wl_display_roundtrip(wdpy);
+
+        wl_proxy_marshal(vp, 1, mono_ms(), x0, y0, ow, oh);
+        wl_proxy_marshal(vp, 4);
+        wl_display_roundtrip(wdpy);
+        usleep(30000);
+
+        wl_proxy_marshal(vp, 2, mono_ms(), (uint32_t)BTN_LEFT, 1u);
+        wl_proxy_marshal(vp, 4);
+        wl_display_roundtrip(wdpy);
+        usleep(30000);
+
+        wl_proxy_marshal(vp, 1, mono_ms(), (x0 + x1) / 2u, (y0 + y1) / 2u, ow, oh);
+        wl_proxy_marshal(vp, 4);
+        wl_display_roundtrip(wdpy);
+        usleep(25000);
+
+        wl_proxy_marshal(vp, 1, mono_ms(), x1, y1, ow, oh);
+        wl_proxy_marshal(vp, 4);
+        wl_display_roundtrip(wdpy);
+        usleep(40000);
+
+        if (mid_shot && mid_shot[0]) {
+            char cmd[1024];
+            snprintf(cmd, sizeof(cmd), "grim '%s'", mid_shot);
+            if (system(cmd) != 0) {}
+        }
+
+        wl_proxy_marshal(vp, 2, mono_ms(), (uint32_t)BTN_LEFT, 0u);
+        wl_proxy_marshal(vp, 4);
+        wl_display_roundtrip(wdpy);
+        usleep(30000);
+
+        wl_proxy_marshal(vp, 8);
+        wl_display_disconnect(wdpy);
+        return 0;
+    }
+
     Display *dpy = XOpenDisplay(NULL);
     if (!dpy) return 1;
     Window root = DefaultRootWindow(dpy);
-    const char *mode = argv[1];
 
     if (strcmp(mode, "client") == 0) {
         /* client <title> <hex_rgb> <x> <y> */
@@ -181,15 +327,105 @@ int main(int argc, char **argv) {
         return 0;
     }
 
+    if (strcmp(mode, "maximize") == 0 && argc > 3) {
+        Window win = (Window)strtoul(argv[2], NULL, 0);
+        int on = atoi(argv[3]);
+        Atom st_a = XInternAtom(dpy, "_NET_WM_STATE", False);
+        Atom mv_a = XInternAtom(dpy, "_NET_WM_STATE_MAXIMIZED_VERT", False);
+        Atom mh_a = XInternAtom(dpy, "_NET_WM_STATE_MAXIMIZED_HORZ", False);
+        XEvent ev;
+        memset(&ev, 0, sizeof(ev));
+        ev.xclient.type = ClientMessage;
+        ev.xclient.window = win;
+        ev.xclient.message_type = st_a;
+        ev.xclient.format = 32;
+        ev.xclient.data.l[0] = on ? 1L : 0L;
+        ev.xclient.data.l[1] = (long)mv_a;
+        ev.xclient.data.l[2] = (long)mh_a;
+        ev.xclient.data.l[3] = 2L;
+        XSendEvent(dpy, root, False, SubstructureRedirectMask | SubstructureNotifyMask, &ev);
+        XSync(dpy, False);
+        return 0;
+    }
+
+    if (strcmp(mode, "win_size") == 0 && argc > 2) {
+        Window win = (Window)strtoul(argv[2], NULL, 0);
+        XWindowAttributes attr;
+        if (!XGetWindowAttributes(dpy, win, &attr)) return 1;
+        printf("%d,%d\n", attr.width, attr.height);
+        return 0;
+    }
+
+    if (strcmp(mode, "resize") == 0 && argc > 4) {
+        Window win = (Window)strtoul(argv[2], NULL, 0);
+        unsigned int nw = (unsigned int)strtoul(argv[3], NULL, 0);
+        unsigned int nh = (unsigned int)strtoul(argv[4], NULL, 0);
+        XResizeWindow(dpy, win, nw, nh);
+        XSync(dpy, False);
+        return 0;
+    }
+
+    if (strcmp(mode, "click_max_btn") == 0 && argc > 2) {
+        Window cur = (Window)strtoul(argv[2], NULL, 0);
+        Window frame = cur;
+        for (int k = 0; k < 5 && cur != None && cur != root; ++k) {
+            Window r_ret = None, p_ret = None, *ch = NULL;
+            unsigned int n = 0;
+            if (!XQueryTree(dpy, cur, &r_ret, &p_ret, &ch, &n)) break;
+            if (ch) XFree(ch);
+            if (p_ret == root) {
+                frame = cur;
+                break;
+            }
+            cur = p_ret;
+        }
+        XWindowAttributes attr;
+        if (!XGetWindowAttributes(dpy, frame, &attr)) return 1;
+        int mx = attr.x + attr.width - 14;
+        int my = attr.y + 14;
+        XTestFakeMotionEvent(dpy, -1, mx, my, CurrentTime);
+        XSync(dpy, False);
+        usleep(20000);
+        XTestFakeButtonEvent(dpy, 1, True, CurrentTime);
+        XSync(dpy, False);
+        usleep(20000);
+        XTestFakeButtonEvent(dpy, 1, False, CurrentTime);
+        XSync(dpy, False);
+        return 0;
+    }
+
+    if (strcmp(mode, "find_iconbox") == 0) {
+        g_xerr = 0;
+        XSetErrorHandler(ignore_xerr);
+        Window found = find_iconbox_rec(dpy, root, 0);
+        if (found != None) {
+            printf("0x%lx\n", (unsigned long)found);
+        } else {
+            printf("NONE\n");
+        }
+        return 0;
+    }
+
     if (strcmp(mode, "wm_ready") == 0) {
         Atom info_a = XInternAtom(dpy, "_MOTIF_WM_INFO", False);
         Atom act = None;
         int fmt = 0;
         unsigned long nitems = 0, rem = 0;
         unsigned char *data = NULL;
-        int ok = (XGetWindowProperty(dpy, root, info_a, 0, 2, False, AnyPropertyType,
-                                     &act, &fmt, &nitems, &rem, &data) == Success &&
-                  data && nitems >= 2);
+        int ok = 0;
+        if (XGetWindowProperty(dpy, root, info_a, 0, 2, False, AnyPropertyType,
+                               &act, &fmt, &nitems, &rem, &data) == Success &&
+            data && nitems >= 2) {
+            Window wm_win = (Window)((unsigned long *)data)[1];
+            XWindowAttributes attr;
+            g_xerr = 0;
+            XSetErrorHandler(ignore_xerr);
+            if (wm_win != None && XGetWindowAttributes(dpy, wm_win, &attr) && !g_xerr) {
+                ok = 1;
+            }
+            XSync(dpy, False);
+            if (g_xerr) ok = 0;
+        }
         if (data) XFree(data);
         return ok ? 0 : 1;
     }
@@ -426,11 +662,7 @@ def verify_wayland_icon_order(comp_bin: Path, helper_bin: Path, work: Path) -> N
         )
         subprocess.run(["wlrctl", "pointer", "click", "right"], env=c_env, check=True)
         time.sleep(0.08)
-        subprocess.run(
-            ["wlrctl", "pointer", "move", str(ga0[0] + ga0[2] // 2 + 24), str(ga0[1] + ga0[3] // 2 + 14)],
-            env=c_env,
-            check=True,
-        )
+        subprocess.run(["wlrctl", "pointer", "move", "24", "14"], env=c_env, check=True)
         subprocess.run(["wlrctl", "pointer", "click", "left"], env=c_env, check=True)
         time.sleep(0.12)
         if (
@@ -447,7 +679,53 @@ def verify_wayland_icon_order(comp_bin: Path, helper_bin: Path, work: Path) -> N
             assert_slot_color(im, gb0, (0x18, 0xD0, 0x50), "Slot1 Green after min/restore")
             assert_slot_color(im, gc0, (0x28, 0x78, 0xF0), "Slot2 Blue after min/restore")
 
-        # 2. Verify Icon Box mode also preserves invariant ordering across minimize & restore
+        # 1b. Verify interactive desktop icon dragging with placement grid & slot highlight:
+        # Drag Window C's icon further down the desktop (+260px Y), confirm it snaps to a lower
+        # grid cell and stays there across minimize/restore, then pack back via f.pack_icons!
+        with Image.open(shot_keep) as im_sz:
+            out_w, out_h = im_sz.size
+        shot_drag_grid = work / "wl-icon-drag-grid.png"
+        cx0 = gc0[0] + gc0[2] // 2
+        cy0 = gc0[1] + gc0[3] // 2
+        subprocess.run(
+            [
+                str(helper_bin),
+                "wl_drag",
+                str(cx0),
+                str(cy0),
+                str(cx0),
+                str(cy0 + 260),
+                str(out_w),
+                str(out_h),
+                str(shot_drag_grid),
+            ],
+            env=c_env,
+            check=True,
+        )
+        time.sleep(0.12)
+
+        gc_dragged = wait_icon_geom(helper_bin, c_env, win_c)
+        if gc_dragged[1] < gc0[1] + 180 or gc_dragged[0] != gc0[0]:
+            raise SystemExit(
+                f"expected dragged desktop icon C to snap further down in column 0, got {gc_dragged} (was {gc0})"
+            )
+        subprocess.run(["wlrctl", "toplevel", "minimize", "title:OrderGammaBlue"], env=c_env, check=True)
+        time.sleep(0.1)
+        subprocess.run(["wlrctl", "toplevel", "focus", "title:OrderGammaBlue"], env=c_env, check=True)
+        time.sleep(0.1)
+        if wait_icon_geom(helper_bin, c_env, win_c) != gc_dragged:
+            raise SystemExit("manually dragged desktop icon C did not stay in place across minimize/restore!")
+
+        subprocess.run([str(helper_bin), "req", "f.pack_icons"], env=c_env, check=True)
+        time.sleep(0.12)
+        if wait_icon_geom(helper_bin, c_env, win_c) != gc0:
+            raise SystemExit(
+                f"expected f.pack_icons to pack C back to {gc0}, got {wait_icon_geom(helper_bin, c_env, win_c)}"
+            )
+
+        # 2. Verify Icon Box mode preserves mental-map ordering across client minimize,
+        # restore, maximize, unmaximize, Icon Box icon clicks, Icon Box frame maximize/restore,
+        # and closing a middle window inside the Icon Box!
         subprocess.run([str(helper_bin), "req", "f.set_use_icon_box 1"], env=c_env, check=True)
         time.sleep(0.15)
         iba = wait_icon_geom(helper_bin, c_env, win_a)
@@ -455,24 +733,109 @@ def verify_wayland_icon_order(comp_bin: Path, helper_bin: Path, work: Path) -> N
         ibc = wait_icon_geom(helper_bin, c_env, win_c)
         if not (iba[0] < ibb[0] < ibc[0]):
             raise SystemExit(f"expected Icon Box order A < B < C, got {iba}, {ibb}, {ibc}")
+
+        # Focus A, minimize B, maximize C, unmaximize C, maximize A, unmaximize A
         subprocess.run(["wlrctl", "toplevel", "focus", "title:OrderAlphaRed"], env=c_env, check=True)
         time.sleep(0.08)
         subprocess.run(["wlrctl", "toplevel", "minimize", "title:OrderBetaGreen"], env=c_env, check=True)
+        time.sleep(0.08)
+        subprocess.run(["wlrctl", "toplevel", "maximize", "title:OrderGammaBlue"], env=c_env, check=True)
+        time.sleep(0.1)
+        subprocess.run([str(helper_bin), "maximize", win_c, "0"], env=c_env, check=True)
+        time.sleep(0.1)
+        subprocess.run(["wlrctl", "toplevel", "maximize", "title:OrderAlphaRed"], env=c_env, check=True)
+        time.sleep(0.1)
+        subprocess.run([str(helper_bin), "maximize", win_a, "0"], env=c_env, check=True)
         time.sleep(0.1)
         if (
             wait_icon_geom(helper_bin, c_env, win_a) != iba
             or wait_icon_geom(helper_bin, c_env, win_b) != ibb
             or wait_icon_geom(helper_bin, c_env, win_c) != ibc
         ):
-            raise SystemExit("Icon Box icon order changed after restore/minimize!")
+            raise SystemExit("Icon Box icon order changed across client minimize/maximize/unmaximize!")
+
+        # Click minimized Icon B inside the Icon Box to restore & focus B, then click focused Icon B
+        # again inside the Icon Box to toggle-minimize B in-place without reordering!
+        subprocess.run(["wlrctl", "pointer", "move", "-10000", "-10000"], env=c_env, check=True)
+        subprocess.run(
+            ["wlrctl", "pointer", "move", str(ibb[0] + ibb[2] // 2), str(ibb[1] + ibb[3] // 2)],
+            env=c_env,
+            check=True,
+        )
+        subprocess.run(["wlrctl", "pointer", "click", "left"], env=c_env, check=True)
+        time.sleep(0.1)
+        subprocess.run(["wlrctl", "pointer", "click", "left"], env=c_env, check=True)
+        time.sleep(0.1)
+        subprocess.run(["wlrctl", "pointer", "click", "left"], env=c_env, check=True)
+        time.sleep(0.1)
+        if (
+            wait_icon_geom(helper_bin, c_env, win_a) != iba
+            or wait_icon_geom(helper_bin, c_env, win_b) != ibb
+            or wait_icon_geom(helper_bin, c_env, win_c) != ibc
+        ):
+            raise SystemExit("Icon Box icon order changed after left-clicking Icon B inside Icon Box!")
+
+        # Maximize and restore the Icon Box frame itself via double-clicking its titlebar
+        # (icon_x = icon_box_x + DTWM_BORDER_WIDTH(6) + 5 + 8 -> icon_box_x = iba[0] - 19,
+        #  icon_y = icon_box_y + DTWM_BORDER_WIDTH(6) + DTWM_TITLE_HEIGHT(24) + 5 + 6 -> icon_box_y = iba[1] - 41)
+        ib_title_x = iba[0] + 120
+        ib_title_y = iba[1] - 41 + 16
+        subprocess.run(["wlrctl", "pointer", "move", "-10000", "-10000"], env=c_env, check=True)
+        subprocess.run(["wlrctl", "pointer", "move", str(ib_title_x), str(ib_title_y)], env=c_env, check=True)
+        subprocess.run(["wlrctl", "pointer", "click", "left"], env=c_env, check=True)
+        subprocess.run(["wlrctl", "pointer", "click", "left"], env=c_env, check=True)
+        time.sleep(0.12)
+        ib_max_a = wait_icon_geom(helper_bin, c_env, win_a)
+        ib_max_b = wait_icon_geom(helper_bin, c_env, win_b)
+        ib_max_c = wait_icon_geom(helper_bin, c_env, win_c)
+        if not (ib_max_a[0] < ib_max_b[0] < ib_max_c[0]) or ib_max_a[1] >= iba[1]:
+            raise SystemExit(
+                f"expected maximized Icon Box order A < B < C near top, got {ib_max_a}, {ib_max_b}, {ib_max_c}"
+            )
+        ib_max_title_x = ib_max_a[0] + 120
+        ib_max_title_y = ib_max_a[1] - 41 + 16
+        subprocess.run(["wlrctl", "pointer", "move", "-10000", "-10000"], env=c_env, check=True)
+        subprocess.run(["wlrctl", "pointer", "move", str(ib_max_title_x), str(ib_max_title_y)], env=c_env, check=True)
+        subprocess.run(["wlrctl", "pointer", "click", "left"], env=c_env, check=True)
+        subprocess.run(["wlrctl", "pointer", "click", "left"], env=c_env, check=True)
+        time.sleep(0.12)
+        if (
+            wait_icon_geom(helper_bin, c_env, win_a) != iba
+            or wait_icon_geom(helper_bin, c_env, win_b) != ibb
+            or wait_icon_geom(helper_bin, c_env, win_c) != ibc
+        ):
+            raise SystemExit("Icon Box icon positions changed after maximizing and restoring Icon Box frame!")
+
+        # Spawn 4th window D while in Icon Box, then close C inside Icon Box -> D shifts into C's slot!
+        p_d_ib, win_d_ib = spawn_color_win(helper_bin, c_env, "OrderDeltaGold", "E0B020", 520, 300)
+        procs.append(p_d_ib)
+        time.sleep(0.2)
+        ibd = wait_icon_geom(helper_bin, c_env, win_d_ib)
+        if not (ibc[0] < ibd[0]):
+            raise SystemExit(f"expected new window D at Slot 3 > C in Icon Box, got C={ibc}, D={ibd}")
+        p_c.terminate()
+        p_c.wait(timeout=3)
+        time.sleep(0.2)
+        if wait_icon_geom(helper_bin, c_env, win_d_ib)[:2] != ibc[:2]:
+            raise SystemExit("closing C inside Wayland Icon Box did not shift D into C's slot!")
+        shot_ib = work / "wl-iconbox-order.png"
+        subprocess.run(["grim", str(shot_ib)], env=c_env, check=True)
+        with Image.open(shot_ib) as im_ib:
+            assert_slot_color(im_ib, iba, (0xE0, 0x28, 0x28), "IconBox Slot0 Red")
+            assert_slot_color(im_ib, ibb, (0x18, 0xD0, 0x50), "IconBox Slot1 Green")
+            assert_slot_color(im_ib, ibc, (0xE0, 0xB0, 0x20), "IconBox Slot2 Gold after closing Blue")
+
+        # Switch back to desktop icons: [A, B, D] must appear at [ga0, gb0, gc0]!
         subprocess.run([str(helper_bin), "req", "f.set_use_icon_box 0"], env=c_env, check=True)
         time.sleep(0.15)
+        p_c = p_d_ib
+        win_c = win_d_ib
         subprocess.run(["wlrctl", "toplevel", "focus", "title:OrderBetaGreen"], env=c_env, check=True)
         time.sleep(0.08)
         subprocess.run(["wlrctl", "toplevel", "minimize", "title:OrderAlphaRed"], env=c_env, check=True)
         time.sleep(0.1)
 
-        # 3. Close middle open window B -> C must move up into Slot 1 (gb0), while A stays at Slot 0 (ga0)!
+        # 3. Close middle open window B -> C (OrderDeltaGold) must move up into Slot 1 (gb0), while A stays at Slot 0 (ga0)!
         p_b.terminate()
         p_b.wait(timeout=3)
         time.sleep(0.2)
@@ -494,7 +857,7 @@ def verify_wayland_icon_order(comp_bin: Path, helper_bin: Path, work: Path) -> N
         shot_closed = work / "wl-order-after-close.png"
         subprocess.run(["grim", str(shot_closed)], env=c_env, check=True)
         with Image.open(shot_closed) as im2:
-            assert_slot_color(im2, wait_icon_geom(helper_bin, c_env, win_c), (0x28, 0x78, 0xF0), "Slot0 Blue after closing A & B")
+            assert_slot_color(im2, wait_icon_geom(helper_bin, c_env, win_c), (0xE0, 0xB0, 0x20), "Slot0 Gold after closing A & B")
 
         p_c.terminate()
         p_c.wait(timeout=3)
@@ -709,7 +1072,138 @@ def verify_x11_dtwm_icon_order(dtwm_bin: Path, helper_bin: Path, work: Path) -> 
         if wait_icon_geom(helper_bin, env, win_c)[:2] != ga0[:2] or wait_icon_geom(helper_bin, env, win_d)[:2] != gb0[:2]:
             raise SystemExit("X11 dtwm icons below closed minimized window A did not pack up!")
 
-        return "X11 dtwm (libXm.so.9) open/minimized icon order + close-pack verified"
+        # Clean up desktop-icon phase clients & dtwm, then restart dtwm in Icon Box mode (3x2 grid)
+        for p_cl in (p_c, p_d, dtwm_proc):
+            if p_cl.poll() is None:
+                p_cl.kill()
+                p_cl.wait(timeout=3)
+        time.sleep(0.15)
+
+        subprocess.run(
+            [
+                str(helper_bin),
+                "xrdb",
+                "Dtwm*useFrontPanel: False\n"
+                "Dtwm*useIconBox: True\n"
+                "Dtwm*iconBoxGeometry: 3x2+20-20\n"
+                "Dtwm*iconBoxSBDisplayPolicy: vertical\n"
+                "Dtwm*showOpenWindowIcons: True\n"
+                "Dtwm*iconPlacement: Left Top\n"
+                "Dtwm*animateMinimizeRestore: False\n"
+                "Dtwm*minimizeAnimation: none\n",
+            ],
+            env=env,
+            check=True,
+        )
+
+        dtwm_ib_proc = subprocess.Popen(
+            [
+                str(dtwm_bin),
+                "-xrm", "Dtwm*useFrontPanel: False",
+                "-xrm", "Dtwm*useIconBox: True",
+                "-xrm", "Dtwm*iconBoxGeometry: 3x2+20-20",
+                "-xrm", "Dtwm*iconBoxSBDisplayPolicy: vertical",
+                "-xrm", "Dtwm*showOpenWindowIcons: True",
+                "-xrm", "Dtwm*iconPlacement: Left Top",
+                "-xrm", "Dtwm*minimizeAnimation: none",
+            ],
+            env=env,
+            stdout=dtwm_log,
+            stderr=subprocess.STDOUT,
+            start_new_session=True,
+        )
+        procs.append(dtwm_ib_proc)
+
+        wm_up = False
+        for _ in range(80):
+            if dtwm_ib_proc.poll() is not None:
+                raise SystemExit(f"X11 dtwm (Icon Box) exited early with rc={dtwm_ib_proc.returncode}")
+            if subprocess.run([str(helper_bin), "wm_ready"], env=env).returncode == 0:
+                wm_up = True
+                break
+            time.sleep(0.05)
+        if not wm_up:
+            raise SystemExit("X11 dtwm (Icon Box) failed to publish _MOTIF_WM_INFO")
+
+        # Launch 5 windows [A, B, C, D, E] -> Row 0 has [A, B, C], Row 1 has [D, E]
+        ib_wins: list[tuple[subprocess.Popen[str], str]] = []
+        for idx, (nm, hx) in enumerate([
+            ("X11IB_A", "E02828"),
+            ("X11IB_B", "18D050"),
+            ("X11IB_C", "2878F0"),
+            ("X11IB_D", "E0B020"),
+            ("X11IB_E", "B040E0"),
+        ]):
+            pr, wid = spawn_color_win(helper_bin, env, nm, hx, 320 + idx * 40, 80 + idx * 30)
+            procs.append(pr)
+            ib_wins.append((pr, wid))
+            time.sleep(0.15)
+        time.sleep(0.2)
+
+        g0 = [wait_icon_geom(helper_bin, env, wid)[:2] for _, wid in ib_wins]
+        # Row 0: A, B, C (same Y, increasing X); Row 1: D, E (larger Y, increasing X)
+        if not (
+            g0[0][1] == g0[1][1] == g0[2][1]
+            and g0[0][0] < g0[1][0] < g0[2][0]
+            and g0[3][1] > g0[0][1]
+            and g0[3][1] == g0[4][1]
+            and g0[3][0] < g0[4][0]
+        ):
+            raise SystemExit(f"X11 Icon Box expected 3x2 row-major [A,B,C / D,E], got {g0}")
+
+        # Client minimize, restore, maximize, unmaximize -> Icon Box order stays strictly g0!
+        subprocess.run([str(helper_bin), "iconify", ib_wins[0][1]], env=env, check=True)
+        subprocess.run([str(helper_bin), "maximize", ib_wins[1][1], "1"], env=env, check=True)
+        time.sleep(0.15)
+        subprocess.run([str(helper_bin), "maximize", ib_wins[1][1], "0"], env=env, check=True)
+        subprocess.run([str(helper_bin), "restore", ib_wins[0][1]], env=env, check=True)
+        subprocess.run([str(helper_bin), "iconify", ib_wins[3][1]], env=env, check=True)
+        time.sleep(0.15)
+        g_after_minmax = [wait_icon_geom(helper_bin, env, wid)[:2] for _, wid in ib_wins]
+        if g_after_minmax != g0:
+            raise SystemExit(
+                f"X11 Icon Box order changed across client minimize/maximize/restore: expected {g0}, got {g_after_minmax}"
+            )
+
+        # Maximize the Icon Box window via _NET_WM_STATE -> widens to 5 columns so [A,B,C,D,E] reflow onto Row 0,
+        # then unmaximize back to initial 3-column width and verify [A,B,C / D,E] order g0 is preserved!
+        ib_xwin = subprocess.run(
+            [str(helper_bin), "find_iconbox"], env=env, check=True, capture_output=True, text=True
+        ).stdout.strip()
+        if ib_xwin == "NONE":
+            raise SystemExit("failed to find X11 Icon Box client window")
+
+        subprocess.run([str(helper_bin), "click_max_btn", ib_xwin], env=env, check=True)
+        time.sleep(0.55)
+        g_ib_wide = [wait_icon_geom(helper_bin, env, wid)[:2] for _, wid in ib_wins]
+        if not (
+            g_ib_wide[0][1] == g_ib_wide[1][1] == g_ib_wide[2][1] == g_ib_wide[3][1] == g_ib_wide[4][1]
+            and g_ib_wide[0][0] < g_ib_wide[1][0] < g_ib_wide[2][0] < g_ib_wide[3][0] < g_ib_wide[4][0]
+        ):
+            raise SystemExit(f"X11 maximized Icon Box did not reflow [A,B,C,D,E] cleanly onto Row 0: {g_ib_wide}")
+
+        subprocess.run([str(helper_bin), "click_max_btn", ib_xwin], env=env, check=True)
+        time.sleep(0.2)
+        g_ib_rest = [wait_icon_geom(helper_bin, env, wid)[:2] for _, wid in ib_wins]
+        if g_ib_rest != g0:
+            raise SystemExit(
+                f"X11 unmaximized Icon Box scrambled or failed to restore 3x2 order: expected {g0}, got {g_ib_rest}"
+            )
+
+        # Close middle window B -> [A, C, D] occupy Row 0 (g0[0..2]) and [E] occupies Row 1 Slot 0 (g0[3])!
+        ib_wins[1][0].terminate()
+        ib_wins[1][0].wait(timeout=3)
+        time.sleep(0.2)
+        g_rem = [
+            wait_icon_geom(helper_bin, env, ib_wins[i][1])[:2]
+            for i in (0, 2, 3, 4)
+        ]
+        if g_rem != g0[:4]:
+            raise SystemExit(
+                f"X11 Icon Box closing B did not compact [A, C, D, E] into {g0[:4]}, got {g_rem}"
+            )
+
+        return "X11 dtwm (libXm.so.9) desktop + Icon Box mental-map ordering & reflow verified"
     finally:
         for p in reversed(procs):
             if p.poll() is None:
@@ -738,7 +1232,10 @@ def main() -> int:
         helper_c = work / "x11_order_helper.c"
         helper_bin = work / "x11_order_helper"
         helper_c.write_text(X11_COLOR_CLIENT_C, encoding="utf-8")
-        subprocess.run([cc, "-O2", str(helper_c), "-lX11", "-o", str(helper_bin)], check=True)
+        subprocess.run(
+            [cc, "-O2", str(helper_c), "-lX11", "-lXtst", "-lwayland-client", "-o", str(helper_bin)],
+            check=True,
+        )
 
         verify_wayland_icon_order(comp_bin, helper_bin, work)
         x11_summary = verify_x11_dtwm_icon_order(dtwm_bin, helper_bin, work)
