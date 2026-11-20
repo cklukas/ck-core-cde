@@ -25,7 +25,7 @@ fi
 
 if [ -z "$DTOPEN_VAUDIO" ]
 then
-    VAUDIO="mpv vlc rhythmbox audacious ffplay aplay"
+    VAUDIO="ck-audio mpv vlc rhythmbox audacious ffplay aplay"
 else
     VAUDIO="$DTOPEN_VAUDIO"
 fi
@@ -137,8 +137,13 @@ case $APPNAME in
         DoSimpleCmd "$VVIDEO" "$@"
         ;;
     dtopen_audio)
-        if [ -z "$DTOPEN_VAUDIO" ]; then TryXdgMimeOpen "$@"; fi
-        DoSimpleCmd "$VAUDIO" "$@"
+        if [ -z "$DTOPEN_VAUDIO" ] && [ -n "$(FindProg ck-audio)" ]
+        then
+            DoSimpleCmd "ck-audio" "$@"
+        else
+            if [ -z "$DTOPEN_VAUDIO" ]; then TryXdgMimeOpen "$@"; fi
+            DoSimpleCmd "$VAUDIO" "$@"
+        fi
         ;;
     dtopen_midi)
         if [ -z "$DTOPEN_VMIDI" ] && [ -n "$(FindProg ck-midi)" ]

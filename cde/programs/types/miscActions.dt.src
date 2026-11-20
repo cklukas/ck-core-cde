@@ -345,6 +345,28 @@ ACTION CkMidi
         DESCRIPTION     Play a Standard MIDI File in CK Core MIDI Player.
 }
 
+ACTION CkAudio
+{
+        LABEL           Audio Player
+        ICON            Fpaudio
+        ARG_COUNT       0
+        TYPE            COMMAND
+        WINDOW_TYPE     NO_STDIO
+        EXEC_STRING     ck-audio
+        DESCRIPTION     Open the CK Core Winamp-inspired Audio & MIDI Player (ck-audio).
+}
+
+ACTION CkAudio
+{
+        LABEL           Audio Player
+        ICON            Fpaudio
+        ARG_COUNT       >0
+        TYPE            COMMAND
+        WINDOW_TYPE     NO_STDIO
+        EXEC_STRING     ck-audio "%(File)Arg_1%"
+        DESCRIPTION     Play an audio or playlist file in CK Core Audio Player (ck-audio).
+}
+
 ACTION CkVideo
 {
         LABEL           Video Player

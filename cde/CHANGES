@@ -1,4 +1,14 @@
 2026-11-20
+- Wire **`ck-audio`** (`CkAudio`, `Audio Player`) as the default CDE audio
+  helper in `dtopen_audio`, register `CkAudio` in Application Manager
+  `Media_Tools`, add symbolic `Fpaudio.{t,m,l}.pm` and `Dtaudio.l.pm` icons,
+  expand `AUDIO_MODERN` for `.opus`, `.aac`, `.aiff`, and `.aif`, and add
+  `AUDIO_PLAYLIST` (`*.m3u`, `*.m3u8`, `*.pls`) routed to `DisplayAudio`
+  (`cde/programs/dtopen/dtopen.src`, `cde/programs/types/miscActions.dt.src`,
+  `cde/programs/types/datatypes.dt.src`,
+  `cde/programs/localized/templates/appmgr.am`,
+  `cde/programs/icons/Makefile.am`,
+  `cde/programs/icons/{Fpaudio.*,Dtaudio.l}.pm`).
 - Theme the fallback stylized-window desktop icon emblem in `dtwm-wayland`
   using the active CDE palette: paint the window interior and monogram letter
   with the primary application window color set (`ColorSet 5` / `window_bg`)

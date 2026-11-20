@@ -865,6 +865,8 @@ Fpmidi.m.pm                     Fpmidi.t.pm \
 Dtvideo.l.pm                    Dtvideo.m.pm \
 Dtvideo.t.pm                    Fpvideo.l.pm \
 Fpvideo.m.pm                    Fpvideo.t.pm \
+Dtaudio.l.pm                    Fpaudio.l.pm \
+Fpaudio.m.pm                    Fpaudio.t.pm \
 Fpsound.l.pm                    Fpsound.m.pm \
 Fpsound.t.pm                    DtSound.pm
 
