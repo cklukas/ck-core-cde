@@ -2566,6 +2566,12 @@ void HandleCConfigureRequest (ClientData *pCD, XConfigureRequestEvent *configure
 	{
 	    if ((stackMode == Above) || (stackMode == TopIf))
 	    {
+		if (pCD->clientState == MINIMIZED_STATE)
+		{
+		    SetClientState (pCD,
+			pCD->maxConfig ? MAXIMIZED_STATE : NORMAL_STATE,
+			GetTimestamp ());
+		}
 		Do_Raise (pCD, (ClientListEntry *) nullptr, STACK_NORMAL);
 	    }
 	    else if ((stackMode == Below) || (stackMode == BottomIf))

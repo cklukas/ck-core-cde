@@ -2089,10 +2089,24 @@ F_Push_Recall (String args, ClientData *pCD, XEvent *event)
 	            pPRCD->pCD->clientState & ~UNSEEN_STATE, CurrentTime);
 	    }
 
-	    /* Make this client visible */
-		    wmGD.bSuspendSecondaryRestack = True;
-	    F_Normalize_And_Raise (nullptr, pPRCD->pCD, event);
-		    wmGD.bSuspendSecondaryRestack = False;
+	    /* Make this client visible and give it active focus */
+	    {
+		Time focusTime = event
+		    ? GetFunctionTimestamp ((XButtonEvent *)event)
+		    : GetTimestamp ();
+		if (pPRCD->pCD->clientState == MINIMIZED_STATE)
+		{
+		    SetClientStateWithEventMask (
+			pPRCD->pCD,
+			pPRCD->pCD->maxConfig ? MAXIMIZED_STATE : NORMAL_STATE,
+			focusTime,
+			GetEventInverseMask (event));
+		}
+		wmGD.bSuspendSecondaryRestack = True;
+		F_Raise (nullptr, pPRCD->pCD, (XEvent *)nullptr);
+		wmGD.bSuspendSecondaryRestack = False;
+		Do_Focus_Key (pPRCD->pCD, focusTime, ALWAYS_SET_FOCUS);
+	    }
 	}
 	else 
 	{

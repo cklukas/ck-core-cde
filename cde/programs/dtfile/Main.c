@@ -3752,7 +3752,21 @@ GetNewView(
              /* must map the window to catch iconified windows */
              /* a XtPopup will not catch it */
              XtMapWidget(file_mgr_rec->shell);
-             XRaiseWindow(display, XtWindow(file_mgr_rec->shell));
+             XMapRaised(display, XtWindow(file_mgr_rec->shell));
+             {
+                Atom net_active = XInternAtom(display, "_NET_ACTIVE_WINDOW", False);
+                XEvent aev;
+                memset(&aev, 0, sizeof(aev));
+                aev.xclient.type = ClientMessage;
+                aev.xclient.window = XtWindow(file_mgr_rec->shell);
+                aev.xclient.message_type = net_active;
+                aev.xclient.format = 32;
+                aev.xclient.data.l[0] = 2;
+                aev.xclient.data.l[1] = CurrentTime;
+                XSendEvent(display, DefaultRootWindow(display), False,
+                           SubstructureRedirectMask | SubstructureNotifyMask, &aev);
+                XFlush(display);
+             }
 
              /* announce activity */
 	     {

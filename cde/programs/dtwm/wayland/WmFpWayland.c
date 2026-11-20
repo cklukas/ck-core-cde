@@ -867,6 +867,27 @@ Boolean F_Post_FpMenu(String args, ClientData *pCD, XEvent *event) {
     return True;
 }
 
+static bool window_has_managed_wm_state(Display *dpy, Window win, Atom wm_state_atom) {
+    if (!dpy || win == None || wm_state_atom == None) return false;
+    Atom act_type = None;
+    int act_fmt = 0;
+    unsigned long nitems = 0, rem = 0;
+    unsigned char *data = nullptr;
+    bool ok = false;
+    if (XGetWindowProperty(
+            dpy, win, wm_state_atom, 0, 2, False, AnyPropertyType,
+            &act_type, &act_fmt, &nitems, &rem, &data
+        ) == Success && data) {
+        if (act_fmt == 32 && nitems >= 1) {
+            unsigned long st = *(unsigned long *)data;
+            /* NormalState (1) or IconicState (3), never WithdrawnState (0) */
+            ok = (st == 1UL || st == 3UL);
+        }
+        XFree(data);
+    }
+    return ok;
+}
+
 Boolean F_Push_Recall(String args, ClientData *pCD, XEvent *event) {
     (void)pCD;
     (void)event;
@@ -876,31 +897,106 @@ Boolean F_Push_Recall(String args, ClientData *pCD, XEvent *event) {
     if (prp->ixReg >= 0 && prp->ixReg < panel.push_recall_count && pr_list) {
         const char *res_name = pr_list[prp->ixReg].pchResName;
         if (res_name && res_name[0]) {
-            /* Ask dtwm-wayland to focus/restore an existing instance if running */
-            Window root_ret = None, parent_ret = None, *children = nullptr;
-            unsigned int nchildren = 0;
+            Display *dpy = wmGD.display;
+            Window root = DefaultRootWindow(dpy);
             bool found = false;
-            if (XQueryTree(wmGD.display, DefaultRootWindow(wmGD.display), &root_ret, &parent_ret, &children, &nchildren) && children) {
-                for (unsigned int i = 0; i < nchildren; ++i) {
-                    XClassHint ch = {nullptr, nullptr};
-                    if (XGetClassHint(wmGD.display, children[i], &ch)) {
-                        XWindowAttributes wattr;
-                        bool match = (ch.res_name && strcasecmp(ch.res_name, res_name) == 0) ||
-                                     (ch.res_class && strcasecmp(ch.res_class, res_name) == 0);
-                        if (ch.res_name) XFree(ch.res_name);
-                        if (ch.res_class) XFree(ch.res_class);
-                        if (match && XGetWindowAttributes(wmGD.display, children[i], &wattr)) {
-                            XMapRaised(wmGD.display, children[i]);
-                            XSetInputFocus(wmGD.display, children[i], RevertToPointerRoot, CurrentTime);
-                            XFlush(wmGD.display);
-                            found = true;
-                            break;
+            Window matched_x11_win = None;
+
+            /* 1. Check dtwm-wayland's live registry of mapped Wayland & Xwayland app IDs */
+            bool has_wayland_registry = false;
+            Atom ids_atom = XInternAtom(dpy, "_DT_WAYLAND_CLIENT_IDS", True);
+            if (ids_atom != None) {
+                Atom act_type = None;
+                int act_fmt = 0;
+                unsigned long nitems = 0, rem = 0;
+                unsigned char *prop = nullptr;
+                if (XGetWindowProperty(
+                        dpy, root, ids_atom, 0, 2048, False, XA_STRING,
+                        &act_type, &act_fmt, &nitems, &rem, &prop
+                    ) == Success) {
+                    if (act_type == XA_STRING && act_fmt == 8) {
+                        has_wayland_registry = true;
+                        if (prop && nitems > 0) {
+                            const char *p = (const char *)prop;
+                            const char *end = p + nitems;
+                            while (p < end) {
+                                size_t slen = strnlen(p, (size_t)(end - p));
+                                if (slen > 0 && strcasecmp(p, res_name) == 0) {
+                                    found = true;
+                                    break;
+                                }
+                                p += slen + 1;
+                            }
                         }
                     }
+                    if (prop) {
+                        XFree(prop);
+                    }
                 }
-                XFree(children);
             }
-            if (found) return True;
+
+            if (has_wayland_registry) {
+                if (found) {
+                    char req[192];
+                    snprintf(req, sizeof(req), "f.recall_client %s", res_name);
+                    send_dt_wm_request(dpy, req);
+                    XFlush(dpy);
+                    return True;
+                }
+            } else {
+                /* 2. Standalone X11 fallback: check managed X11 windows carrying WM_STATE */
+                Atom wm_state_atom = XInternAtom(dpy, "WM_STATE", True);
+                Window root_ret = None, parent_ret = None, *children = nullptr;
+                unsigned int nchildren = 0;
+                Window panel_win = XtIsRealized(panel.shell) ? XtWindow(panel.shell) : None;
+                Window class_fallback_win = None;
+                if (XQueryTree(dpy, root, &root_ret, &parent_ret, &children, &nchildren) && children) {
+                    for (unsigned int i = 0; i < nchildren; ++i) {
+                        if (children[i] == panel_win) continue;
+                        XClassHint ch = {nullptr, nullptr};
+                        if (XGetClassHint(dpy, children[i], &ch)) {
+                            XWindowAttributes wattr;
+                            bool inst_match = (ch.res_name && strcasecmp(ch.res_name, res_name) == 0);
+                            bool cls_match = (ch.res_class && strcasecmp(ch.res_class, res_name) == 0);
+                            if (ch.res_name) XFree(ch.res_name);
+                            if (ch.res_class) XFree(ch.res_class);
+                            if ((inst_match || cls_match) &&
+                                XGetWindowAttributes(dpy, children[i], &wattr) &&
+                                !wattr.override_redirect &&
+                                window_has_managed_wm_state(dpy, children[i], wm_state_atom)) {
+                                if (inst_match) {
+                                    matched_x11_win = children[i];
+                                    break;
+                                }
+                                if (class_fallback_win == None) {
+                                    class_fallback_win = children[i];
+                                }
+                            }
+                        }
+                    }
+                    XFree(children);
+                }
+                if (matched_x11_win == None) {
+                    matched_x11_win = class_fallback_win;
+                }
+                if (matched_x11_win != None) {
+                    Atom net_active = XInternAtom(dpy, "_NET_ACTIVE_WINDOW", False);
+                    XEvent aev;
+                    memset(&aev, 0, sizeof(aev));
+                    aev.xclient.type = ClientMessage;
+                    aev.xclient.window = matched_x11_win;
+                    aev.xclient.message_type = net_active;
+                    aev.xclient.format = 32;
+                    aev.xclient.data.l[0] = 2;
+                    aev.xclient.data.l[1] = CurrentTime;
+                    XSendEvent(
+                        dpy, root, False,
+                        SubstructureRedirectMask | SubstructureNotifyMask, &aev
+                    );
+                    XFlush(dpy);
+                    return True;
+                }
+            }
         }
     }
 

@@ -1,4 +1,15 @@
 2026-11-20
+- Restore minimized windows and bring background windows to the foreground with
+  active focus when clicking Front Panel and subpanel items for already-running
+  applications across both `dtwm-wayland` and X11 `dtwm`, and fix an `Arg`
+  stack-buffer overflow in `dtstyle` `CreateTopColor2` during deferred Color
+  dialog initialization
+  (`cde/programs/dtwm/{WmCEvent.c,WmFunction.c,WmManage.c,Makefile.am}`,
+  `cde/programs/dtwm/wayland/{WmFpWayland.c,cde_output_mgmt.c,cde_workspace.c,dtwm_wayland.h,dtwm_wayland_main.c}`,
+  `cde/programs/dtwm/tests/check-dtwm-push-recall.py`,
+  `cde/programs/types/dtwm.fp.src`, `cde/programs/dtstyle/{Main.c,ColorMain.c}`,
+  `cde/programs/dtfile/{Main.c,Trash.c}`,
+  `docs/improvements/window-management.md`).
 - Wire **`ck-audio`** (`CkAudio`, `Audio Player`) as the default CDE audio
   helper in `dtopen_audio`, register `CkAudio` in Application Manager
   `Media_Tools`, add symbolic `Fpaudio.{t,m,l}.pm` and `Dtaudio.l.pm` icons,

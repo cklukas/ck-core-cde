@@ -1170,6 +1170,19 @@ static void handle_dt_wm_request_item(DtwmServer *server, const char *cmd) {
         }
         return;
     }
+    if (strncmp(cmd, "f.recall_client", 15) == 0 && isspace((unsigned char)cmd[15])) {
+        const char *arg = cmd + 16;
+        while (*arg && isspace((unsigned char)*arg)) arg++;
+        char target[128] = {0};
+        size_t ti = 0;
+        while (*arg && !isspace((unsigned char)*arg) && ti + 1 < sizeof(target)) {
+            target[ti++] = *arg++;
+        }
+        if (target[0]) {
+            (void)dtwm_recall_client_by_name(server, target);
+        }
+        return;
+    }
     if (strncmp(cmd, "f.move_active_to", 16) == 0) {
         int nx = 0, ny = 0;
         if (sscanf(cmd + 16, "%d %d", &nx, &ny) == 2 && server->focused_view) {
@@ -1226,6 +1239,113 @@ void dtwm_publish_active_window_box(DtwmServer *server) {
         server->atom_active_win_box, XCB_ATOM_CARDINAL, 32, 8, box
     );
     xcb_flush(server->xcb_conn);
+}
+
+static bool view_eligible_for_recall(const DtwmView *v) {
+    if (!v || !v->mapped) return false;
+    if (v->is_panel || v->is_subpanel || v->is_desktop_pin || v->is_swallowed || v->is_lock_dialog) {
+        return false;
+    }
+    if (v->kind == DTWM_VIEW_XWAYLAND && v->xwayland_surface &&
+        v->xwayland_surface->override_redirect) {
+        return false;
+    }
+    return true;
+}
+
+static bool view_matches_recall_instance(const DtwmView *v, const char *name) {
+    if (!view_eligible_for_recall(v) || !name || !name[0]) return false;
+    if (v->kind == DTWM_VIEW_XDG && v->xdg_toplevel && v->xdg_toplevel->app_id &&
+        v->xdg_toplevel->app_id[0]) {
+        const char *aid = v->xdg_toplevel->app_id;
+        if (strcasecmp(aid, name) == 0) return true;
+        const char *dot = strrchr(aid, '.');
+        if (dot && dot[1] && strcasecmp(dot + 1, name) == 0) return true;
+    }
+    if (v->kind == DTWM_VIEW_XWAYLAND && v->xwayland_surface) {
+        const struct wlr_xwayland_surface *xs = v->xwayland_surface;
+        if (xs->instance && xs->instance[0] && strcasecmp(xs->instance, name) == 0) return true;
+    }
+    return false;
+}
+
+static bool view_matches_recall_class(const DtwmView *v, const char *name) {
+    if (!view_eligible_for_recall(v) || !name || !name[0]) return false;
+    if (v->kind == DTWM_VIEW_XWAYLAND && v->xwayland_surface) {
+        const struct wlr_xwayland_surface *xs = v->xwayland_surface;
+        if (xs->class && xs->class[0] && strcasecmp(xs->class, name) == 0) return true;
+    }
+    return false;
+}
+
+static void append_client_id_token(char *buf, size_t cap, size_t *len, const char *tok) {
+    if (!tok || !tok[0] || !len) return;
+    size_t tlen = strlen(tok);
+    if (*len + tlen + 1 > cap) return;
+    memcpy(buf + *len, tok, tlen + 1);
+    *len += tlen + 1;
+}
+
+void dtwm_publish_client_ids(DtwmServer *server) {
+    if (!server || !server->xcb_conn || server->xcb_root == XCB_WINDOW_NONE ||
+        server->atom_client_ids == XCB_ATOM_NONE) {
+        return;
+    }
+    char buf[8192];
+    size_t len = 0;
+    DtwmView *v;
+    wl_list_for_each(v, &server->views, link) {
+        if (!view_eligible_for_recall(v)) continue;
+        if (v->kind == DTWM_VIEW_XDG && v->xdg_toplevel && v->xdg_toplevel->app_id &&
+            v->xdg_toplevel->app_id[0]) {
+            const char *aid = v->xdg_toplevel->app_id;
+            append_client_id_token(buf, sizeof(buf), &len, aid);
+            const char *dot = strrchr(aid, '.');
+            if (dot && dot[1]) {
+                append_client_id_token(buf, sizeof(buf), &len, dot + 1);
+            }
+        } else if (v->kind == DTWM_VIEW_XWAYLAND && v->xwayland_surface) {
+            if (v->xwayland_surface->instance && v->xwayland_surface->instance[0]) {
+                append_client_id_token(buf, sizeof(buf), &len, v->xwayland_surface->instance);
+            }
+            if (v->xwayland_surface->class && v->xwayland_surface->class[0]) {
+                append_client_id_token(buf, sizeof(buf), &len, v->xwayland_surface->class);
+            }
+        }
+    }
+    xcb_change_property(
+        server->xcb_conn, XCB_PROP_MODE_REPLACE, server->xcb_root,
+        server->atom_client_ids, XCB_ATOM_STRING, 8, (uint32_t)len, buf
+    );
+    xcb_flush(server->xcb_conn);
+}
+
+bool dtwm_recall_client_by_name(DtwmServer *server, const char *name) {
+    if (!server || !name || !name[0] || server->session_locked) return false;
+    DtwmView *matched = nullptr;
+    DtwmView *v;
+    wl_list_for_each(v, &server->views, link) {
+        if (view_matches_recall_instance(v, name)) {
+            matched = v;
+            break;
+        }
+    }
+    if (!matched) {
+        wl_list_for_each(v, &server->views, link) {
+            if (view_matches_recall_class(v, name)) {
+                matched = v;
+                break;
+            }
+        }
+    }
+    if (matched) {
+        if ((matched->workspace_mask & (1u << server->current_workspace)) == 0) {
+            dtwm_view_set_workspace_mask(matched, 1u << server->current_workspace);
+        }
+        dtwm_restore_view_focus(server, matched);
+        return true;
+    }
+    return false;
 }
 
 static void notify_wayland_fractional_scale_for_outputs(DtwmServer *server) {
@@ -1956,6 +2076,7 @@ void dtwm_workspaces_on_xwayland_ready(DtwmServer *server) {
     server->atom_mwm_hints = intern_atom_sync(server->xcb_conn, "_MOTIF_WM_HINTS");
     server->atom_dt_wm_hints = intern_atom_sync(server->xcb_conn, "_DT_WM_HINTS");
     server->atom_active_win_box = intern_atom_sync(server->xcb_conn, "_DT_ACTIVE_WINDOW_BOX");
+    server->atom_client_ids = intern_atom_sync(server->xcb_conn, "_DT_WAYLAND_CLIENT_IDS");
     server->atom_randr_dpi_opt_in = intern_atom_sync(server->xcb_conn, "_MOTIF_RANDR_OUTPUT_DPI");
     server->atom_dpi = intern_atom_sync(server->xcb_conn, "DPI");
     server->atom_ws_list = intern_atom_sync(server->xcb_conn, "_DT_WORKSPACE_LIST");
@@ -2029,6 +2150,7 @@ void dtwm_workspaces_on_xwayland_ready(DtwmServer *server) {
     xcb_sync_wm_properties(server);
     dtwm_sync_xwayland_randr_dpi(server);
     dtwm_publish_active_window_box(server);
+    dtwm_publish_client_ids(server);
 
     struct wl_event_loop *loop = wl_display_get_event_loop(server->wl_display);
     int xfd = xcb_get_file_descriptor(server->xcb_conn);

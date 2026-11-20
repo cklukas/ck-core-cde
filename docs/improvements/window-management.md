@@ -27,7 +27,11 @@ selection visible and supports pointer hover and pinning. It is enabled by the
   `Super+Up`, and restores the saved pre-tile geometry on `Super+Down`;
 - holding Shift aligns movement and resize to the desktop grid;
 - double-clicking a title bar maximizes or restores the window;
-- clicking the desktop clears the active-window focus; and
+- clicking the desktop clears the active-window focus;
+- clicking a Front Panel or subpanel item whose application is already open
+  moves or switches to the window as needed, restores it if minimized, raises
+  it to the foreground, and grants active keyboard focus on both X11 `dtwm` and
+  Wayland (`dtwm-wayland`); and
 - **Style Manager → Window** configures **Minimize / Restore Animation**
   (`Dtwm*minimizeAnimation`), **Maximize / Restore Animation**
   (`Dtwm*maximizeAnimation`), and **Animation Speed** (`Dtwm*animationSpeed`:

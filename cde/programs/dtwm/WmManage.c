@@ -2570,9 +2570,11 @@ IsPushRecallClient (ClientData *pCD, WmFpPushRecallClientData **ppPRCD)
 	 * It's a push_recall client if the resource name matches
 	 * a slot and the slot isn't already filled.
 	 */
-	if ((!strcmp ((char *)pCD->clientName, 
-		     (char *)(pPRCD->pchResName))) &&
-	    (!pPRCD->pCD))
+	if (!pPRCD->pCD && pPRCD->pchResName &&
+	    ((pCD->clientName &&
+	      !strcasecmp ((char *)pCD->clientName, (char *)pPRCD->pchResName)) ||
+	     (pCD->clientClass &&
+	      !strcasecmp ((char *)pCD->clientClass, (char *)pPRCD->pchResName))))
 	{
 	    *ppPRCD = pPRCD;
 	    bFoundMatch = True;

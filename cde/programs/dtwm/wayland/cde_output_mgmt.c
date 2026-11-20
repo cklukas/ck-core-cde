@@ -987,16 +987,23 @@ void dtwm_foreign_toplevel_sync(DtwmView *view) {
     wlr_foreign_toplevel_handle_v1_set_maximized(ft->handle, view->maximized);
     wlr_foreign_toplevel_handle_v1_set_minimized(ft->handle, view->minimized);
     wlr_foreign_toplevel_handle_v1_set_activated(ft->handle, view->active);
+    dtwm_publish_client_ids(view->server);
 }
 
 void dtwm_foreign_toplevel_destroy(DtwmView *view) {
-    if (!view || !view->foreign_toplevel) return;
+    if (!view) return;
+    DtwmServer *server = view->server;
+    if (!view->foreign_toplevel) {
+        dtwm_publish_client_ids(server);
+        return;
+    }
     DtwmForeignToplevel *ft = view->foreign_toplevel;
     view->foreign_toplevel = nullptr;
     ft->view = nullptr;
     if (ft->handle) {
         wlr_foreign_toplevel_handle_v1_destroy(ft->handle);
     }
+    dtwm_publish_client_ids(server);
 }
 
 void dtwm_output_mgmt_init(DtwmServer *server) {

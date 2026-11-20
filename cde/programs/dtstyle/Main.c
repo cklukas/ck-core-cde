@@ -317,32 +317,68 @@ ErrDialog(
 static const char *s_startupDialogName = nullptr;
 
 static void
+activateShellOnCurrentWorkspace(Widget shell)
+{
+    if (!shell || !style.display || !XtIsRealized(shell))
+        return;
+    Window win = XtWindow(shell);
+    Atom cur_ws = None;
+    if (DtWsmGetCurrentWorkspace(style.display, style.root, &cur_ws) == Success &&
+        cur_ws != None) {
+        DtWsmSetWorkspacesOccupied(style.display, win, &cur_ws, 1);
+    }
+    XtMapWidget(shell);
+    XMapRaised(style.display, win);
+    Atom net_active = XInternAtom(style.display, "_NET_ACTIVE_WINDOW", False);
+    XEvent ev;
+    memset(&ev, 0, sizeof(ev));
+    ev.xclient.type = ClientMessage;
+    ev.xclient.window = win;
+    ev.xclient.message_type = net_active;
+    ev.xclient.format = 32;
+    ev.xclient.data.l[0] = 2;
+    ev.xclient.data.l[1] = CurrentTime;
+    XSendEvent(style.display, style.root, False,
+               SubstructureRedirectMask | SubstructureNotifyMask, &ev);
+    XFlush(style.display);
+}
+
+static void
 openStartupDialogByName(Widget shell, const char *name)
 {
     if (!shell || !style.display)
         return;
-    if (XtIsRealized(shell))
-        XMapRaised(style.display, XtWindow(shell));
+    activateShellOnCurrentWorkspace(shell);
     if (!name || name[0] == '\0' || strncmp(name, "Main", 4) == 0)
         return;
+    Widget sub = nullptr;
     if (strncmp(name, "Display", 7) == 0) {
         extern void popup_displayBB(Widget);
         popup_displayBB(shell);
+        sub = style.displayDialog;
     } else if (strncmp(name, "Backdrop", 8) == 0) {
         BackdropDialog(shell);
+        sub = style.backdropDialog;
     } else if (strncmp(name, "Mouse", 5) == 0 || strncmp(name, "Touchpad", 8) == 0) {
         popup_mouseBB(shell);
+        sub = style.mouseDialog;
     } else if (strncmp(name, "Color", 5) == 0) {
         Customize(shell);
+        sub = style.colorDialog;
     } else if (strncmp(name, "Accessibility", 13) == 0) {
         popup_accessibilityBB(shell);
+        sub = style.accessibilityDialog;
     } else if (strncmp(name, "Beep", 4) == 0 || strncmp(name, "Audio", 5) == 0) {
         extern void popup_audioBB(Widget);
         popup_audioBB(shell);
+        sub = style.audioDialog;
     } else if (strncmp(name, "Window", 6) == 0) {
         extern void popup_dtwmBB(Widget);
         popup_dtwmBB(shell);
+        sub = style.dtwmDialog;
     }
+    if (sub && XtParent(sub))
+        activateShellOnCurrentWorkspace(XtParent(sub));
 }
 
 static void

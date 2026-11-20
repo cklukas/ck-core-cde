@@ -3905,7 +3905,7 @@ void
 CreateTopColor2( void )
 {
     int     n;
-    Arg              args[8];
+    Arg              args[16];
 
     if(style.count > 3)
        return;

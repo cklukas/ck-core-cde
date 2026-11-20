@@ -26,6 +26,7 @@ EXTRA_DIST = tests/check-property-readers.py tests/property-client.c \
              tests/check-dtappintegrate-curated.py \
              tests/check-dtwm-wayland-exit-session.py \
              tests/check-dtwm-icon-order.py \
+             tests/check-dtwm-push-recall.py \
              wayland/protocols/wlr-layer-shell-unstable-v1.xml \
              wayland/protocols/wlr-output-power-management-unstable-v1.xml \
              wayland/protocols/wlr-foreign-toplevel-management-unstable-v1.xml \
@@ -62,6 +63,7 @@ if BUILD_DTWM_WAYLAND
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-busy-light.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-exit-session.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-icon-order.py --compositor ./dtwm-wayland --dtwm ./dtwm
+	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-push-recall.py --compositor ./dtwm-wayland --dtwm ./dtwm
 endif
 
 noinst_DATA = sys.dtwmrc Dtwm.defs

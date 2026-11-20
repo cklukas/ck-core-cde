@@ -301,6 +301,12 @@ static void clear_active_focus(DtwmServer *server) {
     dtwm_publish_active_window_box(server);
 }
 
+static uint64_t dtwm_now_nsec(void) {
+    struct timespec ts = {0};
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (uint64_t)ts.tv_sec * 1000000000ull + (uint64_t)ts.tv_nsec;
+}
+
 static void raise_transient_children_above(DtwmServer *server, DtwmView *parent) {
     if (!server || !parent || server->allow_primary_on_top) {
         return;
@@ -413,12 +419,6 @@ static void focus_view_ex(
 
 static void focus_view(DtwmServer *server, DtwmView *view, struct wlr_surface *surface) {
     focus_view_ex(server, view, surface, true);
-}
-
-static uint64_t dtwm_now_nsec(void) {
-    struct timespec ts = {0};
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    return (uint64_t)ts.tv_sec * 1000000000ull + (uint64_t)ts.tv_nsec;
 }
 
 DtwmAnimStyle dtwm_parse_anim_style(const char *val) {
@@ -2112,6 +2112,14 @@ static bool view_is_normal_app(const DtwmView *v) {
 
 void dtwm_restore_view_focus(DtwmServer *server, DtwmView *view) {
     if (!server || !view || !view->mapped) return;
+    if ((view->workspace_mask & (1u << server->current_workspace)) == 0) {
+        for (uint32_t ws = 0; ws < server->num_workspaces; ++ws) {
+            if (view->workspace_mask & (1u << ws)) {
+                dtwm_switch_workspace(server, ws);
+                break;
+            }
+        }
+    }
     focus_view(server, view, nullptr);
 }
 
@@ -3962,6 +3970,15 @@ static void xdg_toplevel_set_title(struct wl_listener *listener, void *data) {
     }
 }
 
+static void xdg_toplevel_set_app_id(struct wl_listener *listener, void *data) {
+    (void)data;
+    DtwmView *view = wl_container_of(listener, view, set_app_id);
+    if (view->mapped) {
+        dtwm_icons_update_view(view);
+        dtwm_foreign_toplevel_sync(view);
+    }
+}
+
 static void xdg_toplevel_request_move(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmView *view = wl_container_of(listener, view, request_move);
@@ -4016,6 +4033,7 @@ static void xdg_toplevel_destroy(struct wl_listener *listener, void *data) {
     wl_list_remove(&view->request_maximize.link);
     wl_list_remove(&view->request_minimize.link);
     wl_list_remove(&view->set_title.link);
+    wl_list_remove(&view->set_app_id.link);
     wl_list_remove(&view->link);
     dtwm_foreign_toplevel_destroy(view);
     dtwm_icons_on_view_unmap_or_destroy(view, true);
@@ -4075,6 +4093,8 @@ static void handle_new_xdg_toplevel(struct wl_listener *listener, void *data) {
     wl_signal_add(&toplevel->events.request_minimize, &view->request_minimize);
     view->set_title.notify = xdg_toplevel_set_title;
     wl_signal_add(&toplevel->events.set_title, &view->set_title);
+    view->set_app_id.notify = xdg_toplevel_set_app_id;
+    wl_signal_add(&toplevel->events.set_app_id, &view->set_app_id);
 
     wl_list_insert(&server->views, &view->link);
 }
@@ -4757,14 +4777,20 @@ static void xwayland_request_configure(struct wl_listener *listener, void *data)
     int ny = (ev->mask & XCB_CONFIG_WINDOW_Y) ? (ev->y - t) : view->y;
     int nw = (ev->mask & XCB_CONFIG_WINDOW_WIDTH) ? ev->width : view->client_w;
     int nh = (ev->mask & XCB_CONFIG_WINDOW_HEIGHT) ? ev->height : view->client_h;
-    view_apply_geometry(view, nx, ny, nw, nh);
+    if (ev->mask & (XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y |
+                    XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT)) {
+        view_apply_geometry(view, nx, ny, nw, nh);
+    } else {
+        sync_xwayland_client_pos(view);
+    }
 }
 
 static void xwayland_request_activate(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmView *view = wl_container_of(listener, view, request_activate);
-    if (view->mapped && !view->xwayland_surface->override_redirect) {
-        focus_view(view->server, view, view->xwayland_surface->surface);
+    if (view->mapped && !view->xwayland_surface->override_redirect &&
+        !view->is_panel && !view->is_subpanel && !view->is_swallowed && !view->is_desktop_pin) {
+        dtwm_restore_view_focus(view->server, view);
     }
 }
 
@@ -4792,6 +4818,15 @@ static void xwayland_set_title(struct wl_listener *listener, void *data) {
     DtwmView *view = wl_container_of(listener, view, set_title);
     if (view->mapped) {
         dtwm_view_update_frame(view);
+        dtwm_icons_update_view(view);
+        dtwm_foreign_toplevel_sync(view);
+    }
+}
+
+static void xwayland_set_class(struct wl_listener *listener, void *data) {
+    (void)data;
+    DtwmView *view = wl_container_of(listener, view, set_app_id);
+    if (view->mapped) {
         dtwm_icons_update_view(view);
         dtwm_foreign_toplevel_sync(view);
     }
@@ -4907,6 +4942,7 @@ static void xwayland_destroy(struct wl_listener *listener, void *data) {
     wl_list_remove(&view->request_maximize.link);
     wl_list_remove(&view->request_minimize.link);
     wl_list_remove(&view->set_title.link);
+    wl_list_remove(&view->set_app_id.link);
     wl_list_remove(&view->set_decorations.link);
     wl_list_remove(&view->set_hints.link);
     wl_list_remove(&view->set_geometry.link);
@@ -4923,6 +4959,46 @@ static void xwayland_destroy(struct wl_listener *listener, void *data) {
         server->seat && server->seat->drag == nullptr) {
         dtwm_recheck_cursor_focus(server);
     }
+}
+
+static bool handle_xwayland_xwm_event(struct wlr_xwayland *xwayland, xcb_generic_event_t *event) {
+    DtwmServer *server = xwayland ? (DtwmServer *)xwayland->data : nullptr;
+    if (!server || !event || server->session_locked) {
+        return false;
+    }
+    uint8_t rt = event->response_type & ~0x80u;
+    if (rt == XCB_CONFIGURE_REQUEST) {
+        const xcb_configure_request_event_t *creq = (const xcb_configure_request_event_t *)event;
+        if ((creq->value_mask & XCB_CONFIG_WINDOW_STACK_MODE) &&
+            !(creq->value_mask & XCB_CONFIG_WINDOW_SIBLING) &&
+            creq->stack_mode == XCB_STACK_MODE_ABOVE) {
+            DtwmView *v;
+            wl_list_for_each(v, &server->views, link) {
+                if (v->kind == DTWM_VIEW_XWAYLAND && v->mapped && v->xwayland_surface &&
+                    v->xwayland_surface->window_id == creq->window &&
+                    !v->xwayland_surface->override_redirect &&
+                    !v->is_panel && !v->is_subpanel && !v->is_desktop_pin &&
+                    !v->is_swallowed && !v->is_lock_dialog) {
+                    dtwm_restore_view_focus(server, v);
+                    break;
+                }
+            }
+        }
+    } else if (rt == XCB_MAP_REQUEST) {
+        const xcb_map_request_event_t *mreq = (const xcb_map_request_event_t *)event;
+        DtwmView *v;
+        wl_list_for_each(v, &server->views, link) {
+            if (v->kind == DTWM_VIEW_XWAYLAND && v->mapped && v->minimized &&
+                v->xwayland_surface && v->xwayland_surface->window_id == mreq->window &&
+                !v->xwayland_surface->override_redirect &&
+                !v->is_panel && !v->is_subpanel && !v->is_desktop_pin &&
+                !v->is_swallowed && !v->is_lock_dialog) {
+                dtwm_restore_view_focus(server, v);
+                break;
+            }
+        }
+    }
+    return false;
 }
 
 static void handle_new_xwayland_surface(struct wl_listener *listener, void *data) {
@@ -4955,6 +5031,8 @@ static void handle_new_xwayland_surface(struct wl_listener *listener, void *data
     wl_signal_add(&xs->events.request_minimize, &view->request_minimize);
     view->set_title.notify = xwayland_set_title;
     wl_signal_add(&xs->events.set_title, &view->set_title);
+    view->set_app_id.notify = xwayland_set_class;
+    wl_signal_add(&xs->events.set_class, &view->set_app_id);
     view->set_decorations.notify = xwayland_set_decorations;
     wl_signal_add(&xs->events.set_decorations, &view->set_decorations);
     view->set_hints.notify = xwayland_set_hints;
@@ -5396,6 +5474,8 @@ int main(int argc, char **argv) {
 
     server.xwayland = wlr_xwayland_create(server.wl_display, server.compositor, false);
     if (server.xwayland) {
+        server.xwayland->data = &server;
+        server.xwayland->user_event_handler = handle_xwayland_xwm_event;
         server.new_xwayland_surface.notify = handle_new_xwayland_surface;
         wl_signal_add(&server.xwayland->events.new_surface, &server.new_xwayland_surface);
         server.xwayland_ready.notify = handle_xwayland_ready;

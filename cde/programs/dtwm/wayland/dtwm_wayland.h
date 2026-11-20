@@ -253,6 +253,7 @@ struct DtwmView {
     struct wl_listener request_close;
     struct wl_listener request_configure;
     struct wl_listener set_title;
+    struct wl_listener set_app_id;
     struct wl_listener set_decorations;
     struct wl_listener set_hints;
     struct wl_listener set_geometry;
@@ -465,6 +466,7 @@ struct DtwmServer {
     xcb_atom_t atom_net_wm_pid;
     xcb_atom_t atom_wm_command;
     xcb_atom_t atom_active_win_box;
+    xcb_atom_t atom_client_ids;
     xcb_atom_t atom_randr_dpi_opt_in;
     xcb_atom_t atom_dpi;
     int initial_output_dpi[16];
@@ -672,6 +674,8 @@ void dtwm_notify_panel_busy_stop(DtwmServer *server);
 void dtwm_sync_xwayland_randr_dpi(DtwmServer *server);
 void dtwm_set_output_dpi(DtwmServer *server, uint32_t output_idx, int dpi);
 void dtwm_publish_active_window_box(DtwmServer *server);
+void dtwm_publish_client_ids(DtwmServer *server);
+bool dtwm_recall_client_by_name(DtwmServer *server, const char *name);
 void dtwm_get_usable_output_box(DtwmServer *server, double ref_x, double ref_y, struct wlr_box *out_box);
 void dtwm_reflow_views_for_outputs(DtwmServer *server);
 void dtwm_reload_cursor_theme(DtwmServer *server, const char *theme, int size);

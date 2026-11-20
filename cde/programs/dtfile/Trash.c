@@ -1184,15 +1184,33 @@ TrashUpdateWindowIcon( void )
 static void
 TrashRaiseAndFocus( void )
 {
+   Display *dpy;
+   Window win;
+   Atom net_active;
+   XEvent aev;
+
    if (trashShell == nullptr)
       return;
 
    if (!XtIsRealized(trashShell))
       return;
 
-   XRaiseWindow(XtDisplay(trashShell), XtWindow(trashShell));
-   XSetInputFocus(XtDisplay(trashShell), XtWindow(trashShell),
-                  RevertToParent, CurrentTime);
+   dpy = XtDisplay(trashShell);
+   win = XtWindow(trashShell);
+   XtMapWidget(trashShell);
+   XMapRaised(dpy, win);
+
+   net_active = XInternAtom(dpy, "_NET_ACTIVE_WINDOW", False);
+   memset(&aev, 0, sizeof(aev));
+   aev.xclient.type = ClientMessage;
+   aev.xclient.window = win;
+   aev.xclient.message_type = net_active;
+   aev.xclient.format = 32;
+   aev.xclient.data.l[0] = 2;
+   aev.xclient.data.l[1] = CurrentTime;
+   XSendEvent(dpy, DefaultRootWindow(dpy), False,
+              SubstructureRedirectMask | SubstructureNotifyMask, &aev);
+   XFlush(dpy);
 }
 
 static unsigned long long

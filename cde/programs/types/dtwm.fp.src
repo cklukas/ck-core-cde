@@ -192,6 +192,8 @@ CONTROL Help
   ICON                  Fphelp
   LABEL                 %|nls-18009-#Help Manager#|
   PUSH_ACTION           Dthelpview
+  PUSH_RECALL           True
+  CLIENT_NAME           dthelpview
   DROP_ACTION           Dthelpview
   HELP_TOPIC            FPOnItemHelpMgr
   HELP_VOLUME           FPanel
@@ -206,6 +208,8 @@ CONTROL InfoManager
   ICON			Dtinfo
   LABEL			%|nls-18031-#Information Manager#|
   PUSH_ACTION		DtLoadInfoLib
+  PUSH_RECALL		True
+  CLIENT_NAME		dtinfo
   DROP_ACTION		DtLoadInfoLib
   HELP_TOPIC		FPOnItemInfoMgr
   HELP_VOLUME		FPanel
@@ -348,6 +352,8 @@ CONTROL PrintManager
   ICON			FpPrtmg
   LABEL			%|nls-7022-#Print Manager#|
   PUSH_ACTION		DtPrintManager
+  PUSH_RECALL		True
+  CLIENT_NAME		dtprintinfo
   DROP_ACTION		DtPrint
   DROP_ANIMATION	PrinterDrop
   HELP_TOPIC		_hometopic
@@ -421,6 +427,8 @@ CONTROL AudioMixer
   ICON			Dtaudio
   LABEL			Audio Mixer
   PUSH_ACTION		CkMixer
+  PUSH_RECALL		True
+  CLIENT_NAME		ck-mixer
   HELP_TOPIC		FPOnItemStyle
   HELP_VOLUME		FPanel
 }
@@ -434,6 +442,8 @@ CONTROL SoundMidi
   ICON			Fpsound
   LABEL			Sound & MIDI
   PUSH_ACTION		CkSound
+  PUSH_RECALL		True
+  CLIENT_NAME		ck-sound
   HELP_TOPIC		FPOnItemStyle
   HELP_VOLUME		FPanel
 }
@@ -554,6 +564,8 @@ CONTROL HelpMgr
   ICON                  Fphelp
   LABEL                 %|nls-18009-#Help Manager#|
   PUSH_ACTION           Dthelpview
+  PUSH_RECALL           True
+  CLIENT_NAME           dthelpview
   HELP_TOPIC            FPOnItemHelpMgr
   HELP_VOLUME           FPanel
 }
