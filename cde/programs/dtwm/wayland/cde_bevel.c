@@ -196,6 +196,7 @@ void dtwm_palette_init_profile(DtwmPalette *pal, DtwmAppearanceProfile profile) 
             .top_shadow = {0.949, 0.957, 0.973, 1.0},
             .bottom_shadow = {0.490, 0.514, 0.557, 1.0},
         };
+        pal->window_bg = pal->menu;
         pal->desktop_bg = (DtwmRgba){0.486, 0.576, 0.678, 1.0}; /* #7C93AD */
         return;
 
@@ -219,6 +220,12 @@ void dtwm_palette_init_profile(DtwmPalette *pal, DtwmAppearanceProfile profile) 
             .top_shadow = {0.314, 0.392, 0.506, 1.0},
             .bottom_shadow = {0.086, 0.118, 0.165, 1.0},
         };
+        pal->window_bg = (DtwmColorSet){
+            .bg = {0.129, 0.141, 0.169, 1.0},            /* #21242B */
+            .fg = {1.000, 1.000, 1.000, 1.0},
+            .top_shadow = {0.565, 0.571, 0.584, 1.0},
+            .bottom_shadow = {0.391, 0.399, 0.418, 1.0},
+        };
         pal->desktop_bg = (DtwmRgba){0.145, 0.192, 0.259, 1.0}; /* #253142 */
         return;
 
@@ -237,6 +244,7 @@ void dtwm_palette_init_profile(DtwmPalette *pal, DtwmAppearanceProfile profile) 
             .bottom_shadow = {0.800, 0.800, 0.800, 1.0},
         };
         pal->menu = pal->inactive;
+        pal->window_bg = pal->inactive;
         pal->desktop_bg = (DtwmRgba){0.000, 0.000, 0.000, 1.0};
         return;
 
@@ -256,6 +264,12 @@ void dtwm_palette_init_profile(DtwmPalette *pal, DtwmAppearanceProfile profile) 
             .bottom_shadow = {0.312, 0.312, 0.312, 1.0},
         };
         pal->menu = pal->inactive;
+        pal->window_bg = (DtwmColorSet){
+            .bg = {0.776, 0.698, 0.659, 1.0},            /* #C6B2A8 (Default.dp ColorSet 5) */
+            .fg = {0.000, 0.000, 0.000, 1.0},            /* #000000 */
+            .top_shadow = {0.895, 0.858, 0.839, 1.0},
+            .bottom_shadow = {0.421, 0.379, 0.358, 1.0},
+        };
         /* Workspace 0 ("One"): Default.dp ColorSet 2 (#8998AA) */
         pal->desktop_bg = (DtwmRgba){0.538, 0.596, 0.667, 1.0};
         return;

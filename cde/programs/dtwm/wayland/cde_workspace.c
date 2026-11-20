@@ -1518,6 +1518,7 @@ static bool dtwm_server_apply_palette_and_profile(
     server->palette.active = sets[0];
     server->palette.inactive = sets[1];
     server->palette.menu = sets[1];
+    server->palette.window_bg = sets[4];
 
     static const int ws_cs_map[4] = {2, 7, 5, 6};
     for (uint32_t i = 0; i < server->num_workspaces; ++i) {

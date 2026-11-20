@@ -1705,32 +1705,41 @@ static void draw_cde_icon_title_box(
 }
 
 static void draw_default_cde_app_emblem(
-    cairo_t *cr, double x, double y, double size, const DtwmView *view, const DtwmColorSet *cs
+    cairo_t *cr, double x, double y, double size, const DtwmView *view
 ) {
-    /* Miniature 3D CDE window glyph with terminal/document accent */
+    const DtwmPalette *pal = &view->server->palette;
+    bool win_active = !view->minimized && view_or_transient_has_focus(view);
+    const DtwmColorSet *title_cs = win_active ? &pal->active : &pal->inactive;
+    const DtwmColorSet *body_cs = &pal->window_bg;
+
+    /* Miniature 3D CDE window glyph themed from the active palette */
     double pad = floor(size * 0.12);
     double wx = x + pad;
     double wy = y + pad;
     double ww = size - 2 * pad;
     double wh = size - 2 * pad;
 
-    cairo_set_source_rgba(cr, 0.92, 0.93, 0.96, 1.0);
+    /* Window interior (primary application window background) */
+    cairo_set_source_rgba(cr, body_cs->bg.r, body_cs->bg.g, body_cs->bg.b, body_cs->bg.a);
     cairo_rectangle(cr, wx, wy, ww, wh);
     cairo_fill(cr);
-    dtwm_draw_bevel(cr, wx, wy, ww, wh, 1.5, cs->top_shadow, cs->bottom_shadow);
 
-    /* Mini titlebar */
+    /* Outer 3D window frame bevel matching active/inactive window border */
+    dtwm_draw_bevel(cr, wx, wy, ww, wh, 1.5, title_cs->top_shadow, title_cs->bottom_shadow);
+
+    /* Mini titlebar: active window color when open & focused, inactive when unfocused or minimized */
     double th = fmax(6.0, floor(wh * 0.24));
-    cairo_set_source_rgba(cr, 0.26, 0.44, 0.56, 1.0);
+    cairo_set_source_rgba(cr, title_cs->bg.r, title_cs->bg.g, title_cs->bg.b, title_cs->bg.a);
     cairo_rectangle(cr, wx + 2, wy + 2, ww - 4, th);
     cairo_fill(cr);
+    dtwm_draw_bevel(cr, wx + 2, wy + 2, ww - 4, th, 1.0, title_cs->top_shadow, title_cs->bottom_shadow);
 
     const char *title = dtwm_view_title(view);
     char initial[4] = {0};
     initial[0] = (title && title[0]) ? title[0] : 'X';
     dtwm_draw_label(
-        cr, initial, wx + 2, wy + th + 1, ww - 4, wh - th - 3,
-        (DtwmRgba){0.14, 0.18, 0.26, 1.0}, true, true
+        cr, initial, wx + 2, wy + th + 2, ww - 4, wh - th - 4,
+        body_cs->fg, true, true
     );
 }
 
@@ -1834,7 +1843,7 @@ struct wlr_buffer *dtwm_icons_render_tile_buffer(DtwmView *view, int *out_w, int
             cairo_restore(cr);
         }
     } else {
-        draw_default_cde_app_emblem(cr, 6.0, 6.0, img_dim, view, ics);
+        draw_default_cde_app_emblem(cr, 6.0, 6.0, img_dim, view);
     }
 
     /* Icon label from WM_ICON_NAME / _NET_WM_ICON_NAME (or active workspace name for FrontPanel) */

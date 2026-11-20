@@ -1,4 +1,10 @@
 2026-11-20
+- Theme the fallback stylized-window desktop icon emblem in `dtwm-wayland`
+  using the active CDE palette: paint the window interior and monogram letter
+  with the primary application window color set (`ColorSet 5` / `window_bg`)
+  and draw the mini titlebar and frame bevel with the active window color when
+  open and focused, switching to the inactive window color once unfocused or
+  minimized (`cde/programs/dtwm/wayland/{dtwm_wayland.h,cde_bevel.c,cde_workspace.c,cde_icons.c}`).
 - Fix `dtfile` File Manager and `libDtSvc` `DtDndDragStart` crash when starting
   to drag a folder or file icon (for example onto the Shelf) on Wayland/Xdnd:
   pin CK Core Motif ABI 9 `52701a68e60f` so `XmNiccHandle` reflects the active

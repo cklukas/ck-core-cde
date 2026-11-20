@@ -92,6 +92,7 @@ typedef struct {
     DtwmColorSet active;
     DtwmColorSet inactive;
     DtwmColorSet menu;
+    DtwmColorSet window_bg;
     DtwmRgba desktop_bg;
     DtwmAppearanceProfile profile;
 } DtwmPalette;
