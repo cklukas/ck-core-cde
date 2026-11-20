@@ -659,7 +659,7 @@ atomically once both the Wayland socket and rootless `Xwayland` are ready.
   & per-core charts/`systemd1` D-Bus control, `ck-view` PNG/JPEG/WebP/SVG/TIFF/XPM
   rendering + rotate/crop + `DtWsmChangeBackdrop` + `-session` restore, `ck-pdf`
   outline/search/clipboard/CUPS print + `-session` restore, `dtpad` tabs/line
-  numbers/crash-recovery autosave, and `dtcm` RFC 5545 `.ics` round-trips), and
+  numbers/crash-recovery autosave, and `dtcm` RFC 5545 `.ics` round-trips),
   `check-dtwm-wayland-menus.py` (XWayland Motif pulldown/popup menu focus,
   mid-press `zwlr_virtual_pointer_v1` crash cleanup, `wayvnc` stuck-button
   auto-heal, stationary-click `wl_pointer` focus restoration, and post-modeset
