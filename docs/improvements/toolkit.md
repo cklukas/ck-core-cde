@@ -51,8 +51,9 @@ default:
   Contrast (Accessible)`) and **Layout Spacing** (`Comfortable`, `Compact`),
   automatically choosing `modern_light` vs. `modern_dark` from palette luminance,
   embedding a live Motif **Sample Dialog** (`dtstyle --preview-helper`) inside
-  authentic window decorations in the preview canvas (with surface-matched
-  `XmScale` / `XmScrollBar` capsule tracks and unclipped circular slider thumbs),
+  authentic window decorations in the preview canvas (inheriting active session
+  fonts in Classic CDE and rendering surface-matched `XmScale` / `XmScrollBar`
+  capsule tracks with unclipped circular slider thumbs in modern profiles),
   applying desktop-wide updates on **Apply** / **OK**, and reverting cleanly on
   **Cancel**.
 - **`DtHelp` live palette and profile redraw (`Callbacks.c`, `SetList.c`, `PathArea.c`)**:

@@ -1,4 +1,12 @@
 2026-11-20
+- Inherit active session font and render-table resources from
+  `XA_RESOURCE_MANAGER` (falling back to native 100-DPI `-dt-interface
+  system-medium-r-normal-m*` / `user-medium-r-normal-m*`) and initialize
+  `XtSetLanguageProc` in `dtstyle --preview-helper` so Classic CDE `Sample
+  Dialog` previews render crisp, unstretched native session typography matching
+  `Style Manager` instead of falling back to bitmap-stretched fixed/75-DPI fonts
+  (`cde/programs/dtstyle/ColorPreviewHelper.c`,
+  `docs/improvements/toolkit.md`).
 - Fix `XmScale` slider background mismatch and bottom thumb clipping in
   `dtstyle` Style Manager (both the embedded `Sample Dialog` preview helper and
   `XmColorObj`-backed dialogs): pin CK Core Motif ABI 9 `5e44968bc813` so

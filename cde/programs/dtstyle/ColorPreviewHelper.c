@@ -259,6 +259,98 @@ pv_harmonize_slot(Display *dpy, Colormap cmap, const PreviewColorSet *raw,
 }
 
 static void
+pv_build_classic_font_spec(Display *dpy, char *out, size_t cap)
+{
+    if (!out || cap == 0)
+        return;
+    out[0] = '\0';
+
+    static const char *const keys[] = {
+        "*FontList",
+        "*buttonFontList",
+        "*labelFontList",
+        "*textFontList",
+        "*XmText*FontList",
+        "*XmTextField*FontList",
+        "*systemFont",
+        "*userFont",
+        "*renderTable",
+        "*buttonRenderTable",
+        "*labelRenderTable",
+        "*textRenderTable",
+        "*defaultRenderTable"
+    };
+    static const char *const classes[] = {
+        "*FontList",
+        "*ButtonFontList",
+        "*LabelFontList",
+        "*TextFontList",
+        "*XmText*FontList",
+        "*XmTextField*FontList",
+        "*SystemFont",
+        "*UserFont",
+        "*RenderTable",
+        "*ButtonRenderTable",
+        "*LabelRenderTable",
+        "*TextRenderTable",
+        "*DefaultRenderTable"
+    };
+
+    size_t pos = 0;
+    Boolean found_any = False;
+
+    if (dpy) {
+        Atom act_t = None;
+        int act_f = 0;
+        unsigned long nitems = 0, rem = 0;
+        unsigned char *prop = NULL;
+        if (XGetWindowProperty(dpy, DefaultRootWindow(dpy), XA_RESOURCE_MANAGER,
+                               0L, 262144L, False, XA_STRING, &act_t, &act_f,
+                               &nitems, &rem, &prop) == Success &&
+            prop && nitems > 0) {
+            char *rm_copy = (char *)malloc(nitems + 1);
+            if (rm_copy) {
+                memcpy(rm_copy, prop, nitems);
+                rm_copy[nitems] = '\0';
+                XrmDatabase rm_db = XrmGetStringDatabase(rm_copy);
+                free(rm_copy);
+                if (rm_db) {
+                    for (size_t i = 0; i < sizeof(keys) / sizeof(keys[0]); ++i) {
+                        char *str_type = NULL;
+                        XrmValue val = {0, NULL};
+                        if (XrmGetResource(rm_db, keys[i], classes[i],
+                                           &str_type, &val) &&
+                            val.addr && val.addr[0] != '\0') {
+                            int n = snprintf(out + pos, cap - pos, "%s: %s\n",
+                                             keys[i], (const char *)val.addr);
+                            if (n > 0 && (size_t)n < cap - pos) {
+                                pos += (size_t)n;
+                                found_any = True;
+                            }
+                        }
+                    }
+                    XrmDestroyDatabase(rm_db);
+                }
+            }
+        }
+        if (prop)
+            XFree(prop);
+    }
+
+    if (!found_any) {
+        snprintf(
+            out, cap,
+            "*FontList: -dt-interface system-medium-r-normal-m*-*-*-*-*-*-*-*-*:\n"
+            "*buttonFontList: -dt-interface system-medium-r-normal-m*-*-*-*-*-*-*-*-*:\n"
+            "*labelFontList: -dt-interface system-medium-r-normal-m*-*-*-*-*-*-*-*-*:\n"
+            "*textFontList: -dt-interface user-medium-r-normal-m*-*-*-*-*-*-*-*-*:\n"
+            "*XmText*FontList: -dt-interface user-medium-r-normal-m*-*-*-*-*-*-*-*-*:\n"
+            "*XmTextField*FontList: -dt-interface user-medium-r-normal-m*-*-*-*-*-*-*-*-*:\n"
+        );
+    }
+}
+
+static void
 pv_apply_virtual_xrm(PreviewHelperCtx *ctx)
 {
     const char *prof_str =
@@ -289,7 +381,11 @@ pv_apply_virtual_xrm(PreviewHelperCtx *ctx)
                             ? BlackPixel(ctx->dpy, DefaultScreen(ctx->dpy))
                             : ctx->eff[4].bg;
 
-    char spec[4096];
+    char classic_fonts[2048] = "";
+    if (ctx->cur_profile == XmAPPEARANCE_CLASSIC)
+        pv_build_classic_font_spec(ctx->dpy, classic_fonts, sizeof(classic_fonts));
+
+    char spec[6144];
     snprintf(
         spec, sizeof(spec),
         "*useColorObj: False\n"
@@ -305,9 +401,7 @@ pv_apply_virtual_xrm(PreviewHelperCtx *ctx)
         dpi_line,
         prof_str, prof_str, dens_str, dens_str,
         ctx->cset[0].bg_hex,
-        (ctx->cur_profile == XmAPPEARANCE_CLASSIC)
-            ? "*FontList: -dt-interface user-medium-r-normal-s*-*-*-*-*-*-*-*-*:\n"
-            : ""
+        classic_fonts
     );
 
     XrmDatabase db = XrmGetStringDatabase(spec);
@@ -813,6 +907,7 @@ DtstyleRunPreviewHelper(int argc, char **argv)
     g_pv.cur_density = XmAPPEARANCE_DENSITY_COMFORTABLE;
 
     XSetErrorHandler(pv_ignore_x_err);
+    XtSetLanguageProc(NULL, NULL, NULL);
     XtToolkitInitialize();
     g_pv.app = XtCreateApplicationContext();
 
