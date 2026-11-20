@@ -1,4 +1,18 @@
 2026-11-20
+- Fix `dtfile` File Manager and `libDtSvc` `DtDndDragStart` crash when starting
+  to drag a folder or file icon (for example onto the Shelf) on Wayland/Xdnd:
+  pin CK Core Motif ABI 9 `52701a68e60f` so `XmNiccHandle` reflects the active
+  `XdndSelection` atom during `XmNconvertProc` callbacks, answer compositor
+  `TARGETS` / `HOST_NAME` probes in `dndConvertProc` before invoking one-shot
+  `DtCR_DND_CONVERT_DATA` and return exact 64-bit `Atom` element counts instead
+  of `sizeof(Atom)/4`, query `XtGetSelectionRequest` on the selection-owning
+  shell, and use `XtDisplayOfObject` plus 64-bit-safe `Window` `XGetGeometry`
+  outputs on `DtIconGadget` drag initiators
+  (`cde/lib/DtSvc/DtUtil1/DndDrag.c`,
+  `cde/programs/dtfile/{File.c,FileMgr.c,SharedProcs.c,Makefile.am}`,
+  `cde/programs/dtfile/tests/check-dnd-drag-safety.py`,
+  `.ckgit/{motif-revision,ci.yml}`,
+  `docs/improvements/file-manager.md`).
 - Add interactive desktop icon grid dragging with placement-grid and target-slot
   highlights in `dtwm-wayland`, preserve manually placed desktop icon slots across
   minimize/restore/maximize and sibling window closes, and preserve mental-map

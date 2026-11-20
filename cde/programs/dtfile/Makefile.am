@@ -29,6 +29,7 @@ EXTRA_DIST = tests/check-trash-writer.py tests/check-trash-metadata.py \
              tests/check-access-ids.py tests/check-access-ids.c \
              tests/check-storage-size-hardlinks.py tests/check-storage-size-hardlinks.c \
              tests/check-clipboard-undo.py \
+             tests/check-dnd-drag-safety.py \
              tests/check-archive-safety.py org.freedesktop.FileManager1.service.cpp
 
 check-local:
@@ -36,6 +37,7 @@ check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-access-ids.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-storage-size-hardlinks.py
 	CC="$(CC)" PKG_CONFIG="$(PKG_CONFIG)" python3 $(srcdir)/tests/check-clipboard-undo.py --module-source "$(abs_srcdir)"
+	CC="$(CC)" PKG_CONFIG="$(PKG_CONFIG)" python3 $(srcdir)/tests/check-dnd-drag-safety.py --build-root "$(abs_top_builddir)" --cde-src "$(abs_top_srcdir)"
 	CC="$(CC)" PKG_CONFIG="$(PKG_CONFIG)" python3 $(srcdir)/tests/check-archive-safety.py --module-source "$(abs_srcdir)"
 	CC="$(CC)" python3 $(srcdir)/tests/check-trash-writer.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-trash-metadata.py

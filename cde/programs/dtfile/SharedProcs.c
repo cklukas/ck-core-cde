@@ -243,7 +243,7 @@ _DtFileCreateDragStateIcon(
    if ((marker_size % 2) == 0)
       marker_size += 1;
 
-   dpy = XtDisplay(w);
+   dpy = XtDisplayOfObject(w);
    screen = XtScreenOfObject(w);
    if (dpy == nullptr || screen == nullptr)
       return nullptr;

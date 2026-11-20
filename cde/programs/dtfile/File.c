@@ -1815,7 +1815,7 @@ GetDragIconMask(
         unsigned int hei)
 {
    Pixmap dragMask;
-   Display *dpy = XtDisplay(w);
+   Display *dpy = XtDisplayOfObject(w);
    unsigned char flags;
    XRectangle pRect, lRect;
    GC fillGC;
@@ -1890,7 +1890,9 @@ GetDragIcon(
    Widget screen_object = (Widget) XmGetXmScreen(XtScreenOfObject(w));
    Arg args[11];
    int n;
-   unsigned int wid, hei, d, junk;
+   Window root_ret = None;
+   int x_ret = 0, y_ret = 0;
+   unsigned int wid = 0, hei = 0, border_ret = 0, d = 0;
    int hotX = 0;
    int hotY = 0;
    Widget dragIcon;
@@ -1899,12 +1901,12 @@ GetDragIcon(
 
    dragPixmap = _DtIconDraw (w, 0, 0, 0, False);
 
-   XGetGeometry (XtDisplay(w), dragPixmap,
-                 (Window *) &junk,             /* returned root window */
-                 (int *) &junk, (int *) &junk, /* x, y of pixmap */
-                 &wid, &hei,                   /* width, height of pixmap */
-                 &junk,                        /* border width */
-                 &d);                          /* depth */
+   XGetGeometry (XtDisplayOfObject(w), dragPixmap,
+                 &root_ret,
+                 &x_ret, &y_ret,
+                 &wid, &hei,
+                 &border_ret,
+                 &d);
 
    if (initiating_view
        && ((FileMgrData *)initiating_view)->view == BY_ATTRIBUTES)
@@ -6614,7 +6616,9 @@ CreateTreeIcons(Widget w)
   int i, j;
   TreePxId px;
   char pxname[128];
-  unsigned int width, height, dummy;
+  Window root_ret = None;
+  int x_ret = 0, y_ret = 0;
+  unsigned int width = 0, height = 0, border_ret = 0, depth_ret = 0;
 
   XtSetArg (args[0], XmNbackground, &background_color);
   XtSetArg (args[1], XmNforeground, &foreground_color);
@@ -6644,11 +6648,11 @@ CreateTreeIcons(Widget w)
       TreePxTab[j].px[i] = _DtGetPixmap(XtScreen(w), pxname,
                                      foreground_color, background_color);
       width = height = 0;
-      XGetGeometry(XtDisplay(w), TreePxTab[j].px[i],
-                   (Window *) &dummy,               /* returned root window */
-                   (int *) &dummy, (int *) &dummy,  /* x, y of pixmap */
-                   &width, &height,                 /* pixmap width, height */
-                   &dummy, &dummy);                 /* border width, depth */
+      XGetGeometry(XtDisplayOfObject(w), TreePxTab[j].px[i],
+                   &root_ret,
+                   &x_ret, &y_ret,
+                   &width, &height,
+                   &border_ret, &depth_ret);
       if (j == tpxNil)
       {
          TreeNilWd[i] = width;

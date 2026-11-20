@@ -441,19 +441,21 @@ dndDropStartCallback(
 	 */
  
 	/*
-	 * Initialize protocol specific dragData
+	 * Initialize protocol specific dragData if not already converted
 	 */
 
-	dtDragInfo->dragData->numItems	= dtDragInfo->numItems;
+	if (dtDragInfo->dragData->numItems == 0) {
+		dtDragInfo->dragData->numItems	= dtDragInfo->numItems;
 
-	(*dtDragInfo->transfer->methods->convertInit)(dtDragInfo);
+		(*dtDragInfo->transfer->methods->convertInit)(dtDragInfo);
 
-	/*
-	 * Invoke the application convert callback
-	 */
+		/*
+		 * Invoke the application convert callback
+		 */
 
-	dndAppConvert(dragContext, DtCR_DND_CONVERT_DATA, 
-			xmDropInfo->event, dtDragInfo);
+		dndAppConvert(dragContext, DtCR_DND_CONVERT_DATA, 
+				xmDropInfo->event, dtDragInfo);
+	}
 
 	if (dtDragInfo->status == DtDND_FAILURE) {
 		return;
@@ -526,33 +528,10 @@ dndConvertProc(
 	}
 
 	/*
-	 * Get selection request event
-	 */
-
-	XtVaGetValues(dragContext, XmNiccHandle, &realSelectionAtom, nullptr);
-	selectionRequestEvent = XtGetSelectionRequest(dragContext,
-		realSelectionAtom, nullptr); /* REMIND: NULL for atomic transfer */
-
-	/*
-	 * Get the application drag data if necessary
-	 */
-
-	if (dtDragInfo->dragData->numItems == 0) {
-
-		dtDragInfo->dragData->numItems	= dtDragInfo->numItems;
-		
-		(*dtDragInfo->transfer->methods->convertInit)(dtDragInfo);
-
-		dndAppConvert(dragContext, DtCR_DND_CONVERT_DATA,
-			(XEvent *)selectionRequestEvent, dtDragInfo);
-
-		if (dtDragInfo->status == DtDND_FAILURE) {
-			return False;
-		}
-	}
-
-	/*
-	 * Handle transfer protocol independent target conversions
+	 * Handle transfer protocol independent metadata target conversions
+	 * before invoking the application's DtCR_DND_CONVERT_DATA callback,
+	 * so an eager compositor/Xdnd TARGETS probe at drag start does not
+	 * prematurely consume one-shot drag state before an actual drop.
 	 */
 
 	if (*target == XA_TARGETS) {
@@ -591,15 +570,15 @@ dndConvertProc(
 		*returnType 	= XA_ATOM;
 		*returnFormat 	= 32;
 		*returnValue 	= (XtPointer)allTargets;
-		*returnLength 	= numAllTargets * sizeof(Atom)/4;
+		*returnLength 	= numAllTargets;
 
-		status = True;
+		return True;
 
 	} else if (*target == XA_TIMESTAMP || *target == XA_MULTIPLE) {
 	/*
 	 * TIMESTAMP and MULTIPLE are handled by the Intrinsics
 	 */
-		status = True;
+		return True;
 
 	} else if (*target == XA_HOST_NAME ||
 		   *target == XA_SUN_FILE_HOST_NAME) {
@@ -611,9 +590,44 @@ dndConvertProc(
                 *returnLength	= strlen((char *)*returnValue) + 1;
                 *returnFormat	= 8;
 
-		status = True;
+		return True;
+	}
 
-	} else if (*target == XA_DELETE) {
+	/*
+	 * Get selection request event from the shell owning the selection
+	 */
+
+	realSelectionAtom = None;
+	XtVaGetValues(dragContext, XmNiccHandle, &realSelectionAtom, nullptr);
+	{
+		XmDragContext xmDc = (XmDragContext)dragContext;
+		Widget selOwner = (xmDc != nullptr && xmDc->drag.srcShell != nullptr)
+				  ? xmDc->drag.srcShell
+				  : dragContext;
+		selectionRequestEvent = (realSelectionAtom != None)
+			? XtGetSelectionRequest(selOwner, realSelectionAtom, nullptr)
+			: nullptr;
+	}
+
+	/*
+	 * Get the application drag data if necessary
+	 */
+
+	if (dtDragInfo->dragData->numItems == 0) {
+
+		dtDragInfo->dragData->numItems	= dtDragInfo->numItems;
+		
+		(*dtDragInfo->transfer->methods->convertInit)(dtDragInfo);
+
+		dndAppConvert(dragContext, DtCR_DND_CONVERT_DATA,
+			(XEvent *)selectionRequestEvent, dtDragInfo);
+
+		if (dtDragInfo->status == DtDND_FAILURE) {
+			return False;
+		}
+	}
+
+	if (*target == XA_DELETE) {
 	/*
 	 * DELETE	Set up convert callback data to specify
   	 * 		deletion and invoke the application-defined

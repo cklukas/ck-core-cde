@@ -256,6 +256,15 @@ appearance when only one tab is open:
   **Copy** (moving newly created copies into XDG Trash rather than unlinking
   permanently), and **Put in Trash** (restoring items and removing companion
   `.trashinfo` records).
+- **Wayland/Xdnd folder and Shelf drag-and-drop safety (`File.c`, `FileMgr.c`,
+  `DndDrag.c`):** Dragging folder or file icons onto Shelf slots (either to pin
+  a shortcut into an empty Shelf slot or move/copy into a pinned directory) or
+  reordering Shelf slots on Wayland and X11 resolves `XtDisplayOfObject` cleanly
+  on `DtIconGadget` drag initiators, uses 64-bit-safe `Window` outputs in
+  `XGetGeometry`, answers eager compositor `XdndSelection` `TARGETS` probes with
+  exact 64-bit `Atom` element counts without prematurely consuming one-shot
+  `DtCR_DND_CONVERT_DATA` state, and queries `XtGetSelectionRequest` against the
+  owning shell and active selection atom.
 
 The [desktop gallery](../desktop.md#file-manager) shows File Manager browsing
 the staged CDE installation.

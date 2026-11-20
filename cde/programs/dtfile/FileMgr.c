@@ -5504,7 +5504,7 @@ ShelfCreateDragPixmap(
    if (w == nullptr)
       return None;
 
-   dpy = XtDisplay(w);
+   dpy = XtDisplayOfObject(w);
    dragPixmap = _DtIconDraw(w, 0, 0, 0, False);
    if (dragPixmap == None)
       return None;
@@ -5547,7 +5547,7 @@ ShelfCreateDragMask(
    if (w == nullptr || width == 0 || height == 0)
       return None;
 
-   dpy = XtDisplay(w);
+   dpy = XtDisplayOfObject(w);
    if (dpy == nullptr)
       return None;
 
