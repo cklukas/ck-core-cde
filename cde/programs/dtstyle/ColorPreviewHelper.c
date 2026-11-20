@@ -320,17 +320,22 @@ pv_apply_virtual_xrm(PreviewHelperCtx *ctx)
         pv_put_pixel(&db, "*foreground", &ctx->eff[4].fg);
         pv_put_pixel(&db, "*topShadowColor", &ctx->eff[4].ts);
         pv_put_pixel(&db, "*bottomShadowColor", &ctx->eff[4].bs);
-        pv_put_pixel(&db, "*selectColor", &ctx->cset[0].bg);
         pv_put_pixel(&db, "*armColor", &ctx->eff[4].sc);
-        pv_put_pixel(&db, "*troughColor", &ctx->eff[3].bg);
         pv_put_pixel(&db, "*unselectColor", &ctx->eff[3].bg);
         pv_put_pixel(&db, "*highlightColor", &ctx->cset[0].bg);
 
         if (ctx->cur_profile == XmAPPEARANCE_MODERN_LIGHT ||
             ctx->cur_profile == XmAPPEARANCE_MODERN_DARK) {
+            pv_put_pixel(&db, "*troughColor", &ctx->eff[4].bg);
+            XrmPutStringResource(&db, "*XmToggleButton.selectColor", ctx->cset[0].bg_hex);
+            XrmPutStringResource(&db, "*XmToggleButtonGadget.selectColor", ctx->cset[0].bg_hex);
             pv_put_pixel(&db, "*XmPushButton.background", &ctx->eff_btn_bg);
             pv_put_pixel(&db, "*XmPushButtonGadget.background", &ctx->eff_btn_bg);
             pv_put_pixel(&db, "*OptionButton.background", &ctx->eff_btn_bg);
+        } else {
+            pv_put_pixel(&db, "*troughColor", &ctx->eff[4].sc);
+            XrmPutStringResource(&db, "*XmToggleButton.selectColor", ctx->cset[4].sc_hex);
+            XrmPutStringResource(&db, "*XmToggleButtonGadget.selectColor", ctx->cset[4].sc_hex);
         }
 
         /* MenuBar / Secondary (ColorSet 6 -> index 5) */
@@ -435,7 +440,7 @@ pv_rebuild_dialog_contents(PreviewHelperCtx *ctx)
                   XmNheight, ctx->cur_h,
                   NULL);
 
-    int pad = (ctx->cur_density == XmAPPEARANCE_DENSITY_COMPACT) ? 4 : 6;
+    int pad = (ctx->cur_density == XmAPPEARANCE_DENSITY_COMPACT) ? 3 : 4;
 
     Widget root = XtVaCreateWidget(
         "pvRootForm", xmFormWidgetClass, ctx->shell,
@@ -502,7 +507,7 @@ pv_rebuild_dialog_contents(PreviewHelperCtx *ctx)
         NULL
     );
 
-    int btn_mh = (ctx->cur_profile == XmAPPEARANCE_CLASSIC) ? 1 : 3;
+    int btn_mh = (ctx->cur_profile == XmAPPEARANCE_CLASSIC) ? 1 : 2;
     XmString xs_ok = XmStringCreateLocalized("OK");
     Widget ok_btn = XtVaCreateManagedWidget(
         "pvOkBtn", xmPushButtonWidgetClass, btn_row,
@@ -568,7 +573,7 @@ pv_rebuild_dialog_contents(PreviewHelperCtx *ctx)
         "tabGeneral", xmFormWidgetClass, tabs,
         XmNtabLabelString, tab1_xs,
         XmNmarginWidth, pad + 2,
-        XmNmarginHeight, pad,
+        XmNmarginHeight, 3,
         NULL
     );
     XmStringFree(tab1_xs);
@@ -583,24 +588,27 @@ pv_rebuild_dialog_contents(PreviewHelperCtx *ctx)
         XmStringFree(mxs);
     }
     XmString mode_lbl = XmStringCreateLocalized("Preset:");
-    Arg oargs[4];
+    Arg oargs[6];
     Cardinal on = 0;
     XtSetArg(oargs[on], XmNlabelString, mode_lbl); on++;
     XtSetArg(oargs[on], XmNsubMenuId, mode_pd); on++;
+    XtSetArg(oargs[on], XmNmarginHeight, 1); on++;
     XtSetArg(oargs[on], XmNtopAttachment, XmATTACH_FORM); on++;
     XtSetArg(oargs[on], XmNleftAttachment, XmATTACH_FORM); on++;
     Widget opt_menu = XmCreateOptionMenu(page1, "pvOptMenu", oargs, on);
     XmStringFree(mode_lbl);
     XtManageChild(opt_menu);
 
+    int chk_mh = (ctx->cur_density == XmAPPEARANCE_DENSITY_COMPACT) ? 2 : 3;
     XmString chk_xs = XmStringCreateLocalized("Live theme sync");
     Widget chk = XtVaCreateManagedWidget(
         "pvCheck", xmToggleButtonWidgetClass, page1,
         XmNlabelString, chk_xs,
         XmNset, ctx->chk_state,
+        XmNmarginHeight, chk_mh,
         XmNtopAttachment, XmATTACH_WIDGET,
         XmNtopWidget, opt_menu,
-        XmNtopOffset, 4,
+        XmNtopOffset, 3,
         XmNleftAttachment, XmATTACH_FORM,
         NULL
     );
@@ -616,7 +624,7 @@ pv_rebuild_dialog_contents(PreviewHelperCtx *ctx)
         XmNshowValue, False,
         XmNtopAttachment, XmATTACH_WIDGET,
         XmNtopWidget, chk,
-        XmNtopOffset, 4,
+        XmNtopOffset, 3,
         XmNleftAttachment, XmATTACH_FORM,
         XmNrightAttachment, XmATTACH_FORM,
         NULL

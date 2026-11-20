@@ -1,4 +1,18 @@
 2026-11-20
+- Fix `XmScale` slider background mismatch and bottom thumb clipping in
+  `dtstyle` Style Manager (both the embedded `Sample Dialog` preview helper and
+  `XmColorObj`-backed dialogs): pin CK Core Motif ABI 9 `5e44968bc813` so
+  `XmScale` and standalone `XmScrollBar` controls harmonize `XmNbackground` and
+  `XmNtroughColor` to the dialog surface instead of the recessed text-input
+  well and refresh `XmScale` minor geometry across profile switches, bind
+  `*troughColor` in `dtstyle --preview-helper` to the primary surface in modern
+  profiles (`eff[4].bg`) and sunken `primary.sc` (`eff[4].sc`) in Classic CDE,
+  pass string color resources for `XmToggleButton` / `XmToggleButtonGadget`
+  `XmNselectColor`, and tighten `tabGeneral` vertical margins so the circular
+  `XmScale` thumb renders completely unclipped
+  (`cde/programs/dtstyle/ColorPreviewHelper.c`,
+  `.ckgit/{motif-revision,ci.yml}`,
+  `docs/improvements/toolkit.md`).
 - Restore minimized windows and bring background windows to the foreground with
   active focus when clicking Front Panel and subpanel items for already-running
   applications across both `dtwm-wayland` and X11 `dtwm`, and fix an `Arg`
