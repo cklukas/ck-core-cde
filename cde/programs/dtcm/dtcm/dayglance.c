@@ -1196,6 +1196,20 @@ day_event(XEvent *event)
 }
 
 static void
+sync_panel_form_width(Calendar *c)
+{
+	Day *d = (Day *)c->view->day_info;
+	if (!d || !d->panel_form)
+		return;
+	int w = MOBOX_AREA_WIDTH - 2;
+	if (w < 160) w = 160;
+	XtVaSetValues(d->panel_form,
+		XmNrightAttachment, XmATTACH_NONE,
+		XmNwidth, (Dimension)w,
+		nullptr);
+}
+
+static void
 display_monthpanels(Calendar *c)
 {
 	Day 	*d = (Day *)c->view->day_info;
@@ -1205,6 +1219,7 @@ display_monthpanels(Calendar *c)
 	int	panel_year;
 	int	panel_month;
 
+	sync_panel_form_width(c);
 	XtManageChild(d->panel_form);
 
 	XtVaGetValues(d->month_panels[1],

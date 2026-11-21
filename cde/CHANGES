@@ -1,4 +1,6 @@
 2026-11-21
+- Resize the left 3-month `panel_form` container dynamically (`sync_panel_form_width`)
+  when dragging the Day-view divider sash (`cde/programs/dtcm/dtcm/dayglance.c`).
 - Fix `dtcm` Options (*Editor Defaults*) layout overlap and Wayland drag-icon
   `BadMatch` crash:
   - Gate the Appointment Editor's duration preset chips, `Location:`, and
