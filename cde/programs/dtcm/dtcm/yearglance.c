@@ -82,6 +82,7 @@ static char sccsid[] = "@(#)yearglance.c 1.37 95/07/27 Copyr 1991 Sun Microsyste
 #include "dayglance.h"
 #include "weekglance.h"
 #include "monthglance.h"
+#include "agenda_ui.h"
 #include "yearglance.h"
 #include "calendar.h"
 #include "help.h"
@@ -241,6 +242,10 @@ year_button (Widget widget, XtPointer data, XtPointer cbs)
 		case monthGlance:
 			c->view->glance = yearGlance;
 			cleanup_after_monthview(c);
+			break;
+		case agendaGlance:
+			c->view->glance = yearGlance;
+			cleanup_after_agenda(c);
 			break;
 		default:
 			break;

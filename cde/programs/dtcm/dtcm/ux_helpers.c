@@ -104,6 +104,106 @@ dtcm_category_rgb(DtcmCategory cat, unsigned short *r, unsigned short *g, unsign
     if (b) *b = bb;
 }
 
+void
+dtcm_category_pastel_rgb(DtcmCategory cat, unsigned short *r, unsigned short *g, unsigned short *b)
+{
+    unsigned short rr = 0, gg = 0, bb = 0;
+    switch (cat) {
+    case DTCM_CAT_WORK:      /* soft blue  #d6e4f2 */ rr = 0xd6d6; gg = 0xe4e4; bb = 0xf2f2; break;
+    case DTCM_CAT_PERSONAL:  /* soft green #d5ebd9 */ rr = 0xd5d5; gg = 0xebeb; bb = 0xd9d9; break;
+    case DTCM_CAT_IMPORTANT: /* soft coral #f4d6d3 */ rr = 0xf4f4; gg = 0xd6d6; bb = 0xd3d3; break;
+    case DTCM_CAT_TRAVEL:    /* soft amber #f5e5cc */ rr = 0xf5f5; gg = 0xe5e5; bb = 0xcccc; break;
+    default:                 /* soft neutral #e4e1dc */ rr = 0xe4e4; gg = 0xe1e1; bb = 0xdcdc; break;
+    }
+    if (r) *r = rr;
+    if (g) *g = gg;
+    if (b) *b = bb;
+}
+
+static int
+cmp_day_block(const void *a, const void *b)
+{
+    const DtcmDayBlock *ba = (const DtcmDayBlock *)a;
+    const DtcmDayBlock *bb = (const DtcmDayBlock *)b;
+    if (ba->start_min != bb->start_min)
+        return ba->start_min - bb->start_min;
+    if (ba->end_min != bb->end_min)
+        return bb->end_min - ba->end_min; /* longer first */
+    return ba->cache_idx - bb->cache_idx;
+}
+
+int
+dtcm_layout_day_events(DtcmDayBlock *blocks, int count)
+{
+    if (!blocks || count <= 0)
+        return 0;
+
+    for (int i = 0; i < count; i++) {
+        if (blocks[i].start_min < 0) blocks[i].start_min = 0;
+        if (blocks[i].start_min > 1425) blocks[i].start_min = 1425;
+        if (blocks[i].end_min < blocks[i].start_min + 15)
+            blocks[i].end_min = blocks[i].start_min + 15;
+        if (blocks[i].end_min > 1440) blocks[i].end_min = 1440;
+        blocks[i].col = 0;
+        blocks[i].num_cols = 1;
+    }
+
+    qsort(blocks, (size_t)count, sizeof(DtcmDayBlock), cmp_day_block);
+
+    int cluster_start = 0;
+    while (cluster_start < count) {
+        int cluster_end = cluster_start;
+        int max_end = blocks[cluster_start].end_min;
+
+        /* Find connected overlap cluster */
+        while (cluster_end + 1 < count && blocks[cluster_end + 1].start_min < max_end) {
+            cluster_end++;
+            if (blocks[cluster_end].end_min > max_end)
+                max_end = blocks[cluster_end].end_min;
+        }
+
+        /* Greedy interval coloring inside [cluster_start .. cluster_end] */
+        int col_ends[32];
+        int num_cols = 0;
+        for (int i = cluster_start; i <= cluster_end; i++) {
+            int chosen = -1;
+            for (int c = 0; c < num_cols; c++) {
+                if (col_ends[c] <= blocks[i].start_min) {
+                    chosen = c;
+                    break;
+                }
+            }
+            if (chosen < 0) {
+                if (num_cols < 32) {
+                    chosen = num_cols++;
+                } else {
+                    chosen = 31;
+                }
+            }
+            blocks[i].col = chosen;
+            col_ends[chosen] = blocks[i].end_min;
+        }
+        if (num_cols < 1) num_cols = 1;
+        for (int i = cluster_start; i <= cluster_end; i++) {
+            blocks[i].num_cols = num_cols;
+        }
+
+        cluster_start = cluster_end + 1;
+    }
+
+    return count;
+}
+
+int
+dtcm_snap_minutes(int raw_mins, int step_mins)
+{
+    if (step_mins <= 0) step_mins = 15;
+    int snapped = ((raw_mins + step_mins / 2) / step_mins) * step_mins;
+    if (snapped < 0) snapped = 0;
+    if (snapped > 1440) snapped = 1440;
+    return snapped;
+}
+
 static DtcmHitBox *g_hitboxes = NULL;
 static int g_hitbox_count = 0;
 static int g_hitbox_cap = 0;

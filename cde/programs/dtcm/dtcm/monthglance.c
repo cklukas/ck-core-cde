@@ -104,6 +104,8 @@ static  char sccsid[] = "@(#)monthglance.c 1.82 95/07/27 Copyr 1994 Sun Microsys
 #include "ics_io.h"
 #include "ux_helpers.h"
 #include "context_menu.h"
+#include "undo_stack.h"
+#include "agenda_ui.h"
 
 #define XOS_USE_XT_LOCKING
 #define X_INCLUDE_TIME_H
@@ -238,7 +240,13 @@ reschedule_cached_appt(Calendar *c, int cache_idx, Tick target_day)
 	if (updated)
 		csa_free((CSA_buffer)(uintptr_t)updated);
 	csa_free(list);
-	return (stat == CSA_SUCCESS) ? True : False;
+	if (stat == CSA_SUCCESS) {
+		dtcm_undo_push_reschedule(pc->start_time, pc->end_time,
+					  new_start, new_end,
+					  pc->show_time, pc->summary);
+		return True;
+	}
+	return False;
 }
 
 static int
@@ -289,6 +297,8 @@ paint_day_entries(
 
 	for (loop = 0; loop < 2; loop++) {
 		for (i = 0; i < appt_total; i++) {
+			if (!dtcm_filter_matches(cache[i].summary))
+				continue;
 			start_tick = cache[i].start_time;
 	                if (start_tick >= lower && 
 			    start_tick < upper && 
@@ -399,6 +409,10 @@ month_button(Widget widget, XtPointer data, XtPointer cbs)
 			break;
 		case yearGlance:
 			cleanup_after_yearview(c);
+			c->view->glance = monthGlance;
+			break;
+		case agendaGlance:
+			cleanup_after_agenda(c);
 			c->view->glance = monthGlance;
 			break;
 		default:

@@ -373,6 +373,51 @@ ring_it(XtPointer client_data, XtIntervalId *interval_id) {
  * Close dialog: pop down and destroy the dialog, and free
  * associated memory.
  */
+typedef struct {
+	Calendar *cal;
+	Widget shell;
+	char title[256];
+	char body[512];
+} SnoozePayload;
+
+static void
+snooze_timer_cb(XtPointer client_data, XtIntervalId *id)
+{
+	(void)id;
+	SnoozePayload *sp = (SnoozePayload *)client_data;
+	if (!sp)
+		return;
+	dtcm_notify_reminder(sp->body, "Snoozed reminder");
+	if (sp->cal && sp->cal->message_text) {
+		char msg[320];
+		snprintf(msg, sizeof(msg), "Snoozed reminder: %s", sp->body);
+		set_message(sp->cal->message_text, msg);
+	}
+	free(sp);
+}
+
+static void
+snooze_cb(Widget w, XtPointer data, XtPointer ignore)
+{
+	(void)w; (void)ignore;
+	SnoozePayload *sp = (SnoozePayload *)data;
+	if (!sp)
+		return;
+	if (sp->shell) {
+		XtPopdown(sp->shell);
+		XtDestroyWidget(sp->shell);
+		sp->shell = nullptr;
+	}
+	if (sp->cal && sp->cal->xcontext && sp->cal->xcontext->app) {
+		XtAppAddTimeOut(sp->cal->xcontext->app, 10 * 60 * 1000,
+				snooze_timer_cb, (XtPointer)sp);
+		if (sp->cal->message_text)
+			set_message(sp->cal->message_text, "Reminder snoozed for 10 minutes.");
+	} else {
+		free(sp);
+	}
+}
+
 static void
 close_cb(Widget w, XtPointer data, XtPointer ignore)
 {
@@ -454,8 +499,22 @@ postup_show_proc(Calendar *c, CSA_reminder_reference *r) {
 		XmNrightOffset, 1,
 		XmNleftAttachment, XmATTACH_FORM,
 		XmNrightAttachment, XmATTACH_FORM,
-		XmNfractionBase, 3,
+		XmNfractionBase, 5,
 		nullptr);
+
+	xmstr = XmStringCreateLocalized("Snooze 10m");
+	Widget pu_snooze = XtVaCreateManagedWidget("snooze",
+		xmPushButtonWidgetClass, button_form,
+		XmNtopAttachment, XmATTACH_FORM,
+		XmNbottomAttachment, XmATTACH_FORM,
+		XmNleftAttachment, XmATTACH_POSITION,
+		XmNrightAttachment, XmATTACH_POSITION,
+		XmNleftPosition, 1,
+		XmNrightPosition, 2,
+		XmNbottomOffset, 1,
+		XmNlabelString, xmstr,
+		nullptr);
+	XmStringFree(xmstr);
 
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 680, "Close"));
 	pu_close = XtVaCreateManagedWidget("close", 
@@ -464,8 +523,8 @@ postup_show_proc(Calendar *c, CSA_reminder_reference *r) {
 		XmNbottomAttachment, 	XmATTACH_FORM,
 		XmNleftAttachment, 	XmATTACH_POSITION,
 		XmNrightAttachment, 	XmATTACH_POSITION,
-		XmNleftPosition,	1,
-		XmNrightPosition,	2,
+		XmNleftPosition,	3,
+		XmNrightPosition,	4,
 		XmNbottomOffset, 	1,
                 XmNlabelString, 	xmstr,
                 nullptr);
@@ -558,6 +617,19 @@ postup_show_proc(Calendar *c, CSA_reminder_reference *r) {
 	}
 	if (lines)
 		destroy_lines(lines);
+
+	{
+		SnoozePayload *snooze_pl = (SnoozePayload *)calloc(1, sizeof(SnoozePayload));
+		if (snooze_pl) {
+			snooze_pl->cal = c;
+			snooze_pl->shell = pu_frame;
+			snprintf(snooze_pl->title, sizeof(snooze_pl->title), "Calendar Reminder (Snoozed)");
+			snprintf(snooze_pl->body, sizeof(snooze_pl->body), "%s",
+				 (appt->what && appt->what->value && appt->what->value->item.string_value)
+				 ? appt->what->value->item.string_value : "Appointment");
+			XtAddCallback(pu_snooze, XmNactivateCallback, snooze_cb, (XtPointer)snooze_pl);
+		}
+	}
 
 	/*
 	**  Now fill in the correct information

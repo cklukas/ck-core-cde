@@ -122,6 +122,8 @@ static  char sccsid[] = "@(#)calendarA.c 1.196 95/04/12 Copyr 1991 Sun Microsyst
 #include "dayglance.h"
 #include "ics_io.h"
 #include "ux_helpers.h"
+#include "undo_stack.h"
+#include "agenda_ui.h"
 #include "ics_csa.h"
 #include "caldav_ui.h"
 #include "server_status.h"
@@ -1008,6 +1010,8 @@ void view_year_cb( Widget w, XtPointer data, XtPointer cbs)
 		(void) year_button(w, data, cbs);
 }
 
+static void quick_filter_menu_cb(Widget, XtPointer, XtPointer);
+
 static void
 make_view_menu(Calendar *c)
 {
@@ -1056,6 +1060,27 @@ make_view_menu(Calendar *c)
         XtSetArg(al[ac], XmNlabelString, year_str); ac++;
         year = XmCreatePushButtonGadget(view_menu, "year", al, ac);
         XtAddCallback(year, XmNactivateCallback, year_button, nullptr);
+
+        {
+                XmString agenda_str = XmStringCreateLocalized("Agenda");
+                ac = 0;
+                XtSetArg(al[ac], XmNlabelString, agenda_str); ac++;
+                Widget agenda_mi = XmCreatePushButtonGadget(view_menu, "agenda", al, ac);
+                XtAddCallback(agenda_mi, XmNactivateCallback, agenda_button, nullptr);
+                XmStringFree(agenda_str);
+
+                XmString filter_str = XmStringCreateLocalized("Quick Filter");
+                XmString filter_acc = XmStringCreateLocalized("Ctrl+/");
+                ac = 0;
+                XtSetArg(al[ac], XmNlabelString, filter_str); ac++;
+                XtSetArg(al[ac], XmNaccelerator, "Ctrl<Key>slash"); ac++;
+                XtSetArg(al[ac], XmNacceleratorText, filter_acc); ac++;
+                Widget filter_mi = XmCreatePushButtonGadget(view_menu, "quickFilter", al, ac);
+                XtAddCallback(filter_mi, XmNactivateCallback,
+                              quick_filter_menu_cb, (XtPointer)c);
+                XmStringFree(filter_str);
+                XmStringFree(filter_acc);
+        }
 
 	ac = 0;
 	sep = XmCreateSeparatorGadget(view_menu, "separator1", al, ac);
@@ -1350,6 +1375,20 @@ make_file_menu(Calendar *c)
 }
 
 static void
+quick_filter_menu_cb(Widget w, XtPointer client_data, XtPointer call_data)
+{
+        (void)w; (void)call_data;
+        dtcm_filter_bar_toggle((Calendar *)client_data, True);
+}
+
+static void
+undo_menu_cb(Widget w, XtPointer client_data, XtPointer call_data)
+{
+        (void)w; (void)call_data;
+        dtcm_perform_undo((Calendar *)client_data);
+}
+
+static void
 make_edit_menu(Calendar *c)
 {
 	Widget edit_menu, edit_button;
@@ -1377,6 +1416,16 @@ make_edit_menu(Calendar *c)
 	c->todo_edit_menu = XmCreatePushButtonGadget(edit_menu, "toDo", al, ac);
 	XtAddCallback(c->todo_edit_menu, XmNactivateCallback, 
 			appt_cb, (XtPointer) 2);
+
+	{
+		XmCreateSeparatorGadget(edit_menu, "editUndoSep", nullptr, 0);
+		XmString undo_str = XmStringCreateLocalized("Undo (Ctrl+Z)");
+		ac = 0;
+		XtSetArg(al[ac], XmNlabelString, undo_str); ac++;
+		Widget undo_mi = XmCreatePushButtonGadget(edit_menu, "undo", al, ac);
+		XtAddCallback(undo_mi, XmNactivateCallback, undo_menu_cb, (XtPointer)c);
+		XmStringFree(undo_str);
+	}
 
 	ManageChildren(edit_menu);
 
@@ -1806,6 +1855,20 @@ make_buttons(Calendar *c)
 			year_button, nullptr);
         XtAddCallback(c->year_scope, XmNhelpCallback, help_cb,
 			(XtPointer) CALENDAR_HELP_YEAR_BUTTON);
+
+        {
+                XmString ag_s = XmStringCreateLocalized("Agenda");
+                ac = 0;
+                XtSetArg(al[ac], XmNlabelString, ag_s); ac++;
+                XtSetArg(al[ac], XmNfillOnSelect, True); ac++;
+                XtSetArg(al[ac], XmNindicatorOn, False); ac++;
+                XtSetArg(al[ac], XmNshadowThickness, 1); ac++;
+                XtSetArg(al[ac], XmNnavigationType, XmTAB_GROUP); ac++;
+                c->agenda_scope = XmCreateToggleButtonGadget(c->radio, "agenda", al, ac);
+                XtAddCallback(c->agenda_scope, XmNvalueChangedCallback,
+                              agenda_button, nullptr);
+                XmStringFree(ag_s);
+        }
 
 	ManageChildren(c->radio);
 	ManageChildren(toolform);
@@ -2381,6 +2444,112 @@ dtcm_set_status_badge(Calendar *c, const char *text)
         XmStringFree(s);
 }
 
+extern void
+dtcm_perform_undo(Calendar *c)
+{
+        if (!c || c->cal_handle == 0)
+                return;
+        DtcmUndoEntry u;
+        if (!dtcm_undo_pop(&u)) {
+                set_message(c->message_text, "Nothing to undo.");
+                return;
+        }
+        if (u.kind == DTCM_UNDO_DELETE) {
+                char start_iso[BUFSIZ], end_iso[BUFSIZ];
+                _csa_tick_to_iso8601(u.old_start, start_iso);
+                _csa_tick_to_iso8601(u.old_end > u.old_start ? u.old_end : u.old_start, end_iso);
+                Dtcm_appointment *appt = allocate_appt_struct(appt_write,
+                                                              c->general->version, nullptr);
+                load_appt_defaults(appt, (Props *)c->properties);
+                if (appt->time && appt->time->value)
+                        appt->time->value->item.date_time_value = cm_strdup(start_iso);
+                if (appt->end_time && appt->end_time->value)
+                        appt->end_time->value->item.date_time_value = cm_strdup(end_iso);
+                if (appt->what && appt->what->value)
+                        appt->what->value->item.string_value = cm_strdup(u.summary);
+                if (appt->show_time && appt->show_time->value)
+                        appt->show_time->value->item.sint32_value = u.show_time;
+                CSA_entry_handle new_h = 0;
+                CSA_return_code stat = csa_add_entry(c->cal_handle, appt->count, appt->attrs,
+                                                     &new_h, nullptr);
+                if (new_h) csa_free((CSA_buffer)(uintptr_t)new_h);
+                free_appt_struct(&appt);
+                if (stat == CSA_SUCCESS) {
+                        invalidate_cache(c);
+                        if (c->view->glance == monthGlance) prepare_to_paint_monthview(c, nullptr);
+                        else if (c->view->glance == weekGlance) paint_weekview(c, nullptr);
+                        else if (c->view->glance == dayGlance) paint_dayview(c, True, nullptr, False);
+                        else if (c->view->glance == agendaGlance) paint_agendaview(c);
+                        set_message(c->message_text, "Restored deleted appointment.");
+                } else {
+                        set_message(c->message_text, "Could not restore deleted appointment.");
+                }
+        } else if (u.kind == DTCM_UNDO_RESCHEDULE) {
+                Tick day_start = lowerbound(u.new_start);
+                Tick day_stop = next_ndays(day_start, 1) - 1;
+                CSA_attribute *range_attrs = nullptr;
+                CSA_enum *ops = nullptr;
+                int rcount = 0;
+                CSA_uint32 n_entries = 0;
+                CSA_entry_handle *list = nullptr;
+                setup_range(&range_attrs, &ops, &rcount, day_start, day_stop, CSA_TYPE_EVENT,
+                            0, B_FALSE, c->general->version);
+                CSA_return_code stat = csa_list_entries(c->cal_handle, rcount, range_attrs, ops,
+                                                        &n_entries, &list, nullptr);
+                free_range(&range_attrs, &ops, rcount);
+                CSA_entry_handle target = 0;
+                if (stat == CSA_SUCCESS && list && n_entries > 0) {
+                        Dtcm_appointment *appt = allocate_appt_struct(appt_read,
+                                c->general->version,
+                                CSA_ENTRY_ATTR_START_DATE_I,
+                                CSA_ENTRY_ATTR_SUMMARY_I,
+                                nullptr);
+                        for (CSA_uint32 i = 0; i < n_entries; i++) {
+                                if (query_appt_struct(c->cal_handle, list[i], appt) == CSA_SUCCESS) {
+                                        Tick st = 0;
+                                        if (appt->time && appt->time->value && appt->time->value->item.date_time_value)
+                                                _csa_iso8601_to_tick(appt->time->value->item.date_time_value, &st);
+                                        const char *sum = (appt->what && appt->what->value && appt->what->value->item.string_value)
+                                                          ? appt->what->value->item.string_value : "";
+                                        if (st == u.new_start && strcmp(sum, u.summary) == 0) {
+                                                target = list[i];
+                                                break;
+                                        }
+                                }
+                        }
+                        free_appt_struct(&appt);
+                }
+                if (target != 0) {
+                        char start_iso[BUFSIZ], end_iso[BUFSIZ];
+                        _csa_tick_to_iso8601(u.old_start, start_iso);
+                        _csa_tick_to_iso8601(u.old_end > u.old_start ? u.old_end : u.old_start, end_iso);
+                        CSA_attribute_value vals[2];
+                        CSA_attribute attrs[2];
+                        memset(vals, 0, sizeof(vals));
+                        memset(attrs, 0, sizeof(attrs));
+                        vals[0].type = CSA_VALUE_DATE_TIME; vals[0].item.date_time_value = start_iso;
+                        attrs[0].name = CSA_ENTRY_ATTR_START_DATE; attrs[0].value = &vals[0];
+                        vals[1].type = CSA_VALUE_DATE_TIME; vals[1].item.date_time_value = end_iso;
+                        attrs[1].name = CSA_ENTRY_ATTR_END_DATE; attrs[1].value = &vals[1];
+                        CSA_entry_handle upd = 0;
+                        stat = csa_update_entry_attributes(c->cal_handle, target, CSA_SCOPE_ONE,
+                                                           CSA_FALSE, 2, attrs, &upd, nullptr);
+                        if (upd) csa_free((CSA_buffer)(uintptr_t)upd);
+                        if (stat == CSA_SUCCESS) {
+                                invalidate_cache(c);
+                                if (c->view->glance == monthGlance) prepare_to_paint_monthview(c, nullptr);
+                                else if (c->view->glance == weekGlance) paint_weekview(c, nullptr);
+                                else if (c->view->glance == dayGlance) paint_dayview(c, True, nullptr, False);
+                                else if (c->view->glance == agendaGlance) paint_agendaview(c);
+                                set_message(c->message_text, "Reverted appointment move/resize.");
+                        }
+                } else {
+                        set_message(c->message_text, "Could not locate appointment to undo.");
+                }
+                if (list) csa_free(list);
+        }
+}
+
 static void
 canvas_key_handler(Widget w, XtPointer client_data, XEvent *event, Boolean *cont)
 {
@@ -2393,6 +2562,14 @@ canvas_key_handler(Widget w, XtPointer client_data, XEvent *event, Boolean *cont
         KeySym ks = XLookupKeysym(&event->xkey, 0);
         Boolean ctrl = (event->xkey.state & ControlMask) != 0;
 
+        if (ctrl && (ks == XK_z || ks == XK_Z)) {
+                dtcm_perform_undo(c);
+                return;
+        }
+        if (ks == XK_slash || (ctrl && (ks == XK_f || ks == XK_F))) {
+                dtcm_filter_bar_toggle(c, True);
+                return;
+        }
         if (ctrl && (ks == XK_n || ks == XK_N)) {
                 show_editor(c, 0, 0, False);
                 return;
@@ -2455,17 +2632,30 @@ canvas_hover_handler(Widget w, XtPointer client_data, XEvent *event, Boolean *co
         if (event->xmotion.state & (Button1Mask | Button2Mask | Button3Mask))
                 return;
         if (c->view->glance == dayGlance) {
-                static Boolean on_divider = False;
+                static int day_cursor_mode = 0; /* 0=default, 1=hdiv, 2=vresize */
                 static Cursor div_cursor = None;
-                Boolean near = (abs(event->xmotion.x - (MOBOX_AREA_WIDTH + 1)) <= 6);
-                if (near && !on_divider) {
-                        if (div_cursor == None)
-                                div_cursor = XCreateFontCursor(XtDisplay(c->canvas), XC_sb_h_double_arrow);
-                        XDefineCursor(XtDisplay(c->canvas), XtWindow(c->canvas), div_cursor);
-                        on_divider = True;
-                } else if (!near && on_divider) {
-                        XUndefineCursor(XtDisplay(c->canvas), XtWindow(c->canvas));
-                        on_divider = False;
+                static Cursor vres_cursor = None;
+                int want = 0;
+                if (abs(event->xmotion.x - (MOBOX_AREA_WIDTH + 1)) <= 6) {
+                        want = 1;
+                } else {
+                        const DtcmHitBox *hb = dtcm_hittest_find(event->xmotion.x, event->xmotion.y);
+                        if (hb && event->xmotion.y >= hb->y + hb->h - 6)
+                                want = 2;
+                }
+                if (want != day_cursor_mode) {
+                        if (want == 1) {
+                                if (div_cursor == None)
+                                        div_cursor = XCreateFontCursor(XtDisplay(c->canvas), XC_sb_h_double_arrow);
+                                XDefineCursor(XtDisplay(c->canvas), XtWindow(c->canvas), div_cursor);
+                        } else if (want == 2) {
+                                if (vres_cursor == None)
+                                        vres_cursor = XCreateFontCursor(XtDisplay(c->canvas), XC_sb_v_double_arrow);
+                                XDefineCursor(XtDisplay(c->canvas), XtWindow(c->canvas), vres_cursor);
+                        } else {
+                                XUndefineCursor(XtDisplay(c->canvas), XtWindow(c->canvas));
+                        }
+                        day_cursor_mode = want;
                 }
                 return;
         }
@@ -2907,7 +3097,7 @@ init_calendar(int argc, char **argv)
 			XtParseTranslationTable(translations)); ac++;
 	XtSetArg(al[ac], XmNresizePolicy, XmRESIZE_ANY); ac++;
 	XtSetArg(al[ac], XmNtopAttachment, XmATTACH_WIDGET); ac++;
-	XtSetArg(al[ac], XmNtopWidget, calendar->previous); ac++;
+	XtSetArg(al[ac], XmNtopWidget, calendar->toolbar); ac++;
 	XtSetArg(al[ac], XmNrightAttachment, XmATTACH_FORM); ac++;
 	XtSetArg(al[ac], XmNleftAttachment, XmATTACH_FORM); ac++;
 	XtSetArg(al[ac], XmNleftOffset, 1); ac++;

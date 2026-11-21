@@ -77,6 +77,7 @@
 #include "tempbr.h"
 #include "ux_helpers.h"
 #include "context_menu.h"
+#include "agenda_ui.h"
 
 #define XOS_USE_XT_LOCKING
 #define X_INCLUDE_TIME_H
@@ -401,6 +402,10 @@ week_button (Widget widget, XtPointer data, XtPointer cbs)
 		case monthGlance:
 			c->view->glance = weekGlance;
 			cleanup_after_monthview(c);
+			break;
+		case agendaGlance:
+			c->view->glance = weekGlance;
+			cleanup_after_agenda(c);
 			break;
 		default:
 			break;

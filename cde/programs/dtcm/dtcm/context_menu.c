@@ -23,6 +23,7 @@
 #include "monthglance.h"
 #include "select.h"
 #include "todo.h"
+#include "undo_stack.h"
 #include "weekglance.h"
 
 static Widget g_ctx_menu = nullptr;
@@ -157,6 +158,7 @@ ctx_delete_appt_cb(Widget w, XtPointer cd, XtPointer call_data)
     csa_free(list);
 
     if (stat == CSA_SUCCESS) {
+        dtcm_undo_push_delete(pc->start_time, pc->end_time, pc->show_time, pc->summary);
         invalidate_cache(g_ctx_cal);
         if (g_ctx_cal->view->glance == monthGlance)
             prepare_to_paint_monthview(g_ctx_cal, nullptr);
@@ -164,7 +166,7 @@ ctx_delete_appt_cb(Widget w, XtPointer cd, XtPointer call_data)
             paint_weekview(g_ctx_cal, nullptr);
         else if (g_ctx_cal->view->glance == dayGlance)
             paint_dayview(g_ctx_cal, True, nullptr, False);
-        set_message(g_ctx_cal->message_text, "Appointment deleted.");
+        set_message(g_ctx_cal->message_text, "Appointment deleted (Ctrl+Z to undo).");
     } else {
         set_message(g_ctx_cal->message_text, "Could not delete appointment.");
     }

@@ -254,6 +254,19 @@ while preserving the classic Motif look and 100% CSA storage compatibility:
 - **Drag-and-drop**: drop `.ics` files directly onto the `dtcm` window to import
   events via `dtcm_import_ics_file()`, and drag appointments between day cells
   in Month view to reschedule them with DST-preserving day shifts.
+- **Proportional Day-view cards & direct manipulation**: timed appointments in
+  Day view render as proportional pastel-tinted cards with a 4px left category
+  accent bar and side-by-side overlap layout (`dtcm_layout_day_events()`).
+  Dragging an empty time range creates a pre-filled appointment in 15-minute
+  increments; dragging a card moves it; dragging its bottom edge resizes its
+  duration.
+- **Agenda view & inline Quick Filter**: a 5th **Agenda** view displays upcoming
+  events chronologically (14 / 30 / 90 days) with double-click to edit, and a
+  collapsible inline filter bar (`/` or `Ctrl+F`) filters live by text and
+  category.
+- **Undo & Reminder Snooze**: a 10-entry Undo ring buffer (`Ctrl+Z` or
+  **Edit → Undo**) restores deleted appointments and reverts drag-moves/resizes
+  (`tests/check-undo-stack.py`); alarm popups include a **Snooze 10m** action.
 - Pure calendar/category/hit-test helpers (`ux_helpers.c`) are verified under
   ASan/UBSan by `programs/dtcm/dtcm/tests/check-ux-helpers.py`.
 

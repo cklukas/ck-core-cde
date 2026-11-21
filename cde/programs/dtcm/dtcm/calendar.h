@@ -89,7 +89,7 @@ typedef enum {gr_mono, gr_color} GR_depth;
 typedef enum {BOLD, MEDIUM} Font_Weight;
  
 typedef enum {
-	yearGlance, monthGlance, weekGlance, dayGlance
+	yearGlance, monthGlance, weekGlance, dayGlance, agendaGlance
 } Glance;
 
 typedef enum {
@@ -266,6 +266,7 @@ typedef struct {
 	Widget		week_scope;
 	Widget		month_scope;
 	Widget		year_scope;
+	Widget		agenda_scope;
 	Widget		appt_btn;	/* Quick access to appt editor */
 	Widget		todo_btn;	/* Quick access to todo editor */
 	Widget		todo_edit_menu;	/* Menu access to todo editor */
@@ -389,4 +390,5 @@ extern void 		CalFontExtents	(Cal_Font *,
 						   XFontSetExtents *);
 extern void		today_button(Widget, XtPointer, XtPointer);
 extern void		dtcm_set_status_badge(Calendar *, const char *);
+extern void		dtcm_perform_undo(Calendar *);
 #endif

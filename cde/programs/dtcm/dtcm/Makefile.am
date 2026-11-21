@@ -6,7 +6,7 @@ EXTRA_DIST = tests/check-temp-file-create.py tests/check-temp-file-create.c \
              tests/check-sigint-signal.py tests/check-sigint-signal.c \
              tests/check-ics-io.py tests/ics-io-test.c \
              tests/check-caldav.py tests/check-notify-desktop.py \
-             tests/check-ux-helpers.py
+             tests/check-ux-helpers.py tests/check-undo-stack.py
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-temp-file-create.py
@@ -15,6 +15,7 @@ check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-caldav.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-notify-desktop.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-ux-helpers.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-undo-stack.py
 
 AM_CFLAGS = $(DT_INCDIR) $(CSA_INCDIR) -I$(top_srcdir)/lib/csa	\
 -I$(top_srcdir)/programs/dtcm/libDtCmP $(LIBCURL_CFLAGS) \
@@ -31,7 +32,8 @@ LDADD += -lcompat
 endif
 
 dtcm_SOURCES = MonthPanel.c    RFCMIME.c       about.c \
-               alarm.c         blist.c         browser.c \
+               agenda_ui.c     agenda_ui.h     alarm.c \
+               blist.c         browser.c \
                calendarA.c     caldav_client.c caldav_client.h \
                caldav_ui.c     caldav_ui.h     cm_i18n.c       cmtt.c \
                context_menu.c  context_menu.h \
@@ -48,7 +50,8 @@ dtcm_SOURCES = MonthPanel.c    RFCMIME.c       about.c \
                rfp.c           select.c        server_status.c \
                server_status.h session.c \
 	       submit.c        tempbr.c        timezone.c \
-               todo.c          ux_helpers.c    ux_helpers.h \
+               todo.c          undo_stack.c    undo_stack.h \
+               ux_helpers.c    ux_helpers.h \
                weekglance.c    x_graphics.c    yearglance.c
 
 dtcm_delete_SOURCES = cm_delete.c

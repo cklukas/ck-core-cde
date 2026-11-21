@@ -1,4 +1,20 @@
 2026-11-21
+- Implement Phase 1 (Tier 1) modern calendar UX upgrades in `dtcm`:
+  - Render timed appointments in Day view as proportional, macOS-style
+    pastel-tinted cards with a 4px left category accent bar and side-by-side
+    overlap column packing (`dtcm_layout_day_events()` in `ux_helpers.{c,h}`,
+    `dayglance.c`).
+  - Add 15-minute snapped drag-to-create on empty Day-view time slots,
+    drag-to-move on event blocks, and bottom-edge drag-to-resize with hover
+    cursor feedback (`dayglance.c`, `calendarA.c`).
+  - Add a 5th main **Agenda** view (`agendaGlance`, toolbar scope button and
+    **View → Agenda**) plus a collapsible inline **Quick Filter** bar (`/` or
+    `Ctrl+F`, live search + category chips) (`agenda_ui.{c,h}`, `calendar.h`,
+    `calendarA.c`, `monthglance.c`, `dayglance.c`, `weekglance.c`,
+    `yearglance.c`).
+  - Add a 10-entry Undo ring buffer (`Ctrl+Z` / **Edit → Undo**) for deletes
+    and drag-moves/resizes (`undo_stack.{c,h}`, `tests/check-undo-stack.py`),
+    and a **Snooze 10m** button on alarm popups (`alarm.c`).
 - Resize the left 3-month `panel_form` container dynamically (`sync_panel_form_width`)
   when dragging the Day-view divider sash (`cde/programs/dtcm/dtcm/dayglance.c`).
 - Fix `dtcm` Options (*Editor Defaults*) layout overlap and Wayland drag-icon

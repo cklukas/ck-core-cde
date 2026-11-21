@@ -83,6 +83,23 @@ int main(void)
     assert(dtcm_hittest_find(50, 25) == NULL);
     printf("ok    hittest\n");
 
+    /* 6. Day view overlap layout + 15-min snap */
+    DtcmDayBlock blks[4] = {
+        { .cache_idx = 0, .start_min = 600, .end_min = 660 }, /* 10:00-11:00 */
+        { .cache_idx = 1, .start_min = 630, .end_min = 690 }, /* 10:30-11:30 */
+        { .cache_idx = 2, .start_min = 660, .end_min = 720 }, /* 11:00-12:00 */
+        { .cache_idx = 3, .start_min = 840, .end_min = 900 }, /* 14:00-15:00 (isolated) */
+    };
+    assert(dtcm_layout_day_events(blks, 4) == 4);
+    assert(blks[0].num_cols == 2 && blks[1].num_cols == 2 && blks[2].num_cols == 2);
+    assert(blks[0].col == 0 && blks[1].col == 1 && blks[2].col == 0);
+    assert(blks[3].num_cols == 1 && blks[3].col == 0);
+    assert(dtcm_snap_minutes(607, 15) == 600);
+    assert(dtcm_snap_minutes(608, 15) == 615);
+    assert(dtcm_snap_minutes(-10, 15) == 0);
+    assert(dtcm_snap_minutes(1500, 15) == 1440);
+    printf("ok    day-overlap-layout-and-snap\n");
+
     return 0;
 }
 """
