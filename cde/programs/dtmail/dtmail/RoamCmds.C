@@ -123,6 +123,7 @@
 #include "RoamApp.h"
 #include "RoamCmds.h"
 #include "RoamMenuWindow.h"
+#include "MailAccountStore.h"
 #include "SendMsgDialog.h"
 #include "Undelete.hh"
 
@@ -206,11 +207,19 @@ OpenInboxCmd::doit()
 	DtMail::Session *d_session = theRoamApp.session()->session();
 
 	mail_error.clear();
+	dtmail_accounts_init();
 	d_session->queryImpl(mail_error,
 			 d_session->getDefaultImpl(mail_error),
 			 DtMailCapabilityInboxName,
 			 &space,
 			 &mail_file);
+	char resolved_inbox[1024];
+	int used_fb = 0;
+	if (dtmail_resolve_startup_inbox(mail_file, resolved_inbox,
+					 sizeof(resolved_inbox), &used_fb) == 0) {
+	    if (mail_file) free(mail_file);
+	    mail_file = strdup(resolved_inbox);
+	}
 
         // Check for error
 	if (mail_file) _menuWindow->view_mail_file(mail_file, DTM_FALSE);

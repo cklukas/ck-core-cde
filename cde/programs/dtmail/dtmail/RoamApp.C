@@ -774,12 +774,20 @@ tooltalk_msg_handler(
 		if (0 == strcmp("DTMAIL_INBOX", str))
 		{
 	            mail_error.clear();
+	            dtmail_accounts_init();
 	            d_session->queryImpl(
 					mail_error,
 			         	d_session->getDefaultImpl(mail_error),
 			         	DtMailCapabilityInboxName,
 			         	&space,
 			         	&file);
+	            char resolved_inbox[1024];
+	            int used_fb = 0;
+	            if (dtmail_resolve_startup_inbox(file, resolved_inbox,
+	                                             sizeof(resolved_inbox), &used_fb) == 0) {
+	                if (file) free(file);
+	                file = strdup(resolved_inbox);
+	            }
 		}
 
 		free(str);
