@@ -1,4 +1,10 @@
 2026-11-21
+- Show the active selected day button as pressed down with bold text in the
+  `dtcm` Day-view 3-month mini-calendars (`MonthPanel.{c,h}`, `MonthPanelP.h`,
+  `dayglance.c`):
+  - Add `XmMonthPanelSetSelectedDay()` applying an inverted 2px Motif sunken
+    bevel, pressed slate fill, and bold font to the currently viewed day while
+    preserving the crimson Today highlight.
 - Add direct appointment card selection, clipboard Copy/Paste, and keyboard/menu
   Delete in `dtcm` (`ux_helpers.{c,h}`, `dayglance.c`, `context_menu.{c,h}`,
   `calendarA.c`, `tests/check-ux-helpers.py`):

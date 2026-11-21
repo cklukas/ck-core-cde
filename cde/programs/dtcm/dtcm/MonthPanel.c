@@ -301,6 +301,9 @@ Initialize( Widget rw, Widget nw, ArgList args, Cardinal *num_args )
         char buf[BUFSIZ];
 
 	new_w->month_panel.display_rows = 6;  /* minimum to show all days */
+	new_w->month_panel.selected_day = 0;
+	new_w->month_panel.normal_day_font = nullptr;
+	new_w->month_panel.bold_day_font = nullptr;
 
 /*
  * create and cache panel header ( eg. "January") (depends on format resource)
@@ -470,18 +473,100 @@ update_today_highlights(XmMonthPanelWidget mw)
 	}
 
 	if (mw->month_panel.active_days && mw->month_panel.days) {
+		/* Capture normal day font once and build/capture a bold font for selected day */
+		if (!mw->month_panel.normal_day_font && mw->month_panel.days[0]) {
+			XmFontList fl = nullptr;
+			XtVaGetValues(mw->month_panel.days[0], XmNfontList, &fl, nullptr);
+			if (fl)
+				mw->month_panel.normal_day_font = XmFontListCopy(fl);
+		}
+		if (!mw->month_panel.bold_day_font) {
+			static const char *bold_specs[] = {
+				"-*-helvetica-bold-r-normal--12-*-*-*-*-*-*-*",
+				"-*-lucida-bold-r-normal-sans-12-*-*-*-*-*-*-*",
+				"-*-fixed-bold-r-normal--13-*-*-*-*-*-*-*",
+				"fixed",
+				nullptr
+			};
+			for (int bi = 0; bold_specs[bi]; bi++) {
+				XFontStruct *fs = XLoadQueryFont(dpy, bold_specs[bi]);
+				if (fs) {
+					XmFontListEntry entry = XmFontListEntryCreate(
+						XmFONTLIST_DEFAULT_TAG, XmFONT_IS_FONT, (XtPointer)fs);
+					if (entry) {
+						mw->month_panel.bold_day_font = XmFontListAppendEntry(nullptr, entry);
+						XmFontListEntryFree(&entry);
+						break;
+					}
+				}
+			}
+			if (!mw->month_panel.bold_day_font && mw->month_panel.header) {
+				XmFontList hfl = nullptr;
+				XtVaGetValues(mw->month_panel.header, XmNfontList, &hfl, nullptr);
+				if (hfl)
+					mw->month_panel.bold_day_font = XmFontListCopy(hfl);
+			}
+		}
+
+		XColor sel_c;
+		sel_c.red = 0xa800; sel_c.green = 0xb600; sel_c.blue = 0xc400;
+		sel_c.flags = DoRed | DoGreen | DoBlue;
+		Pixel sel_bg = XAllocColor(dpy, cmap, &sel_c) ? sel_c.pixel : def_bg;
+
 		for (int i = 0; i < 31; i++) {
 			Widget btn = mw->month_panel.days[i];
 			if (!btn) continue;
-			if (is_cur_month && (i + 1) == today_d) {
+			Boolean is_today = (is_cur_month && (i + 1) == today_d);
+			Boolean is_sel = (mw->month_panel.selected_day == (i + 1));
+
+			if (is_today) {
 				XmChangeColor(btn, day_bg);
 				XtVaSetValues(btn, XmNforeground, white_pix, nullptr);
+			} else if (is_sel) {
+				XmChangeColor(btn, sel_bg);
+				XtVaSetValues(btn, XmNforeground, def_fg, nullptr);
 			} else {
 				XmChangeColor(btn, def_bg);
 				XtVaSetValues(btn, XmNforeground, def_fg, nullptr);
 			}
+
+			if (is_sel) {
+				/* Swap top & bottom shadow colors for authentic Motif pressed-down bevel */
+				Pixel top_sh = 0, bot_sh = 0;
+				XtVaGetValues(btn,
+					XmNtopShadowColor, &top_sh,
+					XmNbottomShadowColor, &bot_sh,
+					nullptr);
+				XtVaSetValues(btn,
+					XmNtopShadowColor, bot_sh,
+					XmNbottomShadowColor, top_sh,
+					XmNshadowThickness, 2,
+					nullptr);
+				if (mw->month_panel.bold_day_font) {
+					XtVaSetValues(btn, XmNfontList, mw->month_panel.bold_day_font, nullptr);
+				}
+			} else {
+				XtVaSetValues(btn, XmNshadowThickness, 1, nullptr);
+				if (mw->month_panel.normal_day_font) {
+					XtVaSetValues(btn, XmNfontList, mw->month_panel.normal_day_font, nullptr);
+				}
+			}
 		}
 	}
+}
+
+void
+XmMonthPanelSetSelectedDay(Widget panel, int day)
+{
+	if (!panel || !XmIsMonthPanel(panel))
+		return;
+	XmMonthPanelWidget mw = (XmMonthPanelWidget)panel;
+	if (day < 0 || day > 31)
+		day = 0;
+	if (mw->month_panel.selected_day == day)
+		return;
+	mw->month_panel.selected_day = day;
+	update_today_highlights(mw);
 }
 
 static void

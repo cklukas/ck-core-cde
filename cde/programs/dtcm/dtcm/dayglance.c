@@ -845,6 +845,21 @@ paint_dayview(Calendar *c, Boolean repaint, XRectangle *rect, Boolean update_mon
 	if (update_months || day_not_on_panel)
 		update_quarter(c);
 
+	/* Highlight the active day button as pressed down + bold across the 3 mini-panels */
+	{
+		int sel_dom = dom(c->view->date);
+		for (int pk = 0; pk < 3; pk++) {
+			if (!d->month_panels[pk]) continue;
+			int py = 0, pm = 0;
+			XtVaGetValues(d->month_panels[pk],
+				XmNyear, &py,
+				XmNmonth, &pm,
+				nullptr);
+			XmMonthPanelSetSelectedDay(d->month_panels[pk],
+				(py == year_num && pm == month_num) ? sel_dom : 0);
+		}
+	}
+
 	/* no need to do this on a damage event */
 
 	if (!rect)

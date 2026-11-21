@@ -82,6 +82,8 @@ extern Widget XmCreateMonthPanel(
                         ArgList args,
                         Cardinal argCount) ;
 
+extern void XmMonthPanelSetSelectedDay(Widget panel, int day);
+
 /********    End Public Function Declarations    ********/
 
 /********    Resource Strings    ********/
