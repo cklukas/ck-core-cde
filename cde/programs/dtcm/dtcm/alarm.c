@@ -67,6 +67,7 @@ static  char sccsid[] = "@(#)alarm.c 1.50 95/07/27 Copyr 1991 Sun Microsystems, 
 #include <Dt/Session.h>
 #include "calendar.h"
 #include "alarm.h"
+#include "notify_desktop.h"
 #include "misc.h"
 #include "props_pu.h"
 #include "timeops.h"
@@ -683,6 +684,10 @@ postup_show_proc(Calendar *c, CSA_reminder_reference *r) {
 			}
 		}
 	}
+
+	dtcm_notify_reminder(
+		(appt->what && appt->what->value) ? appt->what->value->item.string_value : nullptr,
+		text);
 
 	free_appt_struct(&appt);
 	xmstr = XmStringCreateLocalized(text);

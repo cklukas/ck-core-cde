@@ -15,6 +15,7 @@
 #include <string.h>
 #include <strings.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 #if defined(HAVE_LIBCURL) && HAVE_LIBCURL
@@ -473,14 +474,45 @@ sanitize_uid_filename(const char *uid, char *out, size_t out_sz)
     out[j] = '\0';
 }
 
+typedef struct {
+    char etag[256];
+} EtagCapture;
+
+static size_t
+curl_etag_header_cb(char *buffer, size_t size, size_t nitems, void *userdata)
+{
+    EtagCapture *ec = (EtagCapture *)userdata;
+    size_t total = size * nitems;
+    if (ec && total > 5 && strncasecmp(buffer, "ETag:", 5) == 0) {
+        const char *s = buffer + 5;
+        const char *e = buffer + total;
+        while (s < e && (*s == ' ' || *s == '\t'))
+            s++;
+        while (e > s && (e[-1] == '\r' || e[-1] == '\n' || e[-1] == ' ' || e[-1] == '\t'))
+            e--;
+        size_t len = (size_t)(e - s);
+        if (len >= sizeof(ec->etag))
+            len = sizeof(ec->etag) - 1;
+        memcpy(ec->etag, s, len);
+        ec->etag[len] = '\0';
+    }
+    return total;
+}
+
 int
-dtcm_caldav_put_event(const DtcmCaldavConfig *cfg,
-                      const DtcmIcsEvent *ev,
-                      char *errbuf,
-                      size_t errsz)
+dtcm_caldav_put_event_ex(const DtcmCaldavConfig *cfg,
+                         const DtcmIcsEvent *ev,
+                         char *out_href,
+                         size_t href_sz,
+                         char *out_etag,
+                         size_t etag_sz,
+                         char *errbuf,
+                         size_t errsz)
 {
     if (!cfg || !ev)
         return -1;
+    if (out_href && href_sz) out_href[0] = '\0';
+    if (out_etag && etag_sz) out_etag[0] = '\0';
     if (dtcm_caldav_validate_url(cfg->url, errbuf, errsz) != 0)
         return -1;
 
@@ -536,6 +568,7 @@ dtcm_caldav_put_event(const DtcmCaldavConfig *cfg,
     }
 
     MemBuf resp = { 0 };
+    EtagCapture ec = { 0 };
     struct curl_slist *headers = NULL;
     headers = curl_slist_append(headers, "Content-Type: text/calendar; charset=utf-8");
 
@@ -544,6 +577,8 @@ dtcm_caldav_put_event(const DtcmCaldavConfig *cfg,
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload);
     curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)nread);
+    curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, curl_etag_header_cb);
+    curl_easy_setopt(curl, CURLOPT_HEADERDATA, &ec);
 
     CURLcode rc = curl_easy_perform(curl);
     long http_code = 0;
@@ -563,7 +598,20 @@ dtcm_caldav_put_event(const DtcmCaldavConfig *cfg,
             snprintf(errbuf, errsz, "PUT HTTP error %ld", http_code);
         return -1;
     }
+    if (out_href && href_sz)
+        snprintf(out_href, href_sz, "%s", put_url);
+    if (out_etag && etag_sz)
+        snprintf(out_etag, etag_sz, "%s", ec.etag);
     return 0;
+}
+
+int
+dtcm_caldav_put_event(const DtcmCaldavConfig *cfg,
+                      const DtcmIcsEvent *ev,
+                      char *errbuf,
+                      size_t errsz)
+{
+    return dtcm_caldav_put_event_ex(cfg, ev, NULL, 0, NULL, 0, errbuf, errsz);
 }
 
 #else /* !HAVE_LIBCURL */
@@ -595,14 +643,25 @@ dtcm_caldav_get_events(const DtcmCaldavConfig *cfg, const char *item_url,
 }
 
 int
-dtcm_caldav_put_event(const DtcmCaldavConfig *cfg, const DtcmIcsEvent *ev,
-                      char *errbuf, size_t errsz)
+dtcm_caldav_put_event_ex(const DtcmCaldavConfig *cfg, const DtcmIcsEvent *ev,
+                         char *out_href, size_t href_sz,
+                         char *out_etag, size_t etag_sz,
+                         char *errbuf, size_t errsz)
 {
     (void)cfg;
     (void)ev;
+    if (out_href && href_sz) out_href[0] = '\0';
+    if (out_etag && etag_sz) out_etag[0] = '\0';
     if (errbuf && errsz)
         snprintf(errbuf, errsz, "CalDAV support requires libcurl");
     return -1;
+}
+
+int
+dtcm_caldav_put_event(const DtcmCaldavConfig *cfg, const DtcmIcsEvent *ev,
+                      char *errbuf, size_t errsz)
+{
+    return dtcm_caldav_put_event_ex(cfg, ev, NULL, 0, NULL, 0, errbuf, errsz);
 }
 
 #endif /* HAVE_LIBCURL */
@@ -627,6 +686,7 @@ dtcm_caldav_load_profile(DtcmCaldavConfig *cfg)
         return -1;
     memset(cfg, 0, sizeof(*cfg));
     cfg->verify_tls = 1;
+    cfg->auto_sync_mins = 0;
 
     if (profile_path(path, sizeof(path)) != 0)
         return -1;
@@ -644,6 +704,10 @@ dtcm_caldav_load_profile(DtcmCaldavConfig *cfg)
             snprintf(cfg->username, sizeof(cfg->username), "%s", line + 9);
         else if (strncmp(line, "verify_tls=", 11) == 0)
             cfg->verify_tls = (atoi(line + 11) != 0) ? 1 : 0;
+        else if (strncmp(line, "auto_sync_mins=", 15) == 0) {
+            int mins = atoi(line + 15);
+            cfg->auto_sync_mins = (mins > 0 && mins <= 1440) ? mins : 0;
+        }
     }
     fclose(fp);
     return 0;
@@ -675,9 +739,347 @@ dtcm_caldav_save_profile(const DtcmCaldavConfig *cfg)
         close(fd);
         return -1;
     }
+    int mins = (cfg->auto_sync_mins > 0 && cfg->auto_sync_mins <= 1440) ? cfg->auto_sync_mins : 0;
     /* Intentionally never persist plaintext password to disk */
-    fprintf(fp, "url=%s\nusername=%s\nverify_tls=%d\n",
-            cfg->url, cfg->username, cfg->verify_tls ? 1 : 0);
+    fprintf(fp, "url=%s\nusername=%s\nverify_tls=%d\nauto_sync_mins=%d\n",
+            cfg->url, cfg->username, cfg->verify_tls ? 1 : 0, mins);
     fclose(fp);
     return 0;
+}
+
+static int
+state_path(char *out, size_t out_sz)
+{
+    const char *home = getenv("HOME");
+    if (!home || !home[0])
+        return -1;
+    snprintf(out, out_sz, "%s/.dt/dtcm_caldav_state", home);
+    return 0;
+}
+
+void
+dtcm_caldav_state_free(DtcmCaldavSyncState *st)
+{
+    if (!st)
+        return;
+    free(st->entries);
+    st->entries = NULL;
+    st->count = 0;
+    st->cap = 0;
+}
+
+const DtcmCaldavStateEntry *
+dtcm_caldav_state_find_href(const DtcmCaldavSyncState *st,
+                            const char *url,
+                            const char *href)
+{
+    if (!st || !url || !href)
+        return NULL;
+    for (int i = 0; i < st->count; i++) {
+        if (strcmp(st->entries[i].url, url) == 0 &&
+            strcmp(st->entries[i].href, href) == 0)
+            return &st->entries[i];
+    }
+    return NULL;
+}
+
+const DtcmCaldavStateEntry *
+dtcm_caldav_state_find_uid(const DtcmCaldavSyncState *st,
+                           const char *url,
+                           const char *uid)
+{
+    if (!st || !url || !uid || !uid[0])
+        return NULL;
+    for (int i = 0; i < st->count; i++) {
+        if (strcmp(st->entries[i].url, url) == 0 &&
+            strcmp(st->entries[i].uid, uid) == 0)
+            return &st->entries[i];
+    }
+    return NULL;
+}
+
+int
+dtcm_caldav_state_upsert(DtcmCaldavSyncState *st,
+                         const char *url,
+                         const char *href,
+                         const char *uid,
+                         const char *etag)
+{
+    if (!st || !url || !href)
+        return -1;
+    for (int i = 0; i < st->count; i++) {
+        if (strcmp(st->entries[i].url, url) == 0 &&
+            (strcmp(st->entries[i].href, href) == 0 ||
+             (uid && uid[0] && strcmp(st->entries[i].uid, uid) == 0))) {
+            snprintf(st->entries[i].href, sizeof(st->entries[i].href), "%s", href);
+            if (uid && uid[0])
+                snprintf(st->entries[i].uid, sizeof(st->entries[i].uid), "%s", uid);
+            snprintf(st->entries[i].etag, sizeof(st->entries[i].etag), "%s", etag ? etag : "");
+            return 0;
+        }
+    }
+    if (st->count == st->cap) {
+        int ncap = st->cap ? st->cap * 2 : 32;
+        DtcmCaldavStateEntry *ne = (DtcmCaldavStateEntry *)realloc(
+            st->entries, (size_t)ncap * sizeof(DtcmCaldavStateEntry));
+        if (!ne)
+            return -1;
+        st->entries = ne;
+        st->cap = ncap;
+    }
+    DtcmCaldavStateEntry *e = &st->entries[st->count++];
+    memset(e, 0, sizeof(*e));
+    snprintf(e->url, sizeof(e->url), "%s", url);
+    snprintf(e->href, sizeof(e->href), "%s", href);
+    snprintf(e->uid, sizeof(e->uid), "%s", uid ? uid : "");
+    snprintf(e->etag, sizeof(e->etag), "%s", etag ? etag : "");
+    return 0;
+}
+
+int
+dtcm_caldav_state_load(DtcmCaldavSyncState *st)
+{
+    char path[512];
+    char line[3072];
+
+    if (!st)
+        return -1;
+    memset(st, 0, sizeof(*st));
+
+    if (state_path(path, sizeof(path)) != 0)
+        return 0;
+    FILE *fp = fopen(path, "r");
+    if (!fp)
+        return 0;
+
+    while (fgets(line, sizeof(line), fp)) {
+        size_t len = strlen(line);
+        while (len > 0 && (line[len - 1] == '\n' || line[len - 1] == '\r'))
+            line[--len] = '\0';
+        char *t1 = strchr(line, '\t');
+        if (!t1) continue;
+        *t1++ = '\0';
+        char *t2 = strchr(t1, '\t');
+        if (!t2) continue;
+        *t2++ = '\0';
+        char *t3 = strchr(t2, '\t');
+        if (!t3) continue;
+        *t3++ = '\0';
+        (void)dtcm_caldav_state_upsert(st, line, t1, t2, t3);
+    }
+    fclose(fp);
+    return 0;
+}
+
+int
+dtcm_caldav_state_save(const DtcmCaldavSyncState *st)
+{
+    char dir[512];
+    char path[512];
+    const char *home = getenv("HOME");
+
+    if (!st || !home || !home[0])
+        return -1;
+
+    snprintf(dir, sizeof(dir), "%s/.dt", home);
+    (void)mkdir(dir, 0700);
+    if (state_path(path, sizeof(path)) != 0)
+        return -1;
+
+    int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    if (fd < 0)
+        return -1;
+    (void)fchmod(fd, 0600);
+
+    FILE *fp = fdopen(fd, "w");
+    if (!fp) {
+        close(fd);
+        return -1;
+    }
+    for (int i = 0; i < st->count; i++) {
+        fprintf(fp, "%s\t%s\t%s\t%s\n",
+                st->entries[i].url,
+                st->entries[i].href,
+                st->entries[i].uid,
+                st->entries[i].etag);
+    }
+    fclose(fp);
+    return 0;
+}
+
+static const char *
+secret_tool_bin(void)
+{
+    const char *b = getenv("DTCM_SECRET_TOOL_BIN");
+    return (b && b[0]) ? b : "secret-tool";
+}
+
+int
+dtcm_caldav_keyring_store(const char *url, const char *username, const char *password)
+{
+    int pipefd[2];
+    pid_t pid;
+
+    if (!url || !url[0] || !username || !username[0] || !password || !password[0])
+        return -1;
+    if (pipe(pipefd) != 0)
+        return -1;
+
+    pid = fork();
+    if (pid < 0) {
+        close(pipefd[0]);
+        close(pipefd[1]);
+        return -1;
+    }
+    if (pid == 0) {
+        close(pipefd[1]);
+        dup2(pipefd[0], STDIN_FILENO);
+        close(pipefd[0]);
+        int devnull = open("/dev/null", O_WRONLY);
+        if (devnull >= 0) {
+            dup2(devnull, STDOUT_FILENO);
+            dup2(devnull, STDERR_FILENO);
+            close(devnull);
+        }
+        const char *bin = secret_tool_bin();
+        char *argv[] = {
+            (char *)bin,
+            "store",
+            "--label=CDE Calendar CalDAV",
+            "application", "dtcm",
+            "service", "caldav",
+            "url", (char *)url,
+            "username", (char *)username,
+            NULL
+        };
+        execvp(bin, argv);
+        _exit(127);
+    }
+
+    close(pipefd[0]);
+    size_t plen = strlen(password);
+    size_t off = 0;
+    while (off < plen) {
+        ssize_t w = write(pipefd[1], password + off, plen - off);
+        if (w <= 0)
+            break;
+        off += (size_t)w;
+    }
+    close(pipefd[1]);
+
+    int status = 0;
+    while (waitpid(pid, &status, 0) < 0) {
+        if (errno == EINTR)
+            continue;
+        if (errno == ECHILD)
+            return 0;
+        return -1;
+    }
+    return (WIFEXITED(status) && WEXITSTATUS(status) == 0) ? 0 : -1;
+}
+
+int
+dtcm_caldav_keyring_lookup(const char *url, const char *username,
+                           char *out_pass, size_t pass_sz)
+{
+    int pipefd[2];
+    pid_t pid;
+
+    if (!url || !url[0] || !username || !username[0] || !out_pass || pass_sz == 0)
+        return -1;
+    out_pass[0] = '\0';
+    if (pipe(pipefd) != 0)
+        return -1;
+
+    pid = fork();
+    if (pid < 0) {
+        close(pipefd[0]);
+        close(pipefd[1]);
+        return -1;
+    }
+    if (pid == 0) {
+        close(pipefd[0]);
+        dup2(pipefd[1], STDOUT_FILENO);
+        close(pipefd[1]);
+        int devnull = open("/dev/null", O_WRONLY);
+        if (devnull >= 0) {
+            dup2(devnull, STDERR_FILENO);
+            close(devnull);
+        }
+        const char *bin = secret_tool_bin();
+        char *argv[] = {
+            (char *)bin,
+            "lookup",
+            "application", "dtcm",
+            "service", "caldav",
+            "url", (char *)url,
+            "username", (char *)username,
+            NULL
+        };
+        execvp(bin, argv);
+        _exit(127);
+    }
+
+    close(pipefd[1]);
+    size_t total = 0;
+    while (total + 1 < pass_sz) {
+        ssize_t n = read(pipefd[0], out_pass + total, pass_sz - 1 - total);
+        if (n <= 0)
+            break;
+        total += (size_t)n;
+    }
+    out_pass[total] = '\0';
+    close(pipefd[0]);
+
+    while (total > 0 && (out_pass[total - 1] == '\n' || out_pass[total - 1] == '\r'))
+        out_pass[--total] = '\0';
+
+    int status = 0;
+    while (waitpid(pid, &status, 0) < 0) {
+        if (errno == EINTR)
+            continue;
+        if (errno == ECHILD)
+            return (total > 0) ? 0 : -1;
+        return -1;
+    }
+    return (WIFEXITED(status) && WEXITSTATUS(status) == 0 && total > 0) ? 0 : -1;
+}
+
+int
+dtcm_caldav_keyring_clear(const char *url, const char *username)
+{
+    if (!url || !url[0] || !username || !username[0])
+        return -1;
+    pid_t pid = fork();
+    if (pid < 0)
+        return -1;
+    if (pid == 0) {
+        int devnull = open("/dev/null", O_WRONLY);
+        if (devnull >= 0) {
+            dup2(devnull, STDOUT_FILENO);
+            dup2(devnull, STDERR_FILENO);
+            close(devnull);
+        }
+        const char *bin = secret_tool_bin();
+        char *argv[] = {
+            (char *)bin,
+            "clear",
+            "application", "dtcm",
+            "service", "caldav",
+            "url", (char *)url,
+            "username", (char *)username,
+            NULL
+        };
+        execvp(bin, argv);
+        _exit(127);
+    }
+    int status = 0;
+    while (waitpid(pid, &status, 0) < 0) {
+        if (errno == EINTR)
+            continue;
+        if (errno == ECHILD)
+            return 0;
+        return -1;
+    }
+    return (WIFEXITED(status) && WEXITSTATUS(status) == 0) ? 0 : -1;
 }

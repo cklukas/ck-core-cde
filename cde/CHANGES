@@ -1,4 +1,21 @@
 2026-11-21
+- Upgrade CDE Calendar (`dtcm`) with two-way ETag/UID CalDAV sync, non-blocking
+  UI, keyring & auto-sync, `TZID`/DST timezone resolution, and desktop alarm
+  notifications:
+  - Add persistent `(UID, ETag)` sync state (`~/.dt/dtcm_caldav_state`, mode
+    `0600`), HTTP `ETag` response capture on `PUT`, optional desktop keyring
+    storage (`secret-tool` over stdin pipe), background `pthread` +
+    `XtAppAddInput` non-blocking CalDAV I/O, two-way **Sync** button, and
+    periodic `XtAppAddTimeOut` auto-sync interval in `caldav_client.{c,h}` and
+    `caldav_ui.c` (`cde/programs/dtcm/dtcm/tests/check-caldav.py`).
+  - Resolve IANA and common Windows `TZID` parameters on `DTSTART`/`DTEND` via
+    system zoneinfo with exact DST rules in `ics_io.c`
+    (`cde/programs/dtcm/dtcm/tests/ics-io-test.c`).
+  - Dispatch non-blocking `org.freedesktop.Notifications` desktop reminders via
+    `notify-send` (`--app-name=Calendar --icon=office-calendar --`, opt-out via
+    `DTCM_DESKTOP_NOTIFY=0`) when `dtcm` popup alarms fire
+    (`cde/programs/dtcm/dtcm/{notify_desktop.{c,h},alarm.c,Makefile.am,tests/check-notify-desktop.py}`,
+    `docs/improvements/calendar-server.md`).
 - Add `AF_UNIX` + `SO_PEERCRED` local transport, HTTPS CalDAV sync, and
   optional SSH Unix-socket forwarding to CDE Calendar (`rpc.cmsd`, `libcsa`,
   `dtcm`):

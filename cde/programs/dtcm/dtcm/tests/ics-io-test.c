@@ -35,6 +35,24 @@ int main(void)
         "DURATION:PT45M\r\n"
         "RRULE:FREQ=DAILY\r\n"
         "END:VEVENT\r\n"
+        "BEGIN:VEVENT\r\n"
+        "UID:evt-004-tz-summer@ckcore.test\r\n"
+        "SUMMARY:Berlin Summer Sync\r\n"
+        "DTSTART;TZID=Europe/Berlin:20260715T140000\r\n"
+        "DTEND;TZID=Europe/Berlin:20260715T150000\r\n"
+        "END:VEVENT\r\n"
+        "BEGIN:VEVENT\r\n"
+        "UID:evt-005-tz-winter@ckcore.test\r\n"
+        "SUMMARY:New York Winter Call\r\n"
+        "DTSTART;TZID=\"America/New_York\":20260115T090000\r\n"
+        "DTEND;TZID=\"America/New_York\":20260115T100000\r\n"
+        "END:VEVENT\r\n"
+        "BEGIN:VEVENT\r\n"
+        "UID:evt-006-tz-windows@ckcore.test\r\n"
+        "SUMMARY:Windows TZID Invite\r\n"
+        "DTSTART;TZID=\"W. Europe Standard Time\":20260115T140000\r\n"
+        "DTEND;TZID=\"W. Europe Standard Time\":20260115T150000\r\n"
+        "END:VEVENT\r\n"
         "END:VCALENDAR\r\n";
 
     FILE *fp = fopen("input.ics", "wb");
@@ -45,7 +63,7 @@ int main(void)
     DtcmIcsEvent *events = NULL;
     int count = 0;
     assert(dtcm_ics_parse_file("input.ics", &events, &count) == 0);
-    assert(count == 3);
+    assert(count == 6);
     assert(events != NULL);
 
     /* Event 1: folded line + escaped punctuation + RRULE WEEKLY;INTERVAL=2;COUNT=6 */
@@ -74,6 +92,30 @@ int main(void)
     assert(events[2].interval == 1);
     assert(events[2].count == 0);
 
+    /* Event 4: Europe/Berlin summer (CEST = UTC+2 -> 14:00 local == 12:00Z) */
+    {
+        struct tm exp = { 0 };
+        exp.tm_year = 2026 - 1900; exp.tm_mon = 6; exp.tm_mday = 15; exp.tm_hour = 12;
+        assert(events[3].start_utc == timegm(&exp));
+        assert(events[3].end_utc - events[3].start_utc == 3600);
+    }
+
+    /* Event 5: America/New_York winter (EST = UTC-5 -> 09:00 local == 14:00Z) */
+    {
+        struct tm exp = { 0 };
+        exp.tm_year = 2026 - 1900; exp.tm_mon = 0; exp.tm_mday = 15; exp.tm_hour = 14;
+        assert(events[4].start_utc == timegm(&exp));
+        assert(events[4].end_utc - events[4].start_utc == 3600);
+    }
+
+    /* Event 6: Windows TZID "W. Europe Standard Time" -> Europe/Berlin winter (CET = UTC+1 -> 14:00 == 13:00Z) */
+    {
+        struct tm exp = { 0 };
+        exp.tm_year = 2026 - 1900; exp.tm_mon = 0; exp.tm_mday = 15; exp.tm_hour = 13;
+        assert(events[5].start_utc == timegm(&exp));
+        assert(events[5].end_utc - events[5].start_utc == 3600);
+    }
+
     /* Compose + decompose CSA "what" text */
     char what[2048];
     dtcm_ics_compose_what(&events[0], what, sizeof(what));
@@ -88,9 +130,9 @@ int main(void)
     DtcmIcsEvent *rt = NULL;
     int rt_count = 0;
     assert(dtcm_ics_parse_file("roundtrip.ics", &rt, &rt_count) == 0);
-    assert(rt_count == 3);
+    assert(rt_count == 6);
 
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < 6; ++i) {
         assert(strcmp(rt[i].uid, events[i].uid) == 0);
         assert(strcmp(rt[i].summary, events[i].summary) == 0);
         assert(strcmp(rt[i].location, events[i].location) == 0);

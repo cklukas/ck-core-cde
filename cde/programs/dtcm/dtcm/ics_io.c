@@ -60,6 +60,91 @@ static int parse_4dig(const char *p)
     return hi * 100 + lo;
 }
 
+static const char *map_windows_tzid(const char *tzid)
+{
+    static const struct { const char *win; const char *iana; } table[] = {
+        { "UTC",                              "UTC" },
+        { "GMT Standard Time",                "Europe/London" },
+        { "W. Europe Standard Time",          "Europe/Berlin" },
+        { "Central European Standard Time",   "Europe/Warsaw" },
+        { "Romance Standard Time",            "Europe/Paris" },
+        { "Eastern Standard Time",            "America/New_York" },
+        { "Central Standard Time",            "America/Chicago" },
+        { "Mountain Standard Time",           "America/Denver" },
+        { "Pacific Standard Time",            "America/Los_Angeles" },
+        { "Tokyo Standard Time",              "Asia/Tokyo" },
+        { "AUS Eastern Standard Time",        "Australia/Sydney" },
+    };
+    for (size_t i = 0; i < sizeof(table) / sizeof(table[0]); ++i) {
+        if (strcasecmp(tzid, table[i].win) == 0)
+            return table[i].iana;
+    }
+    return tzid;
+}
+
+static int extract_tzid_param(const char *params, char *out_tz, size_t out_sz)
+{
+    if (!params || !out_tz || out_sz == 0) return 0;
+    out_tz[0] = '\0';
+
+    const char *p = params;
+    while (*p) {
+        if (strncasecmp(p, "TZID=", 5) == 0 &&
+            (p == params || p[-1] == ';')) {
+            p += 5;
+            int quoted = 0;
+            if (*p == '"') {
+                quoted = 1;
+                p++;
+            }
+            size_t j = 0;
+            while (*p && (quoted ? (*p != '"') : (*p != ';'))) {
+                unsigned char ch = (unsigned char)*p++;
+                if (ch < 0x20 || ch >= 0x7f) return 0;
+                if (j + 1 < out_sz)
+                    out_tz[j++] = (char)ch;
+            }
+            out_tz[j] = '\0';
+            if (out_tz[0] == '\0' || out_tz[0] == '/' || strstr(out_tz, "..") != NULL)
+                return 0;
+            return 1;
+        }
+        p++;
+    }
+    return 0;
+}
+
+static time_t mktime_in_tz(struct tm *tmv, const char *tzid)
+{
+    const char *mapped = map_windows_tzid(tzid);
+    const char *orig_tz = getenv("TZ");
+    char saved_tz[256];
+    int had_tz = 0;
+
+    if (orig_tz) {
+        snprintf(saved_tz, sizeof(saved_tz), "%s", orig_tz);
+        had_tz = 1;
+    }
+
+    char tz_env[256];
+    if (strcmp(mapped, "UTC") == 0)
+        snprintf(tz_env, sizeof(tz_env), "UTC");
+    else
+        snprintf(tz_env, sizeof(tz_env), ":%s", mapped);
+
+    setenv("TZ", tz_env, 1);
+    tzset();
+    tmv->tm_isdst = -1;
+    time_t result = mktime(tmv);
+
+    if (had_tz)
+        setenv("TZ", saved_tz, 1);
+    else
+        unsetenv("TZ");
+    tzset();
+    return result;
+}
+
 static int parse_ics_datetime(const char *val, const char *params,
                               time_t *out_utc, int *out_all_day)
 {
@@ -107,7 +192,15 @@ static int parse_ics_datetime(const char *val, const char *params,
 
     int is_utc = (val[15] == 'Z' || val[15] == 'z') ? 1 : 0;
     if (out_all_day) *out_all_day = 0;
-    *out_utc = is_utc ? timegm(&tmv) : mktime(&tmv);
+    if (is_utc) {
+        *out_utc = timegm(&tmv);
+    } else {
+        char tzid[128];
+        if (extract_tzid_param(params, tzid, sizeof(tzid)))
+            *out_utc = mktime_in_tz(&tmv, tzid);
+        else
+            *out_utc = mktime(&tmv);
+    }
     return 0;
 }
 

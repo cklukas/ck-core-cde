@@ -5,13 +5,14 @@ bin_PROGRAMS = dtcm dtcm_delete dtcm_insert dtcm_lookup dtcm_editor
 EXTRA_DIST = tests/check-temp-file-create.py tests/check-temp-file-create.c \
              tests/check-sigint-signal.py tests/check-sigint-signal.c \
              tests/check-ics-io.py tests/ics-io-test.c \
-             tests/check-caldav.py
+             tests/check-caldav.py tests/check-notify-desktop.py
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-temp-file-create.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-sigint-signal.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-ics-io.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-caldav.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-notify-desktop.py
 
 AM_CFLAGS = $(DT_INCDIR) $(CSA_INCDIR) -I$(top_srcdir)/lib/csa	\
 -I$(top_srcdir)/programs/dtcm/libDtCmP $(LIBCURL_CFLAGS) \
@@ -38,7 +39,8 @@ dtcm_SOURCES = MonthPanel.c    RFCMIME.c       about.c \
                group_editor.c  help.c          i18nxlate.c \
                icon.c          ics_csa.c       ics_csa.h \
                ics_io.c        ics_io.h        md5.c           misc.c \
-               monthglance.c   namesvc.c       print.c \
+               monthglance.c   namesvc.c       notify_desktop.c \
+               notify_desktop.h print.c \
                props.c         props_pu.c      reminders.c \
                rfp.c           select.c        server_status.c \
                server_status.h session.c \

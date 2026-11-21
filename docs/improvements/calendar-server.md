@@ -37,8 +37,20 @@ configured.
   `caldav_ui.c`) reuses `ics_io.c` and `libcurl` to sync with standard HTTPS
   CalDAV servers (Nextcloud, Radicale, Baïkal, Fastmail, etc.) using `PROPFIND`,
   `GET`, and `PUT` with TLS certificate verification enabled by default.
-  Profiles are saved to `~/.dt/dtcm_caldav.conf` (`0600`) without persisting
-  plaintext passwords; UID filenames are sanitized against path traversal.
+  Network I/O runs asynchronously on a background `pthread` (signaling the Xt
+  event loop via `XtAppAddInput`) so the UI remains responsive. Persistent
+  `(UID, ETag)` sync state (`~/.dt/dtcm_caldav_state`, mode `0600`) enables
+  two-way **Sync** without duplicating unchanged events; optional periodic
+  auto-sync (`auto_sync_mins`) uses `XtAppAddTimeOut`. Profiles are saved to
+  `~/.dt/dtcm_caldav.conf` (`0600`) without persisting plaintext passwords, and
+  optional desktop keyring storage (`secret-tool` / `gnome-keyring`) stores and
+  retrieves passwords over stdin without exposing them on argv. UID filenames
+  are sanitized against path traversal.
+- **Desktop alarm notifications (`notify_desktop.c`, `alarm.c`)**: Appointment
+  popup reminders also dispatch a non-blocking `org.freedesktop.Notifications`
+  toast via `notify-send` (`--app-name=Calendar --icon=office-calendar --`),
+  working on both Wayland and X11 even when `dtcm` is minimized or on another
+  workspace (disable with `DTCM_DESKTOP_NOTIFY=0`).
 - **SSH Unix-socket forwarding (`lib/csa/ssh_tunnel.c`)**: For classic
   `user@remotehost` CDE-to-CDE calendars without opening LAN RPC ports, enable
   **Use SSH socket tunnel for remote calendars** in **View → Server & Network
@@ -203,10 +215,11 @@ exchange via **File → Import iCalendar (.ics)...** and **File → Export
 iCalendar (.ics)...**:
 
 - Parses folded RFC 5545 lines, escaped text (`\n`, `\,`, `\;`, `\\`), UTC and
-  local `DTSTART` / `DTEND` timestamps, `VALUE=DATE` all-day events, ISO 8601
-  `DURATION` values (`PT45M`, `P1D`), `SUMMARY`, `LOCATION`, `DESCRIPTION`, and
-  `RRULE` recurrences (`DAILY`, `WEEKLY`, `MONTHLY`, `YEARLY`, `INTERVAL`,
-  `COUNT`).
+  local `DTSTART` / `DTEND` timestamps, IANA and common Windows `TZID`
+  parameters (resolved via `/usr/share/zoneinfo` with exact DST rules),
+  `VALUE=DATE` all-day events, ISO 8601 `DURATION` values (`PT45M`, `P1D`),
+  `SUMMARY`, `LOCATION`, `DESCRIPTION`, and `RRULE` recurrences (`DAILY`,
+  `WEEKLY`, `MONTHLY`, `YEARLY`, `INTERVAL`, `COUNT`).
 - Maps imported events into CSA (`rpc.cmsd`) appointments (`csa_add_entry` with
   data-version recurrence rules) and deduplicates expanded CSA recurrence
   occurrences by `CSA_ENTRY_ATTR_REFERENCE_IDENTIFIER` during `.ics` export,
