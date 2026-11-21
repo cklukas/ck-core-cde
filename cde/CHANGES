@@ -1,4 +1,28 @@
 2026-11-21
+- Upgrade CDE Calendar Manager (`dtcm`) visual clarity, navigation, editor
+  ergonomics, and drag-and-drop workflows while preserving 100% CSA storage
+  compatibility:
+  - Add persistent Today highlight across Month/Week/Day views, live
+    current-time horizontal indicator line (60s refresh) in Day and Week views,
+    subtle weekend shading and ISO week numbers (`W01`–`W53`) in Month view,
+    color-coded category bars (`Work`, `Personal`, `Important`, `Travel`),
+    full-appointment hover preview in the status bar, and a right-aligned
+    `Local AF_UNIX` / `CalDAV: synced HH:MM` status badge
+    (`cde/programs/dtcm/dtcm/{ux_helpers.{c,h},monthglance.c,dayglance.c,weekglance.c,calendar.h,calendarA.c,caldav_ui.c}`).
+  - Add mouse-wheel (`Button4`/`Button5`) paging, keyboard navigation
+    (`Left`/`Right`/`Up`/`Down`, `Home`/`T`, `Enter`, `Ctrl+N`), and a
+    right-click (`Button3`) context menu on day cells and appointments
+    (`cde/programs/dtcm/dtcm/{context_menu.{c,h},calendarA.c,monthglance.c,dayglance.c,weekglance.c}`).
+  - Add quick duration chips (`15m`, `30m`, `1h`, `All Day`), dedicated
+    `Location:` input, and `Category:` dropdown in the Appointment Editor
+    (`dssw.{c,h}`), mapped to RFC 5545 `LOCATION:` and `CATEGORIES:` in
+    `ics_io.{c,h}` and `ics_csa.c`.
+  - Support dragging `.ics` files onto `dtcm` to import them (`dnd.c`) and
+    dragging appointments between day cells in Month view to reschedule them
+    with DST-preserving day shifts (`monthglance.c`), backed by ASan/UBSan
+    regression tests (`cde/programs/dtcm/dtcm/tests/{check-ux-helpers.py,ics-io-test.c}`,
+    `cde/programs/dtcm/dtcm/Makefile.am`,
+    `docs/improvements/calendar-server.md`).
 - Enable end-to-end execution of **Mirror** (`CKFSP_MIRROR`) and **Synchronize
   two ways** (`SYNC_PROFILE_TWO_WAY`) via **Apply reviewed plan** in
   `dtfile_sync` (*Compare / Synchronize Folders*) on top of `ck-core-fs-lib`

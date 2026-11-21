@@ -373,6 +373,12 @@ static void handle_unfolded_line(const char *line,
         ics_unescape_text(val, cur->location, sizeof(cur->location));
     } else if (strcasecmp(key_part, "DESCRIPTION") == 0) {
         ics_unescape_text(val, cur->description, sizeof(cur->description));
+    } else if (strcasecmp(key_part, "CATEGORIES") == 0) {
+        char raw_cat[128];
+        ics_unescape_text(val, raw_cat, sizeof(raw_cat));
+        char *comma = strchr(raw_cat, ',');
+        if (comma) *comma = '\0';
+        snprintf(cur->category, sizeof(cur->category), "%s", raw_cat);
     } else if (strcasecmp(key_part, "DTSTART") == 0) {
         (void)parse_ics_datetime(val, params, &cur->start_utc, &cur->all_day);
     } else if (strcasecmp(key_part, "DTEND") == 0) {
@@ -539,6 +545,11 @@ int dtcm_ics_write_file(const char *path, const DtcmIcsEvent *events, int count)
             ics_write_escaped(fp, ev->location);
             fprintf(fp, "\r\n");
         }
+        if (ev->category[0]) {
+            fprintf(fp, "CATEGORIES:");
+            ics_write_escaped(fp, ev->category);
+            fprintf(fp, "\r\n");
+        }
         if (ev->description[0]) {
             fprintf(fp, "DESCRIPTION:");
             ics_write_escaped(fp, ev->description);
@@ -578,24 +589,24 @@ void dtcm_ics_compose_what(const DtcmIcsEvent *ev, char *out_what, size_t out_le
     if (!ev) return;
 
     const char *sum = ev->summary[0] ? ev->summary : "Appointment";
-    if (ev->location[0] && ev->description[0]) {
-        snprintf(out_what, out_len, "%s\nLocation: %s\n%s", sum, ev->location, ev->description);
-    } else if (ev->location[0]) {
-        snprintf(out_what, out_len, "%s\nLocation: %s", sum, ev->location);
-    } else if (ev->description[0]) {
-        snprintf(out_what, out_len, "%s\n%s", sum, ev->description);
-    } else {
-        snprintf(out_what, out_len, "%s", sum);
-    }
+    size_t off = (size_t)snprintf(out_what, out_len, "%s", sum);
+    if (ev->location[0] && off < out_len)
+        off += (size_t)snprintf(out_what + off, out_len - off, "\nLocation: %s", ev->location);
+    if (ev->category[0] && off < out_len)
+        off += (size_t)snprintf(out_what + off, out_len - off, "\nCategory: %s", ev->category);
+    if (ev->description[0] && off < out_len)
+        (void)snprintf(out_what + off, out_len - off, "\n%s", ev->description);
 }
 
-void dtcm_ics_decompose_what(const char *what,
-                             char *out_summary, size_t sum_len,
-                             char *out_location, size_t loc_len,
-                             char *out_desc, size_t desc_len)
+void dtcm_ics_decompose_what_ex(const char *what,
+                                char *out_summary, size_t sum_len,
+                                char *out_location, size_t loc_len,
+                                char *out_category, size_t cat_len,
+                                char *out_desc, size_t desc_len)
 {
     if (out_summary && sum_len > 0) out_summary[0] = '\0';
     if (out_location && loc_len > 0) out_location[0] = '\0';
+    if (out_category && cat_len > 0) out_category[0] = '\0';
     if (out_desc && desc_len > 0) out_desc[0] = '\0';
     if (!what || !what[0]) return;
 
@@ -609,21 +620,46 @@ void dtcm_ics_decompose_what(const char *what,
     if (!nl1) return;
 
     const char *rest = nl1 + 1;
-    while (*rest == '\t') rest++;
-    if (strncmp(rest, "Location: ", 10) == 0) {
-        const char *lstart = rest + 10;
-        const char *nl2 = strchr(lstart, '\n');
-        size_t llen = nl2 ? (size_t)(nl2 - lstart) : strlen(lstart);
-        if (out_location && loc_len > 0) {
-            if (llen >= loc_len) llen = loc_len - 1;
-            memcpy(out_location, lstart, llen);
-            out_location[llen] = '\0';
-        }
-        if (!nl2) return;
-        rest = nl2 + 1;
+    for (;;) {
         while (*rest == '\t') rest++;
+        if (strncmp(rest, "Location: ", 10) == 0) {
+            const char *vstart = rest + 10;
+            const char *nl = strchr(vstart, '\n');
+            size_t vlen = nl ? (size_t)(nl - vstart) : strlen(vstart);
+            if (out_location && loc_len > 0) {
+                if (vlen >= loc_len) vlen = loc_len - 1;
+                memcpy(out_location, vstart, vlen);
+                out_location[vlen] = '\0';
+            }
+            if (!nl) return;
+            rest = nl + 1;
+        } else if (strncmp(rest, "Category: ", 10) == 0) {
+            const char *vstart = rest + 10;
+            const char *nl = strchr(vstart, '\n');
+            size_t vlen = nl ? (size_t)(nl - vstart) : strlen(vstart);
+            if (out_category && cat_len > 0) {
+                if (vlen >= cat_len) vlen = cat_len - 1;
+                memcpy(out_category, vstart, vlen);
+                out_category[vlen] = '\0';
+            }
+            if (!nl) return;
+            rest = nl + 1;
+        } else {
+            break;
+        }
     }
     if (out_desc && desc_len > 0 && rest[0]) {
         snprintf(out_desc, desc_len, "%s", rest);
     }
+}
+
+void dtcm_ics_decompose_what(const char *what,
+                             char *out_summary, size_t sum_len,
+                             char *out_location, size_t loc_len,
+                             char *out_desc, size_t desc_len)
+{
+    dtcm_ics_decompose_what_ex(what, out_summary, sum_len,
+                               out_location, loc_len,
+                               NULL, 0,
+                               out_desc, desc_len);
 }

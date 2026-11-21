@@ -52,15 +52,21 @@ static  char sccsid[] = "@(#)dssw.c 1.58 95/08/07 Copyr 1993 Sun Microsystems, I
 #endif
 
 #include <EUSCompat.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <Xm/Xm.h>
 #include <Xm/Form.h>
 #include <Xm/RowColumn.h>
 #include <Xm/Text.h>
+#include <Xm/TextF.h>
 #include <Xm/LabelG.h>
+#include <Xm/PushB.h>
+#include <Xm/PushBG.h>
 #include <Xm/ToggleBG.h>
 #include <Xm/ToggleB.h>
 #include "dssw.h"
+#include "ics_io.h"
+#include "ux_helpers.h"
 #include "misc.h"
 #include "getdate.h"
 #include "props_pu.h"
@@ -84,15 +90,47 @@ extern void _i18n_HighestWidgetAdjust(int num, Widget *ret,
 static void
 dssw_get_non_times(DSSW *dssw, time_t t) {
 	char		*str;
+	char		*loc_str = nullptr;
 	Props		*p = (Props *)dssw->cal->properties;
 	OrderingType	ot = get_int_prop(p, CP_DATEORDERING);
 	SeparatorType	st = get_int_prop(p, CP_DATESEPARATOR);
+	const char	*cat_name = "";
 
 	cm_strcpy(dssw->date_val,
 		get_date_from_widget(t, dssw->date_text, ot, st));
 
 	str = XmTextGetString(dssw->what_text);
-	snprintf(dssw->what_val, sizeof(dssw->what_val), "%s", str);
+	if (dssw->location_text)
+		loc_str = XmTextFieldGetString(dssw->location_text);
+
+	if (dssw->category_idx > 0 && dssw->category_idx < DTCM_CAT_COUNT)
+		cat_name = dtcm_category_name((DtcmCategory)dssw->category_idx);
+
+	dssw->location_val[0] = '\0';
+	if (loc_str) {
+		snprintf(dssw->location_val, sizeof(dssw->location_val), "%s", loc_str);
+		XtFree(loc_str);
+	}
+
+	if (dssw->location_val[0] || cat_name[0]) {
+		DtcmIcsEvent ev;
+		memset(&ev, 0, sizeof(ev));
+		const char *nl = strchr(str ? str : "", '\n');
+		if (nl) {
+			size_t slen = (size_t)(nl - str);
+			if (slen >= sizeof(ev.summary)) slen = sizeof(ev.summary) - 1;
+			memcpy(ev.summary, str, slen);
+			ev.summary[slen] = '\0';
+			snprintf(ev.description, sizeof(ev.description), "%s", nl + 1);
+		} else {
+			snprintf(ev.summary, sizeof(ev.summary), "%s", str ? str : "");
+		}
+		snprintf(ev.location, sizeof(ev.location), "%s", dssw->location_val);
+		snprintf(ev.category, sizeof(ev.category), "%s", cat_name);
+		dtcm_ics_compose_what(&ev, dssw->what_val, sizeof(dssw->what_val));
+	} else {
+		snprintf(dssw->what_val, sizeof(dssw->what_val), "%s", str ? str : "");
+	}
 	XtFree(str);
 }
 
@@ -101,9 +139,117 @@ dssw_set_non_times(DSSW *dssw, time_t t) {
 	Props		*p = (Props *)dssw->cal->properties;
 	OrderingType	ot = get_int_prop(p, CP_DATEORDERING);
 	SeparatorType	st = get_int_prop(p, CP_DATESEPARATOR);
+	char		sum[512], loc[512], cat[64], desc[2048];
 
 	set_date_in_widget(t, dssw->date_text, ot, st);
-	XmTextSetString(dssw->what_text, dssw->what_val);
+
+	dtcm_ics_decompose_what_ex(dssw->what_val,
+		sum, sizeof(sum), loc, sizeof(loc),
+		cat, sizeof(cat), desc, sizeof(desc));
+
+	if (loc[0] || cat[0]) {
+		char combined[WHAT_LEN];
+		if (desc[0])
+			snprintf(combined, sizeof(combined), "%s\n%s", sum, desc);
+		else
+			snprintf(combined, sizeof(combined), "%s", sum);
+		XmTextSetString(dssw->what_text, combined);
+	} else {
+		XmTextSetString(dssw->what_text, dssw->what_val);
+	}
+
+	snprintf(dssw->location_val, sizeof(dssw->location_val), "%s", loc);
+	if (dssw->location_text)
+		XmTextFieldSetString(dssw->location_text, loc);
+
+	DtcmCategory c_enum = dtcm_category_from_name(cat);
+	dssw->category_idx = (int)c_enum;
+	if (dssw->category_menu && c_enum >= 0 && c_enum < DTCM_CAT_COUNT &&
+	    dssw->category_btns[c_enum]) {
+		XtVaSetValues(dssw->category_menu,
+			XmNmenuHistory, dssw->category_btns[c_enum], nullptr);
+	}
+}
+
+static void
+dssw_category_cb(Widget w, XtPointer client_data, XtPointer call_data)
+{
+	(void)call_data;
+	DSSW *dssw = (DSSW *)client_data;
+	long idx = 0;
+	XtVaGetValues(w, XmNuserData, &idx, nullptr);
+	if (idx >= 0 && idx < DTCM_CAT_COUNT)
+		dssw->category_idx = (int)idx;
+}
+
+static void
+dssw_preset_duration_cb(Widget w, XtPointer client_data, XtPointer call_data)
+{
+	(void)call_data;
+	DSSW *dssw = (DSSW *)client_data;
+	Props *p = (Props *)dssw->cal->properties;
+	DisplayType dt = get_int_prop(p, CP_DEFAULTDISP);
+	long mins = 0;
+
+	XtVaGetValues(w, XmNuserData, &mins, nullptr);
+	if (mins <= 0) {
+		/* All Day / No Time */
+		dssw->start_val.val[0] = '\0';
+		dssw->stop_val.val[0] = '\0';
+		dssw->start_val.block = dssw->stop_val.block = TIME_AM;
+		set_dssw_times(dssw);
+		return;
+	}
+
+	get_dssw_times(dssw);
+	int start_hrs = 9, start_mins = 0;
+	if (!blank_buf(dssw->start_val.val)) {
+		int h = 0, m = 0;
+		if (strchr(dssw->start_val.val, ':')) {
+			(void)sscanf(dssw->start_val.val, "%d:%d", &h, &m);
+		} else {
+			int v = atoi(dssw->start_val.val);
+			h = v / 100;
+			m = v % 100;
+		}
+		if (dt == HOUR12) {
+			if (dssw->start_val.block == TIME_PM && h < 12) h += 12;
+			if (dssw->start_val.block == TIME_AM && h == 12) h = 0;
+		}
+		if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
+			start_hrs = h;
+			start_mins = m;
+		}
+	} else {
+		if (dt == HOUR12) {
+			snprintf(dssw->start_val.val, sizeof(dssw->start_val.val), "9:00");
+			dssw->start_val.block = TIME_AM;
+		} else {
+			snprintf(dssw->start_val.val, sizeof(dssw->start_val.val), "0900");
+			dssw->start_val.block = TIME_AM;
+		}
+	}
+
+	int total = start_hrs * 60 + start_mins + (int)mins;
+	if (total >= 24 * 60) total = 23 * 60 + 59;
+	int stop_hrs = total / 60;
+	int stop_mins = total % 60;
+
+	if (dt == HOUR12) {
+		int disp_h = stop_hrs;
+		if (disp_h >= 12) {
+			dssw->stop_val.block = TIME_PM;
+			if (disp_h > 12) disp_h -= 12;
+		} else {
+			dssw->stop_val.block = TIME_AM;
+			if (disp_h == 0) disp_h = 12;
+		}
+		snprintf(dssw->stop_val.val, sizeof(dssw->stop_val.val), "%d:%02d", disp_h, stop_mins);
+	} else {
+		snprintf(dssw->stop_val.val, sizeof(dssw->stop_val.val), "%02d%02d", stop_hrs, stop_mins);
+		dssw->stop_val.block = (stop_hrs >= 12) ? TIME_PM : TIME_AM;
+	}
+	set_dssw_times(dssw);
 }
 
 /*
@@ -398,12 +544,26 @@ build_dssw(
 	dssw->what_scrollwindow = XtParent(dssw->what_text);
 	XtManageChild(dssw->what_text);
 
+	label_str = XmStringCreateLocalized("Location:");
+	dssw->location_label = XtVaCreateManagedWidget("location_label",
+		xmLabelGadgetClass, dssw->dssw_form_mgr,
+		XmNlabelString, label_str,
+		nullptr);
+	XmStringFree(label_str);
+
+	label_str = XmStringCreateLocalized("Category:");
+	dssw->category_label = XtVaCreateManagedWidget("category_label",
+		xmLabelGadgetClass, dssw->dssw_form_mgr,
+		XmNlabelString, label_str,
+		nullptr);
+	XmStringFree(label_str);
+
 	/*
 	 * Do a layout
 	 */
-	_i18n_WidestWidget( 4, &prev, &max_left_label_width,
+	_i18n_WidestWidget( 6, &prev, &max_left_label_width,
 		dssw->date_label, dssw->start_label, dssw->stop_label,
-		dssw->what_label );
+		dssw->location_label, dssw->category_label, dssw->what_label );
 	_toText = max_left_label_width + 2 * GAP;
 
 	/*
@@ -497,6 +657,104 @@ build_dssw(
 			XmNleftOffset, _toRC,
 			nullptr );
 	prev = curr;
+
+	/*
+	 * Quick duration preset buttons: 15m, 30m, 1h, All Day
+	 */
+	dssw->dur_rc = XtVaCreateWidget("dur_rc",
+		xmRowColumnWidgetClass, dssw->dssw_form_mgr,
+		XmNorientation, XmHORIZONTAL,
+		XmNspacing, 4,
+		XmNmarginWidth, 0,
+		XmNmarginHeight, 0,
+		XmNtopAttachment, XmATTACH_WIDGET,
+		XmNtopWidget, prev,
+		XmNtopOffset, GAP / 2,
+		XmNleftAttachment, XmATTACH_FORM,
+		XmNleftOffset, _toText,
+		nullptr);
+	{
+		static const struct { const char *lbl; long mins; } presets[] = {
+			{ "15m", 15 }, { "30m", 30 }, { "1h", 60 }, { "All Day", 0 }
+		};
+		for (int pi = 0; pi < 4; pi++) {
+			XmString ps = XmStringCreateLocalized((char *)presets[pi].lbl);
+			Widget pb = XtVaCreateManagedWidget("durPreset",
+				xmPushButtonWidgetClass, dssw->dur_rc,
+				XmNlabelString, ps,
+				XmNuserData, (XtPointer)(intptr_t)presets[pi].mins,
+				nullptr);
+			XtAddCallback(pb, XmNactivateCallback, dssw_preset_duration_cb, (XtPointer)dssw);
+			XmStringFree(ps);
+		}
+	}
+	XtManageChild(dssw->dur_rc);
+	prev = dssw->dur_rc;
+
+	/*
+	 * Dedicated Location field + Category dropdown
+	 */
+	{
+		_i18n_WidestWidget(1, &curr, &widest, dssw->location_label);
+		_toLabel = _toText - GAP - widest;
+		XtVaSetValues(dssw->location_label,
+			XmNtopAttachment, XmATTACH_WIDGET,
+			XmNtopWidget, prev,
+			XmNtopOffset, GAP,
+			XmNleftAttachment, XmATTACH_FORM,
+			XmNleftOffset, _toLabel,
+			nullptr);
+
+		dssw->location_text = XtVaCreateManagedWidget("location_text",
+			xmTextFieldWidgetClass, dssw->dssw_form_mgr,
+			XmNcolumns, 22,
+			XmNtopAttachment, XmATTACH_WIDGET,
+			XmNtopWidget, prev,
+			XmNtopOffset, GAP / 2,
+			XmNleftAttachment, XmATTACH_FORM,
+			XmNleftOffset, _toText,
+			XmNrightAttachment, XmATTACH_FORM,
+			nullptr);
+		prev = dssw->location_text;
+
+		_i18n_WidestWidget(1, &curr, &widest, dssw->category_label);
+		_toLabel = _toText - GAP - widest;
+		XtVaSetValues(dssw->category_label,
+			XmNtopAttachment, XmATTACH_WIDGET,
+			XmNtopWidget, prev,
+			XmNtopOffset, GAP,
+			XmNleftAttachment, XmATTACH_FORM,
+			XmNleftOffset, _toLabel,
+			nullptr);
+
+		Widget cat_pane = XmCreatePulldownMenu(dssw->dssw_form_mgr, "catPane", nullptr, 0);
+		static const char *cat_labels[DTCM_CAT_COUNT] = {
+			"None", "Work", "Personal", "Important", "Travel"
+		};
+		for (int ci = 0; ci < DTCM_CAT_COUNT; ci++) {
+			XmString cs = XmStringCreateLocalized((char *)cat_labels[ci]);
+			dssw->category_btns[ci] = XtVaCreateManagedWidget("catBtn",
+				xmPushButtonGadgetClass, cat_pane,
+				XmNlabelString, cs,
+				XmNuserData, (XtPointer)(intptr_t)ci,
+				nullptr);
+			XtAddCallback(dssw->category_btns[ci], XmNactivateCallback,
+				dssw_category_cb, (XtPointer)dssw);
+			XmStringFree(cs);
+		}
+		dssw->category_idx = 0;
+		Arg cat_args[6];
+		int cat_ac = 0;
+		XtSetArg(cat_args[cat_ac], XmNsubMenuId, cat_pane); cat_ac++;
+		XtSetArg(cat_args[cat_ac], XmNtopAttachment, XmATTACH_WIDGET); cat_ac++;
+		XtSetArg(cat_args[cat_ac], XmNtopWidget, prev); cat_ac++;
+		XtSetArg(cat_args[cat_ac], XmNtopOffset, GAP / 2); cat_ac++;
+		XtSetArg(cat_args[cat_ac], XmNleftAttachment, XmATTACH_FORM); cat_ac++;
+		XtSetArg(cat_args[cat_ac], XmNleftOffset, _toText); cat_ac++;
+		dssw->category_menu = XmCreateOptionMenu(dssw->dssw_form_mgr, "catMenu", cat_args, cat_ac);
+		XtManageChild(dssw->category_menu);
+		prev = dssw->category_menu;
+	}
 
 	/*
 	 * dssw->what_label, dssw->what_scrollwindow

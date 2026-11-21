@@ -58,6 +58,8 @@
 #include "props_pu.h"
 #include "props.h"
 #include "dnd.h"
+#include "ics_csa.h"
+#include <strings.h>
 #include "getdate.h"
 #include "cm_tty.h"
 #include "misc.h"
@@ -74,6 +76,29 @@ static Bool lookForButton(Display *, XEvent *, XPointer);
 
 extern int	drag_load_proc(char*, Calendar *);
 static char	dnd_filename[20];
+
+static Boolean
+is_ics_drop_file(const char *path)
+{
+	FILE *fp;
+	char probe[1024];
+	size_t n;
+
+	if (!path || !path[0])
+		return False;
+
+	size_t len = strlen(path);
+	if (len >= 4 && strcasecmp(path + len - 4, ".ics") == 0)
+		return True;
+
+	fp = fopen(path, "rb");
+	if (!fp)
+		return False;
+	n = fread(probe, 1, sizeof(probe) - 1, fp);
+	fclose(fp);
+	probe[n] = '\0';
+	return (strstr(probe, "BEGIN:VCALENDAR") != nullptr) ? True : False;
+}
 
 static Boolean 
 validate_dropped_appt(char *filename, Calendar *c) {
@@ -96,6 +121,9 @@ validate_dropped_appt(char *filename, Calendar *c) {
 		if (a = (Dtcm_appointment *)CmDataListGetData(list, i))
 			free_appt_struct(&a);
 	CmDataListDestroy(list, B_FALSE);
+
+	if (is_ics_drop_file(filename))
+		return(True);
 
 	if (op == VALID_APPT)
 		return(True);
@@ -411,6 +439,19 @@ drag_load_proc(char *filename, Calendar *c) {
 
 	if (!filename || *filename == '\0')
 		return -1;
+
+	if (is_ics_drop_file(filename)) {
+		int imported = 0;
+		if (dtcm_import_ics_file(c, filename, &imported) == 0) {
+			snprintf(buf, sizeof(buf),
+				 "Imported %d event(s) from dropped iCalendar file.",
+				 imported);
+			set_message(c->message_text, buf);
+			return 1;
+		}
+		set_message(c->message_text, "Failed to import dropped iCalendar (.ics) file.");
+		return -1;
+	}
 
 	list = CmDataListCreate();
 

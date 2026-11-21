@@ -392,6 +392,19 @@ wakeup_input_cb(XtPointer client_data, int *source, XtInputId *id)
             (void)unlink(job->pull_ics_path);
         }
         set_status(job->result_msg);
+        if (job->cal && job->op != CALDAV_OP_TEST &&
+            strstr(job->result_msg, "complete") != nullptr) {
+            time_t now_t = time(nullptr);
+            struct tm *now_tm = localtime(&now_t);
+            char badge[64];
+            if (now_tm) {
+                snprintf(badge, sizeof(badge), "CalDAV: synced %02d:%02d",
+                         now_tm->tm_hour, now_tm->tm_min);
+            } else {
+                snprintf(badge, sizeof(badge), "CalDAV: synced");
+            }
+            dtcm_set_status_badge(job->cal, badge);
+        }
         free(job);
     }
     set_buttons_sensitive(True);

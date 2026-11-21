@@ -257,6 +257,7 @@ typedef struct {
 	Widget		browse_menu;	/* cached for quick access */
 	Widget		browse_button;	/* for updating browse menu */
 	Widget		message_text;	/* status at foot of main window */
+	Widget		status_badge;	/* right-aligned connection/sync status badge */
 	Widget		previous;	/* arrow to step back in time */
 	Widget		today;		/* button to jump to "now" */
 	Widget		next;		/* arrow to step forward in time */
@@ -386,4 +387,6 @@ extern void 		CalDrawString	(Display *, Drawable,
 						   char *, int);
 extern void 		CalFontExtents	(Cal_Font *, 
 						   XFontSetExtents *);
+extern void		today_button(Widget, XtPointer, XtPointer);
+extern void		dtcm_set_status_badge(Calendar *, const char *);
 #endif

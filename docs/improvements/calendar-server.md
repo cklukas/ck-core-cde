@@ -228,6 +228,35 @@ iCalendar (.ics)...**:
 - `programs/dtcm/dtcm/ics_io.c` is verified standalone under AddressSanitizer
   and UndefinedBehaviorSanitizer by `programs/dtcm/dtcm/tests/check-ics-io.py`.
 
+## Calendar Manager (`dtcm`) visual & interaction UX improvements
+
+Calendar Manager (`programs/dtcm/dtcm/`) includes everyday usability upgrades
+while preserving the classic Motif look and 100% CSA storage compatibility:
+
+- **Visual clarity**: persistent Today accent highlight across Month, Week, and
+  Day views; live current-time horizontal indicator line (updated every 60
+  seconds) in Day and Week views; subtle weekend column shading (Sunday and
+  Saturday) and ISO 8601 week numbers (`W01`–`W53`) in Month view; color-coded
+  category bars (`Work`, `Personal`, `Important`, `Travel`); hover preview of
+  the full appointment summary, location, and category in the bottom status bar;
+  and a right-aligned connection/sync status badge (`Local AF_UNIX` or
+  `CalDAV: synced HH:MM`).
+- **Navigation & context menu**: mouse-wheel (`Button4`/`Button5`) paging,
+  keyboard navigation (`Left`/`Right`/`Up`/`Down`, `Home`/`T` for Today,
+  `Enter` and `Ctrl+N` for New Appointment), and a right-click (`Button3`)
+  context menu on day cells and appointments (*New Appointment...*, *New To
+  Do...*, *Switch to Day View*, *Jump to Today*, plus *Edit Appointment...* and
+  *Delete Appointment* when clicking an appointment).
+- **Appointment Editor**: quick duration chips (`15m`, `30m`, `1h`, `All Day`),
+  a dedicated `Location:` field, and a `Category:` dropdown (`None`, `Work`,
+  `Personal`, `Important`, `Travel`) mapped to RFC 5545 `LOCATION:` and
+  `CATEGORIES:` while remaining backward-compatible with CSA `what` text.
+- **Drag-and-drop**: drop `.ics` files directly onto the `dtcm` window to import
+  events via `dtcm_import_ics_file()`, and drag appointments between day cells
+  in Month view to reschedule them with DST-preserving day shifts.
+- Pure calendar/category/hit-test helpers (`ux_helpers.c`) are verified under
+  ASan/UBSan by `programs/dtcm/dtcm/tests/check-ux-helpers.py`.
+
 ## Limits
 
 - The request-level tests call the handlers directly; the live checks of the

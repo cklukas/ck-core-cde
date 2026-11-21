@@ -498,10 +498,11 @@ int dtcm_export_ics_file(Calendar *c, const char *ics_path, int *out_count)
         const char *what = (appt->what && appt->what->value)
                                ? appt->what->value->item.string_value
                                : "";
-        dtcm_ics_decompose_what(what,
-                                ev->summary, sizeof(ev->summary),
-                                ev->location, sizeof(ev->location),
-                                ev->description, sizeof(ev->description));
+        dtcm_ics_decompose_what_ex(what,
+                                   ev->summary, sizeof(ev->summary),
+                                   ev->location, sizeof(ev->location),
+                                   ev->category, sizeof(ev->category),
+                                   ev->description, sizeof(ev->description));
         extract_appt_recurrence(appt, ev);
         count++;
     }

@@ -72,6 +72,7 @@ static  char sccsid[] = "@(#)monthglance.c 1.82 95/07/27 Copyr 1994 Sun Microsys
 #include <netinet/in.h>
 #include <X11/Xlib.h>
 #include <X11/IntrinsicP.h>
+#include <X11/cursorfont.h>
 #include <Xm/Xm.h>
 #include <Xm/DrawingA.h>
 #include <Xm/Label.h>
@@ -99,6 +100,10 @@ static  char sccsid[] = "@(#)monthglance.c 1.82 95/07/27 Copyr 1994 Sun Microsys
 #include "find.h"
 #include "goto.h"
 #include "tempbr.h"
+#include "misc.h"
+#include "ics_io.h"
+#include "ux_helpers.h"
+#include "context_menu.h"
 
 #define XOS_USE_XT_LOCKING
 #define X_INCLUDE_TIME_H
@@ -123,6 +128,118 @@ static void	paint_month(Calendar *, Tick, XRectangle *);
 static void	unmanage_children(Calendar *);
 static void	manage_children(Calendar *);
 static int	count_month_appts(CSA_entry_handle *, int, Calendar *);
+
+static Boolean
+alloc_rgb_pixel(new_XContext *xc, unsigned short r, unsigned short g,
+                unsigned short b, Pixel *out)
+{
+	if (!xc || !xc->display || !out)
+		return False;
+	XColor col;
+	col.red = r;
+	col.green = g;
+	col.blue = b;
+	col.flags = DoRed | DoGreen | DoBlue;
+	Colormap cmap = DefaultColormap(xc->display, DefaultScreen(xc->display));
+	if (XAllocColor(xc->display, cmap, &col)) {
+		*out = col.pixel;
+		return True;
+	}
+	return False;
+}
+
+static Boolean
+reschedule_cached_appt(Calendar *c, int cache_idx, Tick target_day)
+{
+	if (!c || c->cal_handle == 0 || !c->paint_cache ||
+	    cache_idx < 0 || cache_idx >= c->paint_cache_size)
+		return False;
+
+	Paint_cache *pc = &c->paint_cache[cache_idx];
+	Tick src_day = lowerbound(pc->start_time);
+	Tick dst_day = lowerbound(target_day);
+	int delta_days = (int)((dst_day - src_day + (dst_day >= src_day ? 43200 : -43200)) / 86400);
+	if (delta_days == 0)
+		return False;
+
+	Tick start = src_day;
+	Tick stop = next_ndays(src_day, 1) - 1;
+	CSA_attribute *range_attrs = nullptr;
+	CSA_enum *ops = nullptr;
+	int rcount = 0;
+	CSA_uint32 n_entries = 0;
+	CSA_entry_handle *list = nullptr;
+
+	setup_range(&range_attrs, &ops, &rcount, start, stop, CSA_TYPE_EVENT,
+	            0, B_FALSE, c->general->version);
+	CSA_return_code stat = csa_list_entries(c->cal_handle, rcount,
+	                                        range_attrs, ops, &n_entries, &list, nullptr);
+	free_range(&range_attrs, &ops, rcount);
+	if (stat != CSA_SUCCESS || !list || n_entries == 0) {
+		if (list) csa_free(list);
+		return False;
+	}
+
+	CSA_entry_handle target = 0;
+	Dtcm_appointment *appt = allocate_appt_struct(appt_read,
+	                                              c->general->version,
+	                                              CSA_ENTRY_ATTR_START_DATE_I,
+	                                              CSA_ENTRY_ATTR_END_DATE_I,
+	                                              CSA_ENTRY_ATTR_SUMMARY_I,
+	                                              nullptr);
+	for (CSA_uint32 i = 0; i < n_entries; i++) {
+		if (query_appt_struct(c->cal_handle, list[i], appt) == CSA_SUCCESS) {
+			Tick st = 0;
+			if (appt->time && appt->time->value && appt->time->value->item.date_time_value)
+				_csa_iso8601_to_tick(appt->time->value->item.date_time_value, &st);
+			const char *sum = (appt->what && appt->what->value && appt->what->value->item.string_value)
+			                  ? appt->what->value->item.string_value : "";
+			if (st == pc->start_time &&
+			    strcmp(sum, pc->summary ? pc->summary : "") == 0) {
+				target = list[i];
+				break;
+			}
+		}
+	}
+	free_appt_struct(&appt);
+
+	if (target == 0) {
+		csa_free(list);
+		return False;
+	}
+
+	Tick new_start = dtcm_shift_time_by_days(pc->start_time, delta_days);
+	Tick new_end = (pc->end_time > pc->start_time)
+	               ? dtcm_shift_time_by_days(pc->end_time, delta_days)
+	               : new_start;
+
+	char start_iso[BUFSIZ], end_iso[BUFSIZ];
+	_csa_tick_to_iso8601(new_start, start_iso);
+	_csa_tick_to_iso8601(new_end, end_iso);
+
+	CSA_attribute_value vals[2];
+	CSA_attribute attrs[2];
+	memset(vals, 0, sizeof(vals));
+	memset(attrs, 0, sizeof(attrs));
+
+	vals[0].type = CSA_VALUE_DATE_TIME;
+	vals[0].item.date_time_value = start_iso;
+	attrs[0].name = CSA_ENTRY_ATTR_START_DATE;
+	attrs[0].value = &vals[0];
+
+	vals[1].type = CSA_VALUE_DATE_TIME;
+	vals[1].item.date_time_value = end_iso;
+	attrs[1].name = CSA_ENTRY_ATTR_END_DATE;
+	attrs[1].value = &vals[1];
+
+	CSA_entry_handle updated = 0;
+	stat = csa_update_entry_attributes(c->cal_handle, target, CSA_SCOPE_ONE,
+	                                   CSA_FALSE, 2, attrs, &updated, nullptr);
+	if (updated)
+		csa_free((CSA_buffer)(uintptr_t)updated);
+	csa_free(list);
+	return (stat == CSA_SUCCESS) ? True : False;
+}
 
 static int
 compute_pad_width(
@@ -179,9 +296,38 @@ paint_day_entries(
 				if (nlines < maxlines) {
 					Boolean	pad;
 					static int pad_width = 0;
+					char clean_sum[256], loc_buf[128], cat_buf[64];
+					DtcmCategory cat = DTCM_CAT_NONE;
+					int bar_indent = 0;
+
+					dtcm_ics_decompose_what_ex(cache[i].summary,
+						clean_sum, sizeof(clean_sum),
+						loc_buf, sizeof(loc_buf),
+						cat_buf, sizeof(cat_buf),
+						nullptr, 0);
+					cat = dtcm_category_from_name(cat_buf);
+
+					if (cat != DTCM_CAT_NONE) {
+						unsigned short cr, cg, cb;
+						Pixel cpix;
+						dtcm_category_rgb(cat, &cr, &cg, &cb);
+						if (alloc_rgb_pixel(xc, cr, cg, cb, &cpix)) {
+							if (rect)
+								XSetClipRectangles(xc->display, xc->gc, 0, 0, rect, 1, Unsorted);
+							XSetForeground(xc->display, xc->gc, cpix);
+							XFillRectangle(xc->display, xc->xid, xc->gc,
+								x, y - pfy + 2, 3, pfy > 3 ? pfy - 2 : pfy);
+							XSetForeground(xc->display, xc->gc, xc->foreground);
+							if (rect)
+								XSetClipMask(xc->display, xc->gc, None);
+							bar_indent = 5;
+						}
+					}
+
+					dtcm_hittest_add(x, y - pfy + 2, w, pfy, i, day);
 
 	                                lines = 
-					     text_to_lines(cache[i].summary, 1);
+					     text_to_lines(clean_sum[0] ? clean_sum : cache[i].summary, 1);
 	                                if (lines != nullptr) {
 	                                        buf = ckalloc(
 						      cm_strlen(lines->s) + 18);
@@ -207,18 +353,18 @@ paint_day_entries(
 					}
 					if (pad) {
 	                                	maxchars = gr_nchars(
-								w - pad_width, 
+								w - pad_width - bar_indent, 
 								buf, pf);
 	                                	if (cm_strlen(buf) > maxchars)
 							buf[maxchars] = '\0';
-	                                	(void)gr_text(xc, x + pad_width,
+	                                	(void)gr_text(xc, x + pad_width + bar_indent,
 							      y, pf, buf, rect);
 					} else {
-	                                	maxchars = gr_nchars(w, buf, 
+	                                	maxchars = gr_nchars(w - bar_indent, buf, 
 								     pf);
 	                                	if (cm_strlen(buf) > maxchars)
 							buf[maxchars] = '\0';
-	                                	(void)gr_text(xc, x, y, pf, 
+	                                	(void)gr_text(xc, x + bar_indent, y, pf, 
 							      buf, rect);
 					}
 	                                free(buf); buf=nullptr;
@@ -318,13 +464,30 @@ paint_month(Calendar *c, Tick key, XRectangle *rect)
 
 	CalFontExtents(c->fonts->viewfont, &fontextents);
 	default_height = fontextents.max_logical_extent.height;
+	dtcm_hittest_clear();
         x = firstdom; y = 0;
+        Tick today_tick = now();
  
         for(i = 1; i <= m->ndays; i++) {
 		int box_origin_x=0, box_origin_y=0;
 
 		box_origin_x = (x * boxw) + margin;
 		box_origin_y = (y * boxh) + dayname_height + c->view->topoffset;
+
+		if (dtcm_is_same_day(day, today_tick)) {
+			Pixel accent_pix;
+			if (!alloc_rgb_pixel(xc, 0xc000, 0x3900, 0x2b00, &accent_pix))
+				accent_pix = xc->hilight_color;
+			if (rect)
+				XSetClipRectangles(xc->display, xc->gc, 0, 0, rect, 1, Unsorted);
+			XSetForeground(xc->display, xc->gc, accent_pix);
+			XFillRectangle(xc->display, xc->xid, xc->gc,
+				box_origin_x + 1, box_origin_y + 1,
+				boxw > 2 ? boxw - 2 : boxw, 4);
+			XSetForeground(xc->display, xc->gc, xc->foreground);
+			if (rect)
+				XSetClipMask(xc->display, xc->gc, None);
+		}
 
 		XtVaGetValues(m->hot_button[i-1], XmNheight, &btn_ht,
 			XmNwidth, &btn_w, nullptr);
@@ -428,6 +591,32 @@ paint_grid(Calendar *c, XRectangle *rect)
         int bottomargin = c->view->topoffset+ dayname_height+boxh*nrows;
         new_XContext *xc    = c->xcontext;
 
+        /* Subtle weekend shading on Sunday (col 0) and Saturday (col 6) */
+        if (xc && xc->display && boxw > 2 && boxh > 2) {
+                XColor bgcol;
+                Colormap cmap = DefaultColormap(xc->display, DefaultScreen(xc->display));
+                bgcol.pixel = xc->background;
+                XQueryColor(xc->display, cmap, &bgcol);
+                unsigned short dr = (bgcol.red > 0x0d00) ? (bgcol.red - 0x0d00) : bgcol.red;
+                unsigned short dg = (bgcol.green > 0x0d00) ? (bgcol.green - 0x0d00) : bgcol.green;
+                unsigned short db = (bgcol.blue > 0x0a00) ? (bgcol.blue - 0x0a00) : bgcol.blue;
+                Pixel shade_pix;
+                if (alloc_rgb_pixel(xc, dr, dg, db, &shade_pix)) {
+                        if (rect)
+                                XSetClipRectangles(xc->display, xc->gc, 0, 0, rect, 1, Unsorted);
+                        XSetForeground(xc->display, xc->gc, shade_pix);
+                        XFillRectangle(xc->display, xc->xid, xc->gc,
+                                margin + 1, c->view->topoffset + dayname_height + 1,
+                                boxw - 1, boxh * nrows - 1);
+                        XFillRectangle(xc->display, xc->xid, xc->gc,
+                                margin + 6 * boxw + 1, c->view->topoffset + dayname_height + 1,
+                                boxw - 1, boxh * nrows - 1);
+                        XSetForeground(xc->display, xc->gc, xc->foreground);
+                        if (rect)
+                                XSetClipMask(xc->display, xc->gc, None);
+                }
+        }
+
         /* horizontal */                   
         for (i = 1; i <= nrows; i++) {
                 gr_draw_line(xc, margin,
@@ -446,6 +635,33 @@ paint_grid(Calendar *c, XRectangle *rect)
         gr_draw_box(xc, margin-1,
                 c->view->topoffset-1, 7*boxw+2,
                         nrows*boxh+2+dayname_height, rect);
+
+        /* ISO week numbers (W01-W53) in left margin */
+        if (margin >= 18) {
+                struct tm tm_first;
+                _Xltimeparams localtime_buf;
+                Tick d1 = c->view->date;
+                tm_first = *_XLocaltime(&d1, localtime_buf);
+                tm_first.tm_mday = 1;
+                tm_first.tm_isdst = -1;
+                Tick row_day = mktime(&tm_first);
+                struct tm *tm_r = _XLocaltime(&row_day, localtime_buf);
+                int fday_wday = tm_r->tm_wday;
+                /* First Sunday of row 0 */
+                row_day = dtcm_shift_time_by_days(row_day, -fday_wday);
+                for (i = 0; i < nrows; i++) {
+                        /* Thursday of this week (Sunday + 4) determines ISO week */
+                        Tick thu = dtcm_shift_time_by_days(row_day, i * 7 + 4);
+                        struct tm *tm_thu = _XLocaltime(&thu, localtime_buf);
+                        int wk = dtcm_iso_week_number(tm_thu->tm_year + 1900,
+                                                      tm_thu->tm_mon + 1,
+                                                      tm_thu->tm_mday);
+                        char wbuf[8];
+                        snprintf(wbuf, sizeof(wbuf), "W%02d", wk);
+                        int wy = c->view->topoffset + dayname_height + i * boxh + 18;
+                        gr_text(xc, 2, wy, c->fonts->viewfont, wbuf, rect);
+                }
+        }
 }
 
 extern void
@@ -594,6 +810,11 @@ month_event(XEvent *event)
 {
         static int 	lastcol, lastrow;
         static XEvent 	lastevent;
+        static int      drag_cache_idx = -1;
+        static int      drag_start_x = 0, drag_start_y = 0;
+        static Tick     drag_source_day = 0;
+        static Boolean  drag_active = False;
+        static Cursor   drag_cursor = None;
         int 		x, y, j, toffset;
         int 		boxw, boxh, row, col, margin, dayname_height;
         Tick 		date;
@@ -622,6 +843,12 @@ month_event(XEvent *event)
 
         /* boundary conditions */
         if (x < margin || col > 6 || y < (dayname_height+toffset) || row > c->view->nwks-1) {
+                if (event->type == ButtonRelease && drag_active) {
+                        XUndefineCursor(XtDisplay(c->canvas), XtWindow(c->canvas));
+                        drag_active = False;
+                        drag_cache_idx = -1;
+                        set_message(c->message_text, "");
+                }
                 calendar_deselect(c);
                 lastcol=0; lastrow=0;
                 return;
@@ -630,6 +857,12 @@ month_event(XEvent *event)
 	/* boundary check for click in invalid cell */
 	if (((col < fdom(date)) && (row==0)) ||
 	    ((col > ldom(date)) && (row==c->view->nwks - 1))) {
+		if (event->type == ButtonRelease && drag_active) {
+			XUndefineCursor(XtDisplay(c->canvas), XtWindow(c->canvas));
+			drag_active = False;
+			drag_cache_idx = -1;
+			set_message(c->message_text, "");
+		}
 		calendar_deselect(c);
 		lastcol=0; lastrow=0;
 		return;
@@ -637,7 +870,18 @@ month_event(XEvent *event)
 
 	switch(event->type) {
 	case MotionNotify:
-               if (col !=lastcol || row !=lastrow) {
+                if (drag_cache_idx >= 0 && !drag_active) {
+                        int dx = x - drag_start_x;
+                        int dy = y - drag_start_y;
+                        if (dx * dx + dy * dy >= 36) {
+                                drag_active = True;
+                                if (drag_cursor == None)
+                                        drag_cursor = XCreateFontCursor(XtDisplay(c->canvas), XC_fleur);
+                                XDefineCursor(XtDisplay(c->canvas), XtWindow(c->canvas), drag_cursor);
+                                set_message(c->message_text, "Release on a day cell to reschedule appointment...");
+                        }
+                }
+                if (col !=lastcol || row !=lastrow) {
                         calendar_deselect(c);
                         j = xytoclock(col+1, row+1, date);
                         if (j > 0) {
@@ -649,8 +893,56 @@ month_event(XEvent *event)
                         lastrow=row;
                 }
                 break;
+      case ButtonRelease:
+                if (drag_active && drag_cache_idx >= 0) {
+                        XUndefineCursor(XtDisplay(c->canvas), XtWindow(c->canvas));
+                        j = xytoclock(col+1, row+1, date);
+                        if (j > 0 && !dtcm_is_same_day(j, drag_source_day)) {
+                                if (reschedule_cached_appt(c, drag_cache_idx, j)) {
+                                        invalidate_cache(c);
+                                        c->view->olddate = c->view->date;
+                                        c->view->date = j;
+                                        prepare_to_paint_monthview(c, nullptr);
+                                        set_message(c->message_text, "Appointment rescheduled.");
+                                } else {
+                                        set_message(c->message_text, "Could not reschedule appointment.");
+                                }
+                        } else {
+                                set_message(c->message_text, "");
+                        }
+                }
+                drag_active = False;
+                drag_cache_idx = -1;
+                break;
       case ButtonPress:
+                if (event->xbutton.button == Button3) {
+                        calendar_deselect(c);
+                        j = xytoclock(col+1, row+1, date);
+                        if (j > 0) {
+                                c->view->olddate = c->view->date;
+                                c->view->date = j;
+                                calendar_select(c, daySelect, (caddr_t)nullptr);
+                        }
+                        const DtcmHitBox *hb = dtcm_hittest_find(x, y);
+                        dtcm_context_menu_popup(c, &event->xbutton, j,
+                                                hb ? hb->cache_idx : -1);
+                        lastcol=col;
+                        lastrow=row;
+                        break;
+                }
+                drag_active = False;
+                drag_cache_idx = -1;
+                if (event->xbutton.button == Button1) {
+                        const DtcmHitBox *hb = dtcm_hittest_find(x, y);
+                        if (hb) {
+                                drag_cache_idx = hb->cache_idx;
+                                drag_start_x = x;
+                                drag_start_y = y;
+                                drag_source_day = hb->day;
+                        }
+                }
 		if (ds_is_double_click(&lastevent, event)) {
+			drag_cache_idx = -1;
 			_DtTurnOnHourGlass(c->frame);
 			if (lastcol == col && lastrow == row)
 				show_editor(c, 0, 0, False);

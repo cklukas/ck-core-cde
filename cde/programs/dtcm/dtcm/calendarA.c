@@ -75,6 +75,7 @@ static  char sccsid[] = "@(#)calendarA.c 1.196 95/04/12 Copyr 1991 Sun Microsyst
 #include <sys/wait.h>
 #include <netinet/in.h>
 #include <X11/Xlib.h>
+#include <X11/keysym.h>
 #include <Xm/Xm.h>
 #include <Xm/ArrowBG.h>
 #include <Xm/DrawingA.h>
@@ -118,6 +119,8 @@ static  char sccsid[] = "@(#)calendarA.c 1.196 95/04/12 Copyr 1991 Sun Microsyst
 #include "blist.h"
 #include "alarm.h"
 #include "dayglance.h"
+#include "ics_io.h"
+#include "ux_helpers.h"
 #include "ics_csa.h"
 #include "caldav_ui.h"
 #include "server_status.h"
@@ -339,6 +342,10 @@ cache_dims(Calendar *c, Dimension w, Dimension h)
 			c->view->boxw = (int)(w-2*margin)/5;
 			break;
 		case monthGlance:
+			if (margin < 32) {
+				margin = 32;
+				c->view->outside_margin = margin;
+			}
 			c->view->boxw = (int)(w-2*margin)/7;
 			c->view->topoffset =  boldfontextents.max_logical_extent.height + 30;
 			c->view->boxh = (int)(h-c->view->topoffset-
@@ -2363,6 +2370,138 @@ logon_retry(XtPointer data, XtIntervalId *dummy)
 	}
 }
 
+extern void
+dtcm_set_status_badge(Calendar *c, const char *text)
+{
+        if (!c || !c->status_badge || !text)
+                return;
+        XmString s = XmStringCreateLocalized((char *)text);
+        XtVaSetValues(c->status_badge, XmNlabelString, s, nullptr);
+        XmStringFree(s);
+}
+
+static void
+canvas_key_handler(Widget w, XtPointer client_data, XEvent *event, Boolean *cont)
+{
+        (void)w;
+        (void)cont;
+        Calendar *c = (Calendar *)client_data;
+        if (!c || !event || event->type != KeyPress)
+                return;
+
+        KeySym ks = XLookupKeysym(&event->xkey, 0);
+        Boolean ctrl = (event->xkey.state & ControlMask) != 0;
+
+        if (ctrl && (ks == XK_n || ks == XK_N)) {
+                show_editor(c, 0, 0, False);
+                return;
+        }
+        if (ks == XK_Home || (!ctrl && (ks == XK_t || ks == XK_T))) {
+                today_button(c->canvas, nullptr, nullptr);
+                return;
+        }
+        if (ks == XK_Return || ks == XK_KP_Enter) {
+                show_editor(c, 0, 0, False);
+                return;
+        }
+
+        int delta = 0;
+        if (ks == XK_Left)
+                delta = -1;
+        else if (ks == XK_Right)
+                delta = 1;
+        else if (ks == XK_Up)
+                delta = (c->view->glance == monthGlance) ? -7 : -1;
+        else if (ks == XK_Down)
+                delta = (c->view->glance == monthGlance) ? 7 : 1;
+
+        if (delta != 0) {
+                Tick old_d = c->view->date;
+                Tick new_d = dtcm_shift_time_by_days(old_d, delta);
+                if (new_d > 0) {
+                        c->view->olddate = old_d;
+                        c->view->date = new_d;
+                        if (c->view->glance == monthGlance) {
+                                if (month(old_d) != month(new_d) || year(old_d) != year(new_d)) {
+                                        invalidate_cache(c);
+                                        prepare_to_paint_monthview(c, nullptr);
+                                } else {
+                                        calendar_deselect(c);
+                                        calendar_select(c, daySelect, (caddr_t)nullptr);
+                                }
+                        } else if (c->view->glance == weekGlance) {
+                                invalidate_cache(c);
+                                paint_weekview(c, nullptr);
+                        } else if (c->view->glance == dayGlance) {
+                                invalidate_cache(c);
+                                paint_dayview(c, False, nullptr, True);
+                                calendar_select(c, hourSelect, (caddr_t)nullptr);
+                        }
+                }
+        }
+}
+
+static void
+canvas_hover_handler(Widget w, XtPointer client_data, XEvent *event, Boolean *cont)
+{
+        (void)w;
+        (void)cont;
+        Calendar *c = (Calendar *)client_data;
+        static int last_hover_idx = -1;
+
+        if (!c || !event || event->type != MotionNotify)
+                return;
+        if (event->xmotion.state & (Button1Mask | Button2Mask | Button3Mask))
+                return;
+        if (c->view->glance != monthGlance)
+                return;
+
+        const DtcmHitBox *hb = dtcm_hittest_find(event->xmotion.x, event->xmotion.y);
+        int idx = hb ? hb->cache_idx : -1;
+        if (idx == last_hover_idx)
+                return;
+        last_hover_idx = idx;
+
+        if (idx >= 0 && c->paint_cache && idx < c->paint_cache_size) {
+                Paint_cache *pc = &c->paint_cache[idx];
+                char sum[256], loc[128], cat[64];
+                dtcm_ics_decompose_what_ex(pc->summary, sum, sizeof(sum),
+                                           loc, sizeof(loc), cat, sizeof(cat),
+                                           nullptr, 0);
+                struct tm *tm = localtime(&pc->start_time);
+                char msg[512];
+                char tbuf[16] = "";
+                if (pc->show_time && tm)
+                        snprintf(tbuf, sizeof(tbuf), "%02d:%02d ", tm->tm_hour, tm->tm_min);
+                snprintf(msg, sizeof(msg), "%s%s%s%s%s%s%s",
+                         tbuf,
+                         sum[0] ? sum : (pc->summary ? pc->summary : ""),
+                         loc[0] ? " @ " : "",
+                         loc,
+                         cat[0] ? " [" : "",
+                         cat,
+                         cat[0] ? "]" : "");
+                set_message(c->message_text, msg);
+        } else {
+                set_message(c->message_text, " ");
+        }
+}
+
+static void
+now_line_timer_cb(XtPointer client_data, XtIntervalId *id)
+{
+        (void)id;
+        Calendar *c = (Calendar *)client_data;
+        if (!c || !c->xcontext || !c->xcontext->app)
+                return;
+        if (c->view->glance == dayGlance && dtcm_is_same_day(c->view->date, now())) {
+                paint_dayview(c, False, nullptr, False);
+        } else if (c->view->glance == weekGlance) {
+                paint_weekview(c, nullptr);
+        }
+        XtAppAddTimeOut(c->xcontext->app, 60000, now_line_timer_cb, (XtPointer)c);
+}
+
 static void
 handle_view_event(XEvent *event)
 {
@@ -2370,6 +2509,16 @@ handle_view_event(XEvent *event)
 
         if (event == nullptr)
                 return;
+        if (event->type == ButtonPress) {
+                if (event->xbutton.button == Button4) {
+                        prev_button(c->canvas, nullptr, nullptr);
+                        return;
+                }
+                if (event->xbutton.button == Button5) {
+                        next_button(c->canvas, nullptr, nullptr);
+                        return;
+                }
+        }
         if (c->view->glance == monthGlance)
                 month_event(event);
         else if (c->view->glance == weekGlance)
@@ -2556,7 +2705,11 @@ init_calendar(int argc, char **argv)
 	Dimension w, h, label_width;
         String translations =
         	"<Btn1Down>: view_event()               \n\
-         	<Btn1Motion>: view_event()";
+         	<Btn1Motion>: view_event()              \n\
+         	<Btn1Up>: view_event()                  \n\
+         	<Btn3Down>: view_event()                \n\
+         	<Btn4Down>: view_event()                \n\
+         	<Btn5Down>: view_event()";
         static XtActionsRec action_table[] = {
                 {(String) "view_event", view_event_action},
 		{(String) "TranslationDragStart", 
@@ -2747,8 +2900,20 @@ init_calendar(int argc, char **argv)
         XtAddCallback(calendar->canvas, XmNhelpCallback,
 					help_view_cb, nullptr);
 	ac=0;
-	XtSetArg(al[ac], XmNalignment, XmALIGNMENT_BEGINNING); ac++;
+	XtSetArg(al[ac], XmNalignment, XmALIGNMENT_END); ac++;
 	XtSetArg(al[ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+	XtSetArg(al[ac], XmNrightOffset, 6); ac++;
+	XtSetArg(al[ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
+	XtSetArg(al[ac], XmNmarginHeight, 0); ac++;
+	calendar->status_badge = XmCreateLabelGadget(calendar->form, "statusBadge",
+						     al, ac);
+	dtcm_set_status_badge(calendar, "Local AF_UNIX");
+
+	ac=0;
+	XtSetArg(al[ac], XmNalignment, XmALIGNMENT_BEGINNING); ac++;
+	XtSetArg(al[ac], XmNrightAttachment, XmATTACH_WIDGET); ac++;
+	XtSetArg(al[ac], XmNrightWidget, calendar->status_badge); ac++;
+	XtSetArg(al[ac], XmNrightOffset, 8); ac++;
 	XtSetArg(al[ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
 	XtSetArg(al[ac], XmNleftAttachment, XmATTACH_FORM); ac++;
 	XtSetArg(al[ac], XmNmarginHeight, 0); ac++;
@@ -2787,6 +2952,11 @@ init_calendar(int argc, char **argv)
         XtAddCallback(calendar->canvas, XmNresizeCallback, resize_proc, nullptr);
         XtAddCallback(calendar->canvas, XmNinputCallback, view_event_cb, nullptr);
         XtAddCallback(calendar->canvas, XmNexposeCallback, repaint_proc, nullptr);
+        XtAddEventHandler(calendar->canvas, KeyPressMask, False,
+                          canvas_key_handler, (XtPointer)calendar);
+        XtAddEventHandler(calendar->canvas, PointerMotionMask, False,
+                          canvas_hover_handler, (XtPointer)calendar);
+        XtAppAddTimeOut(app, 60000, now_line_timer_cb, (XtPointer)calendar);
 
 	cm_register_drop_site(calendar, calendar->form);
 

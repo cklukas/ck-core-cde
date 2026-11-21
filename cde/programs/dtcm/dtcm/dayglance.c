@@ -78,6 +78,8 @@ static char sccsid[] = "@(#)dayglance.c 1.76 95/04/24 Copyr 1991 Sun Microsystem
 #include "todo.h"
 #include "print.h"
 #include "group_editor.h"
+#include "ux_helpers.h"
+#include "context_menu.h"
 
 #define XOS_USE_XT_LOCKING
 #define X_INCLUDE_TIME_H
@@ -708,6 +710,42 @@ paint_dayview(Calendar *c, Boolean repaint, XRectangle *rect, Boolean update_mon
 	}
 
 	paint_day_header(c, c->view->date, rect);
+
+	/* Live current-time indicator line and Today header accent when viewing Today */
+	if (dtcm_is_same_day(c->view->date, now())) {
+		new_XContext *xc = c->xcontext;
+		XColor col;
+		col.red = 0xc000; col.green = 0x3900; col.blue = 0x2b00;
+		col.flags = DoRed | DoGreen | DoBlue;
+		Colormap cmap = DefaultColormap(xc->display, DefaultScreen(xc->display));
+		Pixel line_pix = XAllocColor(xc->display, cmap, &col) ? col.pixel : xc->hilight_color;
+
+		if (rect)
+			XSetClipRectangles(xc->display, xc->gc, 0, 0, rect, 1, Unsorted);
+		XSetForeground(xc->display, xc->gc, line_pix);
+
+		/* Subtle Today accent bar along top of schedule pane */
+		XFillRectangle(xc->display, xc->xid, xc->gc,
+			(int)MOBOX_AREA_WIDTH + 3, c->view->topoffset - 4,
+			c->view->boxw > 2 ? c->view->boxw - 2 : c->view->winw - (int)MOBOX_AREA_WIDTH - 4, 3);
+
+		time_t cur = now();
+		struct tm *now_tm = localtime(&cur);
+		if (now_tm && now_tm->tm_hour >= beg && now_tm->tm_hour < end && c->view->boxh > 0) {
+			int now_y = c->view->topoffset + c->view->boxh +
+				(now_tm->tm_hour - beg) * c->view->boxh +
+				(now_tm->tm_min * c->view->boxh) / 60;
+			int x1 = (int)MOBOX_AREA_WIDTH + 3;
+			int x2 = x1 + c->view->boxw - 2;
+			XFillArc(xc->display, xc->xid, xc->gc, x1, now_y - 3, 7, 7, 0, 360 * 64);
+			XFillRectangle(xc->display, xc->xid, xc->gc, x1 + 4, now_y - 1,
+				x2 > x1 + 4 ? x2 - x1 - 4 : 1, 2);
+		}
+
+		XSetForeground(xc->display, xc->gc, xc->foreground);
+		if (rect)
+			XSetClipMask(xc->display, xc->gc, None);
+	}
 }
 
 extern void
@@ -1000,6 +1038,11 @@ day_event(XEvent *event)
                 }
                 break;
         case ButtonPress:
+		if (event->xbutton.button == Button3 && !in_mbox) {
+			j = day_xytoclock(c, xy.x, xy.y, date);
+			dtcm_context_menu_popup(c, &event->xbutton, j >= 0 ? j : c->view->date, -1);
+			break;
+		}
 		if (ds_is_double_click(&lastevent, event)) {
 			_DtTurnOnHourGlass(c->frame);
 			j = day_xytoclock(c, xy.x, xy.y, date);

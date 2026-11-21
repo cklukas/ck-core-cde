@@ -16,6 +16,7 @@ typedef struct {
     char uid[256];
     char summary[512];
     char location[512];
+    char category[64];
     char description[2048];
     time_t start_utc;
     time_t end_utc;
@@ -35,5 +36,10 @@ void dtcm_ics_decompose_what(const char *what,
                              char *out_summary, size_t sum_len,
                              char *out_location, size_t loc_len,
                              char *out_desc, size_t desc_len);
+void dtcm_ics_decompose_what_ex(const char *what,
+                                char *out_summary, size_t sum_len,
+                                char *out_location, size_t loc_len,
+                                char *out_category, size_t cat_len,
+                                char *out_desc, size_t desc_len);
 
 #endif /* DTCM_ICS_IO_H */

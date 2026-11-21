@@ -18,6 +18,7 @@ int main(void)
         "SUMMARY:Design Review\\, Wayland\\\r\n"
         "  & X11\r\n"
         "LOCATION:Room 42\\; Floor 3\r\n"
+        "CATEGORIES:Work\r\n"
         "DESCRIPTION:Line one\\nLine two\\, with comma\r\n"
         "DTSTART:20261120T090000Z\r\n"
         "DTEND:20261120T103000Z\r\n"
@@ -71,6 +72,7 @@ int main(void)
     assert(strstr(events[0].summary, "Design Review, Wayland") != NULL);
     assert(strstr(events[0].summary, "& X11") != NULL);
     assert(strcmp(events[0].location, "Room 42; Floor 3") == 0);
+    assert(strcmp(events[0].category, "Work") == 0);
     assert(strcmp(events[0].description, "Line one\nLine two, with comma") == 0);
     assert(events[0].all_day == 0);
     assert(events[0].end_utc - events[0].start_utc == 5400);

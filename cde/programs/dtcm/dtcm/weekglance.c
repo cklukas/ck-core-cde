@@ -75,6 +75,8 @@
 #include "find.h"
 #include "goto.h"
 #include "tempbr.h"
+#include "ux_helpers.h"
+#include "context_menu.h"
 
 #define XOS_USE_XT_LOCKING
 #define X_INCLUDE_TIME_H
@@ -953,6 +955,22 @@ draw_week(Calendar *c, XRectangle *rect, Boundary boundary)
 		if (boundary == okay) {
                 	day_om = dom(current_day);
 			display_hot_btn(c, n, day_om);
+			if (dtcm_is_same_day(current_day, now())) {
+				XColor tcol;
+				tcol.red = 0xc000; tcol.green = 0x3900; tcol.blue = 0x2b00;
+				tcol.flags = DoRed | DoGreen | DoBlue;
+				Colormap cmap = DefaultColormap(xc->display, DefaultScreen(xc->display));
+				Pixel tpix = XAllocColor(xc->display, cmap, &tcol) ? tcol.pixel : xc->hilight_color;
+				if (rect)
+					XSetClipRectangles(xc->display, xc->gc, 0, 0, rect, 1, Unsorted);
+				XSetForeground(xc->display, xc->gc, tpix);
+				XFillRectangle(xc->display, xc->xid, xc->gc,
+					x + 1, y + 1,
+					w->day_width > 2 ? w->day_width - 2 : w->day_width, 4);
+				XSetForeground(xc->display, xc->gc, xc->foreground);
+				if (rect)
+					XSetClipMask(xc->display, xc->gc, None);
+			}
                 	fill_day(c, w, x, y, current_day, 
 				 c->paint_cache, c->paint_cache_size, rect);
                 	current_day += daysec;
@@ -1242,7 +1260,39 @@ draw_chart(Calendar *c, Week *w, XRectangle *rect)
                 gr_text(xc, w->chart_x + (w->chart_day_width * n) + x,
                         y - char_height / 2, w->font, days3[n+1], rect);
         }
- 
+
+        /* Live current-time indicator line across Today's column in week chart */
+        {
+                time_t cur = now();
+                for (n = 0; n < 7; n++) {
+                        if (dtcm_is_same_day(w->start_date + (Tick)n * daysec, cur)) {
+                                struct tm *now_tm = localtime(&cur);
+                                int hr_h = w->chart_hour_height + w->add_pixels;
+                                if (now_tm && now_tm->tm_hour >= w->begin_hour &&
+                                    now_tm->tm_hour < w->end_hour && hr_h > 0) {
+                                        int now_y = w->chart_y +
+                                                (now_tm->tm_hour - w->begin_hour) * hr_h +
+                                                (now_tm->tm_min * hr_h) / 60;
+                                        int col_x = w->chart_x + w->chart_day_width * n;
+                                        XColor tcol;
+                                        tcol.red = 0xc000; tcol.green = 0x3900; tcol.blue = 0x2b00;
+                                        tcol.flags = DoRed | DoGreen | DoBlue;
+                                        Colormap cmap = DefaultColormap(xc->display, DefaultScreen(xc->display));
+                                        Pixel tpix = XAllocColor(xc->display, cmap, &tcol) ? tcol.pixel : xc->hilight_color;
+                                        if (rect)
+                                                XSetClipRectangles(xc->display, xc->gc, 0, 0, rect, 1, Unsorted);
+                                        XSetForeground(xc->display, xc->gc, tpix);
+                                        XFillRectangle(xc->display, xc->xid, xc->gc,
+                                                col_x + 1, now_y - 1,
+                                                w->chart_day_width > 2 ? w->chart_day_width - 2 : w->chart_day_width, 2);
+                                        XSetForeground(xc->display, xc->gc, xc->foreground);
+                                        if (rect)
+                                                XSetClipMask(xc->display, xc->gc, None);
+                                }
+                                break;
+                        }
+                }
+        }
 }
 
 extern void
@@ -1292,6 +1342,10 @@ week_event(XEvent *event)
 		j = week_xytoclock(w, x, y);
 		if (j == -1)
 			return;
+		if (event->xbutton.button == Button3) {
+			dtcm_context_menu_popup(c, &event->xbutton, j, -1);
+			break;
+		}
 		hr = (inchart(w, x, y)) ? week_xytohour(w, x, y) : (wsel->row + w->begin_hour);
 
 		if (ds_is_double_click(&lastevent, event)) {

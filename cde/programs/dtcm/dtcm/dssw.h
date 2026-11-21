@@ -108,6 +108,14 @@ typedef struct {
 	Widget			what_text;
 	Widget			what_scrollwindow;
 	char			what_val[WHAT_LEN];
+	Widget			dur_rc;
+	Widget			location_label;
+	Widget			location_text;
+	char			location_val[512];
+	Widget			category_label;
+	Widget			category_menu;
+	Widget			category_btns[5];
+	int			category_idx;
 	Boolean			show_notime_selection;
 	Boolean			show_allday_selection;
 } DSSW;
