@@ -115,6 +115,21 @@ int main(void)
     assert(spans[3].cache_idx == 2 && spans[3].lane == 1);
     printf("ok    multiday-span-lanes\n");
 
+    dtcm_selected_appt_clear();
+    assert(!dtcm_selected_appt_is_set());
+    dtcm_selected_appt_set(3, 1000, 4600, 1, "Design Sync");
+    assert(dtcm_selected_appt_is_set());
+    assert(dtcm_selected_appt_matches(1000, "Design Sync"));
+    assert(!dtcm_selected_appt_matches(1000, "Other"));
+    dtcm_clipboard_copy(1000, 4600, 1, "Design Sync");
+    assert(dtcm_clipboard_has_item());
+    time_t cs = 0, ce = 0; int cst = 0; char csum[64];
+    assert(dtcm_clipboard_get(&cs, &ce, &cst, csum, sizeof(csum)) == 1);
+    assert(cs == 1000 && ce == 4600 && cst == 1 && strcmp(csum, "Design Sync") == 0);
+    dtcm_selected_appt_clear();
+    assert(!dtcm_selected_appt_is_set());
+    printf("ok    selection-and-clipboard\n");
+
     return 0;
 }
 """

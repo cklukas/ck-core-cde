@@ -1,4 +1,13 @@
 2026-11-21
+- Add direct appointment card selection, clipboard Copy/Paste, and keyboard/menu
+  Delete in `dtcm` (`ux_helpers.{c,h}`, `dayglance.c`, `context_menu.{c,h}`,
+  `calendarA.c`, `tests/check-ux-helpers.py`):
+  - Clicking an appointment card in Day view selects only that event card with
+    a 2px highlight border (instead of highlighting the entire hour row).
+  - Add **Copy Appointment** (`Ctrl+C`), **Paste Appointment** (`Ctrl+V`), and
+    **Delete Appointment** (`Del`) to the **Edit** menu, right-click context
+    menu, and canvas keyboard shortcuts (`Enter` edits the selected card,
+    `Escape` clears selection).
 - Deliver Track 2 (`WP-21` – `WP-24`) pure XWayland-free native Wayland session
   mode (`--no-xwayland`):
   - Pin CK Core Motif ABI 9 to `7686d1a37ef9aa623b3104d464dae591597fda5f`

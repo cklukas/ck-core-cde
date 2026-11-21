@@ -57,4 +57,16 @@ void dtcm_hittest_clear(void);
 void dtcm_hittest_add(int x, int y, int w, int h, int cache_idx, time_t day);
 const DtcmHitBox *dtcm_hittest_find(int x, int y);
 
+/* Direct appointment selection state (survives repaints by matching start_time + summary) */
+void dtcm_selected_appt_set(int cache_idx, time_t start_time, time_t end_time, int show_time, const char *summary);
+void dtcm_selected_appt_clear(void);
+int dtcm_selected_appt_is_set(void);
+int dtcm_selected_appt_matches(time_t start_time, const char *summary);
+int dtcm_selected_appt_get(int *out_cache_idx, time_t *out_start, time_t *out_end, int *out_show_time, char *out_summary, size_t sum_len);
+
+/* Appointment clipboard for Copy / Paste across days and hours */
+void dtcm_clipboard_copy(time_t start_time, time_t end_time, int show_time, const char *summary);
+int dtcm_clipboard_has_item(void);
+int dtcm_clipboard_get(time_t *out_start, time_t *out_end, int *out_show_time, char *out_summary, size_t sum_len);
+
 #endif /* DTCM_UX_HELPERS_H */

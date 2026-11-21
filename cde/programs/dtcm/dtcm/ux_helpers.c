@@ -299,3 +299,93 @@ dtcm_hittest_find(int x, int y)
     }
     return NULL;
 }
+
+typedef struct {
+    int valid;
+    int cache_idx;
+    time_t start_time;
+    time_t end_time;
+    int show_time;
+    char summary[1024];
+} DtcmApptRef;
+
+static DtcmApptRef g_selected_appt = { 0 };
+static DtcmApptRef g_clipboard_appt = { 0 };
+
+void
+dtcm_selected_appt_set(int cache_idx, time_t start_time, time_t end_time, int show_time, const char *summary)
+{
+    g_selected_appt.valid = 1;
+    g_selected_appt.cache_idx = cache_idx;
+    g_selected_appt.start_time = start_time;
+    g_selected_appt.end_time = end_time;
+    g_selected_appt.show_time = show_time;
+    snprintf(g_selected_appt.summary, sizeof(g_selected_appt.summary), "%s", summary ? summary : "");
+}
+
+void
+dtcm_selected_appt_clear(void)
+{
+    g_selected_appt.valid = 0;
+    g_selected_appt.cache_idx = -1;
+    g_selected_appt.summary[0] = '\0';
+}
+
+int
+dtcm_selected_appt_is_set(void)
+{
+    return g_selected_appt.valid;
+}
+
+int
+dtcm_selected_appt_matches(time_t start_time, const char *summary)
+{
+    if (!g_selected_appt.valid)
+        return 0;
+    return (g_selected_appt.start_time == start_time &&
+            strcmp(g_selected_appt.summary, summary ? summary : "") == 0) ? 1 : 0;
+}
+
+int
+dtcm_selected_appt_get(int *out_cache_idx, time_t *out_start, time_t *out_end, int *out_show_time, char *out_summary, size_t sum_len)
+{
+    if (!g_selected_appt.valid)
+        return 0;
+    if (out_cache_idx) *out_cache_idx = g_selected_appt.cache_idx;
+    if (out_start) *out_start = g_selected_appt.start_time;
+    if (out_end) *out_end = g_selected_appt.end_time;
+    if (out_show_time) *out_show_time = g_selected_appt.show_time;
+    if (out_summary && sum_len > 0)
+        snprintf(out_summary, sum_len, "%s", g_selected_appt.summary);
+    return 1;
+}
+
+void
+dtcm_clipboard_copy(time_t start_time, time_t end_time, int show_time, const char *summary)
+{
+    g_clipboard_appt.valid = 1;
+    g_clipboard_appt.cache_idx = -1;
+    g_clipboard_appt.start_time = start_time;
+    g_clipboard_appt.end_time = end_time;
+    g_clipboard_appt.show_time = show_time;
+    snprintf(g_clipboard_appt.summary, sizeof(g_clipboard_appt.summary), "%s", summary ? summary : "");
+}
+
+int
+dtcm_clipboard_has_item(void)
+{
+    return g_clipboard_appt.valid;
+}
+
+int
+dtcm_clipboard_get(time_t *out_start, time_t *out_end, int *out_show_time, char *out_summary, size_t sum_len)
+{
+    if (!g_clipboard_appt.valid)
+        return 0;
+    if (out_start) *out_start = g_clipboard_appt.start_time;
+    if (out_end) *out_end = g_clipboard_appt.end_time;
+    if (out_show_time) *out_show_time = g_clipboard_appt.show_time;
+    if (out_summary && sum_len > 0)
+        snprintf(out_summary, sum_len, "%s", g_clipboard_appt.summary);
+    return 1;
+}

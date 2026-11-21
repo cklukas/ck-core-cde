@@ -125,6 +125,7 @@ static  char sccsid[] = "@(#)calendarA.c 1.196 95/04/12 Copyr 1991 Sun Microsyst
 #include "ux_helpers.h"
 #include "undo_stack.h"
 #include "agenda_ui.h"
+#include "context_menu.h"
 #include "overlay_ui.h"
 #include "ics_csa.h"
 #include "caldav_ui.h"
@@ -1428,6 +1429,28 @@ undo_menu_cb(Widget w, XtPointer client_data, XtPointer call_data)
 }
 
 static void
+copy_appt_menu_cb(Widget w, XtPointer client_data, XtPointer call_data)
+{
+        (void)w; (void)call_data;
+        dtcm_copy_selected_appt((Calendar *)client_data);
+}
+
+static void
+paste_appt_menu_cb(Widget w, XtPointer client_data, XtPointer call_data)
+{
+        (void)w; (void)call_data;
+        Calendar *c = (Calendar *)client_data;
+        dtcm_paste_appt(c, c ? c->view->date : 0);
+}
+
+static void
+delete_appt_menu_cb(Widget w, XtPointer client_data, XtPointer call_data)
+{
+        (void)w; (void)call_data;
+        dtcm_delete_selected_appt((Calendar *)client_data);
+}
+
+static void
 make_edit_menu(Calendar *c)
 {
 	Widget edit_menu, edit_button;
@@ -1458,12 +1481,50 @@ make_edit_menu(Calendar *c)
 
 	{
 		XmCreateSeparatorGadget(edit_menu, "editUndoSep", nullptr, 0);
-		XmString undo_str = XmStringCreateLocalized("Undo (Ctrl+Z)");
+
+		XmString undo_str = XmStringCreateLocalized("Undo");
+		XmString undo_acc = XmStringCreateLocalized("Ctrl+Z");
 		ac = 0;
 		XtSetArg(al[ac], XmNlabelString, undo_str); ac++;
+		XtSetArg(al[ac], XmNaccelerator, "Ctrl<Key>z"); ac++;
+		XtSetArg(al[ac], XmNacceleratorText, undo_acc); ac++;
 		Widget undo_mi = XmCreatePushButtonGadget(edit_menu, "undo", al, ac);
 		XtAddCallback(undo_mi, XmNactivateCallback, undo_menu_cb, (XtPointer)c);
 		XmStringFree(undo_str);
+		XmStringFree(undo_acc);
+
+		XmString copy_str = XmStringCreateLocalized("Copy Appointment");
+		XmString copy_acc = XmStringCreateLocalized("Ctrl+C");
+		ac = 0;
+		XtSetArg(al[ac], XmNlabelString, copy_str); ac++;
+		XtSetArg(al[ac], XmNaccelerator, "Ctrl<Key>c"); ac++;
+		XtSetArg(al[ac], XmNacceleratorText, copy_acc); ac++;
+		Widget copy_mi = XmCreatePushButtonGadget(edit_menu, "copyAppt", al, ac);
+		XtAddCallback(copy_mi, XmNactivateCallback, copy_appt_menu_cb, (XtPointer)c);
+		XmStringFree(copy_str);
+		XmStringFree(copy_acc);
+
+		XmString paste_str = XmStringCreateLocalized("Paste Appointment");
+		XmString paste_acc = XmStringCreateLocalized("Ctrl+V");
+		ac = 0;
+		XtSetArg(al[ac], XmNlabelString, paste_str); ac++;
+		XtSetArg(al[ac], XmNaccelerator, "Ctrl<Key>v"); ac++;
+		XtSetArg(al[ac], XmNacceleratorText, paste_acc); ac++;
+		Widget paste_mi = XmCreatePushButtonGadget(edit_menu, "pasteAppt", al, ac);
+		XtAddCallback(paste_mi, XmNactivateCallback, paste_appt_menu_cb, (XtPointer)c);
+		XmStringFree(paste_str);
+		XmStringFree(paste_acc);
+
+		XmString del_str = XmStringCreateLocalized("Delete Appointment");
+		XmString del_acc = XmStringCreateLocalized("Del");
+		ac = 0;
+		XtSetArg(al[ac], XmNlabelString, del_str); ac++;
+		XtSetArg(al[ac], XmNaccelerator, "<Key>osfDelete"); ac++;
+		XtSetArg(al[ac], XmNacceleratorText, del_acc); ac++;
+		Widget del_mi = XmCreatePushButtonGadget(edit_menu, "deleteAppt", al, ac);
+		XtAddCallback(del_mi, XmNactivateCallback, delete_appt_menu_cb, (XtPointer)c);
+		XmStringFree(del_str);
+		XmStringFree(del_acc);
 	}
 
 	ManageChildren(edit_menu);
@@ -2657,6 +2718,31 @@ canvas_key_handler(Widget w, XtPointer client_data, XEvent *event, Boolean *cont
                 dtcm_perform_undo(c);
                 return;
         }
+        if (ctrl && (ks == XK_c || ks == XK_C)) {
+                dtcm_copy_selected_appt(c);
+                return;
+        }
+        if (ctrl && (ks == XK_v || ks == XK_V)) {
+                dtcm_paste_appt(c, c->view->date);
+                return;
+        }
+        if (ks == XK_Delete || ks == XK_BackSpace) {
+                if (dtcm_selected_appt_is_set()) {
+                        dtcm_delete_selected_appt(c);
+                        return;
+                }
+        }
+        if (ks == XK_Escape) {
+                if (dtcm_selected_appt_is_set()) {
+                        dtcm_selected_appt_clear();
+                        if (c->view->glance == dayGlance)
+                                paint_dayview(c, False, nullptr, False);
+                        else if (c->view->glance == monthGlance)
+                                prepare_to_paint_monthview(c, nullptr);
+                        set_message(c->message_text, " ");
+                        return;
+                }
+        }
         if (ks == XK_slash || (ctrl && (ks == XK_f || ks == XK_F))) {
                 dtcm_filter_bar_toggle(c, True);
                 return;
@@ -2670,7 +2756,15 @@ canvas_key_handler(Widget w, XtPointer client_data, XEvent *event, Boolean *cont
                 return;
         }
         if (ks == XK_Return || ks == XK_KP_Enter) {
-                show_editor(c, 0, 0, False);
+                time_t st = 0, en = 0;
+                int show_t = 1;
+                char sum[1024];
+                if (dtcm_selected_appt_get(nullptr, &st, &en, &show_t, sum, sizeof(sum))) {
+                        show_editor(c, (Tick)st, (Tick)en, show_t ? False : True);
+                        editor_select_appt(c, (Tick)st, sum);
+                } else {
+                        show_editor(c, 0, 0, False);
+                }
                 return;
         }
 

@@ -500,17 +500,31 @@ paint_dayview_appts(Calendar *c, Paint_cache *cache, int a_total, void *rect)
 			XRectangle clip_r = { (short)blk_x, (short)top_y, (unsigned short)blk_w, (unsigned short)blk_h };
 			XSetClipRectangles(xc->display, xc->gc, 0, 0, &clip_r, 1, Unsorted);
 
+			Boolean is_selected = (idx >= 0 &&
+				dtcm_selected_appt_matches(cache[idx].start_time, cache[idx].summary))
+				? True : False;
+
 			/* Soft pastel card fill */
 			XSetForeground(xc->display, xc->gc, fill_pix);
 			XFillRectangle(xc->display, xc->xid, xc->gc, blk_x, top_y, (unsigned int)blk_w, (unsigned int)blk_h);
 
-			/* 4px bold category accent bar on left */
+			/* Bold category accent bar on left */
 			XSetForeground(xc->display, xc->gc, acc_pix);
-			XFillRectangle(xc->display, xc->xid, xc->gc, blk_x, top_y, 4, (unsigned int)blk_h);
+			XFillRectangle(xc->display, xc->xid, xc->gc, blk_x, top_y, is_selected ? 5 : 4, (unsigned int)blk_h);
 
-			/* Subtle border */
-			XDrawRectangle(xc->display, xc->xid, xc->gc, blk_x, top_y,
-				(unsigned int)(blk_w - 1), (unsigned int)(blk_h - 1));
+			/* Crisp border (thick highlight ring when this event card is selected) */
+			if (is_selected) {
+				XSetForeground(xc->display, xc->gc, xc->hilight_color);
+				XDrawRectangle(xc->display, xc->xid, xc->gc, blk_x, top_y,
+					(unsigned int)(blk_w - 1), (unsigned int)(blk_h - 1));
+				if (blk_w > 3 && blk_h > 3) {
+					XDrawRectangle(xc->display, xc->xid, xc->gc, blk_x + 1, top_y + 1,
+						(unsigned int)(blk_w - 3), (unsigned int)(blk_h - 3));
+				}
+			} else {
+				XDrawRectangle(xc->display, xc->xid, xc->gc, blk_x, top_y,
+					(unsigned int)(blk_w - 1), (unsigned int)(blk_h - 1));
+			}
 
 			XSetForeground(xc->display, xc->gc, xc->foreground);
 			XSetClipMask(xc->display, xc->gc, None);
@@ -1436,6 +1450,14 @@ day_event(XEvent *event)
 		if (event->xbutton.button == Button3 && !in_mbox) {
 			j = day_xytoclock(c, xy.x, xy.y, date);
 			const DtcmHitBox *hb = dtcm_hittest_find(x, y);
+			if (hb && c->paint_cache && hb->cache_idx >= 0 &&
+			    hb->cache_idx < c->paint_cache_size) {
+				Paint_cache *pc = &c->paint_cache[hb->cache_idx];
+				calendar_deselect(c);
+				dtcm_selected_appt_set(hb->cache_idx, pc->start_time, pc->end_time,
+						       pc->show_time, pc->summary);
+				paint_dayview(c, False, nullptr, False);
+			}
 			dtcm_context_menu_popup(c, &event->xbutton, j >= 0 ? j : c->view->date,
 						hb ? hb->cache_idx : -1);
 			break;
@@ -1500,26 +1522,51 @@ day_event(XEvent *event)
 					add_all_gappt(ge);
 				}
 			} else {
+				const DtcmHitBox *hb = dtcm_hittest_find(x, y);
 				calendar_deselect(c);
-				j = day_xytoclock(c, xy.x, xy.y, date);
-				if (j >= 0) {
+				if (hb && c->paint_cache && hb->cache_idx >= 0 &&
+				    hb->cache_idx < c->paint_cache_size) {
+					Paint_cache *pc = &c->paint_cache[hb->cache_idx];
 					c->view->olddate = c->view->date;
-					c->view->date = j;
-					calendar_select(c, hourSelect,
-							(caddr_t)&xy);
+					c->view->date = pc->start_time;
+					dtcm_selected_appt_set(hb->cache_idx, pc->start_time, pc->end_time,
+							       pc->show_time, pc->summary);
+					paint_dayview(c, False, nullptr, False);
+					char csum[256], cloc[128], ccat[64], smsg[384];
+					dtcm_ics_decompose_what_ex(pc->summary, csum, sizeof(csum),
+						cloc, sizeof(cloc), ccat, sizeof(ccat), nullptr, 0);
+					snprintf(smsg, sizeof(smsg),
+						 "Selected: %s  (Ctrl+C Copy, Del Delete, Enter Edit)",
+						 csum[0] ? csum : (pc->summary ? pc->summary : ""));
+					set_message(c->message_text, smsg);
 					if (editor_showing(e)) {
-						set_editor_defaults(e, j,
-							next_nhours(j, 1), xy.y == 0 ? True : False);
-						add_all_appt(e);
+						editor_select_appt(c, pc->start_time, pc->summary);
 					}
-					if (todo_showing(t)) {
-						set_todo_defaults(t);
-						add_all_todo(t);
-					}
-					if (geditor_showing(ge)) {
-						set_geditor_defaults(ge, j,
-							next_nhours(j, 1));
-						add_all_gappt(ge);
+				} else {
+					Boolean had_sel = dtcm_selected_appt_is_set() ? True : False;
+					dtcm_selected_appt_clear();
+					if (had_sel)
+						paint_dayview(c, False, nullptr, False);
+					j = day_xytoclock(c, xy.x, xy.y, date);
+					if (j >= 0) {
+						c->view->olddate = c->view->date;
+						c->view->date = j;
+						calendar_select(c, hourSelect,
+								(caddr_t)&xy);
+						if (editor_showing(e)) {
+							set_editor_defaults(e, j,
+								next_nhours(j, 1), xy.y == 0 ? True : False);
+							add_all_appt(e);
+						}
+						if (todo_showing(t)) {
+							set_todo_defaults(t);
+							add_all_todo(t);
+						}
+						if (geditor_showing(ge)) {
+							set_geditor_defaults(ge, j,
+								next_nhours(j, 1));
+							add_all_gappt(ge);
+						}
 					}
 				}
 			}
