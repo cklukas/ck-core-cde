@@ -1356,6 +1356,36 @@ BoxCreate (void)
          XtAddEventHandler(box_data->right_control_form, ButtonPressMask,False,
                            PostPopupMenu, (XtPointer) nullptr);
       }
+
+      if (box_data->left_arrow_form != nullptr)
+      {
+         XtSetArg (al[0], XmNuserData, CONTROL);
+         XtSetValues (box_data->left_arrow_form, al, 1);
+
+         if (panel.popup_data == nullptr || panel.popup_data->popup == nullptr)
+	    CreatePopupMenu(box_data->left_arrow_form);
+         else
+	    XmAddToPostFromList(panel.popup_data->popup,
+				box_data->left_arrow_form);
+
+         XtAddEventHandler(box_data->left_arrow_form, ButtonPressMask, False,
+                           PostPopupMenu, (XtPointer) nullptr);
+      }
+
+      if (box_data->right_arrow_form != nullptr)
+      {
+         XtSetArg (al[0], XmNuserData, CONTROL);
+         XtSetValues (box_data->right_arrow_form, al, 1);
+
+         if (panel.popup_data == nullptr || panel.popup_data->popup == nullptr)
+	    CreatePopupMenu(box_data->right_arrow_form);
+         else
+	    XmAddToPostFromList(panel.popup_data->popup,
+				box_data->right_arrow_form);
+
+         XtAddEventHandler(box_data->right_arrow_form, ButtonPressMask, False,
+                           PostPopupMenu, (XtPointer) nullptr);
+      }
    }
 
 

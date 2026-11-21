@@ -732,7 +732,9 @@ GetBoxDataFromForm (Widget     form,
       if (box_data == *box_data_rtn) continue;
 
       if (box_data->left_control_form == form ||
-         box_data->right_control_form == form)
+         box_data->right_control_form == form ||
+         box_data->left_arrow_form == form ||
+         box_data->right_arrow_form == form)
       {
          *box_data_rtn = box_data;
          break;
@@ -859,7 +861,8 @@ GetMainControlData (BoxData * box_data,
    {
       control_data = box_data->control_data[i];
 
-      if (control_data->icon == focus_widget)
+      if (control_data->icon == focus_widget ||
+          control_data->arrow == focus_widget)
       {
          found = True;
          break;
@@ -1325,6 +1328,26 @@ PopupMenu (Widget    w,
 
       focus_widget = (Widget) XmObjectAtPoint (form, event->xbutton.x,
 					       event->xbutton.y);
+      if (focus_widget == nullptr && control_type == CONTROL &&
+          box_data != nullptr &&
+          (form == box_data->left_arrow_form ||
+           form == box_data->right_arrow_form))
+      {
+         /* Allow right-clicking anywhere along the arrow bar, including its
+          * 1px top/bottom shadow margin, to resolve the corresponding control. */
+         int idx;
+         for (idx = 0; idx < box_data->control_data_count; idx++)
+         {
+            Widget arrow = box_data->control_data[idx]->arrow;
+            if (arrow != nullptr && XtParent(arrow) == form &&
+                event->xbutton.x >= XtX(arrow) &&
+                event->xbutton.x < (int)XtX(arrow) + (int)XtWidth(arrow))
+            {
+               focus_widget = arrow;
+               break;
+            }
+         }
+      }
       if (focus_widget == nullptr)
          return;
 
@@ -1347,6 +1370,8 @@ PopupMenu (Widget    w,
    if (control_type == CONTROL)
    {
       control_data = GetMainControlData (box_data, focus_widget);
+      if (control_data == nullptr)
+         return;
 
       /* Find the right subpanel data if main control is not default */
       /* control.						     */
@@ -1736,7 +1761,8 @@ GetSwitchControlData (SwitchData * switch_data,
    {
       control_data = switch_data->control_data[i];
 
-      if (control_data->icon == focus_widget)
+      if (control_data->icon == focus_widget ||
+          control_data->arrow == focus_widget)
       {
          found = True;
          break;

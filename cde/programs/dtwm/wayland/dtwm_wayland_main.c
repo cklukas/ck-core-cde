@@ -1713,16 +1713,6 @@ static void promote_subpanel_to_tool_window(DtwmView *view) {
     }
 }
 
-static void close_docked_subpanels(DtwmServer *server) {
-    if (!server) return;
-    DtwmView *v;
-    wl_list_for_each(v, &server->views, link) {
-        if (v->mapped && v->is_subpanel && !v->subpanel_torn_off) {
-            view_close(v);
-        }
-    }
-}
-
 static bool view_is_normal_app(const DtwmView *v);
 
 static void spawn_desktop_command(DtwmServer *server, const char *prog, const char *arg1) {
@@ -2798,7 +2788,6 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
 
     if (!view && !surface) {
         dismiss_open_client_popups(server, t_ms);
-        close_docked_subpanels(server);
         if (dtwm_icon_box_is_topmost_at(server, server->cursor->x, server->cursor->y)) {
             (void)dtwm_icon_box_handle_button(server, btn, true, t_ms);
             if (server->icon_box_active) {
@@ -2831,9 +2820,6 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
             if (part == DTWM_PART_CLIENT && surface) {
                 wlr_seat_pointer_notify_enter(server->seat, surface, sx, sy);
             }
-        }
-        if (!view->is_panel && !view->is_subpanel) {
-            close_docked_subpanels(server);
         }
         focus_view_ex(
             server,

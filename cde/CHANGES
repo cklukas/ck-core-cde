@@ -1,3 +1,26 @@
+2026-11-21
+- Fix Wayland drag-and-drop cursor visuals and Front Panel subpanel
+  interactions across `dtwm`, `dtwm-wayland`, `dtfile`, and pinned CK Core
+  Motif ABI 9 `3b2c39b50c77`:
+  - Pin CK Core Motif `3b2c39b50c77` so `XmDragContext` / `XmDragOverShell`
+    uses a 32-bit ARGB XRender-composited `XmDRAG_WINDOW` on XWayland and
+    composited X11 displays instead of invisible `XmPIXMAP` root-window
+    drawing, and hide `dtfile`'s diagnostic 9x9 black hotspot marker in
+    `_DtFileCreateDragStateIcon` unless `DTFILE_DRAG_DEBUG` is set
+    (`cde/programs/dtfile/SharedProcs.c`, `.ckgit/{motif-revision,ci.yml}`).
+  - Allow right-clicking anywhere on the Front Panel subpanel arrow bar
+    (`left_arrow_form` / `right_arrow_form`, including empty slots above
+    controls such as Mail) to open the control's popup menu with *Add Subpanel*
+    / *Delete Subpanel* (`cde/programs/dtwm/{UI.c,PopupMenu.c}`).
+  - Keep docked Front Panel subpanels open when clicking the desktop or
+    another window in `dtwm-wayland` (matching X11 `dtwm` so users can drag
+    items from `dtfile` onto a docked subpanel's *Install Icon* drop zone),
+    closing only on arrow toggle, opening another docked subpanel, or
+    activating a docked subpanel control
+    (`cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
+    `cde/programs/dtwm/tests/check-dtwm-wayland-panel-dnd.py`,
+    `cde/programs/dtwm/Makefile.am`, `docs/improvements/wayland.md`).
+
 2026-11-20
 - Inherit active session font and render-table resources from
   `XA_RESOURCE_MANAGER` (falling back to native 100-DPI `-dt-interface

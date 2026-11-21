@@ -238,10 +238,20 @@ _DtFileCreateDragStateIcon(
    if (w == nullptr || hot_x < 0 || hot_y < 0)
       return nullptr;
 
-   if (marker_size < 1)
+   if (drag_state_debug_enabled < 0)
+      drag_state_debug_enabled = (getenv("DTFILE_DRAG_DEBUG") != nullptr) ? 1 : 0;
+
+   /* Keep the hotspot anchor invisible in normal operation; only paint the
+    * diagnostic square when DTFILE_DRAG_DEBUG is explicitly set. */
+   if (!drag_state_debug_enabled)
       marker_size = 1;
-   if ((marker_size % 2) == 0)
-      marker_size += 1;
+   else
+   {
+      if (marker_size < 1)
+         marker_size = 1;
+      if ((marker_size % 2) == 0)
+         marker_size += 1;
+   }
 
    dpy = XtDisplayOfObject(w);
    screen = XtScreenOfObject(w);
@@ -269,27 +279,30 @@ _DtFileCreateDragStateIcon(
    XFillRectangle(dpy, mask, gc, 0, 0, width, height);
 
    half = marker_size / 2;
-   rect_x = 0;
-   rect_y = 0;
-   if (rect_x < 0)
+   if (drag_state_debug_enabled)
+   {
       rect_x = 0;
-   if (rect_y < 0)
       rect_y = 0;
-   rect_w = (rect_x + marker_size > (int)width)
-               ? (width - rect_x)
-               : (unsigned int)marker_size;
-   rect_h = (rect_y + marker_size > (int)height)
-               ? (height - rect_y)
-               : (unsigned int)marker_size;
+      if (rect_x < 0)
+         rect_x = 0;
+      if (rect_y < 0)
+         rect_y = 0;
+      rect_w = (rect_x + marker_size > (int)width)
+                  ? (width - rect_x)
+                  : (unsigned int)marker_size;
+      rect_h = (rect_y + marker_size > (int)height)
+                  ? (height - rect_y)
+                  : (unsigned int)marker_size;
 
-   values.foreground = 1;
-   XChangeGC(dpy, gc, GCForeground, &values);
-   XFillRectangle(dpy, pm, gc, rect_x, rect_y, rect_w, rect_h);
-   XFillRectangle(dpy, mask, gc, rect_x, rect_y, rect_w, rect_h);
+      values.foreground = 1;
+      XChangeGC(dpy, gc, GCForeground, &values);
+      XFillRectangle(dpy, pm, gc, rect_x, rect_y, rect_w, rect_h);
+      XFillRectangle(dpy, mask, gc, rect_x, rect_y, rect_w, rect_h);
 
-   values.foreground = 0;
-   XChangeGC(dpy, gc, GCForeground, &values);
-   XDrawPoint(dpy, pm, gc, half, half);
+      values.foreground = 0;
+      XChangeGC(dpy, gc, GCForeground, &values);
+      XDrawPoint(dpy, pm, gc, half, half);
+   }
 
    XFreeGC(dpy, gc);
 

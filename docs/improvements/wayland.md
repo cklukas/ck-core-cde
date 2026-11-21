@@ -120,7 +120,13 @@ Wayland and XWayland clients:
   (`Fplite` ↔ `FpliteY` + busy watch cursor driven by ToolTalk
   `DtActivity_Beginning` / `DtActivity_Began` notices, compositor launcher
   spawns, and automatic completion turn-off when a new native Wayland or
-  XWayland top-level window maps), `Ctrl+Alt+1..8` and `Ctrl+Alt+Left/Right`
+  XWayland top-level window maps), right-click *Add Subpanel* / *Delete
+  Subpanel* context menus on both main controls and the subpanel arrow bar
+  above them, X11-faithful docked subpanel persistence (staying open when
+  clicking the desktop or `dtfile` so items can be dragged onto *Install Icon*,
+  closing on arrow toggle or docked control activation), transparent 32-bit
+  ARGB `XmDRAG_WINDOW` drag-and-drop icons from `dtfile` and Motif
+  applications, `Ctrl+Alt+1..8` and `Ctrl+Alt+Left/Right`
   shortcuts, and bottom strut reservation (`dtwm_get_usable_output_box`)
   respected by maximized and edge-snapped windows (`--no-panel` and `--greeter`
   hide the panel when needed).
