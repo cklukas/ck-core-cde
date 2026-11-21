@@ -206,6 +206,7 @@ struct DtwmView {
     bool has_queued_resize;
     int queued_x, queued_y, queued_w, queued_h;
     uint32_t resize_sent_ms;
+    uint32_t pending_resize_serial;
 
     bool mapped;
     bool active;

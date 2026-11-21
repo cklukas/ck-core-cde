@@ -65,12 +65,15 @@ framing or interaction rules.
   Motif menu (`XmMenuShell` / `xdg_popup`), while holding a mouse button during
   menu-bar press-drag-release keeps Wayland pointer focus on the grabbed client
   surface across override-redirect pulldown items until release;
-- Interactive window resizing suppresses no-op configures and coalesces rapid
-  pointer-motion bursts against client surface commits (paired with `dtfile`
-  `ConfigureNotify` queue draining and 16 ms icon-relayout coalescing) so
-  resizing finishes immediately without trailing redraw lag, and `DtHelp`
-  display and TOC canvases support mouse-wheel scrolling (`Button4`/`Button5`
-  and horizontal `Shift+Wheel` / `Button6`/`Button7`);
+- Interactive window resizing suppresses no-op configures, enforces 1-in-flight
+  latest-wins `wlr_xdg_toplevel_set_size` serial tracking (`pending_resize_serial`)
+  so older in-flight buffer commits never snap the outer CDE bevel frame backward
+  while preserving idle client-driven self-resizes, and pairs with CK Core Motif
+  `VendorShell` `ConfigureNotify` queue compression, Wayland `xdg_surface.configure`
+  coalescing, and `dtfile` 16 ms icon-relayout coalescing so resizing settles
+  immediately at the latest geometry without backlog or rubber-banding, while
+  `DtHelp` display and TOC canvases support mouse-wheel scrolling
+  (`Button4`/`Button5` and horizontal `Shift+Wheel` / `Button6`/`Button7`);
 - Holding `Shift` during pointer move or resize aligns geometry to the 16-pixel
   desktop grid;
 - Dragging toward output edges or corners previews half-screen and quadrant snap

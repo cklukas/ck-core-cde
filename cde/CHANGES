@@ -1,4 +1,18 @@
 2026-11-21
+- Eliminate interactive window resize accumulation and backward frame rubber-banding
+  in `dtwm-wayland` (`programs/dtwm/wayland/dtwm_wayland.h`,
+  `programs/dtwm/wayland/dtwm_wayland_main.c`):
+  - Bump pinned CK Core Motif ABI 9 to `173f00ceb3a0b90a58b377d332089cb198f62674`
+    (`.ckgit/motif-revision`, `.ckgit/ci.yml`) for `VendorShell`
+    `ConfigureNotify` queue compression and Wayland `xdg_surface.configure` /
+    `ack_configure` coalescing.
+  - Track the configure serial returned by `wlr_xdg_toplevel_set_size`
+    (`pending_resize_serial`), enforce strict 1-in-flight latest-wins resize
+    coalescing (with a 250 ms dead-man timeout only for unresponsive clients)
+    instead of overlapping 32 ms timer dispatches, and prevent older in-flight
+    `xdg_toplevel_commit` surface geometries from snapping `client_w` / `client_h`
+    and the CDE bevel frame backward while still adopting idle client-initiated
+    self-resizes (such as `ck-calc` mode switches).
 - Fix native Wayland (`--no-xwayland`) ToolTalk ptype environment, Color Server
   IPC bridge, Front Panel workspace switching, desktop icon resolution, and
   compositor disconnect exit (`programs/dtwm/wayland/dtwm_wayland_main.c`,

@@ -238,7 +238,8 @@ static void view_apply_geometry(DtwmView *view, int x, int y, int client_w, int 
         wlr_scene_node_set_position(&view->frame_tree->node, view->x, view->y);
     }
     if (view->kind == DTWM_VIEW_XDG && view->xdg_toplevel) {
-        wlr_xdg_toplevel_set_size(view->xdg_toplevel, client_w, client_h);
+        view->pending_resize_serial =
+            wlr_xdg_toplevel_set_size(view->xdg_toplevel, client_w, client_h);
     } else if (view->kind == DTWM_VIEW_XWAYLAND && view->xwayland_surface) {
         sync_xwayland_client_pos(view);
     }
@@ -274,15 +275,30 @@ static int handle_resize_flush_timer(void *data) {
     if (!server) {
         return 0;
     }
+    uint32_t now_ms = dtwm_now_msec();
+    uint32_t next_wait_ms = 0;
     DtwmView *v;
     wl_list_for_each(v, &server->views, link) {
-        if (v->mapped && v->has_queued_resize) {
-            bool active_resize =
-                (server->cursor_mode == DTWM_CURSOR_RESIZE && server->grabbed_view == v);
-            view_dispatch_queued_resize(v, active_resize);
-        } else if (!v->has_queued_resize) {
-            v->resize_inflight = false;
+        if (!v->mapped) {
+            continue;
         }
+        if (v->has_queued_resize) {
+            uint32_t elapsed = now_ms - v->resize_sent_ms;
+            if (!v->resize_inflight || elapsed >= 250u) {
+                view_dispatch_queued_resize(v, true);
+            } else {
+                uint32_t rem = 250u - elapsed;
+                if (next_wait_ms == 0 || rem < next_wait_ms) {
+                    next_wait_ms = rem;
+                }
+            }
+        } else if (v->resize_inflight && (now_ms - v->resize_sent_ms) >= 250u) {
+            v->resize_inflight = false;
+            v->pending_resize_serial = 0;
+        }
+    }
+    if (next_wait_ms > 0 && server->resize_flush_timer) {
+        wl_event_source_timer_update(server->resize_flush_timer, (int)next_wait_ms);
     }
     return 0;
 }
@@ -2387,14 +2403,15 @@ static void process_cursor_resize(DtwmServer *server) {
         return;
     }
     uint32_t now_ms = dtwm_now_msec();
-    if (v->resize_inflight && (now_ms - v->resize_sent_ms) < 120u) {
+    if (v->resize_inflight && (now_ms - v->resize_sent_ms) < 250u) {
+        /* Overwrite in-place so ONLY the single latest resize target is kept */
         v->has_queued_resize = true;
         v->queued_x = new_x;
         v->queued_y = new_y;
         v->queued_w = new_w;
         v->queued_h = new_h;
         if (server->resize_flush_timer) {
-            wl_event_source_timer_update(server->resize_flush_timer, 32);
+            wl_event_source_timer_update(server->resize_flush_timer, 250);
         }
         return;
     }
@@ -2725,13 +2742,16 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
         } else if (server->cursor_mode == DTWM_CURSOR_RESIZE && server->grabbed_view) {
             DtwmView *rv = server->grabbed_view;
             if (had_wireframe) {
-                rv->resize_inflight = false;
+                rv->resize_inflight = true;
                 rv->has_queued_resize = false;
+                rv->resize_sent_ms = dtwm_now_msec();
                 view_apply_geometry(rv, pending.x, pending.y, pending.width, pending.height);
-            } else {
-                view_dispatch_queued_resize(rv, false);
-                rv->resize_inflight = false;
+            } else if (!rv->resize_inflight && rv->has_queued_resize) {
+                view_dispatch_queued_resize(rv, true);
             }
+            /* If rv->resize_inflight is true, leave rv->has_queued_resize set so
+             * xdg_toplevel_commit dispatches the single final size once the
+             * in-flight frame commits without snapping the frame backward. */
         }
         if (server->cursor_mode != DTWM_CURSOR_PASSTHROUGH) {
             server->cursor_mode = DTWM_CURSOR_PASSTHROUGH;
@@ -4006,6 +4026,7 @@ static void xdg_toplevel_unmap(struct wl_listener *listener, void *data) {
     view->pending_pos_set = false;
     view->resize_inflight = false;
     view->has_queued_resize = false;
+    view->pending_resize_serial = 0;
     wlr_scene_node_set_enabled(&view->frame_tree->node, false);
     dtwm_foreign_toplevel_destroy(view);
     dtwm_icons_on_view_unmap_or_destroy(view, false);
@@ -4026,24 +4047,37 @@ static void xdg_toplevel_commit(struct wl_listener *listener, void *data) {
         return;
     }
     if (view->mapped) {
-        struct wlr_box geo = view->xdg_toplevel->base->geometry;
-        int nw = geo.width > 0 ? geo.width : view->xdg_toplevel->base->surface->current.width;
-        int nh = geo.height > 0 ? geo.height : view->xdg_toplevel->base->surface->current.height;
-        if (nw > 0 && nh > 0 && (nw != view->client_w || nh != view->client_h)) {
-            view->client_w = nw;
-            view->client_h = nh;
-            dtwm_view_update_frame(view);
-            if (view == view->server->focused_view) {
-                dtwm_publish_active_window_box(view->server);
-            }
+        uint32_t acked = view->xdg_toplevel->base->current.configure_serial;
+        bool active_resize =
+            (view->server->cursor_mode == DTWM_CURSOR_RESIZE &&
+             view->server->grabbed_view == view);
+        bool serial_settled =
+            (view->pending_resize_serial == 0 || acked >= view->pending_resize_serial);
+
+        if (serial_settled && view->pending_resize_serial != 0) {
+            view->pending_resize_serial = 0;
         }
-        if (view->resize_inflight) {
-            bool active_resize =
-                (view->server->cursor_mode == DTWM_CURSOR_RESIZE &&
-                 view->server->grabbed_view == view);
+        if (view->resize_inflight && serial_settled) {
             view->resize_inflight = false;
             if (view->has_queued_resize) {
-                view_dispatch_queued_resize(view, active_resize);
+                view_dispatch_queued_resize(view, true);
+            }
+        }
+
+        /* Only adopt spontaneous client-initiated size changes when no
+         * compositor-driven resize is active, queued, or awaiting ack. */
+        if (!active_resize && !view->resize_inflight && !view->has_queued_resize &&
+            view->pending_resize_serial == 0) {
+            struct wlr_box geo = view->xdg_toplevel->base->geometry;
+            int nw = geo.width > 0 ? geo.width : view->xdg_toplevel->base->surface->current.width;
+            int nh = geo.height > 0 ? geo.height : view->xdg_toplevel->base->surface->current.height;
+            if (nw > 0 && nh > 0 && (nw != view->client_w || nh != view->client_h)) {
+                view->client_w = nw;
+                view->client_h = nh;
+                dtwm_view_update_frame(view);
+                if (view == view->server->focused_view) {
+                    dtwm_publish_active_window_box(view->server);
+                }
             }
         }
     }
