@@ -1466,6 +1466,15 @@ static cairo_surface_t *fetch_x11_icon_pixmap(
 
 static void resolve_xdg_view_named_icon_fallback(DtwmView *view) {
     if (!view || view->kind != DTWM_VIEW_XDG || !view->xdg_toplevel || view->icon_surface) return;
+    if (view->is_panel) {
+        const char *pic = lookup_dtwm_defs_icon_image("FrontPanel", "FrontPanel");
+        cairo_surface_t *ps = load_named_icon_surface(view->server, pic ? pic : "Fpfpmin");
+        if (ps) {
+            view->icon_surface = ps;
+            view->icon_from_named_image = true;
+            return;
+        }
+    }
     const char *app_id = view->xdg_toplevel->app_id;
     if (!app_id || !app_id[0]) return;
 
@@ -1475,6 +1484,12 @@ static void resolve_xdg_view_named_icon_fallback(DtwmView *view) {
     const char *ic = lookup_dtwm_defs_icon_image(app_id, tail);
     if (!ic) ic = lookup_action_icon_for_token(app_id);
     if (!ic) ic = lookup_action_icon_for_token(tail);
+    if (!ic && (strcasecmp(app_id, "dtfile") == 0 || strcasecmp(tail, "dtfile") == 0)) {
+        ic = "Fphome";
+    } else if (!ic && (strcasecmp(app_id, "dthelp") == 0 || strcasecmp(tail, "dthelp") == 0 ||
+                       strcasecmp(app_id, "dthelpview") == 0 || strcasecmp(tail, "dthelpview") == 0)) {
+        ic = "Fphelp";
+    }
 
     cairo_surface_t *s = ic ? load_named_icon_surface(view->server, ic) : nullptr;
     if (!s) s = load_named_icon_surface(view->server, app_id);
@@ -1857,6 +1872,17 @@ struct wlr_buffer *dtwm_icons_render_tile_buffer(DtwmView *view, int *out_w, int
         label = view->icon_title;
     } else {
         label = dtwm_view_title(view);
+        if (view->kind == DTWM_VIEW_XDG && label) {
+            if (strncmp(label, "File Manager - ", 15) == 0 && label[15] != '\0') {
+                label = label + 15;
+            } else if (strncmp(label, "Application Manager - ", 22) == 0 && label[22] != '\0') {
+                label = label + 22;
+            } else if (strcmp(label, "Style Manager") == 0) {
+                label = "Style";
+            } else if (strncmp(label, "Text Editor - ", 14) == 0 && label[14] != '\0') {
+                label = label + 14;
+            }
+        }
     }
     draw_cde_icon_title_box(
         cr,

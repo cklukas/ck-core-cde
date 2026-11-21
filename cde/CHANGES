@@ -1,4 +1,32 @@
 2026-11-21
+- Fix native Wayland (`--no-xwayland`) ToolTalk ptype environment, Color Server
+  IPC bridge, Front Panel workspace switching, desktop icon resolution, and
+  compositor disconnect exit (`programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `programs/dtwm/wayland/WmFpWayland.c`, `programs/dtwm/wayland/cde_icons.c`,
+  `programs/dtsession/SmWayland.c`, `programs/dtsession/SrvPalette.c`):
+  - Bump pinned CK Core Motif ABI 9 to `2fc136347c1306734017e149cfa99ebb580e00d1`
+    (`.ckgit/motif-revision`, `.ckgit/ci.yml`).
+  - Start `ttsession -p` inside `dtwm-wayland --no-xwayland` after
+    `WAYLAND_DISPLAY` and `CK_MOTIF_BACKEND=wayland` are set and publish
+    `TT_SESSION` to both `--status-file` and the native IPC bus so ToolTalk
+    ptype servers (such as `dtpad -server`) inherit the Wayland display and
+    launch without `TT_ERR_PTYPE_START`.
+  - Mirror the active `"SDT Pixel Set"` (`XmSPIXEL_SET_PROP`) and
+    `"_DT_COLOR_TYPE_MONITOR"` properties onto `DefaultRootWindow(dpy)` in
+    `WmFpWayland.c` and `SrvPalette.c`, and split IPC `SET <atom> <hex>` frames
+    on the trailing space (`strrchr`) in `dtwm_wayland_main.c` so space-bearing
+    property names synchronize session color palettes and monitor color-use
+    settings across Wayland Motif clients (`XmColorObj` and `dtstyle`'s Color
+    dialog) without `Xwayland`.
+  - Translate numeric X11 workspace atom IDs via `XGetAtomName` in `dtwm-panel`'s
+    `DtWorkspace_SetCurrent`, `DtWorkspace_Title_Set`, and `DtWorkspace_Delete`
+    ToolTalk handlers so Front Panel workspace buttons switch, rename, and
+    delete workspaces without `Xwayland`.
+  - Resolve `Fpfpmin`, `Fphome`, and `Fphelp` fallback icons and concise CDE icon
+    labels for native `xdg_toplevel` views in `cde_icons.c`, assign native XDG
+    toplevels to the active workspace when mapped (`xdg_toplevel_map`) so
+    pre-built or re-opened dialogs always appear on the current workspace, and
+    exit `dtsession` immediately when the Wayland compositor socket closes.
 - Implement Phase 3 (Tier 3) OAuth2 PKCE sign-in, iTIP calendar invitations, and
   sender autocomplete in `dtmail` (`programs/dtmail/dtmail/`):
   - Add RFC 7636 PKCE OAuth2 (`XOAUTH2`) loopback sign-in (`OAuth2Client.{C,h}`),

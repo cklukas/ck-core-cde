@@ -421,6 +421,21 @@ static void bootstrap_color_server_if_needed(Display *dpy, unsigned char profile
         dpy, g_colorSrvWin, pixel_set_prop, XA_STRING, 8, PropModeReplace,
         (const unsigned char *)buf, pos
     );
+    Window root_win = DefaultRootWindow(dpy);
+    if (root_win != None) {
+        Atom type_mon_prop = XInternAtom(dpy, "_DT_COLOR_TYPE_MONITOR", False);
+        if (type_mon_prop != None) {
+            XChangeProperty(
+                dpy, root_win, type_mon_prop, XA_STRING, 8, PropModeReplace,
+                (const unsigned char *)g_colorSrvTypeMon,
+                (int)strlen(g_colorSrvTypeMon)
+            );
+        }
+        XChangeProperty(
+            dpy, root_win, pixel_set_prop, XA_STRING, 8, PropModeReplace,
+            (const unsigned char *)buf, pos
+        );
+    }
     XSetSelectionOwner(dpy, cust_atom, g_colorSrvWin, CurrentTime);
     XFlush(dpy);
 }
@@ -1426,6 +1441,27 @@ static Tt_callback_action exit_session_tt_reply_cb(Tt_message m, Tt_pattern p) {
     return TT_CALLBACK_CONTINUE;
 }
 
+static void resolve_ws_arg_name(Display *dpy, const char *arg, char *out, size_t out_sz) {
+    if (!out || out_sz == 0) return;
+    out[0] = '\0';
+    if (!arg || !arg[0]) return;
+
+    char *endp = nullptr;
+    unsigned long raw_atom = strtoul(arg, &endp, 0);
+    if (endp != arg && *endp == '\0' && raw_atom != 0 && dpy) {
+        char *aname = XGetAtomName(dpy, (Atom)raw_atom);
+        if (aname) {
+            if (aname[0]) {
+                snprintf(out, out_sz, "%s", aname);
+                XFree(aname);
+                return;
+            }
+            XFree(aname);
+        }
+    }
+    snprintf(out, out_sz, "%s", arg);
+}
+
 static Tt_callback_action wayland_wsm_tt_request_cb(Tt_message m, Tt_pattern p) {
     (void)p;
     if (tt_message_state(m) != TT_SENT) {
@@ -1442,8 +1478,10 @@ static Tt_callback_action wayland_wsm_tt_request_cb(Tt_message m, Tt_pattern p) 
     if (strcmp(op, "DtWorkspace_SetCurrent") == 0) {
         char *pch = tt_message_arg_val(m, 1);
         if (tt_ptr_error(pch) == TT_OK && pch) {
+            char ws_name[64];
             char req[128];
-            snprintf(req, sizeof(req), "f.goto_workspace %s", pch);
+            resolve_ws_arg_name(dpy, pch, ws_name, sizeof(ws_name));
+            snprintf(req, sizeof(req), "f.goto_workspace %s", ws_name);
             send_dt_wm_request(dpy, req);
             tt_free(pch);
         }
@@ -1453,8 +1491,10 @@ static Tt_callback_action wayland_wsm_tt_request_cb(Tt_message m, Tt_pattern p) 
         char *pch_title = tt_message_arg_val(m, 2);
         if (tt_ptr_error(pch_ws) == TT_OK && pch_ws &&
             tt_ptr_error(pch_title) == TT_OK && pch_title) {
+            char ws_name[64];
             char req[256];
-            snprintf(req, sizeof(req), "f.set_workspace_title %s %s", pch_ws, pch_title);
+            resolve_ws_arg_name(dpy, pch_ws, ws_name, sizeof(ws_name));
+            snprintf(req, sizeof(req), "f.set_workspace_title %s %s", ws_name, pch_title);
             send_dt_wm_request(dpy, req);
         }
         if (tt_ptr_error(pch_ws) == TT_OK && pch_ws) tt_free(pch_ws);
@@ -1473,8 +1513,10 @@ static Tt_callback_action wayland_wsm_tt_request_cb(Tt_message m, Tt_pattern p) 
     } else if (strcmp(op, "DtWorkspace_Delete") == 0) {
         char *pch_ws = tt_message_arg_val(m, 0);
         if (tt_ptr_error(pch_ws) == TT_OK && pch_ws) {
+            char ws_name[64];
             char req[128];
-            snprintf(req, sizeof(req), "f.delete_workspace %s", pch_ws);
+            resolve_ws_arg_name(dpy, pch_ws, ws_name, sizeof(ws_name));
+            snprintf(req, sizeof(req), "f.delete_workspace %s", ws_name);
             send_dt_wm_request(dpy, req);
             tt_free(pch_ws);
         }

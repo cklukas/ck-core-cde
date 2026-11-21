@@ -487,6 +487,33 @@ _DtCacheProperties(
   XChangeProperty(dpy, win, pixel_set_atom, XA_STRING, 8, PropModeAppend,
 		 (unsigned char *) XtNewString(palette->converted),
 		 palette->converted_len) ;
+
+  /* Mirror SDT Pixel Set and monitor color-use descriptor onto DefaultRootWindow
+   * as well so XWayland-free Wayland sessions synchronize ColorObj & dtstyle
+   * across clients over the compositor's root-property IPC bus. */
+  Window root_win = DefaultRootWindow(dpy);
+  if (root_win != None && root_win != win) {
+    char mon_buf[64];
+    int mon_len = snprintf(
+        mon_buf, sizeof(mon_buf), "%x_%x_%x_%x",
+        colorSrv.TypeOfMonitor[screen_number],
+        colorSrv.UsePixmaps[screen_number],
+        colorSrv.FgColor[screen_number],
+        colorSrv.DynamicColor[screen_number]
+    );
+    Atom mon_atom = XInternAtom(dpy, "_DT_COLOR_TYPE_MONITOR", FALSE);
+    if (mon_atom != None && mon_len > 0) {
+      XChangeProperty(
+          dpy, root_win, mon_atom, XA_STRING, 8, PropModeReplace,
+          (const unsigned char *)mon_buf, mon_len
+      );
+    }
+    XChangeProperty(
+        dpy, root_win, pixel_set_atom, XA_STRING, 8, PropModeReplace,
+        (const unsigned char *)palette->converted, (int)palette->converted_len
+    );
+    XFlush(dpy);
+  }
 }
 
 /*****************************************************************************

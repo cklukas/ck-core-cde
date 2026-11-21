@@ -272,6 +272,10 @@ static void xt_wayland_fd_cb(XtPointer closure, int *source, XtInputId *id) {
             XtRemoveInput(g_smwl.xt_input_id);
             g_smwl.xt_input_id = (XtInputId)0;
         }
+        /* Match X11 session-display disconnect semantics: when the Wayland
+         * compositor exits, terminate immediately instead of hanging in
+         * shutdown dialogs against a closed display. */
+        _exit(0);
     } else {
         wl_display_flush(g_smwl.wl_dpy);
     }

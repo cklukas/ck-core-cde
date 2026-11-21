@@ -3968,6 +3968,7 @@ static void xdg_toplevel_map(struct wl_listener *listener, void *data) {
         return;
     }
 
+    view->workspace_mask = 1u << view->server->current_workspace;
     place_initial_view(view);
     wlr_scene_node_set_enabled(&view->frame_tree->node, dtwm_view_visible_on_current_ws(view));
     dtwm_view_update_frame(view);
@@ -5156,9 +5157,91 @@ static void write_status_file(DtwmServer *server) {
     } else if (server->no_xwayland) {
         fprintf(fp, "NO_XWAYLAND=1\n");
     }
+    const char *tts_env = getenv("TT_SESSION");
+    if (!tts_env || !tts_env[0]) {
+        tts_env = getenv("_SUN_TT_SESSION");
+    }
+    if (tts_env && tts_env[0]) {
+        fprintf(fp, "TT_SESSION=%s\n", tts_env);
+    }
     fprintf(fp, "PID=%d\n", (int)getpid());
     fclose(fp);
     rename(tmp_path, server->status_file);
+}
+
+static void ensure_wayland_ttsession_env(void) {
+    const char *existing = getenv("TT_SESSION");
+    if (!existing || !existing[0]) {
+        existing = getenv("_SUN_TT_SESSION");
+    }
+    if (existing && existing[0]) {
+        setenv("TT_SESSION", existing, 1);
+        setenv("_SUN_TT_SESSION", existing, 1);
+        return;
+    }
+
+    const char *cands[2] = {
+#ifdef CDE_INSTALLATION_TOP
+        CDE_INSTALLATION_TOP "/bin/ttsession",
+#else
+        "/usr/dt/bin/ttsession",
+#endif
+        "/usr/dt/bin/ttsession",
+    };
+    const char *tt_bin = nullptr;
+    for (size_t i = 0; i < 2; ++i) {
+        if (cands[i] && access(cands[i], X_OK) == 0) {
+            tt_bin = cands[i];
+            break;
+        }
+    }
+    if (!tt_bin) return;
+
+    int pfd[2] = {-1, -1};
+    if (pipe(pfd) != 0) return;
+
+    pid_t pid = fork();
+    if (pid == 0) {
+        sigset_t empty_mask;
+        sigemptyset(&empty_mask);
+        sigprocmask(SIG_SETMASK, &empty_mask, nullptr);
+        close(pfd[0]);
+        dup2(pfd[1], STDOUT_FILENO);
+        if (pfd[1] > STDOUT_FILENO) close(pfd[1]);
+        int devnull = open("/dev/null", O_WRONLY);
+        if (devnull >= 0) {
+            dup2(devnull, STDERR_FILENO);
+            if (devnull > STDERR_FILENO) close(devnull);
+        }
+        execl(tt_bin, "ttsession", "-p", (char *)nullptr);
+        _exit(127);
+    }
+    close(pfd[1]);
+    if (pid < 0) {
+        close(pfd[0]);
+        return;
+    }
+
+    char line[512] = {0};
+    size_t used = 0;
+    struct pollfd pf = {.fd = pfd[0], .events = POLLIN, .revents = 0};
+    while (used + 1 < sizeof(line) && poll(&pf, 1, 1500) > 0 &&
+           (pf.revents & (POLLIN | POLLHUP))) {
+        char ch = '\0';
+        ssize_t nr = read(pfd[0], &ch, 1);
+        if (nr <= 0 || ch == '\n' || ch == '\r') break;
+        line[used++] = ch;
+    }
+    line[used] = '\0';
+    close(pfd[0]);
+
+    int st = 0;
+    (void)waitpid(pid, &st, WNOHANG);
+
+    if (line[0]) {
+        setenv("TT_SESSION", line, 1);
+        setenv("_SUN_TT_SESSION", line, 1);
+    }
 }
 
 /* --- Native Session Root-Property & WM-Request IPC Bus (--no-xwayland) --- */
@@ -5315,7 +5398,7 @@ static int handle_ipc_peer_fd(int fd, uint32_t mask, void *data) {
         *nl = '\0';
         if (!strncmp(start, "SET ", 4)) {
             char *p = start + 4;
-            char *sp = strchr(p, ' ');
+            char *sp = strrchr(p, ' ');
             if (sp) {
                 *sp = '\0';
                 const char *aname = p;
@@ -5898,8 +5981,14 @@ int main(int argc, char **argv) {
 
     setenv("WAYLAND_DISPLAY", socket, 1);
     start_native_ipc_server(&server);
+    if (server.no_xwayland && !server.greeter_mode && server.show_front_panel) {
+        ensure_wayland_ttsession_env();
+    }
     {
         const char *tts = getenv("TT_SESSION");
+        if (!tts || !tts[0]) {
+            tts = getenv("_SUN_TT_SESSION");
+        }
         if (tts && tts[0]) {
             dtwm_native_ipc_publish_prop(&server, "_SUN_TT_SESSION", tts, strlen(tts));
             dtwm_native_ipc_publish_prop(&server, "TT_SESSION", tts, strlen(tts));
@@ -5932,6 +6021,9 @@ int main(int argc, char **argv) {
 
     if (startup_cmd) {
         if (fork() == 0) {
+            sigset_t empty_mask;
+            sigemptyset(&empty_mask);
+            sigprocmask(SIG_SETMASK, &empty_mask, nullptr);
             execl("/bin/sh", "/bin/sh", "-c", startup_cmd, (char *)nullptr);
             _exit(127);
         }
