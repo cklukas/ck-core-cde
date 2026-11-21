@@ -1,4 +1,18 @@
 2026-11-21
+- Fix etched-in armed gadget menu labels and `xdg_popup` `MenuShell`
+  repositioning across Wayland CDE menus
+  (`programs/dtwm/wayland/dtwm_wayland_main.c`, `.ckgit/motif-revision`,
+  `.ckgit/ci.yml`):
+  - Bump pinned CK Core Motif ABI 9 to `5129c9cb1a2fd77b2554949bcfb4be463bd25380`
+    for etched-in `XmToggleButtonGadget` / `XmCascadeButtonGadget` armed label GC
+    fixes, `xdg_popup_reposition` support when a shared `XmMenuShell` moves
+    between menu-bar cascades, and parent `Expose` delivery on child subwindow
+    unmap/move.
+  - Handle `xdg_popup->events.reposition` in `dtwm-wayland`
+    (`xdg_popup_reposition` -> `wlr_xdg_popup_unconstrain_from_box`) so switching
+    between open menu-bar pulldowns (such as `Help` ↔ `Mailbox` in `dtmail`)
+    immediately repositions and unconstrains the popup surface on the active
+    output.
 - Audit and fix Style Manager (`dtstyle`) dialogs and native Wayland `xdg_popup`
   menu activation in XWayland-free (`--no-xwayland`) sessions
   (`programs/dtstyle/Backdrop.c`, `programs/dtstyle/ColorEdit.c`,

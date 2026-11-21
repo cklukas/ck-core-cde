@@ -61,10 +61,12 @@ framing or interaction rules.
     `Dtwm*animateMinimizeRestore` compatibility, and automatically falling back
     when roaming `$HOME` between Wayland and X11 sessions;
 - Clicking or dragging a window title bar, frame border, window button, native
-  Wayland surface, or desktop background dismisses any open client popup or
-  Motif menu (`XmMenuShell` / `xdg_popup`), while holding a mouse button during
-  menu-bar press-drag-release keeps Wayland pointer focus on the grabbed client
-  surface across override-redirect pulldown items until release;
+  Wayland surface of another client, or desktop background dismisses any open
+  client popup or Motif menu (`XmMenuShell` / `xdg_popup`), while `xdg_popup`
+  reposition events (`xdg_popup.reposition`) re-unconstrain shared `XmMenuShell`
+  pulldowns as the user moves across menu-bar cascades and holding a mouse button
+  during menu-bar press-drag-release keeps Wayland pointer focus on the grabbed
+  client surface across pulldown items until release;
 - Interactive window resizing suppresses no-op configures, enforces 1-in-flight
   latest-wins `wlr_xdg_toplevel_set_size` serial tracking (`pending_resize_serial`)
   so older in-flight buffer commits never snap the outer CDE bevel frame backward

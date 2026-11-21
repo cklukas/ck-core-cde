@@ -36,6 +36,7 @@ typedef struct {
     struct wlr_xdg_popup *xdg_popup;
     struct wlr_scene_tree *scene_tree;
     struct wl_listener commit;
+    struct wl_listener reposition;
     struct wl_listener destroy;
 } DtwmPopup;
 
@@ -4261,14 +4262,27 @@ static void handle_new_xdg_toplevel(struct wl_listener *listener, void *data) {
 }
 
 /* XDG Popups */
+static void xdg_popup_unconstrain(DtwmPopup *popup) {
+    if (!popup || !popup->xdg_popup || !popup->server) {
+        return;
+    }
+    struct wlr_box obox;
+    get_primary_output_box(popup->server, popup->server->cursor->x, popup->server->cursor->y, &obox);
+    wlr_xdg_popup_unconstrain_from_box(popup->xdg_popup, &obox);
+}
+
 static void xdg_popup_commit(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmPopup *popup = wl_container_of(listener, popup, commit);
     if (popup->xdg_popup->base->initial_commit) {
-        struct wlr_box obox;
-        get_primary_output_box(popup->server, popup->server->cursor->x, popup->server->cursor->y, &obox);
-        wlr_xdg_popup_unconstrain_from_box(popup->xdg_popup, &obox);
+        xdg_popup_unconstrain(popup);
     }
+}
+
+static void xdg_popup_reposition(struct wl_listener *listener, void *data) {
+    (void)data;
+    DtwmPopup *popup = wl_container_of(listener, popup, reposition);
+    xdg_popup_unconstrain(popup);
 }
 
 static void xdg_popup_destroy(struct wl_listener *listener, void *data) {
@@ -4276,6 +4290,7 @@ static void xdg_popup_destroy(struct wl_listener *listener, void *data) {
     DtwmPopup *popup = wl_container_of(listener, popup, destroy);
     wl_list_remove(&popup->link);
     wl_list_remove(&popup->commit.link);
+    wl_list_remove(&popup->reposition.link);
     wl_list_remove(&popup->destroy.link);
     free(popup);
 }
@@ -4301,6 +4316,8 @@ static void handle_new_xdg_popup(struct wl_listener *listener, void *data) {
 
     popup->commit.notify = xdg_popup_commit;
     wl_signal_add(&xdg_popup->base->surface->events.commit, &popup->commit);
+    popup->reposition.notify = xdg_popup_reposition;
+    wl_signal_add(&xdg_popup->events.reposition, &popup->reposition);
     popup->destroy.notify = xdg_popup_destroy;
     wl_signal_add(&xdg_popup->events.destroy, &popup->destroy);
 }
