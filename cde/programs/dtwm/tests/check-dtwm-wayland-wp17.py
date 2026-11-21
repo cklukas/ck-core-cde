@@ -1566,7 +1566,16 @@ def main() -> int:
     cc_cmd = shlex.split(os.environ.get("CC", "cc"))
     pkg_cfg = os.environ.get("PKG_CONFIG", "pkg-config")
 
-    with tempfile.TemporaryDirectory(prefix="wp17-dual-", dir=os.environ.get("TMPDIR")) as td:
+    raw_tmp = os.environ.get("TMPDIR")
+    if raw_tmp:
+        st = os.stat(raw_tmp)
+        if (st.st_mode & 0o022) and not (st.st_mode & 0o1000):
+            if st.st_uid == os.geteuid():
+                os.chmod(raw_tmp, 0o700)
+            else:
+                raw_tmp = "/var/tmp" if os.path.isdir("/var/tmp") else None
+
+    with tempfile.TemporaryDirectory(prefix="wp17-dual-", dir=raw_tmp) as td:
         base_tmp = Path(td)
         xml_path = base_tmp / "wlr-data-control.xml"
         hdr_path = base_tmp / "wlr-data-control-client.h"

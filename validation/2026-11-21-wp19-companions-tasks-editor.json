@@ -1,0 +1,33 @@
+{
+  "work_package": "WP-19",
+  "date": "2026-11-21",
+  "branch": "master",
+  "host_vm": "cde-ubuntu2604 (Ubuntu 26.04.1 LTS aarch64, Linux 7.0.0-43-generic, clang 21, wlroots 0.19)",
+  "motif_revision": "3b2c39b50c77035fc78f3b10de2bd70fce771e95",
+  "cde_revision": "e555179c039fe520e9266c5880b3cf5d18bc3786",
+  "apps_revision": "87b7623",
+  "test_timing": {
+    "parallel_wayland_and_x11_seconds": 3.92
+  },
+  "binary_sha256": {
+    "/usr/dt/lib/libXm.so.9.0.0": "52af7335ce8a517ba804ce46aafeee66cd41a5bdbe2400b9fb9f3ca49f046949",
+    "/var/tmp/ck-wayland-build/wp00/cde-build/programs/dtwm/dtwm-wayland": "3c8dc00b8e45e9fa1a4d97f8a3fbacc1f23e5a7f10e96284cbb50b62c90922d2",
+    "/var/tmp/ck-wayland-build/wp00/cde-build/programs/dtwm/.libs/dtwm": "4e43ed39a71d0f8e8fb6ad9aad584e745c23853f4c5cd66405bf9440a3e3c74c",
+    "/var/tmp/ck-wayland-build/wp00/cde-build/programs/dtpad/.libs/dtpad": "a5129dea376e4f3f11adda7a216bba6f79794bd9b7d0310c2da51386ce0a2244",
+    "/var/tmp/ck-wayland-build/wp00/cde-build/programs/dtcm/dtcm/.libs/dtcm": "f8298da100f629cec670c7896a4177140dc1d436437e232dbf3408d33706fa43",
+    "/var/tmp/ck-wayland-build/wp00/apps-build/bin/ck-tasks": "5d0da906de9c6e151a14eac7c106f25175c22c6e063c25a749be242afd6374fb",
+    "/var/tmp/ck-wayland-build/wp00/apps-build/bin/ck-view": "a59a99dccc1b35ba169bdadcff73848c9cd9d105bd6f9877d5f27b838a8b8547",
+    "/var/tmp/ck-wayland-build/wp00/apps-build/bin/ck-pdf": "0afb85db497aea9a83bc1cece809d93117b927bbb99ed54edde11e89c192f94b"
+  },
+  "features_verified": [
+    "Runtime toolkit linkage: verified ck-tasks, ck-view, ck-pdf, dtpad, and dtcm map CK Core Motif ABI 9 (libXm.so.9)",
+    "Actionable ck-tasks system monitor: live network interface throughput enumeration, overall/per-core Performance chart toggle, process renice (nice == 6), Motif Force Kill confirmation modal + SIGKILL termination, and D-Bus systemd1 service Start/Stop/Restart",
+    "Native Motif image viewer (ck-view): PNG/JPEG/WebP/TIFF/XPM/SVG loading, folder NEXT/PREV, lossless 90-degree rotation, crop, save, PNG clipboard copy, CDE workspace backdrop setting, and WM_SAVE_YOURSELF -session restore",
+    "Native Motif PDF viewer (ck-pdf): Poppler/Cairo rendering, Document Outline tree, page jump, FIND / FIND_NEXT text search, clipboard text copy, CUPS lp printing, and WM_SAVE_YOURSELF -session page restore",
+    "dtpad & dtcm polish: dtpad tabbed documents, Open Recent MRU, line-number gutter, and crash-recovery autosave + restore; dtcm RFC 5545 .ics multi-event/RRULE import and export round-trip"
+  ],
+  "commands": [
+    "CC=clang python3 cde/programs/dtwm/tests/check-dtwm-wayland-wp19.py --compositor /var/tmp/ck-wayland-build/wp00/cde-build/programs/dtwm/dtwm-wayland --apps-bin-dir /var/tmp/ck-wayland-build/wp00/apps-build/bin --apps-src-dir /Volumes/PRO-BLADE/git/ck-core-apps (wayland: PASS, x11: PASS in 3.92s)"
+  ],
+  "result": "pass"
+}

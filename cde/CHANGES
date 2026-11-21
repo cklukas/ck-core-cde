@@ -1,4 +1,14 @@
 2026-11-21
+- Record standalone dual-environment (Wayland + X11/XLibre) qualification
+  receipts for `WP-15`, `WP-17`, and `WP-19`, retire the obsolete `x11_wayland`
+  branch note, expand the detailed Track 2 (`WP-21`–`WP-24`) XWayland-free
+  Motif runtime specification, and harden `check-dtwm-wayland-wp17.py` against
+  non-sticky group-writable `TMPDIR` paths so `dtfile_sync` private-storage
+  ancestor checks succeed reliably (`wayland_work_plan.md`,
+  `validation/2026-11-21-wp15-audio-wifi-bluetooth.json`,
+  `validation/2026-11-21-wp17-dtfile-browser-ergonomics.json`,
+  `validation/2026-11-21-wp19-companions-tasks-editor.json`,
+  `cde/programs/dtwm/tests/check-dtwm-wayland-wp17.py`).
 - Fix Wayland drag-and-drop cursor visuals and Front Panel subpanel
   interactions across `dtwm`, `dtwm-wayland`, `dtfile`, and pinned CK Core
   Motif ABI 9 `3b2c39b50c77`:

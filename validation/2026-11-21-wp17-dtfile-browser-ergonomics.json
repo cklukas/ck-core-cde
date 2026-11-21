@@ -1,0 +1,38 @@
+{
+  "work_package": "WP-17",
+  "date": "2026-11-21",
+  "branch": "master",
+  "host_vm": "cde-ubuntu2604 (Ubuntu 26.04.1 LTS aarch64, Linux 7.0.0-43-generic, clang 21, wlroots 0.19)",
+  "motif_revision": "3b2c39b50c77035fc78f3b10de2bd70fce771e95",
+  "cde_revision": "e555179c039fe520e9266c5880b3cf5d18bc3786",
+  "fs_lib_revision": "7cf90e9",
+  "test_timing": {
+    "parallel_wayland_and_x11_seconds": 20.12
+  },
+  "binary_sha256": {
+    "/usr/dt/lib/libXm.so.9.0.0": "52af7335ce8a517ba804ce46aafeee66cd41a5bdbe2400b9fb9f3ca49f046949",
+    "/var/tmp/ck-wayland-build/wp00/fs-prefix/lib/libck-core-fs-lib.so.0.5.0": "18f2861b8bdc1d445f8a295ece93a4ac55cda09c083cd8dba99bf082df491b31",
+    "/var/tmp/ck-wayland-build/wp00/cde-build/programs/dtwm/dtwm-wayland": "3c8dc00b8e45e9fa1a4d97f8a3fbacc1f23e5a7f10e96284cbb50b62c90922d2",
+    "/var/tmp/ck-wayland-build/wp00/cde-build/programs/dtwm/.libs/dtwm": "4e43ed39a71d0f8e8fb6ad9aad584e745c23853f4c5cd66405bf9440a3e3c74c",
+    "/var/tmp/ck-wayland-build/wp00/cde-build/programs/dtfile/.libs/dtfile": "abfaaeb93e2590cf1f41b4614af20685f7fd759b48be920a77ae0c8852d90842",
+    "/var/tmp/ck-wayland-build/wp00/cde-build/programs/dtfile/dtsync/dtfile_sync": "de9f9199a6c044c3c6a24e42cb5dbf57ef8a66a3b3ade2b5788287feda995846"
+  },
+  "runtime_provenance": {
+    "wayland_dtfile_pid": 649559,
+    "wayland_dtsync_pid": 649893,
+    "x11_dtfile_pid": 649567,
+    "x11_dtsync_pid": 649885
+  },
+  "features_verified": [
+    "Runtime toolkit & filesystem engine linkage: verified dtfile and dtfile_sync map CK Core Motif ABI 9 (libXm.so.9) and ck-core-fs-lib (libck-core-fs-lib.so.0.5)",
+    "Multi-tab browsing & navigation shortcuts in dtfile: Ctrl+T new tab, Alt+Left/Alt+Right Back/Forward history, Alt+Up parent folder, Ctrl+Tab/Ctrl+Shift+Tab tab cycling, middle-click folder open in tab, Ctrl+W close tab, Ctrl+H hidden-files toggle, and F2 inline rename",
+    "Asynchronous cancellable in-window search (Ctrl+F + ck-core-fs-lib ckfes_*): recursive glob, content, size, and modified-date filtering, Reveal in Folder navigation/selection, and mid-scan Stop cancellation with verified worker drain",
+    "Cross-toolkit file clipboard (Ctrl+C/Ctrl+X/Ctrl+V): bidirectional x-special/gnome-copied-files and text/uri-list copy/cut/paste with native Wayland zwlr_data_control_v1 and X11 CLIPBOARD peers plus same-folder duplicate collision naming",
+    "Bounded per-session undo journal (Ctrl+Z): verified reversal of Move to Trash, Move, Copy, and Rename",
+    "Validated Synchronize Folders (dtfile_sync) execution: one-way Synchronize review receipt generation and Apply reviewed plan to CKFET_COMPLETE with verified worker drain"
+  ],
+  "commands": [
+    "CC=clang python3 cde/programs/dtwm/tests/check-dtwm-wayland-wp17.py --compositor /var/tmp/ck-wayland-build/wp00/cde-build/programs/dtwm/dtwm-wayland (wayland: PASS, x11: PASS in 20.12s)"
+  ],
+  "result": "pass"
+}

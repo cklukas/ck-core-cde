@@ -1,0 +1,29 @@
+{
+  "work_package": "WP-15",
+  "date": "2026-11-21",
+  "branch": "master",
+  "host_vm": "cde-ubuntu2604 (Ubuntu 26.04.1 LTS aarch64, Linux 7.0.0-43-generic, clang 21, wlroots 0.19, PipeWire / WirePlumber, D-Bus 1.16)",
+  "motif_revision": "3b2c39b50c77035fc78f3b10de2bd70fce771e95",
+  "cde_revision": "e555179c039fe520e9266c5880b3cf5d18bc3786",
+  "apps_revision": "87b7623",
+  "test_timing": {
+    "parallel_wayland_and_x11_seconds": 5.93
+  },
+  "binary_sha256": {
+    "/usr/dt/lib/libXm.so.9.0.0": "52af7335ce8a517ba804ce46aafeee66cd41a5bdbe2400b9fb9f3ca49f046949",
+    "/var/tmp/ck-wayland-build/wp00/cde-build/programs/dtwm/dtwm-wayland": "3c8dc00b8e45e9fa1a4d97f8a3fbacc1f23e5a7f10e96284cbb50b62c90922d2",
+    "/var/tmp/ck-wayland-build/wp00/cde-build/programs/dtwm/.libs/dtwm": "4e43ed39a71d0f8e8fb6ad9aad584e745c23853f4c5cd66405bf9440a3e3c74c",
+    "/var/tmp/ck-wayland-build/wp00/apps-build/bin/ck-mixer": "684f77d3327f343aea709fa9c82f1baa68bdcedf03674a20cda620a3c9c1ee32",
+    "/var/tmp/ck-wayland-build/wp00/apps-build/bin/ck-status": "856275f769ea02f2a3e86a85bae2354199c61698598bf4c303d33dc186f760ef"
+  },
+  "features_verified": [
+    "Runtime toolkit & library linkage: verified ck-mixer and ck-status map CK Core Motif ABI 9 (libXm.so.9), libpulse.so.0, and libdbus-1.so.3",
+    "PipeWire / PulseAudio backend in ck-mixer with zero-ALSA fallback (CK_MIXER_NO_ALSA=1 against isolated pipewire + wireplumber + pipewire-pulse): live microphone peak meter (mic_peak_pct >= 10), mic mute/unmute peak gating, default output sink switching (desk_spk -> bt_a2dp), sink volume/mute, per-application stream routing (MusicStream -> bt_a2dp), and sound card profile selection (pro-audio)",
+    "Native Motif Wi-Fi (WPA2-PSK & WPA-Enterprise 802.1X PEAP/MSCHAPv2) and VPN onboarding in ck-status via NetworkManager AddAndActivateConnection plus asynchronous SecretAgent.GetSecrets Motif dialog round-trip",
+    "Built-in BlueZ Pairing Agent (org.bluez.Agent1 KeyboardDisplay) & MPRIS media transport in ck-status: AgentManager1.RegisterAgent, StartDiscovery, non-blocking Pair() -> RequestConfirmation(614829) Motif modal round-trip, Trusted toggle, RemoveDevice, and MPRIS PlayPause/Next"
+  ],
+  "commands": [
+    "CC=clang python3 cde/programs/dtwm/tests/check-dtwm-wayland-wp15.py --compositor /var/tmp/ck-wayland-build/wp00/cde-build/programs/dtwm/dtwm-wayland --ck-mixer /var/tmp/ck-wayland-build/wp00/apps-build/bin/ck-mixer --ck-status /var/tmp/ck-wayland-build/wp00/apps-build/bin/ck-status (wayland: PASS, x11: PASS in 5.93s)"
+  ],
+  "result": "pass"
+}
