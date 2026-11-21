@@ -2266,8 +2266,17 @@ static DtwmView *desktop_view_at(
     *out_surface = nullptr;
     *out_part = DTWM_PART_NONE;
 
-    /* First check scene graph for popups / unmanaged XWayland menus / layer surfaces / client surfaces */
+    /* First check scene graph for popups / unmanaged XWayland menus / layer surfaces / client surfaces.
+     * Temporarily hide the cursor-attached drag_icon_tree so it never intercepts hit-testing over drop targets. */
+    bool restore_drag_icon = false;
+    if (server->drag_icon_tree && server->drag_icon_tree->node.enabled) {
+        wlr_scene_node_set_enabled(&server->drag_icon_tree->node, false);
+        restore_drag_icon = true;
+    }
     struct wlr_scene_node *node = wlr_scene_node_at(&server->scene->tree.node, lx, ly, sx, sy);
+    if (restore_drag_icon && server->drag_icon_tree) {
+        wlr_scene_node_set_enabled(&server->drag_icon_tree->node, true);
+    }
     if (node && node->type == WLR_SCENE_NODE_BUFFER) {
         struct wlr_scene_buffer *sbuf = wlr_scene_buffer_from_node(node);
         struct wlr_scene_surface *ssurf = wlr_scene_surface_try_from_buffer(sbuf);

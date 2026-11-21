@@ -1,4 +1,19 @@
 2026-11-21
+- Fix `dtfile` Shelf/object context menus and cursor-attached folder/file
+  drag-and-drop icons on native Wayland
+  (`programs/dtwm/wayland/dtwm_wayland_main.c`, `.ckgit/motif-revision`,
+  `.ckgit/ci.yml`, `docs/improvements/wayland.md`):
+  - Bump pinned CK Core Motif ABI 9 to `98691a263a68764b99ddd1377342d4f70d65ce3a`
+    for `XmMenuPosition`/`XmMenuShell` `MS_LastManagedMenuTime` popup-click
+    posting (fixing `dtfile` Shelf context menus flickering and immediately
+    popping down on right-click release), `owner_events = True` passive button
+    grab `ButtonPress` delivery on `XmCreatePopupMenu` targets, and persistent
+    cursor-attached `XmDragOverShell` `wl_drag_icon` surfaces with 1-bit/8-bit
+    Pixman alpha mask rendering and clean off-window `Escape` drag cancellation.
+  - Exclude `server->drag_icon_tree` from `desktop_view_at` scene hit-testing in
+    `dtwm-wayland` so cursor-attached folder and file drag icons in `overlay_tree`
+    never intercept pointer hit-testing over underlying Shelf slots or client
+    drop sites.
 - Fix etched-in armed gadget menu labels and `xdg_popup` `MenuShell`
   repositioning across Wayland CDE menus
   (`programs/dtwm/wayland/dtwm_wayland_main.c`, `.ckgit/motif-revision`,

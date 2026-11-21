@@ -192,14 +192,17 @@ clipboard/drag-and-drop, screenshots, and mixed-DPI multi-monitor setups work
 across native Wayland and XWayland clients simultaneously:
 
 - **Bidirectional Motif XDND v5 ↔ Wayland `wl_data_device` drag-and-drop:**
-  Native Wayland drags (`wl_data_device.start_drag`) render `wlr_scene_drag_icon`
-  surfaces in `overlay_tree` and bridge automatically to Motif `XmDropSite`
-  targets via `wlroots`'s XDND v5 forwarder, while `cde_xdnd_bridge.c` watches
-  `XdndSelection` via XFixes on `dtwm-wayland`'s XCB connection and promotes
-  active Motif `XmDragStart` drags into a `wlr_drag` (`text/uri-list`,
-  `UTF8_STRING`, `text/plain;charset=utf-8`) the moment the pointer enters a
-  native Wayland surface — preserving native X11-to-X11 Motif drags untouched
-  over XWayland surfaces;
+  Native Wayland drags (`wl_data_device.start_drag`, including `dtfile` file-view
+  and Shelf drags via CK Core Motif's `XmDragOverShell` `wl_drag_icon` surface)
+  render cursor-attached folder/file drag icons in `overlay_tree`—excluded from
+  `desktop_view_at` pointer hit-testing so the icon never shadows underlying drop
+  sites—and bridge automatically to Motif `XmDropSite` targets via `wlroots`'s
+  XDND v5 forwarder, while `cde_xdnd_bridge.c` watches `XdndSelection` via XFixes
+  on `dtwm-wayland`'s XCB connection and promotes active Motif `XmDragStart`
+  drags into a `wlr_drag` (`text/uri-list`, `UTF8_STRING`,
+  `text/plain;charset=utf-8`) the moment the pointer enters a native Wayland
+  surface — preserving native X11-to-X11 Motif drags untouched over XWayland
+  surfaces;
 - **`ck-grab` Wayland screencopy, region overlay, and clipboard (`zwlr_screencopy_manager_v1`, `zwlr_layer_shell_v1`, `zwlr_data_control_manager_v1`):**
   `dtwm-wayland` publishes `_DT_ACTIVE_WINDOW_BOX` (`outer_x`, `outer_y`,
   `outer_w`, `outer_h`, `client_x`, `client_y`, `client_w`, `client_h`) on the
