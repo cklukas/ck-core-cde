@@ -113,7 +113,7 @@ static SyncProfilesResult profile_validate(const SyncProfile *p)
         !bounded_length(p->destination, SYNC_PROFILE_PATH_MAX, &n))
         return SYNC_PROFILES_LIMIT;
     if (p->source[0] != '/' || p->destination[0] != '/') return SYNC_PROFILES_INVALID;
-    if (p->profile > CKFSP_COMPARE || p->metadata_scope > 1) return SYNC_PROFILES_INVALID;
+    if (p->profile > 7u || p->metadata_scope > 1) return SYNC_PROFILES_INVALID;
     const ckfsp_filters *f = &p->filters;
     if (f->has_minimum_size > 1 || f->has_maximum_size > 1 ||
         f->has_modified_not_before > 1 || f->has_modified_before > 1 ||
@@ -1191,6 +1191,10 @@ int main(int argc, char **argv)
     SyncProfile *q = test_profile("from-stale-reader");
     test_queue(b, q); assert(test_settled(b).result == SYNC_PROFILES_OK);
     assert(test_settled(b).count == 2); /* Merged disk DB, not b's stale empty cache. */
+    p->profile = 7u; /* SYNC_PROFILE_TWO_WAY */
+    test_queue(a, p); assert(test_settled(a).result == SYNC_PROFILES_OK);
+    test_reload(b); assert(test_settled(b).count == 2);
+    test_get(b, p->name, out); test_assert_profile(p, out);
     p->profile = CKFSP_COMPARE;
     test_queue(a, p); assert(test_settled(a).result == SYNC_PROFILES_OK);
     test_reload(b); assert(test_settled(b).count == 2);

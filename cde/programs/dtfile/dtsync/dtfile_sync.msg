@@ -50,7 +50,7 @@ $set 1
 52 Complete preservation
 53 Ordinary mode/times; new caller ownership
 54 Metadata:
-55 Compare, rule review and Apply reviewed plan are available for Copy, Update, Copy missing only and Synchronize one way.\nCompare only and Mirror remain preview-only; two-way sync and move are not part of this window.
+55 Compare, rule review and Apply reviewed plan are available for Copy, Update, Copy missing only,\nSynchronize one way, Mirror (with deletion approval) and Synchronize two ways. Compare only never modifies files.
 56 Minimum bytes:
 57 Maximum bytes:
 58 Modified on/after (local YYYY-MM-DD or UTC time):
@@ -249,7 +249,7 @@ $set 1
 290 Update: add missing objects and consider source-newer files.\nRounded timestamps determine order; destination-newer files are skipped.\nEqual-time differences need review before Apply reviewed plan is enabled.
 291 Copy missing only: propose adding objects absent from the destination.\nExisting destination objects are kept; review conflicts and unavailable assessments before applying.\nThis is not two-way synchronization.
 292 Synchronize one way: make included destination files match the source.\nMay propose replacing destination-newer files after review; destination-only objects remain.\nReview rules to enable Apply reviewed plan. This is not two-way synchronization.
-293 Mirror preview: also propose removing destination-only objects in scope.\nWarning: the plan can contain deletions, which require separate review.\nPreview only: mirror execution and two-way synchronization are unavailable.
+293 Mirror: make destination match source, including removing destination-only objects.\nWarning: the plan can contain deletions, which require explicit approval and rule review before Apply reviewed plan is enabled.
 294 Swap folders
 295 Clear filters
 296 These results use earlier folder options.\nCompare again before reviewing rules.
@@ -278,3 +278,8 @@ $set 1
 319 Operation needs attention. Open Operation diagnostics.
 320 Operation state
 321 Operation message
+322 Synchronize two ways
+323 Synchronize two ways: reconcile changes in both folders using a persistent baseline.\nFirst-run baseline creation and conflicting edits require explicit review before Apply reviewed plan is enabled.
+324 Approve proposed destination deletions (Mirror)
+325 Approve initial two-way baseline (first run)
+326 Two-way baseline generation

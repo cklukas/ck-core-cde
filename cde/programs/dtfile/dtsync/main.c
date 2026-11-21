@@ -1,5 +1,7 @@
 /* SPDX-License-Identifier: LGPL-2.0-or-later */
+#ifndef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE 200809L
+#endif
 #ifndef _DEFAULT_SOURCE
 #define _DEFAULT_SOURCE 1
 #endif
@@ -45,7 +47,7 @@ typedef struct {
     XtAppContext context;
     Widget shell, notebook, setup, source, destination, list, details, diagnostics, status, rules_list;
     Widget compare, review, execute, pause, cancel, previous, next, remove_rule;
-    Widget new_name, zero, retain, size_min, size_max, date_after, date_before;
+    Widget new_name, zero, retain, approve_deletions, approve_first_run, size_min, size_max, date_after, date_before;
     Widget choice_menu[23], class_menu[15];
     unsigned profile_index, choice, scope, kind, fallback, metadata, name_side;
     SyncJob *job;
@@ -80,7 +82,7 @@ typedef struct {
     XmFontList mono;
     XFontStruct *font;
 } SyncWindow;
-static const uint32_t profiles[]={CKFSP_COMPARE,CKFSP_COPY,CKFSP_UPDATE,CKFSP_MISSING_ONLY,CKFSP_SYNC,CKFSP_MIRROR};
+static const uint32_t profiles[]={CKFSP_COMPARE,CKFSP_COPY,CKFSP_UPDATE,CKFSP_MISSING_ONLY,CKFSP_SYNC,CKFSP_MIRROR,SYNC_PROFILE_TWO_WAY};
 static unsigned selected_rows(SyncWindow *,uint64_t [SYNC_PAGE_SIZE],int *);
 static void render_rules(SyncWindow *);
 static void render_diagnostics(SyncWindow *);
@@ -199,7 +201,8 @@ static void operation_explanation(SyncWindow *w)
     case 2: text=M(290,"Update: add missing objects and consider source-newer files.\nRounded timestamps determine order; destination-newer files are skipped.\nEqual-time differences need review before Apply reviewed plan is enabled."); break;
     case 3: text=M(291,"Copy missing only: propose adding objects absent from the destination.\nExisting destination objects are kept; review conflicts and unavailable assessments before applying.\nThis is not two-way synchronization."); break;
     case 4: text=M(292,"Synchronize one way: make included destination files match the source.\nMay propose replacing destination-newer files after review; destination-only objects remain.\nReview rules to enable Apply reviewed plan. This is not two-way synchronization."); break;
-    case 5: text=M(293,"Mirror preview: also propose removing destination-only objects in scope.\nWarning: the plan can contain deletions, which require separate review.\nPreview only: mirror execution and two-way synchronization are unavailable."); break;
+    case 5: text=M(293,"Mirror: make destination match source, including removing destination-only objects.\nWarning: the plan can contain deletions, which require explicit approval and rule review before Apply reviewed plan is enabled."); break;
+    case 6: text=M(323,"Synchronize two ways: reconcile changes in both folders using a persistent baseline.\nFirst-run baseline creation and conflicting edits require explicit review before Apply reviewed plan is enabled."); break;
     default: text=M(1,"Unknown"); break;
     }
     if (w->operation_explanation) label(w->operation_explanation,text);
@@ -279,6 +282,11 @@ static void mark_dirty(SyncWindow *w)
     clear_command_notice(w); w->dirty=1;
     ++w->local_rules_revision;
     if (w->execute) XtSetSensitive(w->execute,False);
+}
+static void approval_changed(Widget widget,XtPointer data,XtPointer call)
+{
+    (void)widget;(void)call; SyncWindow *w=data;
+    mark_dirty(w);
 }
 static void name_changed(Widget widget,XtPointer data,XtPointer call)
 {
@@ -449,6 +457,12 @@ static void render_diagnostics(SyncWindow *w)
         char shown_state[1024];
         snprintf(shown_state,sizeof(shown_state),"%s%s",state,pause_pending?M(39," (pause requested)"):"");
         detail_line(text,sizeof(text),M(320,"Operation state"),shown_state);
+        if (v->two_way) {
+            char gen_buf[128];
+            snprintf(gen_buf,sizeof(gen_buf),"%" PRIu64 "%s",v->two_way_generation,
+                v->first_run?" (initial first-run baseline)":"");
+            detail_line(text,sizeof(text),M(326,"Two-way baseline generation"),gen_buf);
+        }
         if (v->snapshot.recovery_required) detail_line(text,sizeof(text),M(242,"Recovery required"),M(248,"Yes"));
         if (v->error[0]) detail_line(text,sizeof(text),M(321,"Operation message"),v->error);
         if (v->journal[0]) {
@@ -663,6 +677,8 @@ static void reset_result_view(SyncWindow *w)
     w->rule_count=reusable; w->have_rendered=0; w->displayed_count=0; w->pause_requested=0; w->cancel_requested=0;
     w->rename_selection_count=0; w->rename_row=0; w->feedback_selection_count=0;
     w->dirty=1; w->setup_dirty=0; w->review_pending=0; w->execute_pending=0;
+    if (w->approve_deletions) XmToggleButtonSetState(w->approve_deletions,False,False);
+    if (w->approve_first_run) XmToggleButtonSetState(w->approve_first_run,False,False);
     memset(w->view,0,sizeof(*w->view));
     render_diagnostics(w);
     XmListDeleteAllItems(w->rules_list); XmListDeleteAllItems(w->list);
@@ -946,7 +962,10 @@ static void review(Widget widget,XtPointer data,XtPointer call)
         command_notice(w,M(31,"For a reviewed rename, select one row and enter one basename.")); XtFree(name); return;
     }
     w->rename_selection_count=n; w->rename_row=n==1?ids[0]:0;
-    uint64_t serial=SyncJobReview(w->job,w->view->snapshot.plan_generation,w->rules,w->rule_count,nullptr,0,
+    unsigned approve_del=w->approve_deletions && XmToggleButtonGetState(w->approve_deletions);
+    unsigned approve_first=w->approve_first_run && XmToggleButtonGetState(w->approve_first_run);
+    uint64_t serial=SyncJobReviewEx(w->job,w->view->snapshot.plan_generation,w->rules,w->rule_count,nullptr,0,
+        approve_del,approve_first,
         n==1?ids[0]:0,*name?name:nullptr,w->name_side?CKFET_NAME_TARGET:CKFET_NAME_INCOMING);
     XtFree(name); w->dirty=1; w->review_pending=serial!=0; w->review_serial=serial;
     w->previous_receipt=w->view->snapshot.receipt_id;
@@ -970,7 +989,9 @@ static void execute(Widget widget,XtPointer data,XtPointer call)
     if (w->dirty || w->setup_dirty || !SyncJobViewCoherent(w->view) || w->view->api!=CKFE_API_OK ||
         w->view->snapshot.state!=CKFET_AWAITING_REVIEW || w->view->snapshot.unresolved_rows ||
         !w->view->snapshot.receipt_id || w->view->snapshot.rule_count!=w->rule_count ||
-        profiles[w->profile_index]==CKFSP_COMPARE || profiles[w->profile_index]==CKFSP_MIRROR) {
+        profiles[w->profile_index]==CKFSP_COMPARE ||
+        (profiles[w->profile_index]==CKFSP_MIRROR && w->view->planned_removals && !w->view->deletions_approved) ||
+        (profiles[w->profile_index]==SYNC_PROFILE_TWO_WAY && w->view->first_run && !w->view->first_run_approved)) {
         command_notice(w,M(273,"Compare and review the complete current plan before applying changes.")); return;
     }
     w->execute_serial=SyncJobExecute(w->job,w->view->snapshot.plan_generation,w->view->snapshot.receipt_id);
@@ -1066,8 +1087,9 @@ static void tick(XtPointer data,XtIntervalId *id)
                 w->dirty=w->local_rules_revision!=w->reviewed_rules_revision; w->review_pending=0;
             }
         }
-        if (w->execute_pending && v->completed_submission==w->execute_serial && !v->command_accepted) {
-            w->dirty=1; w->execute_pending=0;
+        if (w->execute_pending && v->completed_submission==w->execute_serial) {
+            if (!v->command_accepted) w->dirty=1;
+            w->execute_pending=0;
         }
         XtSetSensitive(w->review,awaiting && !w->cancel_requested && !w->closing && !w->setup_dirty && !w->review_pending && !w->execute_pending);
         XtSetSensitive(w->pause,!w->closing && !w->cancel_requested && !v->settling && !v->snapshot.recovery_required && active && (v->snapshot.state!=CKFET_AWAITING_REVIEW ||
@@ -1079,8 +1101,10 @@ static void tick(XtPointer data,XtIntervalId *id)
         XtSetSensitive(w->next,!w->closing && !w->cancel_requested && v->has_next);
         /* A local rule edit must not reuse a receipt from the prior rule list. */
         int reviewed=!w->closing && !w->cancel_requested && !w->dirty && !w->setup_dirty && !w->review_pending && !w->execute_pending && v->snapshot.rule_count==w->rule_count;
-        XtSetSensitive(w->execute,DTFILE_SYNC_MUTATION_QUALIFIED && awaiting && coherent && reviewed && v->api==CKFE_API_OK && v->snapshot.receipt_id && !v->snapshot.unresolved_rows &&
-            profiles[w->profile_index]!=CKFSP_COMPARE && profiles[w->profile_index]!=CKFSP_MIRROR);
+        int mode_approved = (profiles[w->profile_index]!=CKFSP_MIRROR || !v->planned_removals || v->deletions_approved) &&
+                            (profiles[w->profile_index]!=SYNC_PROFILE_TWO_WAY || !v->first_run || v->first_run_approved);
+        XtSetSensitive(w->execute,DTFILE_SYNC_MUTATION_QUALIFIED && awaiting && coherent && reviewed && mode_approved && v->api==CKFE_API_OK && v->snapshot.receipt_id && !v->snapshot.unresolved_rows &&
+            profiles[w->profile_index]!=CKFSP_COMPARE);
         label(w->pause,v->snapshot.pause_requested?M(36,"Resume"):M(37,"Pause"));
         if (v->cache_valid && (!w->have_rendered || v->snapshot.sequence!=w->rendered_sequence || v->offset!=w->rendered_offset ||
             w->rendered_names_valid!=v->names_valid)) {
@@ -1121,6 +1145,7 @@ static void tick(XtPointer data,XtIntervalId *id)
     if (w->shell && XtIsRealized(w->shell)) {
         Display *dpy = XtDisplay(w->shell);
         Window root_win = DefaultRootWindow(dpy);
+        static unsigned sync_cmd_seq = 0;
         Atom cmd_atom = XInternAtom(dpy, "_DT_SYNC_CMD", False);
         Atom actual_type = None;
         int actual_fmt = 0;
@@ -1134,7 +1159,7 @@ static void tick(XtPointer data,XtIntervalId *id)
                 memcpy(cmd, prop, clen);
                 cmd[clen] = '\0';
                 unsigned p_idx = 0, k_idx = 0, c_idx = 0;
-                if (sscanf(cmd, "profile:%u", &p_idx) == 1 && p_idx < 6) {
+                if (sscanf(cmd, "profile:%u", &p_idx) == 1 && p_idx < 7) {
                     w->profile_index = p_idx;
                     option_selected(w->operation_option, p_idx);
                     operation_changed(w->operation_option, w, nullptr);
@@ -1142,22 +1167,30 @@ static void tick(XtPointer data,XtIntervalId *id)
                     w->metadata = p_idx;
                     option_selected(w->metadata_option, p_idx);
                     setup_changed(w->metadata_option, w, nullptr);
+                } else if (sscanf(cmd, "approve_deletions:%u", &p_idx) == 1 && w->approve_deletions) {
+                    XmToggleButtonSetState(w->approve_deletions, p_idx ? True : False, True);
+                } else if (sscanf(cmd, "approve_first_run:%u", &p_idx) == 1 && w->approve_first_run) {
+                    XmToggleButtonSetState(w->approve_first_run, p_idx ? True : False, True);
+                } else if (sscanf(cmd, "retain:%u", &p_idx) == 1 && w->retain) {
+                    XmToggleButtonSetState(w->retain, p_idx ? True : False, True);
                 } else if (!strcmp(cmd, "compare") && XtIsSensitive(w->compare)) {
                     compare(w->compare, w, nullptr);
                 } else if (sscanf(cmd, "rule:%u:%u", &k_idx, &c_idx) == 2 && k_idx < 15 && c_idx < 23) {
                     w->kind = k_idx;
                     w->choice = c_idx;
                     w->scope = 0; /* All matching in job */
-                    if (w->retain) XmToggleButtonSetState(w->retain, False, False);
                     option_selected(w->class_option, k_idx);
                     add_rule(nullptr, w, nullptr);
                 } else if (!strcmp(cmd, "review") && XtIsSensitive(w->review)) {
                     review(w->review, w, nullptr);
                 } else if (!strcmp(cmd, "apply") && XtIsSensitive(w->execute)) {
                     execute(w->execute, w, nullptr);
+                } else if (sscanf(cmd, "tab:%u", &p_idx) == 1 && p_idx >= 1 && p_idx <= 4) {
+                    XtVaSetValues(w->notebook, XmNcurrentPageNumber, (int)p_idx, nullptr);
                 } else if (!strcmp(cmd, "close")) {
                     close_window(w->shell, w, nullptr);
                 }
+                ++sync_cmd_seq;
             }
             XFree(prop);
         }
@@ -1166,16 +1199,22 @@ static void tick(XtPointer data,XtIntervalId *id)
         char st_buf[512];
         int nst = snprintf(st_buf, sizeof(st_buf),
             "ready=%u|state=%u|gen=%" PRIu64 "|receipt=%" PRIu64 "|unresolved=%" PRIu64
-            "|completed=%" PRIu64 "|apply_sensitive=%d|review_sensitive=%d|finished=%u",
+            "|completed=%" PRIu64 "|removals=%" PRIu64 "|two_way=%u|tw_gen=%" PRIu64 "|first_run=%u"
+            "|apply_sensitive=%d|review_sensitive=%d|finished=%u|cmd_seq=%u",
             w->job ? w->view->ready : 0u,
             w->job ? w->view->snapshot.state : 0u,
             w->job ? w->view->snapshot.plan_generation : UINT64_C(0),
             w->job ? w->view->snapshot.receipt_id : UINT64_C(0),
             w->job ? w->view->snapshot.unresolved_rows : UINT64_C(0),
             w->job ? w->view->snapshot.completed_items : UINT64_C(0),
+            w->job ? w->view->planned_removals : UINT64_C(0),
+            w->job ? w->view->two_way : 0u,
+            w->job ? w->view->two_way_generation : UINT64_C(0),
+            w->job ? w->view->first_run : 0u,
             w->execute && XtIsSensitive(w->execute) ? 1 : 0,
             w->review && XtIsSensitive(w->review) ? 1 : 0,
-            w->job ? w->view->finished : 0u);
+            w->job ? w->view->finished : 0u,
+            sync_cmd_seq);
         if (nst > 0) {
             XChangeProperty(dpy, root_win, st_atom, XA_STRING, 8, PropModeReplace,
                             (const unsigned char *)st_buf, nst);
@@ -1264,8 +1303,8 @@ int main(int argc,char **argv)
     XtAddCallback(w.source,XmNvalueChangedCallback,path_edited,&w); XtAddCallback(w.destination,XmNvalueChangedCallback,path_edited,&w);
     button(w.setup,"swapFolders",M(294,"Swap folders"),swap_folders,&w);
     Widget modes=XtVaCreateManagedWidget("modes",xmRowColumnWidgetClass,w.setup,nullptr);
-    const char *mode_names[]={M(45,"Compare only"),M(46,"Copy"),M(47,"Update: protect destination-newer"),M(48,"Copy missing only"),M(49,"Synchronize one way"),M(50,"Mirror - deletion review required")};
-    w.operation_option=option(modes,"operation",M(51,"Operation:"),mode_names,6,&w.profile_index,nullptr);
+    const char *mode_names[]={M(45,"Compare only"),M(46,"Copy"),M(47,"Update: protect destination-newer"),M(48,"Copy missing only"),M(49,"Synchronize one way"),M(50,"Mirror - deletion review required"),M(322,"Synchronize two ways")};
+    w.operation_option=option(modes,"operation",M(51,"Operation:"),mode_names,7,&w.profile_index,nullptr);
     w.operation_explanation=XtVaCreateManagedWidget("operationExplanation",xmLabelWidgetClass,modes,
         XmNalignment,XmALIGNMENT_BEGINNING,nullptr);
     operation_explanation(&w);
@@ -1274,7 +1313,7 @@ int main(int argc,char **argv)
     w.metadata_option=option(modes,"metadata",M(54,"Metadata:"),metadata,2,&w.metadata,nullptr);
     observe_setup_option(w.metadata_option,&w);
     Widget warning=XtVaCreateManagedWidget("capabilities",xmLabelWidgetClass,w.setup,nullptr);
-    label(warning,M(55,"Compare, rule review and Apply reviewed plan are available for Copy, Update, Copy missing only and Synchronize one way.\nCompare only and Mirror remain preview-only; two-way sync and move are not part of this window."));
+    label(warning,M(55,"Compare, rule review and Apply reviewed plan are available for Copy, Update, Copy missing only,\nSynchronize one way, Mirror (with deletion approval) and Synchronize two ways. Compare only never modifies files."));
     Widget comparison_note=XtVaCreateManagedWidget("comparisonPolicy",xmLabelWidgetClass,w.setup,nullptr);
     label(comparison_note,M(309,"Byte and date bounds filter regular files only; comparison reads contents.\nUnknown required size, time or precision stays unknown; it is not excluded."));
     Widget filters=XtVaCreateManagedWidget("filters",xmRowColumnWidgetClass,w.setup,nullptr);
@@ -1326,6 +1365,12 @@ int main(int argc,char **argv)
     XtAddCallback(w.zero,XmNvalueChangedCallback,rule_input_changed,&w);
     w.retain=XtVaCreateManagedWidget("retainReplaced",xmToggleButtonWidgetClass,policies,XmNset,True,nullptr); label(w.retain,M(74,"Preserve replaced versions"));
     XtAddCallback(w.retain,XmNvalueChangedCallback,rule_input_changed,&w);
+    w.approve_deletions=XtVaCreateManagedWidget("approveDeletions",xmToggleButtonWidgetClass,policies,XmNset,False,nullptr);
+    label(w.approve_deletions,M(324,"Approve proposed destination deletions (Mirror)"));
+    XtAddCallback(w.approve_deletions,XmNvalueChangedCallback,approval_changed,&w);
+    w.approve_first_run=XtVaCreateManagedWidget("approveFirstRun",xmToggleButtonWidgetClass,policies,XmNset,False,nullptr);
+    label(w.approve_first_run,M(325,"Approve initial two-way baseline (first run)"));
+    XtAddCallback(w.approve_first_run,XmNvalueChangedCallback,approval_changed,&w);
     w.new_name=field(rule_page,"newName",M(75,"Exact reviewed basename (one row):"),"",40);
     XtAddCallback(w.new_name,XmNvalueChangedCallback,name_changed,&w);
     const char *name_sides[]={M(254,"Incoming object"),M(255,"Existing target")};

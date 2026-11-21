@@ -24,7 +24,7 @@ EXTRA_DIST = tests/check-trash-writer.py tests/check-trash-metadata.py \
              tests/directory-control-packets.c \
              tests/check-file-dialog-safety.py tests/file-dialog-safety.c \
              tests/check-sync-controller.py tests/sync-controller.c \
-             tests/check-sync-retry-ui.py SyncFeature.h.in \
+             tests/check-sync-retry-ui.py tests/check-sync-mirror-twoway.py SyncFeature.h.in \
              tests/check-stop-signal.py tests/check-stop-signal.c \
              tests/check-access-ids.py tests/check-access-ids.c \
              tests/check-storage-size-hardlinks.py tests/check-storage-size-hardlinks.c \

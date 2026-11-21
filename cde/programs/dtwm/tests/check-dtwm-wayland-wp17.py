@@ -1566,7 +1566,7 @@ def main() -> int:
     cc_cmd = shlex.split(os.environ.get("CC", "cc"))
     pkg_cfg = os.environ.get("PKG_CONFIG", "pkg-config")
 
-    raw_tmp = os.environ.get("TMPDIR")
+    raw_tmp = os.environ.get("DTFILE_PRIVATE_TEST_ROOT") or os.environ.get("TMPDIR")
     if raw_tmp:
         st = os.stat(raw_tmp)
         if (st.st_mode & 0o022) and not (st.st_mode & 0o1000):
@@ -1609,6 +1609,12 @@ def main() -> int:
              str(x11_c_path), "-o", str(x11_helper_bin), *x11_flags, "-ldl"],
             check=True,
         )
+
+        base_tmp.chmod(0o700)
+        for ln in ("wayland", "x11"):
+            lr = base_tmp / f"lane-{ln}"
+            lr.mkdir(parents=True, exist_ok=True)
+            lr.chmod(0o700)
 
         with ThreadPoolExecutor(max_workers=2) as pool:
             fut_wl = pool.submit(

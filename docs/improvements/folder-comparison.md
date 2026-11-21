@@ -1,6 +1,6 @@
 ---
 title: Compare and synchronize folders
-description: Use the optional folder comparison and reviewed one-way synchronization window, matching rules and saved preferences.
+description: Use the optional folder comparison, reviewed one-way and mirror synchronization, two-way synchronization, matching rules and saved preferences.
 ---
 
 # Compare and synchronize folders
@@ -8,11 +8,11 @@ description: Use the optional folder comparison and reviewed one-way synchroniza
 The optional **File → Synchronize Folders...** command opens a native comparison
 and reviewed execution window (`dtfile_sync`). It inventories two folders, shows
 their differences, evaluates matching rules, and—for **Copy**, **Update: protect
-destination-newer**, **Copy missing only**, and **Synchronize one way**—executes
-the reviewed transactional plan through `ck-core-fs-lib` (`ckfet_execute_v1`)
-when you select **Apply reviewed plan**. **Compare only** and **Mirror** remain
-read-only preview modes; two-way reconciliation and mirror execution are not
-enabled.
+destination-newer**, **Copy missing only**, **Synchronize one way**, **Mirror**
+(with explicit destination-deletion approval), and **Synchronize two ways**—executes
+the reviewed transactional plan through `ck-core-fs-lib` (`ckfet_start_with_journal_root_v2` /
+`ckfet_execute_v1` and `ckfss_two_way_open_tree_v1`) when you select **Apply reviewed plan**.
+**Compare only** remains a read-only preview mode and never modifies files.
 
 The ordinary File Manager **Copy to...** and **Move to...** commands continue to
 perform file operations through the existing copy/move helper. Choosing a
@@ -60,7 +60,7 @@ clean build is unnecessary.
 
 ## Start a comparison
 
-The three notebook tabs are at the top. Each page scrolls independently when
+The four notebook tabs are at the top. Each page scrolls independently when
 its content exceeds the available space. The initial window size is bounded by
 the actual screen so the bottom action buttons remain visible.
 
@@ -74,11 +74,16 @@ the actual screen so the bottom action buttons remain visible.
    selected through Browse or loaded from a saved profile.
 3. Keep **Compare only**, or choose a policy to inspect or apply its reviewed
    plan. **Copy**, **Update: protect destination-newer**, **Copy missing only**,
-   and **Synchronize one way** can be executed via **Apply reviewed plan** once
-   all conflicts are resolved and a current review receipt is issued; **Mirror**
-   remains preview-only and proposed mirror removals are never executed. The
-   explanation below the operation menu describes the selected policy and its
-   direction before you compare.
+   **Synchronize one way**, **Mirror**, and **Synchronize two ways** can be
+   executed via **Apply reviewed plan** once all conflicts are resolved and a
+   current review receipt is issued. **Mirror** plans containing proposed
+   destination removals require checking **Approve proposed destination deletions
+   (Mirror)** on **Matching rules** before **Review rules** issues an executable
+   receipt; **Synchronize two ways** requires checking **Approve initial two-way
+   baseline (first run)** when creating generation 0, and supports directional
+   conflict resolution (**Keep Left**, **Keep Right**, **Skip matching**) across
+   subsequent generations. The explanation below the operation menu describes the
+   selected policy and its direction before you compare.
 4. Choose the metadata scope and optional byte/date bounds, then select
    **Compare folders**. **Clear filters** removes the four byte/date bounds
    while keeping the folders, operation, metadata scope and matching rules.
@@ -142,9 +147,12 @@ choose one of these scopes:
 - **Matching in selected subtree**: exactly one selected subtree root.
 
 Choose the tie/unknown fallback and the separate **Do not replace nonempty with
-empty** and **Preserve replaced versions** preferences. Add/update the rule,
+empty**, **Preserve replaced versions**, **Approve proposed destination deletions
+(Mirror)**, and **Approve initial two-way baseline (first run)** controls. Both
+approval checkboxes reset automatically whenever a new comparison starts so
+destructive or first-run approvals are never carried over implicitly. Add/update the rule,
 then select **Review rules** to obtain backend counts and consequences. Editing
-or removing a rule requires review again; only actions offered for that class
+or removing a rule or toggling an approval checkbox requires review again; only actions offered for that class
 and scope can be selected.
 
 Footer input errors and rule-command feedback remain visible while the current plan is

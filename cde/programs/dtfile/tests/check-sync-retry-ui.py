@@ -270,17 +270,18 @@ static void setup_cases(SyncWindow *w)
     assertion(explanation && XtNameToWidget(w->shell,"*swapFolders") &&
               XtNameToWidget(w->shell,"*clearFilters"),"new setup controls exist");
     if (!explanation) { free_paths(&original); return; }
-    const char *titles[]={"Compare only:","Copy preview:","Update preview:",
-                          "Copy missing only preview:","Synchronize one way preview:","Mirror preview:"};
+    const char *titles[]={"Compare only:","Copy:","Update:",
+                          "Copy missing only:","Synchronize one way:","Mirror:",
+                          "Synchronize two ways:"};
     const char *meaning[]={"No file changes are proposed or applied", "Newer targets are not implicitly protected",
                           "Equal-time differences need review", "Existing destination objects are kept",
-                          "destination-only objects remain", "plan can contain deletions"};
-    for (unsigned i=0;i<6;++i) {
+                          "destination-only objects remain", "plan can contain deletions",
+                          "persistent baseline"};
+    for (unsigned i=0;i<7;++i) {
         choose_option(w->operation_option,i);
         char *text=label_text(explanation);
         assertion(w->profile_index==i && strstr(text,titles[i]) && strstr(text,meaning[i]),
                   "actual operation menu callback updates its complete explanation");
-        if (i) assertion(strstr(text,"Preview only")!=NULL,"mutating operation remains explicitly preview-only");
         assertion(!XtIsSensitive(w->execute),"operation explanations never enable Apply"); XtFree(text);
     }
     set_native_path(w,w->source,"/native/left\\\001");

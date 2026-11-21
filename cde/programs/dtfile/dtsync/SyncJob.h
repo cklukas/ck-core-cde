@@ -5,6 +5,7 @@
 #define SYNC_PAGE_SIZE 64
 #define SYNC_MAX_RULES 64
 #define SYNC_DISPLAY_PATH 2048
+#define SYNC_PROFILE_TWO_WAY 7u
 typedef struct SyncJob SyncJob;
 typedef struct {
     ckfet_row_v1 observed;
@@ -26,6 +27,8 @@ typedef struct {
     uint64_t planned_skips, planned_reports, planned_bytes, summary_generation, summary_receipt;
     unsigned summary_valid, planned_bytes_known;
     uint64_t class_choices[15], class_rows[15];
+    unsigned two_way, first_run, deletions_approved, first_run_approved;
+    uint64_t two_way_generation;
     ckfe_api_status api;
     char error[512], journal[SYNC_DISPLAY_PATH];
 } SyncView;
@@ -54,6 +57,10 @@ int SyncJobRead(SyncJob *, SyncView *);
 int SyncJobPage(SyncJob *, uint64_t offset);
 uint64_t SyncJobReview(SyncJob *, uint64_t generation, const SyncRule *, unsigned count,
                   const uint64_t *deletions, unsigned deletion_count,
+                  uint64_t rename_row, const char *rename, uint32_t rename_side);
+uint64_t SyncJobReviewEx(SyncJob *, uint64_t generation, const SyncRule *, unsigned count,
+                  const uint64_t *deletions, unsigned deletion_count,
+                  unsigned approve_all_deletions, unsigned approve_first_run,
                   uint64_t rename_row, const char *rename, uint32_t rename_side);
 uint64_t SyncJobExecute(SyncJob *, uint64_t generation, uint64_t receipt);
 void SyncJobPause(SyncJob *, int paused);

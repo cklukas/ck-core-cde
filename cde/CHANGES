@@ -1,4 +1,24 @@
 2026-11-21
+- Enable end-to-end execution of **Mirror** (`CKFSP_MIRROR`) and **Synchronize
+  two ways** (`SYNC_PROFILE_TWO_WAY`) via **Apply reviewed plan** in
+  `dtfile_sync` (*Compare / Synchronize Folders*) on top of `ck-core-fs-lib`
+  ABI 0.5 (`ckfet_start_with_journal_root_v2` / `ckfss_two_way_open_tree_v1`):
+  - Wire multi-page destination deletion approval (`Approve proposed
+    destination deletions (Mirror)`), recursive folder creation and post-order
+    folder removal, retained destination file replacement, and post-execution
+    `execute_pending` reset (re-enabling **Compare folders** in the same window)
+    into `SyncJob` and `dtfile_sync`.
+  - Add `"Synchronize two ways"` (`profile:6`) with durable per-folder-pair
+    session baselines, first-run baseline approval (`Approve initial two-way
+    baseline (first run)`), directional conflict choices (`Keep Left`,
+    `Keep Right`, `Restore deleted`, `Keep edited`, `Delete edited`), retained
+    versions, recursive directory-tree synchronization, saved-profile
+    persistence, and baseline-generation diagnostics
+    (`cde/programs/dtfile/dtsync/{SyncJob.{c,h},SyncProfiles.c,main.c,dtfile_sync.msg}`,
+    `cde/programs/dtfile/tests/{sync-controller.c,check-sync-controller.py,check-sync-retry-ui.py,check-sync-mirror-twoway.py}`,
+    `cde/programs/dtfile/Makefile.am`,
+    `cde/programs/dtwm/tests/check-dtwm-wayland-wp17.py`,
+    `docs/improvements/folder-comparison.md`).
 - Upgrade CDE Calendar (`dtcm`) with two-way ETag/UID CalDAV sync, non-blocking
   UI, keyring & auto-sync, `TZID`/DST timezone resolution, and desktop alarm
   notifications:
@@ -44,23 +64,6 @@
     coverage (`cde/lib/csa/{ssh_tunnel.{c,h},connection.c,Makefile.am,tests/check-ssh-tunnel.py}`,
     `cde/programs/dtcm/dtcm/server_status.c`,
     `docs/improvements/calendar-server.md`).
-- Enable end-to-end execution of **Mirror** (`CKFSP_MIRROR`) and **Synchronize
-  two ways** (`SYNC_PROFILE_TWO_WAY`) via **Apply reviewed plan** in
-  `dtfile_sync` (*Compare / Synchronize Folders*) on top of `ck-core-fs-lib`
-  ABI 0.5 (`ckfet_start_with_journal_root_v2` / `ckfss_two_way_open_tree_v1`):
-  - Wire multi-page destination deletion approval (`Approve proposed
-    destination deletions (Mirror)`), recursive folder creation and post-order
-    folder removal, and retained destination file replacement into `SyncJob`
-    and `dtfile_sync`.
-  - Add `"Synchronize two ways"` (`profile:6`) with durable per-folder-pair
-    session baselines, first-run baseline approval (`Approve initial two-way
-    baseline (first run)`), directional conflict choices (`Keep Left`,
-    `Keep Right`, `Restore deleted`, `Keep edited`, `Delete edited`), retained
-    versions, recursive directory-tree synchronization, saved-profile
-    persistence, and baseline-generation diagnostics
-    (`cde/programs/dtfile/dtsync/{SyncJob.{c,h},SyncProfiles.c,main.c,dtfile_sync.msg}`,
-    `cde/programs/dtfile/tests/{sync-controller.c,check-sync-controller.py,check-sync-retry-ui.py,check-sync-mirror-twoway.py}`,
-    `cde/programs/dtfile/Makefile.am`, `docs/improvements/folder-comparison.md`).
 - Harden `rpc.cmsd` defaults to loopback-only and add a live **View → Server &
   Network Status...** dialog to `dtcm`:
   - Default `rpc.cmsd` standalone mode (`-l`, with `-n` opt-in for LAN) to
