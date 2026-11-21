@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include "OAuth2Client.h"
 
 #include <Xm/Xm.h>
 #include <Xm/DialogS.h>
@@ -326,6 +327,86 @@ test_conn_cb(Widget w, XtPointer cd, XtPointer call_data)
     }
 }
 
+typedef struct {
+    DtMailAccount acct;
+    DtMailPkcePair pkce;
+    int listen_fd;
+    int port;
+} OAuth2ThreadCtx;
+
+static void *
+oauth2_worker_thread(void *arg)
+{
+    OAuth2ThreadCtx *ctx = (OAuth2ThreadCtx *)arg;
+    char code[512] = "";
+    if (dtmail_oauth2_loopback_wait_code(ctx->listen_fd, ctx->pkce.state, 180,
+                                         code, sizeof(code)) == 0) {
+        char redir[128];
+        snprintf(redir, sizeof(redir), "http://127.0.0.1:%d/callback", ctx->port);
+        DtMailOAuthTokens tok;
+        char err[256] = "";
+        if (dtmail_oauth2_exchange_code(&ctx->acct, code, ctx->pkce.code_verifier,
+                                        redir, &tok, err, sizeof(err)) == 0) {
+            (void)dtmail_keyring_store(ctx->acct.id, "oauth_access", tok.access_token);
+            if (tok.refresh_token[0]) {
+                (void)dtmail_keyring_store(ctx->acct.id, "oauth_refresh", tok.refresh_token);
+            }
+        }
+    }
+    close(ctx->listen_fd);
+    free(ctx);
+    return NULL;
+}
+
+static void
+oauth2_signin_cb(Widget w, XtPointer cd, XtPointer call_data)
+{
+    (void)w; (void)cd; (void)call_data;
+    DtMailAccount a;
+    char pass[256] = "";
+    read_account_from_form(&a, pass, sizeof(pass));
+    if (!a.email[0]) {
+        set_dlg_status("Enter your email address before starting OAuth2 sign-in.");
+        return;
+    }
+    a.auth_mode = DTMAIL_AUTH_OAUTH2;
+    (void)dtmail_accounts_upsert(&a);
+
+    DtMailPkcePair pkce;
+    int port = 0;
+    if (dtmail_oauth2_generate_pkce(&pkce) != 0) {
+        set_dlg_status("Failed to initialize PKCE challenge.");
+        return;
+    }
+    int lfd = dtmail_oauth2_loopback_listen(&port);
+    if (lfd < 0) {
+        set_dlg_status("Could not open local OAuth2 loopback listener.");
+        return;
+    }
+    char auth_url[1024] = "";
+    if (dtmail_oauth2_build_auth_url(&a, &pkce, port, auth_url, sizeof(auth_url)) != 0) {
+        close(lfd);
+        set_dlg_status("Failed to build OAuth2 authorization URL.");
+        return;
+    }
+    OAuth2ThreadCtx *ctx = (OAuth2ThreadCtx *)calloc(1, sizeof(OAuth2ThreadCtx));
+    if (!ctx) { close(lfd); return; }
+    ctx->acct = a;
+    ctx->pkce = pkce;
+    ctx->listen_fd = lfd;
+    ctx->port = port;
+    pthread_t th;
+    if (pthread_create(&th, NULL, oauth2_worker_thread, ctx) == 0) {
+        pthread_detach(th);
+        (void)dtmail_oauth2_open_browser(auth_url);
+        set_dlg_status("Opened browser for OAuth2 sign-in (waiting on loopback callback)...");
+    } else {
+        close(lfd);
+        free(ctx);
+        set_dlg_status("Could not start OAuth2 sign-in thread.");
+    }
+}
+
 static void
 sync_now_cb(Widget w, XtPointer cd, XtPointer call_data)
 {
@@ -516,12 +597,13 @@ dtmail_show_accounts_dialog(Widget parent, DtMailSyncDoneCb on_sync_done, void *
 
         static const struct { const char *lbl; XtCallbackProc cb; } btns[] = {
             { "Save Account", save_acct_cb },
+            { "Sign In (OAuth2)", oauth2_signin_cb },
             { "Test Connection", test_conn_cb },
             { "Sync Now", sync_now_cb },
             { "Remove", remove_acct_cb },
             { "Close", close_acct_cb }
         };
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 6; i++) {
             XmString bs = XmStringCreateLocalized((char *)btns[i].lbl);
             Widget b = XtVaCreateManagedWidget("acctBtn", xmPushButtonWidgetClass, btn_rc,
                 XmNlabelString, bs, NULL);

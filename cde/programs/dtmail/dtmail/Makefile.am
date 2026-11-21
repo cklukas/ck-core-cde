@@ -18,6 +18,7 @@ dtmail_LDADD = ../libDtMail/libDtMail.a ../MotifApp/libMotifApp.a \
 		$(DTCLIENTLIBS) $(XTOOLLIB) $(TIRPCLIB) $(LIBCURL_LIBS)
 
 dtmail_SOURCES = AccountSetupDialog.C            AccountSetupDialog.h \
+		 AddressAutocomplete.C           AddressAutocomplete.h \
 		 AliasListUiItem.C               AlternatesListUiItem.C \
 		 AntiCheckBoxUiItem.C            AttachArea.C \
 		 Attachment.C			 CheckBoxUiItem.C \
@@ -37,6 +38,7 @@ dtmail_SOURCES = AccountSetupDialog.C            AccountSetupDialog.h \
 		 Icon.C				 IgnoreListUiItem.C \
 		 InboxTextFieldUiItem.C		 \
 		 IndexedOptionMenu.C		 IndexedOptionMenuUiItem.C \
+		 ItipBanner.C                    ItipBanner.h \
 		 ListUiItem.C			 MailAccountStore.C \
 		 MailAccountStore.h              MailQuickFilter.C \
 		 MailQuickFilter.h               MailRcSource.C \
@@ -44,6 +46,7 @@ dtmail_SOURCES = AccountSetupDialog.C            AccountSetupDialog.h \
 		 MailThreadRules.C               MailThreadRules.h \
 		 MoveMenuListUiItem.C            MsgHndArray.C \
 		 MsgScrollingList.C              NoOpCmd.C \
+		 OAuth2Client.C                  OAuth2Client.h \
 		 OptCmd.C                        PasswordDialogManager.C \
 		 PropUi.C                        \
 		 RoamApp.C                       RoamCmds.C \

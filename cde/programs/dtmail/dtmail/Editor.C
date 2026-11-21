@@ -53,6 +53,7 @@
 #include "str_utils.h"
 
 #include "HtmlReadable.h"
+#include "ItipBanner.h"
 #include <ctype.h>
 #include <strings.h>
 
@@ -262,6 +263,23 @@ Editor::set_message(DtMail::Message * msg,
 		free(g_last_html_body);
 		g_last_html_body = NULL;
 		g_last_html_len = 0;
+		dtmail_itip_set_current((const char *)contents, (size_t)size);
+		if (dtmail_itip_has_current()) {
+		    const DtMailItipInvite *inv = dtmail_itip_get_current();
+		    if (inv) {
+			char ibanner[768];
+			snprintf(ibanner, sizeof(ibanner),
+			    "=== Meeting Invitation ===\n"
+			    "Event: %s\nWhen:  %s%s%s\n"
+			    "(Use Mailbox -> Open Invite in Calendar (dtcm) to add to Calendar)\n"
+			    "==========================\n\n",
+			    inv->summary[0] ? inv->summary : "(Untitled)",
+			    inv->dtstart[0] ? inv->dtstart : "(unspecified)",
+			    inv->location[0] ? "  @ " : "",
+			    inv->location);
+			append_to_contents(ibanner, strlen(ibanner));
+		    }
+		}
 	    }
 	    if (contents && size > 0 && is_html_body(type, (const char *)contents, (size_t)size)) {
 		if (format != IF_INDENTED) {

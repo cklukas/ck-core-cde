@@ -47,6 +47,7 @@
 #include "SendMsgDialog.h"
 #include "MailAccountStore.h"
 #include "CurlMailEngine.h"
+#include "AddressAutocomplete.h"
 #include "NoOpCmd.h"
 #include "RoamCmds.h"
 #include "ComposeCmds.hh"
@@ -425,6 +426,31 @@ SendMsgDialog::~SendMsgDialog()
 void
 header_form_traverse(Widget w, XtPointer, XtPointer)
 {
+    dtmail_contacts_init();
+    if (XmIsTextField(w)) {
+        char *cur = XmTextFieldGetString(w);
+        if (cur && cur[0]) {
+            char *last_sep = strrchr(cur, ',');
+            char *tok = last_sep ? last_sep + 1 : cur;
+            while (*tok == ' ' || *tok == '\t') tok++;
+            if (tok[0] && !strchr(tok, '@')) {
+                char matches[4][256];
+                if (dtmail_contacts_match(tok, matches, 4) > 0) {
+                    char completed[1024];
+                    if (last_sep) {
+                        size_t plen = (size_t)(last_sep - cur) + 1;
+                        if (plen > 512) plen = 512;
+                        snprintf(completed, sizeof(completed), "%.*s %s",
+                                 (int)plen, cur, matches[0]);
+                    } else {
+                        snprintf(completed, sizeof(completed), "%s", matches[0]);
+                    }
+                    XmTextFieldSetString(w, completed);
+                }
+            }
+            XtFree(cur);
+        }
+    }
     (void) XmProcessTraversal(w, XmTRAVERSE_NEXT_TAB_GROUP);
 }
 
@@ -4265,6 +4291,15 @@ SendMsgDialog::finishUndoSendDispatch()
     if (!smtp_acct) {
         cancelUndoSend();
         return;
+    }
+
+    /* Harvest sent recipients into ~/.dt/dtmail_contacts (0600) */
+    dtmail_contacts_init();
+    if (dtmail_contacts_harvest_header(_pending_smtp_rcpts) > 0) {
+        char cpath[1024];
+        if (dtmail_contacts_default_path(cpath, sizeof(cpath)) == 0) {
+            (void)dtmail_contacts_save_file(cpath);
+        }
     }
 
     char rcpt_buf[1024];

@@ -1,4 +1,18 @@
 2026-11-21
+- Implement Phase 3 (Tier 3) OAuth2 PKCE sign-in, iTIP calendar invitations, and
+  sender autocomplete in `dtmail` (`programs/dtmail/dtmail/`):
+  - Add RFC 7636 PKCE OAuth2 (`XOAUTH2`) loopback sign-in (`OAuth2Client.{C,h}`),
+    wired to **Sign In (OAuth2)** in `AccountSetupDialog.C`, launching
+    `ck-browser` (or `$BROWSER` / `xdg-open`), exchanging authorization codes
+    and refresh tokens over `libcurl`, and storing tokens in the desktop keyring.
+  - Add iTIP (`text/calendar` `METHOD:REQUEST`) meeting invitation detection and
+    `dtcm` handoff (`ItipBanner.{C,h}`, `Editor.C`, **Mailbox → Open Invite in
+    Calendar (dtcm)** in `RoamMenuWindow.C`), saving `.ics` invites safely to
+    `~/.dt/calendar/incoming_invite.ics` (`0600`).
+  - Add sender/recipient autocomplete (`AddressAutocomplete.{C,h}`,
+    `~/.dt/dtmail_contacts`, mode `0600`) harvesting sent recipients and
+    auto-completing `To:`/`Cc:`/`Bcc:` fields in `SendMsgDialog.C`.
+  - Add ASan/UBSan test coverage in `tests/check-oauth2-pkce.py`.
 - Implement Phase 2 (Tier 2) modern daily mail UX in `dtmail`
   (`programs/dtmail/dtmail/`):
   - Add a persistent collapsible left **Accounts & Folders** sidebar

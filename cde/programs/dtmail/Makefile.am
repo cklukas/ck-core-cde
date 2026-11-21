@@ -12,7 +12,8 @@ EXTRA_DIST = tests/check-spool-helper.py tests/check-message-text.py \
              tests/check-roam-temp-file-create.py tests/check-roam-temp-file-create.cc \
              tests/check-session-file-create.py tests/check-session-file-create.cc \
              tests/check-mail-accounts.py tests/check-html-readable.py \
-             tests/check-curl-mail.py tests/check-thread-rules.py
+             tests/check-curl-mail.py tests/check-thread-rules.py \
+             tests/check-oauth2-pkce.py
 
 check-local:
 	DTMAIL_CC='$(CC) $(DEFS) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)' \
@@ -29,3 +30,4 @@ check-local:
 	CXX="$(CXX)" python3 $(srcdir)/tests/check-html-readable.py
 	CXX="$(CXX)" python3 $(srcdir)/tests/check-curl-mail.py
 	CXX="$(CXX)" python3 $(srcdir)/tests/check-thread-rules.py
+	CXX="$(CXX)" python3 $(srcdir)/tests/check-oauth2-pkce.py

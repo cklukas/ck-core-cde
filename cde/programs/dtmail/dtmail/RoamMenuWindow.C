@@ -104,6 +104,7 @@
 #include "FolderSidebar.h"
 #include "MailQuickFilter.h"
 #include "MailThreadRules.h"
+#include "ItipBanner.h"
 #include <X11/keysym.h>
 #include <Xm/RowColumn.h>
 #include <Xm/PushB.h>
@@ -3511,6 +3512,25 @@ public:
     const char *const className() override { return "SyncRemoteMailCmd"; }
 };
 
+class OpenInviteDtcmCmd : public NoUndoCmd {
+    RoamMenuWindow *_rmw;
+public:
+    OpenInviteDtcmCmd(char *name, char *label, int active, RoamMenuWindow *rmw)
+        : NoUndoCmd(name, label, active), _rmw(rmw) {}
+    void doit() override {
+        if (!_rmw) return;
+        if (!dtmail_itip_has_current()) {
+            _rmw->message((char *)"Current message does not contain a calendar invitation.");
+            return;
+        }
+        if (dtmail_itip_open_current_in_dtcm() == 0)
+            _rmw->message((char *)"Saved invitation and opened Calendar (dtcm).");
+        else
+            _rmw->message((char *)"Could not launch Calendar (dtcm).");
+    }
+    const char *const className() override { return "OpenInviteDtcmCmd"; }
+};
+
 class OpenHtmlBrowserCmd : public NoUndoCmd {
     RoamMenuWindow *_rmw;
 public:
@@ -3619,6 +3639,7 @@ RoamMenuWindow::construct_file_menu()
     cmdList->add(new SyncRemoteMailCmd((char *)"SyncRemoteMail", (char *)"Sync Remote Mail", TRUE, this));
     cmdList->add(new MailRulesCmd((char *)"MailRules", (char *)"Mail Rules...", TRUE, this));
     cmdList->add(new OpenHtmlBrowserCmd((char *)"OpenHtmlBrowser", (char *)"Open HTML in Browser", TRUE, this));
+    cmdList->add(new OpenInviteDtcmCmd((char *)"OpenInviteDtcm", (char *)"Open Invite in Calendar (dtcm)", TRUE, this));
     cmdList->add(theRoamApp.mailOptions());
     cmdList->add(_file_separator);
     cmdList->add(_file_quit);

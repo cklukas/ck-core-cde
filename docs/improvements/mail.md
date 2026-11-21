@@ -482,3 +482,20 @@ local `/usr/sbin/sendmail` MTA to be usable on a modern desktop:
   5-second `Sending in Ns... [Cancel Send]` countdown bar before dispatching
   remote SMTP mail.
 - Verified under ASan/UBSan by `tests/check-thread-rules.py`.
+
+## OAuth2 PKCE sign-in, Calendar invitations (`dtcm`), and sender autocomplete
+
+- **Loopback PKCE OAuth2 (`XOAUTH2`)**: `OAuth2Client.C` implements RFC 7636
+  PKCE (`S256`) with an ephemeral `127.0.0.1:0` loopback callback listener,
+  browser sign-in via `ck-browser` (or `$BROWSER` / `xdg-open`), and `libcurl`
+  token exchange/refresh stored in the desktop keyring. Start sign-in from
+  **Mailbox → Accounts & Servers... → Sign In (OAuth2)**.
+- **Meeting invitations (`text/calendar` → `dtcm`)**: `ItipBanner.C` detects
+  `BEGIN:VCALENDAR` / `BEGIN:VEVENT` meeting invitations when displaying a
+  message, renders an inline summary banner in the reading pane, and hands the
+  `.ics` file (`~/.dt/calendar/incoming_invite.ics`, `0600`) to Calendar Manager
+  via **Mailbox → Open Invite in Calendar (dtcm)**.
+- **Sender & recipient autocomplete**: `AddressAutocomplete.C` harvests unique
+  `Name <email>` contacts into `~/.dt/dtmail_contacts` (`0600`) and completes
+  prefixes in Compose `To:`, `Cc:`, and `Bcc:` fields.
+- Verified under ASan/UBSan by `tests/check-oauth2-pkce.py`.
