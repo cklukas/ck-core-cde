@@ -45,7 +45,8 @@ dtcm_SOURCES = MonthPanel.c    RFCMIME.c       about.c \
                format.c        goto.c          graphics.c \
                group_editor.c  help.c          i18nxlate.c \
                icon.c          ics_csa.c       ics_csa.h \
-               ics_io.c        ics_io.h        md5.c           misc.c \
+               ics_io.c        ics_io.h        itip_ui.c       itip_ui.h \
+               md5.c           misc.c \
                monthglance.c   namesvc.c       notify_desktop.c \
                notify_desktop.h overlay_store.c overlay_store.h \
                overlay_ui.c    overlay_ui.h    print.c \

@@ -198,6 +198,46 @@ int main(void)
     dtcm_ics_free_events(rev2);
     dtcm_ics_free_events(rev);
 
+    /* Test iTIP METHOD:REQUEST parsing + METHOD:REPLY generation */
+    const char *itip_req =
+        "BEGIN:VCALENDAR\r\n"
+        "VERSION:2.0\r\n"
+        "METHOD:REQUEST\r\n"
+        "BEGIN:VEVENT\r\n"
+        "UID:invite-42@example.com\r\n"
+        "DTSTART:20261124T140000Z\r\n"
+        "DTEND:20261124T150000Z\r\n"
+        "SUMMARY:Architecture Sync\r\n"
+        "LOCATION:Boardroom 1\r\n"
+        "ORGANIZER;CN=\"Alice Smith\":mailto:alice@example.com\r\n"
+        "ATTENDEE;CN=\"Bob Jones\";PARTSTAT=NEEDS-ACTION:mailto:bob@example.com\r\n"
+        "END:VEVENT\r\n"
+        "END:VCALENDAR\r\n";
+    FILE *ifp = fopen("itip_req.ics", "wb");
+    assert(ifp != NULL);
+    fwrite(itip_req, 1, strlen(itip_req), ifp);
+    fclose(ifp);
+
+    DtcmIcsEvent *iev = NULL;
+    int icnt = 0;
+    assert(dtcm_ics_parse_file("itip_req.ics", &iev, &icnt) == 0);
+    assert(icnt == 1);
+    assert(strcmp(iev[0].method, "REQUEST") == 0);
+    assert(strcmp(iev[0].organizer_mailto, "alice@example.com") == 0);
+    assert(strstr(iev[0].organizer, "Alice Smith") != NULL);
+    assert(strstr(iev[0].attendees, "bob@example.com") != NULL);
+
+    assert(dtcm_ics_write_itip_reply("itip_reply.ics", &iev[0], "bob@example.com", "ACCEPTED") == 0);
+    DtcmIcsEvent *rep = NULL;
+    int repcnt = 0;
+    assert(dtcm_ics_parse_file("itip_reply.ics", &rep, &repcnt) == 0);
+    assert(repcnt == 1);
+    assert(strcmp(rep[0].method, "REPLY") == 0);
+    assert(strcmp(rep[0].uid, "invite-42@example.com") == 0);
+    assert(strstr(rep[0].attendees, "ACCEPTED") != NULL);
+    dtcm_ics_free_events(rep);
+    dtcm_ics_free_events(iev);
+
     printf("ics-io-test: all assertions passed\n");
     return 0;
 }

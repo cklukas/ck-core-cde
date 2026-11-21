@@ -282,6 +282,13 @@ while preserving the classic Motif look and 100% CSA storage compatibility:
   (`dtcm_ics_expand_occurrences()`); deleting a recurring appointment via the
   context menu prompts for **This Occurrence** (`CSA_SCOPE_ONE`) vs **All
   Occurrences** (`CSA_SCOPE_ALL`).
+- **iTIP / iMIP meeting invitations**: importing or dropping an RFC 5546
+  `METHOD:REQUEST` `.ics` file opens a **Meeting Invitation** dialog displaying
+  the meeting summary, time, location, organizer, and attendees, with
+  **Accept**, **Tentative**, and **Decline** actions that add accepted or
+  tentative meetings to the primary calendar and deliver a `METHOD:REPLY` via
+  either **Send Reply via Mail** (`submit_mail`) or **Save Reply `.ics`...**
+  (`itip_ui.c`, `ics_io.c`, `tests/ics-io-test.c`).
 - Pure calendar/category/hit-test helpers (`ux_helpers.c`) are verified under
   ASan/UBSan by `programs/dtcm/dtcm/tests/check-ux-helpers.py`.
 

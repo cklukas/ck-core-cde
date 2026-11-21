@@ -1,4 +1,12 @@
 2026-11-21
+- Implement Phase 3 (Tier 3) iTIP / iMIP meeting invitations in `dtcm`:
+  - Parse RFC 5546 `METHOD:`, `ORGANIZER`, and `ATTENDEE` (`CN=`, `PARTSTAT=`,
+    `mailto:`) properties and generate `METHOD:REPLY` `.ics` payloads via
+    `dtcm_ics_write_itip_reply()` (`ics_io.{c,h}`, `tests/ics-io-test.c`).
+  - Add a **Meeting Invitation** response dialog (`itip_ui.{c,h}`, `ics_csa.c`)
+    triggered when importing or dropping a `METHOD:REQUEST` `.ics` file,
+    offering **Accept**, **Tentative**, and **Decline** with both **Send Reply
+    via Mail** (`submit_mail`) and **Save Reply `.ics`...** delivery options.
 - Implement Phase 2 (Tier 2) power calendar features in `dtcm`:
   - Render multi-day appointments and overlaid subscriptions as continuous
     horizontal spanning pastel/accent bars across day cells in Month view

@@ -2,7 +2,9 @@
 #define DTCM_ICS_CSA_H
 
 #include "calendar.h"
+#include "ics_io.h"
 
+int dtcm_ics_import_single_event(Calendar *c, const DtcmIcsEvent *ev);
 int dtcm_import_ics_file(Calendar *c, const char *ics_path, int *out_count);
 int dtcm_export_ics_file(Calendar *c, const char *ics_path, int *out_count);
 

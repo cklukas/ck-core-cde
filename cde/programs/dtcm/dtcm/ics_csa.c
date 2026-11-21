@@ -15,6 +15,7 @@
 #include "cm_tty.h"
 #include "ics_csa.h"
 #include "ics_io.h"
+#include "itip_ui.h"
 #include "misc.h"
 
 extern void scrub_attr_list(Dtcm_appointment *appt);
@@ -276,6 +277,59 @@ static void extract_appt_recurrence(const Dtcm_appointment *appt, DtcmIcsEvent *
     }
 }
 
+int dtcm_ics_import_single_event(Calendar *c, const DtcmIcsEvent *ev)
+{
+    if (!c || !ev)
+        return 0;
+    offline_store_append(ev);
+    if (!c->cal_handle)
+        return 1;
+
+    int version = (c->general && c->general->version) ? c->general->version : DATAVER4;
+    Dtcm_appointment *appt = allocate_appt_struct(appt_write, version, nullptr);
+    load_appt_defaults(appt, (Props *)c->properties);
+
+    time_t st = ev->start_utc;
+    time_t et = (ev->end_utc > ev->start_utc)
+                    ? ev->end_utc
+                    : (ev->all_day ? ev->start_utc + 86400 : ev->start_utc + 3600);
+
+    if (appt->time && appt->time->value) {
+        free(appt->time->value->item.date_time_value);
+        appt->time->value->item.date_time_value = ckalloc(64);
+        _csa_tick_to_iso8601(st, appt->time->value->item.date_time_value);
+    }
+    if (appt->end_time && appt->end_time->value) {
+        free(appt->end_time->value->item.date_time_value);
+        appt->end_time->value->item.date_time_value = ckalloc(64);
+        _csa_tick_to_iso8601(et, appt->end_time->value->item.date_time_value);
+    }
+    if (appt->show_time && appt->show_time->value) {
+        appt->show_time->value->item.sint32_value = ev->all_day ? B_FALSE : B_TRUE;
+    }
+
+    char what_buf[3072];
+    dtcm_ics_compose_what(ev, what_buf, sizeof(what_buf));
+    if (appt->what && appt->what->value) {
+        free(appt->what->value->item.string_value);
+        appt->what->value->item.string_value = cm_strdup(what_buf);
+    }
+
+    apply_ics_recurrence_to_appt(ev, appt, version);
+    scrub_attr_list(appt);
+
+    int ok = 0;
+    CSA_entry_handle new_entry = 0;
+    CSA_return_code rc =
+        csa_add_entry(c->cal_handle, appt->count, appt->attrs, &new_entry, nullptr);
+    if (rc == CSA_SUCCESS) {
+        csa_free((CSA_buffer)new_entry);
+        ok = 1;
+    }
+    free_appt_struct(&appt);
+    return ok;
+}
+
 int dtcm_import_ics_file(Calendar *c, const char *ics_path, int *out_count)
 {
     if (out_count)
@@ -293,55 +347,15 @@ int dtcm_import_ics_file(Calendar *c, const char *ics_path, int *out_count)
     }
 
     int imported = 0;
+    int invitations = 0;
     for (int i = 0; i < count; ++i) {
         const DtcmIcsEvent *ev = &events[i];
-        offline_store_append(ev);
-
-        if (c->cal_handle) {
-            int version = (c->general && c->general->version) ? c->general->version : DATAVER4;
-            Dtcm_appointment *appt = allocate_appt_struct(appt_write, version, nullptr);
-            load_appt_defaults(appt, (Props *)c->properties);
-
-            time_t st = ev->start_utc;
-            time_t et = (ev->end_utc > ev->start_utc)
-                            ? ev->end_utc
-                            : (ev->all_day ? ev->start_utc + 86400 : ev->start_utc + 3600);
-
-            if (appt->time && appt->time->value) {
-                free(appt->time->value->item.date_time_value);
-                appt->time->value->item.date_time_value = ckalloc(64);
-                _csa_tick_to_iso8601(st, appt->time->value->item.date_time_value);
-            }
-            if (appt->end_time && appt->end_time->value) {
-                free(appt->end_time->value->item.date_time_value);
-                appt->end_time->value->item.date_time_value = ckalloc(64);
-                _csa_tick_to_iso8601(et, appt->end_time->value->item.date_time_value);
-            }
-            if (appt->show_time && appt->show_time->value) {
-                appt->show_time->value->item.sint32_value = ev->all_day ? B_FALSE : B_TRUE;
-            }
-
-            char what_buf[3072];
-            dtcm_ics_compose_what(ev, what_buf, sizeof(what_buf));
-            if (appt->what && appt->what->value) {
-                free(appt->what->value->item.string_value);
-                appt->what->value->item.string_value = cm_strdup(what_buf);
-            }
-
-            apply_ics_recurrence_to_appt(ev, appt, version);
-            scrub_attr_list(appt);
-
-            CSA_entry_handle new_entry = 0;
-            CSA_return_code rc =
-                csa_add_entry(c->cal_handle, appt->count, appt->attrs, &new_entry, nullptr);
-            if (rc == CSA_SUCCESS) {
-                csa_free((CSA_buffer)new_entry);
-                imported++;
-            }
-            free_appt_struct(&appt);
-        } else {
-            imported++;
+        if (strcasecmp(ev->method, "REQUEST") == 0 && c->frame && XtIsRealized(c->frame)) {
+            dtcm_itip_show_invitation_dialog(c, ev);
+            invitations++;
+            continue;
         }
+        imported += dtcm_ics_import_single_event(c, ev);
     }
 
     dtcm_ics_free_events(events);
@@ -353,9 +367,15 @@ int dtcm_import_ics_file(Calendar *c, const char *ics_path, int *out_count)
 
     snprintf(g_last_ics_path, sizeof(g_last_ics_path), "%s", ics_path);
     g_last_imported = imported;
-    snprintf(g_status_msg, sizeof(g_status_msg),
-             "Imported %d event%s from %s",
-             imported, (imported == 1) ? "" : "s", ics_path);
+    if (invitations > 0 && imported == 0) {
+        snprintf(g_status_msg, sizeof(g_status_msg),
+                 "Opened %d meeting invitation%s from %s",
+                 invitations, (invitations == 1) ? "" : "s", ics_path);
+    } else {
+        snprintf(g_status_msg, sizeof(g_status_msg),
+                 "Imported %d event%s from %s",
+                 imported, (imported == 1) ? "" : "s", ics_path);
+    }
     if (c->message_text)
         set_message(c->message_text, g_status_msg);
     dtcm_ics_publish_state(c);

@@ -28,12 +28,23 @@ typedef struct {
     time_t until_utc;        /* 0 = none */
     time_t exdates[32];      /* excluded occurrence start timestamps */
     int exdate_count;
+    char method[32];         /* e.g. "REQUEST", "REPLY", "CANCEL" from VCALENDAR METHOD */
+    char organizer[256];     /* display organizer, e.g. "Alice <alice@example.com>" */
+    char organizer_mailto[256]; /* raw email address without mailto: */
+    char attendees[1024];    /* newline-separated attendees */
 } DtcmIcsEvent;
 
 int dtcm_ics_parse_file(const char *path, DtcmIcsEvent **out_events, int *out_count);
 void dtcm_ics_free_events(DtcmIcsEvent *events);
 
 int dtcm_ics_write_file(const char *path, const DtcmIcsEvent *events, int count);
+
+/* Writes an RFC 5546 iTIP METHOD:REPLY .ics file for req with PARTSTAT
+ * ("ACCEPTED", "TENTATIVE", or "DECLINED"). Returns 0 on success. */
+int dtcm_ics_write_itip_reply(const char *path,
+                              const DtcmIcsEvent *req,
+                              const char *attendee_email,
+                              const char *partstat);
 
 /* Expands occurrences of ev whose start time falls in [range_start, range_end].
  * Respects freq, interval, count, byday_mask, until_utc, and exdates.

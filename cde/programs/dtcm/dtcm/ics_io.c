@@ -317,9 +317,51 @@ static void parse_ics_rrule(const char *val, DtcmIcsEvent *ev)
     }
 }
 
+static void extract_param_value(const char *params, const char *key,
+                                char *out, size_t out_len)
+{
+    if (!out || out_len == 0) return;
+    out[0] = '\0';
+    if (!params || !key) return;
+    size_t klen = strlen(key);
+    const char *p = params;
+    while (*p) {
+        if (strncasecmp(p, key, klen) == 0 && p[klen] == '=') {
+            const char *v = p + klen + 1;
+            int quoted = (*v == '"') ? 1 : 0;
+            if (quoted) v++;
+            size_t o = 0;
+            while (*v && o + 1 < out_len) {
+                if (quoted && *v == '"') break;
+                if (!quoted && *v == ';') break;
+                out[o++] = *v++;
+            }
+            out[o] = '\0';
+            return;
+        }
+        const char *semi = strchr(p, ';');
+        if (!semi) break;
+        p = semi + 1;
+    }
+}
+
+static void strip_mailto(const char *val, char *out, size_t out_len)
+{
+    if (!out || out_len == 0) return;
+    out[0] = '\0';
+    if (!val) return;
+    while (*val && isspace((unsigned char)*val)) val++;
+    if (strncasecmp(val, "mailto:", 7) == 0) val += 7;
+    snprintf(out, out_len, "%s", val);
+    size_t l = strlen(out);
+    while (l > 0 && isspace((unsigned char)out[l - 1])) out[--l] = '\0';
+}
+
 static void handle_unfolded_line(const char *line,
                                  int *in_vevent,
                                  int *subcomponent_depth,
+                                 char *cal_method,
+                                 size_t cal_method_len,
                                  DtcmIcsEvent *cur,
                                  long *cur_duration,
                                  DtcmIcsEvent **events,
@@ -328,15 +370,26 @@ static void handle_unfolded_line(const char *line,
 {
     if (!line || !line[0]) return;
 
-    if (strcasecmp(line, "BEGIN:VEVENT") == 0) {
-        *in_vevent = 1;
-        *subcomponent_depth = 0;
-        memset(cur, 0, sizeof(*cur));
-        cur->interval = 1;
-        *cur_duration = 0;
+    if (!*in_vevent) {
+        if (strncasecmp(line, "METHOD:", 7) == 0 && cal_method && cal_method_len > 0) {
+            const char *m = line + 7;
+            while (*m && isspace((unsigned char)*m)) m++;
+            snprintf(cal_method, cal_method_len, "%s", m);
+            size_t ml = strlen(cal_method);
+            while (ml > 0 && isspace((unsigned char)cal_method[ml - 1])) cal_method[--ml] = '\0';
+            return;
+        }
+        if (strcasecmp(line, "BEGIN:VEVENT") == 0) {
+            *in_vevent = 1;
+            *subcomponent_depth = 0;
+            memset(cur, 0, sizeof(*cur));
+            cur->interval = 1;
+            if (cal_method && cal_method[0])
+                snprintf(cur->method, sizeof(cur->method), "%s", cal_method);
+            *cur_duration = 0;
+        }
         return;
     }
-    if (!*in_vevent) return;
 
     if (strncasecmp(line, "BEGIN:", 6) == 0) {
         (*subcomponent_depth)++;
@@ -426,6 +479,33 @@ static void handle_unfolded_line(const char *line,
                 cur->exdates[cur->exdate_count++] = ex_ts;
             }
         }
+    } else if (strcasecmp(key_part, "ORGANIZER") == 0) {
+        char cn[128], addr[200];
+        extract_param_value(params, "CN", cn, sizeof(cn));
+        strip_mailto(val, addr, sizeof(addr));
+        snprintf(cur->organizer_mailto, sizeof(cur->organizer_mailto), "%s", addr);
+        if (cn[0] && addr[0])
+            snprintf(cur->organizer, sizeof(cur->organizer), "%s <%s>", cn, addr);
+        else
+            snprintf(cur->organizer, sizeof(cur->organizer), "%s", addr[0] ? addr : cn);
+    } else if (strcasecmp(key_part, "ATTENDEE") == 0) {
+        char cn[128], addr[200], pstat[32], entry[320];
+        extract_param_value(params, "CN", cn, sizeof(cn));
+        extract_param_value(params, "PARTSTAT", pstat, sizeof(pstat));
+        strip_mailto(val, addr, sizeof(addr));
+        if (cn[0] && addr[0])
+            snprintf(entry, sizeof(entry), "%s <%s>%s%s%s", cn, addr,
+                     pstat[0] ? " [" : "", pstat, pstat[0] ? "]" : "");
+        else
+            snprintf(entry, sizeof(entry), "%s%s%s%s", addr[0] ? addr : cn,
+                     pstat[0] ? " [" : "", pstat, pstat[0] ? "]" : "");
+        if (entry[0]) {
+            size_t used = strlen(cur->attendees);
+            if (used + strlen(entry) + 2 < sizeof(cur->attendees)) {
+                if (used > 0) cur->attendees[used++] = '\n';
+                snprintf(cur->attendees + used, sizeof(cur->attendees) - used, "%s", entry);
+            }
+        }
     }
 }
 
@@ -444,6 +524,7 @@ int dtcm_ics_parse_file(const char *path, DtcmIcsEvent **out_events, int *out_co
 
     int in_vevent = 0;
     int sub_depth = 0;
+    char cal_method[32] = "";
     DtcmIcsEvent cur;
     memset(&cur, 0, sizeof(cur));
     long cur_dur = 0;
@@ -479,8 +560,8 @@ int dtcm_ics_parse_file(const char *path, DtcmIcsEvent **out_events, int *out_co
             acc[acc_len] = '\0';
         } else {
             if (acc_len > 0) {
-                handle_unfolded_line(acc, &in_vevent, &sub_depth, &cur, &cur_dur,
-                                     &events, &count, &cap);
+                handle_unfolded_line(acc, &in_vevent, &sub_depth, cal_method, sizeof(cal_method),
+                                     &cur, &cur_dur, &events, &count, &cap);
             }
             if (rlen + 1 > acc_cap) {
                 size_t ncap = (rlen + 1) * 2;
@@ -494,8 +575,8 @@ int dtcm_ics_parse_file(const char *path, DtcmIcsEvent **out_events, int *out_co
         }
     }
     if (acc_len > 0) {
-        handle_unfolded_line(acc, &in_vevent, &sub_depth, &cur, &cur_dur,
-                             &events, &count, &cap);
+        handle_unfolded_line(acc, &in_vevent, &sub_depth, cal_method, sizeof(cal_method),
+                             &cur, &cur_dur, &events, &count, &cap);
     }
 
     free(acc);
@@ -828,4 +909,74 @@ int dtcm_ics_expand_occurrences(const DtcmIcsEvent *ev,
             out_starts[out++] = cand;
     }
     return out;
+}
+
+int dtcm_ics_write_itip_reply(const char *path,
+                              const DtcmIcsEvent *req,
+                              const char *attendee_email,
+                              const char *partstat)
+{
+    if (!path || !path[0] || !req || !attendee_email || !attendee_email[0])
+        return -1;
+    const char *ps = (partstat && partstat[0]) ? partstat : "ACCEPTED";
+
+    char tmp_path[4200];
+    snprintf(tmp_path, sizeof(tmp_path), "%s.tmp.%d", path, (int)getpid());
+    int fd = open(tmp_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (fd < 0)
+        return -1;
+    FILE *fp = fdopen(fd, "wb");
+    if (!fp) {
+        close(fd);
+        unlink(tmp_path);
+        return -1;
+    }
+
+    char stamp[32], dtstart[32], dtend[32];
+    format_utc_stamp(time(NULL), 0, stamp, sizeof(stamp));
+
+    fprintf(fp, "BEGIN:VCALENDAR\r\n");
+    fprintf(fp, "VERSION:2.0\r\n");
+    fprintf(fp, "PRODID:-//CK-Core CDE//dtcm//EN\r\n");
+    fprintf(fp, "METHOD:REPLY\r\n");
+    fprintf(fp, "BEGIN:VEVENT\r\n");
+    fprintf(fp, "UID:");
+    ics_write_escaped(fp, req->uid[0] ? req->uid : "dtcm-reply@ck-core-cde");
+    fprintf(fp, "\r\n");
+    fprintf(fp, "DTSTAMP:%s\r\n", stamp);
+
+    if (req->all_day) {
+        format_utc_stamp(req->start_utc, 1, dtstart, sizeof(dtstart));
+        time_t end_ts = req->end_utc > req->start_utc ? req->end_utc : (req->start_utc + 86400);
+        format_utc_stamp(end_ts, 1, dtend, sizeof(dtend));
+        fprintf(fp, "DTSTART;VALUE=DATE:%s\r\n", dtstart);
+        fprintf(fp, "DTEND;VALUE=DATE:%s\r\n", dtend);
+    } else {
+        format_utc_stamp(req->start_utc, 0, dtstart, sizeof(dtstart));
+        time_t end_ts = req->end_utc >= req->start_utc ? req->end_utc : (req->start_utc + 3600);
+        format_utc_stamp(end_ts, 0, dtend, sizeof(dtend));
+        fprintf(fp, "DTSTART:%s\r\n", dtstart);
+        fprintf(fp, "DTEND:%s\r\n", dtend);
+    }
+
+    fprintf(fp, "SUMMARY:");
+    ics_write_escaped(fp, req->summary[0] ? req->summary : "Meeting");
+    fprintf(fp, "\r\n");
+
+    if (req->organizer_mailto[0]) {
+        fprintf(fp, "ORGANIZER:mailto:%s\r\n", req->organizer_mailto);
+    }
+    fprintf(fp, "ATTENDEE;PARTSTAT=%s:mailto:%s\r\n", ps, attendee_email);
+    fprintf(fp, "END:VEVENT\r\n");
+    fprintf(fp, "END:VCALENDAR\r\n");
+
+    if (fclose(fp) != 0) {
+        unlink(tmp_path);
+        return -1;
+    }
+    if (rename(tmp_path, path) != 0) {
+        unlink(tmp_path);
+        return -1;
+    }
+    return 0;
 }
