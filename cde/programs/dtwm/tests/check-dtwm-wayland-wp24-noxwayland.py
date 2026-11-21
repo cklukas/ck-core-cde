@@ -268,9 +268,13 @@ def run_noxwayland_lane(
         (home_dir / "SampleDocs/readme.txt").write_text("Pure Native Wayland CDE\n", encoding="utf-8")
 
         dtsession_bin = resolve_cde_prog(cde_build_root, "dtsession", "dtsession")
+        help_env = {k: v for k, v in os.environ.items() if k not in ("DISPLAY", "WAYLAND_DISPLAY")}
+        help_env["XDG_RUNTIME_DIR"] = str(rt_dir)
+        help_env["CK_MOTIF_BACKEND"] = "x11"
+        help_env["LD_LIBRARY_PATH"] = build_ld_library_path(cde_build_root, motif_prefix, fs_prefix)
         help_out = subprocess.check_output(
             [str(dtsession_bin), "--help"],
-            env={**os.environ, "LD_LIBRARY_PATH": build_ld_library_path(cde_build_root, motif_prefix, fs_prefix)},
+            env=help_env,
             text=True,
             timeout=5.0,
         )

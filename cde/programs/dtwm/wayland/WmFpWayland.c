@@ -787,16 +787,28 @@ static void register_all_subpanel_contexts(void) {
             ControlData *cd = bd->control_data[j];
             if (cd && cd->subpanel_data && cd->subpanel_data->shell &&
                 XtIsRealized(cd->subpanel_data->shell)) {
-                XClassHint sp_hint = {
-                    .res_name = (char *)"dtwm-subpanel",
-                    .res_class = (char *)"Dtwm",
-                };
-                XSetClassHint(wmGD.display, XtWindow(cd->subpanel_data->shell), &sp_hint);
+                Window sp_win = XtWindow(cd->subpanel_data->shell);
+                XClassHint cur_hint = {nullptr, nullptr};
+                bool has_sp_hint = false;
+                if (XGetClassHint(wmGD.display, sp_win, &cur_hint)) {
+                    if (cur_hint.res_name && strncmp(cur_hint.res_name, "dtwm-subpanel", 13) == 0) {
+                        has_sp_hint = true;
+                    }
+                    if (cur_hint.res_name) XFree(cur_hint.res_name);
+                    if (cur_hint.res_class) XFree(cur_hint.res_class);
+                }
+                if (!has_sp_hint) {
+                    XClassHint sp_hint = {
+                        .res_name = (char *)"dtwm-subpanel",
+                        .res_class = (char *)"Dtwm",
+                    };
+                    XSetClassHint(wmGD.display, sp_win, &sp_hint);
+                }
                 ensure_shell_context(
                     cd->subpanel_data->shell, DtWM_BEHAVIOR_PANEL | DtWM_BEHAVIOR_SUBPANEL
                 );
                 XSelectInput(
-                    wmGD.display, XtWindow(cd->subpanel_data->shell),
+                    wmGD.display, sp_win,
                     StructureNotifyMask | PropertyChangeMask
                 );
             }

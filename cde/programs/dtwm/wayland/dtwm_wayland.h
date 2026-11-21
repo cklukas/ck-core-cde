@@ -477,6 +477,9 @@ struct DtwmServer {
     uint32_t next_output_idx;
     struct wlr_scene_tree *drag_icon_tree;
     struct wl_listener drag_destroy;
+    struct wl_listener drag_icon_destroy;
+    bool drag_destroy_attached;
+    bool drag_icon_destroy_attached;
 
     /* Native Wayland ext-workspace-v1 & xdg-toplevel-icon-v1 protocols */
     struct wl_global *ext_ws_global;

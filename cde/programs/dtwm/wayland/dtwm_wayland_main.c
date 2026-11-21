@@ -3671,10 +3671,27 @@ static void handle_request_set_primary_selection(struct wl_listener *listener, v
     wlr_seat_set_primary_selection(server->seat, ev->source, ev->serial);
 }
 
+static void handle_drag_icon_destroy(struct wl_listener *listener, void *data) {
+    (void)data;
+    DtwmServer *server = wl_container_of(listener, server, drag_icon_destroy);
+    if (server->drag_icon_destroy_attached) {
+        wl_list_remove(&server->drag_icon_destroy.link);
+        server->drag_icon_destroy_attached = false;
+    }
+    server->drag_icon_tree = nullptr;
+}
+
 static void handle_drag_destroy(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmServer *server = wl_container_of(listener, server, drag_destroy);
-    wl_list_remove(&server->drag_destroy.link);
+    if (server->drag_destroy_attached) {
+        wl_list_remove(&server->drag_destroy.link);
+        server->drag_destroy_attached = false;
+    }
+    if (server->drag_icon_destroy_attached) {
+        wl_list_remove(&server->drag_icon_destroy.link);
+        server->drag_icon_destroy_attached = false;
+    }
     server->drag_icon_tree = nullptr;
     if (server->focused_view) {
         struct wlr_surface *s = view_wlr_surface(server->focused_view);
@@ -3687,9 +3704,21 @@ static void handle_drag_destroy(struct wl_listener *listener, void *data) {
 static void handle_start_drag(struct wl_listener *listener, void *data) {
     DtwmServer *server = wl_container_of(listener, server, start_drag);
     struct wlr_drag *drag = data;
+    if (server->drag_icon_destroy_attached) {
+        wl_list_remove(&server->drag_icon_destroy.link);
+        server->drag_icon_destroy_attached = false;
+    }
+    if (server->drag_destroy_attached) {
+        wl_list_remove(&server->drag_destroy.link);
+        server->drag_destroy_attached = false;
+    }
+    server->drag_icon_tree = nullptr;
     if (drag->icon) {
         server->drag_icon_tree = wlr_scene_drag_icon_create(server->overlay_tree, drag->icon);
         if (server->drag_icon_tree) {
+            server->drag_icon_destroy.notify = handle_drag_icon_destroy;
+            wl_signal_add(&server->drag_icon_tree->node.events.destroy, &server->drag_icon_destroy);
+            server->drag_icon_destroy_attached = true;
             wlr_scene_node_set_position(
                 &server->drag_icon_tree->node, (int)server->cursor->x, (int)server->cursor->y
             );
@@ -3697,6 +3726,7 @@ static void handle_start_drag(struct wl_listener *listener, void *data) {
     }
     server->drag_destroy.notify = handle_drag_destroy;
     wl_signal_add(&drag->events.destroy, &server->drag_destroy);
+    server->drag_destroy_attached = true;
 }
 
 static void handle_request_start_drag(struct wl_listener *listener, void *data) {
@@ -3892,7 +3922,7 @@ static void xdg_toplevel_map(struct wl_listener *listener, void *data) {
         dtwm_notify_panel_mapped(view->server);
         return;
     }
-    if (!strcmp(app_id, "dtwm-subpanel") ||
+    if (!strncmp(app_id, "dtwm-subpanel", 13) ||
         (view->server->panel_view && view->server->panel_view->xdg_toplevel &&
          view->xdg_toplevel->parent == view->server->panel_view->xdg_toplevel)) {
         view->is_subpanel = true;
@@ -3909,7 +3939,25 @@ static void xdg_toplevel_map(struct wl_listener *listener, void *data) {
         }
         int outer_w = 0, outer_h = 0;
         dtwm_view_outer_size(view, &outer_w, &outer_h);
-        view->x = view->server->panel_x > 0 ? view->server->panel_x : 120;
+        int rel_x = 0;
+        bool has_rel_x = (!strncmp(app_id, "dtwm-subpanel:", 14) &&
+                          sscanf(app_id + 14, "%d", &rel_x) == 1);
+        int base_px = view->server->panel_x > 0 ? view->server->panel_x : 0;
+        if (has_rel_x) {
+            view->x = base_px + rel_x;
+        } else {
+            view->x = base_px > 0 ? base_px : 120;
+        }
+        struct wlr_box obox = {0};
+        wlr_output_layout_get_box(view->server->output_layout, nullptr, &obox);
+        if (obox.width > 0 && outer_w > 0) {
+            if (view->x + outer_w > obox.x + obox.width) {
+                view->x = obox.x + obox.width - outer_w;
+            }
+            if (view->x < obox.x) {
+                view->x = obox.x;
+            }
+        }
         int py = (view->server->panel_h > 0) ? view->server->panel_y : 640;
         view->y = py - outer_h;
         if (view->y < 0) view->y = 0;

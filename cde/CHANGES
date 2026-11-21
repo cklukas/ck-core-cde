@@ -1,4 +1,36 @@
 2026-11-21
+- Align native Wayland Front Panel subpanels above their control arrows and fix
+  drag-icon scene use-after-free in `dtwm-wayland` (`Callback.c`, `Session.c`,
+  `WmFpWayland.c`, `dtwm_wayland.h`, `dtwm_wayland_main.c`,
+  `check-dtwm-wayland-wp24-noxwayland.py`):
+  - Bump pinned CK Core Motif ABI 9 to `5a4ccded16cfe2977f69a6b3d634ab973e22d075`
+    (`.ckgit/motif-revision`, `.ckgit/ci.yml`) for intra-process Wayland `DtDnd`
+    Shelf drag-and-drop and shaped `XmDragOverShell` drag icons.
+  - Encode each posted subpanel's panel-relative horizontal offset in its
+    `WM_CLASS` / `xdg_toplevel` `app_id` (`dtwm-subpanel:<rel_x>`) before mapping
+    so `dtwm-wayland` docks subpanels directly above their parent control arrow
+    instead of at the left edge of the Front Panel.
+  - Attach a scene-node destroy listener (`drag_icon_destroy`) to
+    `server->drag_icon_tree->node.events.destroy` so destroying a client's drag
+    icon `wl_surface` before `wlr_drag` teardown never leaves a dangling
+    `drag_icon_tree` pointer during `process_cursor_motion`.
+- Implement Phase 1 (Tier 1) modern mail transport, fallback inbox, and HTML
+  rendering in `dtmail` (`programs/dtmail/dtmail/`):
+  - Add multi-account configuration store (`~/.dt/dtmail_accounts`, mode `0600`)
+    with provider presets (Gmail, iCloud, Fastmail, Microsoft 365, Custom
+    IMAP/SMTP, Local), desktop keyring credential storage (`secret-tool` via
+    `fork`/`exec`), and automatic local `~/.dt/mail/Inbox` fallback when
+    `/var/mail/$USER` is unavailable (`MailAccountStore.{C,h}`, `RoamApp.C`,
+    `tests/check-mail-accounts.py`).
+  - Add `libcurl`-based TLS IMAPS/STARTTLS folder listing, incremental UID sync
+    into per-account `mbox` caches (with RFC 4155 `From ` escaping), two-way
+    flag sync, and SMTPS/STARTTLS submission (`CurlMailEngine.{C,h}`,
+    `AccountSetupDialog.{C,h}`, `RoamMenuWindow.C`, `SendMsgDialog.C`,
+    `tests/check-curl-mail.py`).
+  - Add pure C/C++ HTML-to-clean-readable-text rendering for HTML emails
+    (stripping scripts/styles/comments and formatting headings, lists, links,
+    and entities) plus **Open HTML in Browser** launching `ck-browser`
+    (`HtmlReadable.{C,h}`, `Editor.C`, `tests/check-html-readable.py`).
 - Fix UTF-8 `XCreateFontSet` label rendering and ToolTalk `ttsession -p` bootstrap
   under `dtwm-wayland --no-xwayland`:
   - Bump pinned CK Core Motif ABI 9 to `b1c6fa1e08356336d7cee9282db972a87e664f5e` (`.ckgit/motif-revision`,

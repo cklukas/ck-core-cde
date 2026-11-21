@@ -309,6 +309,19 @@ SessionRestoreData (void)
                XtSetArg (al[1], XmNy, subpanel_y);
                XtSetValues (subpanel_data[j]->form, al, 2);
 
+               if (XtWindow (subpanel_data[j]->shell) != None)
+               {
+                  int rel_x = subpanel_x - (int)(panel.shell ? XtX (panel.shell) : 0);
+                  char sp_res_name[64];
+                  snprintf (sp_res_name, sizeof (sp_res_name), "dtwm-subpanel:%d", rel_x);
+                  XClassHint sp_hint = {
+                     .res_name = sp_res_name,
+                     .res_class = (char *)"Dtwm",
+                  };
+                  XSetClassHint (XtDisplay (subpanel_data[j]->shell),
+                                 XtWindow (subpanel_data[j]->shell), &sp_hint);
+               }
+
                XtManageChild (subpanel_data[j]->shell);
                XtSetMappedWhenManaged (subpanel_data[j]->shell, True);
 

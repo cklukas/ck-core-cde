@@ -252,6 +252,19 @@ ArrowCB (Widget    w,
       XtSetArg (al[0], XmNx, x);
       XtSetValues (subpanel_data->form, al, 1);
 
+      if (XtWindow (subpanel_data->shell) != None)
+      {
+         int rel_x = (int)x - (int)(panel.shell ? XtX (panel.shell) : 0);
+         char sp_res_name[64];
+         snprintf (sp_res_name, sizeof (sp_res_name), "dtwm-subpanel:%d", rel_x);
+         XClassHint sp_hint = {
+            .res_name = sp_res_name,
+            .res_class = (char *)"Dtwm",
+         };
+         XSetClassHint (XtDisplay (subpanel_data->shell),
+                        XtWindow (subpanel_data->shell), &sp_hint);
+      }
+
       XtManageChild (subpanel_data->shell);
       XtSetMappedWhenManaged (subpanel_data->shell, True);
 
