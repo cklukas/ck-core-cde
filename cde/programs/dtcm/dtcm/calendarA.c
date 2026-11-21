@@ -76,6 +76,7 @@ static  char sccsid[] = "@(#)calendarA.c 1.196 95/04/12 Copyr 1991 Sun Microsyst
 #include <netinet/in.h>
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
+#include <X11/xpm.h>
 #include <X11/cursorfont.h>
 #include <Xm/Xm.h>
 #include <Xm/ArrowBG.h>
@@ -1840,6 +1841,7 @@ make_buttons(Calendar *c)
         XtSetArg(al[ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
         XtSetArg(al[ac], XmNrightAttachment, XmATTACH_FORM); ac++;
         XtSetArg(al[ac], XmNorientation, XmHORIZONTAL); ac++;
+        XtSetArg(al[ac], XmNpacking, XmPACK_TIGHT); ac++;
 	c->radio = XmCreateRadioBox(toolform, "radio", al, ac);
 
 	/* toolbar "scope navigation" buttons */
@@ -1895,9 +1897,61 @@ make_buttons(Calendar *c)
 			(XtPointer) CALENDAR_HELP_YEAR_BUTTON);
 
         {
-                XmString ag_s = XmStringCreateLocalized("Agenda");
+                static char *agenda_xpm[] = {
+                    "24 24 10 1 0 0",
+                    "  s background c #949494949494",
+                    ". c black",
+                    "X c #bdbdbdbdbdbd",
+                    "o c white",
+                    "O c #737373737373",
+                    "+ c #949494949494",
+                    "@ c #dededededede",
+                    "# c #adadadadadad",
+                    "$ c #212121212121",
+                    "% c blue",
+                    "     .            .     ",
+                    "    .X.          .X.    ",
+                    "  ...o............o...  ",
+                    "  .o.o.oooooooooo.o.O.  ",
+                    "  .o.+.@@@@@@@@@@.+.#.  ",
+                    "  $o@.@@@@@@@@@@@@.@#.  ",
+                    "  $o@@@@@@@@@@@@@@@@#$  ",
+                    "  $o@@%%@@%%%%%%%%@@#$  ",
+                    "  $o@@%%@@%%%%%%%%@@#$  ",
+                    "  $o@@@@@@@@@@@@@@@@#$  ",
+                    "  $o@@@@@@@@@@@@@@@@#$  ",
+                    "  $o@@%%@@%%%%%%%%@@#$  ",
+                    "  $o@@%%@@%%%%%%%%@@#$  ",
+                    "  $o@@@@@@@@@@@@@@@@#$  ",
+                    "  $o@@@@@@@@@@@@@@@@#$  ",
+                    "  $o@@%%@@%%%%%%%%@@#$  ",
+                    "  $o@@%%@@%%%%%%%%@@#$  ",
+                    "  $o@@@@@@@@@@@@@@@@#$  ",
+                    "  $o@@@@@@@@@@@@@@@@#$  ",
+                    "  $o@@@@@@@@@@@@@@@@#$  ",
+                    "  $o@@@@@@@@@@@@@@@@#$  ",
+                    "  $o#################$  ",
+                    "  $$$$$$$$$$$$$$$$$$$$  ",
+                    "                        "
+                };
+                Pixmap ag_pm = XmUNSPECIFIED_PIXMAP;
+                XpmColorSymbol sym = { (char *)"background", nullptr, bg };
+                XpmAttributes xattr;
+                memset(&xattr, 0, sizeof(xattr));
+                xattr.valuemask = XpmColorSymbols | XpmColormap | XpmDepth;
+                xattr.colorsymbols = &sym;
+                xattr.numsymbols = 1;
+                xattr.colormap = DefaultColormapOfScreen(s);
+                xattr.depth = DefaultDepthOfScreen(s);
+                if (XpmCreatePixmapFromData(DisplayOfScreen(s),
+                                            RootWindowOfScreen(s),
+                                            agenda_xpm, &ag_pm, nullptr,
+                                            &xattr) != XpmSuccess) {
+                        ag_pm = pu->day_button_xbm;
+                }
                 ac = 0;
-                XtSetArg(al[ac], XmNlabelString, ag_s); ac++;
+                XtSetArg(al[ac], XmNlabelType, XmPIXMAP); ac++;
+                XtSetArg(al[ac], XmNlabelPixmap, ag_pm); ac++;
                 XtSetArg(al[ac], XmNfillOnSelect, True); ac++;
                 XtSetArg(al[ac], XmNindicatorOn, False); ac++;
                 XtSetArg(al[ac], XmNshadowThickness, 1); ac++;
@@ -1905,7 +1959,6 @@ make_buttons(Calendar *c)
                 c->agenda_scope = XmCreateToggleButtonGadget(c->radio, "agenda", al, ac);
                 XtAddCallback(c->agenda_scope, XmNvalueChangedCallback,
                               agenda_button, nullptr);
-                XmStringFree(ag_s);
         }
 
 	ManageChildren(c->radio);
@@ -3187,7 +3240,7 @@ init_calendar(int argc, char **argv)
 
         XtVaGetValues(calendar->frame, XmNwidth, &w, XmNheight, &h, nullptr);
 	XtVaSetValues(calendar->frame,
-		XmNminWidth, min(400,w),
+		XmNminWidth, max(480, (int)min(480, w)),
 		XmNminHeight, min(450,h),
 		nullptr);
 
