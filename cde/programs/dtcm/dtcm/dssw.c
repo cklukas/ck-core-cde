@@ -544,26 +544,39 @@ build_dssw(
 	dssw->what_scrollwindow = XtParent(dssw->what_text);
 	XtManageChild(dssw->what_text);
 
-	label_str = XmStringCreateLocalized("Location:");
-	dssw->location_label = XtVaCreateManagedWidget("location_label",
-		xmLabelGadgetClass, dssw->dssw_form_mgr,
-		XmNlabelString, label_str,
-		nullptr);
-	XmStringFree(label_str);
+	dssw->dur_rc = nullptr;
+	dssw->location_label = nullptr;
+	dssw->location_text = nullptr;
+	dssw->category_label = nullptr;
+	dssw->category_menu = nullptr;
+	dssw->category_idx = 0;
 
-	label_str = XmStringCreateLocalized("Category:");
-	dssw->category_label = XtVaCreateManagedWidget("category_label",
-		xmLabelGadgetClass, dssw->dssw_form_mgr,
-		XmNlabelString, label_str,
-		nullptr);
-	XmStringFree(label_str);
+	if (show_allday) {
+		label_str = XmStringCreateLocalized("Location:");
+		dssw->location_label = XtVaCreateManagedWidget("location_label",
+			xmLabelGadgetClass, dssw->dssw_form_mgr,
+			XmNlabelString, label_str,
+			nullptr);
+		XmStringFree(label_str);
 
-	/*
-	 * Do a layout
-	 */
-	_i18n_WidestWidget( 6, &prev, &max_left_label_width,
-		dssw->date_label, dssw->start_label, dssw->stop_label,
-		dssw->location_label, dssw->category_label, dssw->what_label );
+		label_str = XmStringCreateLocalized("Category:");
+		dssw->category_label = XtVaCreateManagedWidget("category_label",
+			xmLabelGadgetClass, dssw->dssw_form_mgr,
+			XmNlabelString, label_str,
+			nullptr);
+		XmStringFree(label_str);
+
+		/*
+		 * Do a layout (including Location and Category labels)
+		 */
+		_i18n_WidestWidget( 6, &prev, &max_left_label_width,
+			dssw->date_label, dssw->start_label, dssw->stop_label,
+			dssw->location_label, dssw->category_label, dssw->what_label );
+	} else {
+		_i18n_WidestWidget( 4, &prev, &max_left_label_width,
+			dssw->date_label, dssw->start_label, dssw->stop_label,
+			dssw->what_label );
+	}
 	_toText = max_left_label_width + 2 * GAP;
 
 	/*
@@ -659,8 +672,11 @@ build_dssw(
 	prev = curr;
 
 	/*
-	 * Quick duration preset buttons: 15m, 30m, 1h, All Day
+	 * Quick duration preset buttons (15m, 30m, 1h, All Day), dedicated
+	 * Location field, and Category dropdown — only for full Appointment
+	 * Editors (show_allday == True), not Options or To Do dialogs.
 	 */
+	if (show_allday) {
 	dssw->dur_rc = XtVaCreateWidget("dur_rc",
 		xmRowColumnWidgetClass, dssw->dssw_form_mgr,
 		XmNorientation, XmHORIZONTAL,
@@ -755,6 +771,7 @@ build_dssw(
 		XtManageChild(dssw->category_menu);
 		prev = dssw->category_menu;
 	}
+	} /* if (show_allday) */
 
 	/*
 	 * dssw->what_label, dssw->what_scrollwindow

@@ -656,10 +656,15 @@ ApptConvertCB(
 	if (convertInfo->reason != DtCR_DND_CONVERT_DATA)
 		return;
 
+        if (!context || !context->data) {
+                convertInfo->status = DtDND_FAILURE;
+                return;
+        }
+
         /* REMIND: Need to check convertInfo->reason, handle DELETE, etc */
 
         data->bp   = XtNewString(context->data);
-        data->size = strlen(data->bp);
+        data->size = data->bp ? strlen(data->bp) : 0;
         data->name = XtNewString(CATGETS(c->DT_catd, 1, 236, "CalendarAppointment"));
 }
 
@@ -680,15 +685,24 @@ GetIcon(Calendar *calendar)
         GEditor         *ge = (GEditor *) calendar->geditor;
  
         if (e->drag_bitmap == 0) {
-                e->drag_bitmap = XCreateBitmapFromData(display,
+                Pixel fg = BlackPixelOfScreen(XtScreen(calendar->frame));
+                Pixel bg = WhitePixelOfScreen(XtScreen(calendar->frame));
+                unsigned int depth = (unsigned int)DefaultDepthOfScreen(XtScreen(calendar->frame));
+                XtVaGetValues(calendar->frame,
+                        XmNforeground, &fg,
+                        XmNbackground, &bg,
+                        XmNdepth, &depth,
+                        nullptr);
+                e->drag_bitmap = XCreatePixmapFromBitmapData(display,
                         window, (char *) drag_xbm_bits,
-                        drag_xbm_width, drag_xbm_height);
+                        drag_xbm_width, drag_xbm_height,
+                        fg, bg, depth);
                 if (e->drag_bitmap == 0) {
 
                         printf("%s", CATGETS(calendar->DT_catd, 1, 237, "XCreateBitmapFromData() failed for bitmap.\n"));
                         return;
                 }
-                else
+                else if (ge)
                         ge->drag_bitmap = e->drag_bitmap;
         }
         if (e->drag_mask == 0) {
@@ -699,7 +713,7 @@ GetIcon(Calendar *calendar)
                         printf("%s", CATGETS(calendar->DT_catd, 1, 238, "XCreateBitmapFromData() failed for mask.\n"));
                         return;
                 }
-                else
+                else if (ge)
                         ge->drag_mask = e->drag_mask;
         }
 }
@@ -750,9 +764,13 @@ CreateDragSourceIcon(
         Arg             args[20];
         Cardinal        nn = 0;
  
-        XGetGeometry (XtDisplayOfObject(widget), pixmap, &rootWindow,
+        if (pixmap == None)
+                return nullptr;
+
+        if (!XGetGeometry (XtDisplayOfObject(widget), pixmap, &rootWindow,
                 &pixmapX, &pixmapY, &pixmapWidth, &pixmapHeight,
-                &pixmapBorder, &pixmapDepth);
+                &pixmapBorder, &pixmapDepth))
+                return nullptr;
  
         XtSetArg(args[nn], XmNwidth, pixmapWidth);  nn++;
         XtSetArg(args[nn], XmNheight, pixmapHeight);  nn++;
@@ -983,6 +1001,14 @@ ApptDragStart(
 	}
 	free_appt_struct(&appt);
 
+	if (apptstr == nullptr) {
+		if (editor_type == SingleEditorIcon) e->doing_drag = False;
+		else if (editor_type == GroupEditorIcon && ge) ge->doing_drag = False;
+		else if (editor_type == TodoEditorIcon && t) t->doing_drag = False;
+		free(context);
+		return;
+	}
+
 	context->data = apptstr;
 
         GetIcon(calendar);
@@ -990,7 +1016,7 @@ ApptDragStart(
         convertCBRec[0].closure = (XtPointer)context;
         dragFinishCBRec[0].closure = (XtPointer)context;
  
-        if (e->drag_icon == nullptr) {
+        if (e->drag_icon == nullptr && e->drag_bitmap != None) {
                 e->drag_icon = CreateDragSourceIcon(widget, e->drag_bitmap,
 						    e->drag_mask);
         }

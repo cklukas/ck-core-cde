@@ -1,4 +1,14 @@
 2026-11-21
+- Fix `dtcm` Options (*Editor Defaults*) layout overlap and Wayland drag-icon
+  `BadMatch` crash:
+  - Gate the Appointment Editor's duration preset chips, `Location:`, and
+    `Category:` rows in `build_dssw()` on `show_allday == True` so dialogs
+    reusing `DSSW` without end times (Options → *Editor Defaults*, To Do
+    Editor) never render overlapping widgets (`dssw.c`).
+  - Create the `dtcm` DnD source icon pixmap at the widget's native screen
+    depth via `XCreatePixmapFromBitmapData()` instead of a 1-bit bitmap (which
+    triggered `BadMatch` in `X_PolyFillRectangle` on XWayland) and guard
+    null/invalid pixmap and buffer pointers in `dnd.c`.
 - Polish `dtcm` Day view, context menu, double-click, and To Do Editor layout:
   - Add a draggable vertical divider sash between the left 3-month mini-panels
     and the Day schedule pane (`dayglance.{c,h}`, `calendarA.c`).
