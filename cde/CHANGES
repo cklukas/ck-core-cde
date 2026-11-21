@@ -1,4 +1,10 @@
 2026-11-21
+- Pin CK Core Motif ABI 9 `58f2066b5d9c` so `_XmAllocReceiverInfo` /
+  `GetDestinationInfo` zero-initialize `flags` for local Motif shells (so
+  `FinishAction` never misclassifies local drops as external XDND targets and
+  always runs `AnimateLeave` to clear Shelf/drop-site highlights cleanly) and
+  `DragUnder.c` clears the full translated `dropSiteRegion` extents on leave
+  (`.ckgit/{motif-revision,ci.yml}`).
 - Package and enable the CDE Calendar Manager daemon (`rpc-cmsd.service`) in
   `ck-core-cde` Debian/Ubuntu packages and the Lima Ubuntu 26.04 VM template:
   install `/lib/systemd/system/rpc-cmsd.service` (running `/usr/dt/bin/rpc.cmsd -s`
