@@ -666,10 +666,11 @@ def guest_build_and_verify(args: argparse.Namespace) -> int:
                     stderr=subprocess.DEVNULL,
                     start_new_session=True,
                 )
-                procs.extend([p_clk_fp, p_pad, p_term, p_calc, p_foot])
+                p_cm = subprocess.Popen(["/usr/dt/bin/dtcm"], env=c_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+                procs.extend([p_pad, p_term, p_calc, p_cm, p_foot])
                 time.sleep(2.5)
 
-                for label, proc in [("dtpad", p_pad), ("dtterm", p_term), ("ck-clock", p_clk_fp), ("ck-calc", p_calc)]:
+                for label, proc in [("dtpad", p_pad), ("dtterm", p_term), ("ck-calc", p_calc), ("dtcm", p_cm)]:
                     if proc.poll() is not None:
                         raise SystemExit(f"installed Wayland {label} exited with {proc.returncode}")
                     maps = Path(f"/proc/{proc.pid}/maps").read_text(encoding="utf-8", errors="replace")
