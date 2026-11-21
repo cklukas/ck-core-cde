@@ -100,6 +100,21 @@ int main(void)
     assert(dtcm_snap_minutes(1500, 15) == 1440);
     printf("ok    day-overlap-layout-and-snap\n");
 
+    DtcmMultiDaySpan spans[4] = {
+        { .cache_idx = 0, .start_col = 1, .end_col = 4 }, /* Mon-Thu */
+        { .cache_idx = 1, .start_col = 2, .end_col = 5 }, /* Tue-Fri (overlaps 0 -> lane 1) */
+        { .cache_idx = 2, .start_col = 5, .end_col = 6 }, /* Fri-Sat (after 0 -> reuses lane 0) */
+        { .cache_idx = 3, .start_col = 0, .end_col = 6 }, /* Sun-Sat (widest, starts first -> lane 0) */
+    };
+    int lanes = dtcm_compute_multiday_spans(spans, 4, 7);
+    assert(lanes == 3);
+    /* Sorted by start_col: idx 3 (0..6) lane 0, idx 0 (1..4) lane 1, idx 1 (2..5) lane 2, idx 2 (5..6) reuses lane 1 */
+    assert(spans[0].cache_idx == 3 && spans[0].lane == 0);
+    assert(spans[1].cache_idx == 0 && spans[1].lane == 1);
+    assert(spans[2].cache_idx == 1 && spans[2].lane == 2);
+    assert(spans[3].cache_idx == 2 && spans[3].lane == 1);
+    printf("ok    multiday-span-lanes\n");
+
     return 0;
 }
 """

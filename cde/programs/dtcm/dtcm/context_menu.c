@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <Xm/Xm.h>
+#include <Xm/MessageB.h>
 #include <Xm/PushBG.h>
 #include <Xm/RowColumn.h>
 #include <Xm/SeparatoG.h>
@@ -98,6 +99,63 @@ ctx_edit_appt_cb(Widget w, XtPointer cd, XtPointer call_data)
     editor_select_appt(g_ctx_cal, pc->start_time, pc->summary);
 }
 
+typedef struct {
+    Calendar *c;
+    CSA_entry_handle target;
+    CSA_entry_handle *list;
+    Tick start_time;
+    Tick end_time;
+    int show_time;
+    char summary[512];
+} RecurDeleteCtx;
+
+static void
+finish_delete_entry(Calendar *c, CSA_entry_handle target, CSA_entry_handle *list,
+                    CSA_enum scope, Tick start_time, Tick end_time,
+                    int show_time, const char *summary)
+{
+    CSA_return_code stat = csa_delete_entry(c->cal_handle, target, scope, nullptr);
+    if (list) csa_free(list);
+
+    if (stat == CSA_SUCCESS) {
+        if (scope == CSA_SCOPE_ONE)
+            dtcm_undo_push_delete(start_time, end_time, show_time, summary);
+        invalidate_cache(c);
+        if (c->view->glance == monthGlance)
+            prepare_to_paint_monthview(c, nullptr);
+        else if (c->view->glance == weekGlance)
+            paint_weekview(c, nullptr);
+        else if (c->view->glance == dayGlance)
+            paint_dayview(c, True, nullptr, False);
+        set_message(c->message_text,
+            scope == CSA_SCOPE_ALL
+                ? "All occurrences deleted."
+                : "Appointment deleted (Ctrl+Z to undo).");
+    } else {
+        set_message(c->message_text, "Could not delete appointment.");
+    }
+}
+
+static void
+recur_del_response_cb(Widget w, XtPointer cd, XtPointer call_data)
+{
+    RecurDeleteCtx *ctx = (RecurDeleteCtx *)cd;
+    XmAnyCallbackStruct *cbs = (XmAnyCallbackStruct *)call_data;
+    if (ctx && cbs) {
+        if (cbs->reason == XmCR_OK) {
+            finish_delete_entry(ctx->c, ctx->target, ctx->list, CSA_SCOPE_ONE,
+                                ctx->start_time, ctx->end_time, ctx->show_time, ctx->summary);
+        } else if (cbs->reason == XmCR_HELP) {
+            finish_delete_entry(ctx->c, ctx->target, ctx->list, CSA_SCOPE_ALL,
+                                ctx->start_time, ctx->end_time, ctx->show_time, ctx->summary);
+        } else {
+            if (ctx->list) csa_free(ctx->list);
+        }
+        free(ctx);
+    }
+    XtDestroyWidget(XtParent(w));
+}
+
 static void
 ctx_delete_appt_cb(Widget w, XtPointer cd, XtPointer call_data)
 {
@@ -127,10 +185,12 @@ ctx_delete_appt_cb(Widget w, XtPointer cd, XtPointer call_data)
     }
 
     CSA_entry_handle target = 0;
+    Boolean is_recurring = False;
     Dtcm_appointment *appt = allocate_appt_struct(appt_read,
                                                   g_ctx_cal->general->version,
                                                   CSA_ENTRY_ATTR_START_DATE_I,
                                                   CSA_ENTRY_ATTR_SUMMARY_I,
+                                                  CSA_X_DT_ENTRY_ATTR_REPEAT_TYPE_I,
                                                   nullptr);
     for (CSA_uint32 i = 0; i < n_entries; i++) {
         if (query_appt_struct(g_ctx_cal->cal_handle, list[i], appt) == CSA_SUCCESS) {
@@ -142,6 +202,10 @@ ctx_delete_appt_cb(Widget w, XtPointer cd, XtPointer call_data)
             if (st == pc->start_time &&
                 strcmp(sum, pc->summary ? pc->summary : "") == 0) {
                 target = list[i];
+                if (appt->repeat_type && appt->repeat_type->value &&
+                    appt->repeat_type->value->item.sint32_value != CSA_X_DT_REPEAT_ONETIME) {
+                    is_recurring = True;
+                }
                 break;
             }
         }
@@ -154,22 +218,50 @@ ctx_delete_appt_cb(Widget w, XtPointer cd, XtPointer call_data)
         return;
     }
 
-    stat = csa_delete_entry(g_ctx_cal->cal_handle, target, CSA_SCOPE_ONE, nullptr);
-    csa_free(list);
+    if (is_recurring) {
+        RecurDeleteCtx *ctx = (RecurDeleteCtx *)calloc(1, sizeof(RecurDeleteCtx));
+        if (!ctx) {
+            csa_free(list);
+            return;
+        }
+        ctx->c = g_ctx_cal;
+        ctx->target = target;
+        ctx->list = list;
+        ctx->start_time = pc->start_time;
+        ctx->end_time = pc->end_time;
+        ctx->show_time = pc->show_time;
+        snprintf(ctx->summary, sizeof(ctx->summary), "%s", pc->summary ? pc->summary : "");
 
-    if (stat == CSA_SUCCESS) {
-        dtcm_undo_push_delete(pc->start_time, pc->end_time, pc->show_time, pc->summary);
-        invalidate_cache(g_ctx_cal);
-        if (g_ctx_cal->view->glance == monthGlance)
-            prepare_to_paint_monthview(g_ctx_cal, nullptr);
-        else if (g_ctx_cal->view->glance == weekGlance)
-            paint_weekview(g_ctx_cal, nullptr);
-        else if (g_ctx_cal->view->glance == dayGlance)
-            paint_dayview(g_ctx_cal, True, nullptr, False);
-        set_message(g_ctx_cal->message_text, "Appointment deleted (Ctrl+Z to undo).");
-    } else {
-        set_message(g_ctx_cal->message_text, "Could not delete appointment.");
+        XmString msg = XmStringCreateLocalized(
+            "This is a recurring appointment.\nDelete only this occurrence or all occurrences?");
+        XmString ok_lbl = XmStringCreateLocalized("This Occurrence");
+        XmString all_lbl = XmStringCreateLocalized("All Occurrences");
+        XmString cancel_lbl = XmStringCreateLocalized("Cancel");
+        XmString title = XmStringCreateLocalized("Delete Recurring Appointment");
+        Widget dlg = XmCreateQuestionDialog(g_ctx_cal->frame, "recurDeleteDlg", nullptr, 0);
+        XtVaSetValues(dlg,
+            XmNdialogTitle, title,
+            XmNmessageString, msg,
+            XmNokLabelString, ok_lbl,
+            XmNhelpLabelString, all_lbl,
+            XmNcancelLabelString, cancel_lbl,
+            XmNdialogStyle, XmDIALOG_PRIMARY_APPLICATION_MODAL,
+            nullptr);
+        XtAddCallback(dlg, XmNokCallback, recur_del_response_cb, ctx);
+        XtAddCallback(dlg, XmNhelpCallback, recur_del_response_cb, ctx);
+        XtAddCallback(dlg, XmNcancelCallback, recur_del_response_cb, ctx);
+        XmStringFree(msg);
+        XmStringFree(ok_lbl);
+        XmStringFree(all_lbl);
+        XmStringFree(cancel_lbl);
+        XmStringFree(title);
+        XtManageChild(dlg);
+        return;
     }
+
+    finish_delete_entry(g_ctx_cal, target, list, CSA_SCOPE_ONE,
+                        pc->start_time, pc->end_time, pc->show_time,
+                        pc->summary ? pc->summary : "");
 }
 
 void

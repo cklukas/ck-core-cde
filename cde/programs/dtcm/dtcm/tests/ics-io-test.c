@@ -149,6 +149,55 @@ int main(void)
 
     dtcm_ics_free_events(rt);
     dtcm_ics_free_events(events);
+
+    /* Test extended RRULE (BYDAY + UNTIL) and EXDATE parsing, round-trip, and expansion */
+    const char *rrule_ics =
+        "BEGIN:VCALENDAR\r\n"
+        "VERSION:2.0\r\n"
+        "BEGIN:VEVENT\r\n"
+        "UID:byday-1@example.com\r\n"
+        "DTSTART:20261102T090000Z\r\n" /* Monday Nov 2, 2026 */
+        "DTEND:20261102T100000Z\r\n"
+        "SUMMARY:MWF Standup\r\n"
+        "RRULE:FREQ=WEEKLY;BYDAY=MO,WE,FR;UNTIL=20261113T235959Z\r\n"
+        "EXDATE:20261106T090000Z\r\n" /* Skip Friday Nov 6 */
+        "END:VEVENT\r\n"
+        "END:VCALENDAR\r\n";
+
+    const char *rrule_in = "rrule_in.ics";
+    const char *rrule_out = "rrule_out.ics";
+    FILE *rfp = fopen(rrule_in, "wb");
+    assert(rfp != NULL);
+    fwrite(rrule_ics, 1, strlen(rrule_ics), rfp);
+    fclose(rfp);
+
+    DtcmIcsEvent *rev = NULL;
+    int rcnt = 0;
+    assert(dtcm_ics_parse_file(rrule_in, &rev, &rcnt) == 0);
+    assert(rcnt == 1);
+    /* MO=bit1, WE=bit3, FR=bit5 => (1<<1)|(1<<3)|(1<<5) = 2+8+32 = 42 */
+    assert(rev[0].byday_mask == ((1u << 1) | (1u << 3) | (1u << 5)));
+    assert(rev[0].until_utc > rev[0].start_utc);
+    assert(rev[0].exdate_count == 1);
+
+    /* Expand over Nov 1..Nov 20: Mon 2, Wed 4, (skip Fri 6), Mon 9, Wed 11, Fri 13 => 5 occurrences */
+    time_t occ[16];
+    int nocc = dtcm_ics_expand_occurrences(&rev[0], rev[0].start_utc - 86400, rev[0].start_utc + 20 * 86400, occ, 16);
+    assert(nocc == 5);
+
+    /* Round-trip write + parse preserves BYDAY, UNTIL, EXDATE */
+    assert(dtcm_ics_write_file(rrule_out, rev, rcnt) == 0);
+    DtcmIcsEvent *rev2 = NULL;
+    int rcnt2 = 0;
+    assert(dtcm_ics_parse_file(rrule_out, &rev2, &rcnt2) == 0);
+    assert(rcnt2 == 1);
+    assert(rev2[0].byday_mask == rev[0].byday_mask);
+    assert(rev2[0].until_utc == rev[0].until_utc);
+    assert(rev2[0].exdate_count == 1);
+    assert(rev2[0].exdates[0] == rev[0].exdates[0]);
+    dtcm_ics_free_events(rev2);
+    dtcm_ics_free_events(rev);
+
     printf("ics-io-test: all assertions passed\n");
     return 0;
 }

@@ -86,6 +86,7 @@ static char sccsid[] = "@(#)dayglance.c 1.76 95/04/24 Copyr 1991 Sun Microsystem
 #include "context_menu.h"
 #include "undo_stack.h"
 #include "agenda_ui.h"
+#include "overlay_store.h"
 
 #define XOS_USE_XT_LOCKING
 #define X_INCLUDE_TIME_H
@@ -383,6 +384,64 @@ paint_dayview_appts(Calendar *c, Paint_cache *cache, int a_total, void *rect)
 			bcount++;
 		}
 
+		/* Merge enabled overlaid calendar occurrences for this day */
+		Tick day_lo = lowerbound(c->view->date);
+		Tick day_hi = next_ndays(day_lo, 1) - 1;
+		DtcmOverlayOccurrence ovl[64];
+		int novl = dtcm_overlay_query_range((time_t)day_lo, (time_t)day_hi, ovl, 64);
+		for (int oi = 0; oi < novl; oi++) {
+			if (!dtcm_filter_matches(ovl[oi].summary))
+				continue;
+			if (ovl[oi].all_day) {
+				/* Render all-day overlay pill in top no-time band */
+				new_XContext *xc2 = c->xcontext;
+				Colormap cmap2 = DefaultColormap(xc2->display, DefaultScreen(xc2->display));
+				unsigned short pr2, pg2, pb2, ar2, ag2, ab2;
+				dtcm_category_pastel_rgb(ovl[oi].color, &pr2, &pg2, &pb2);
+				dtcm_category_rgb(ovl[oi].color, &ar2, &ag2, &ab2);
+				XColor pc2 = { .red = pr2, .green = pg2, .blue = pb2, .flags = DoRed | DoGreen | DoBlue };
+				XColor ac2 = { .red = ar2, .green = ag2, .blue = ab2, .flags = DoRed | DoGreen | DoBlue };
+				Pixel fp2 = XAllocColor(xc2->display, cmap2, &pc2) ? pc2.pixel : xc2->background;
+				Pixel ap2 = XAllocColor(xc2->display, cmap2, &ac2) ? ac2.pixel : xc2->foreground;
+				int ax = MOBOX_AREA_WIDTH + hrbox_margin + 5;
+				int aw = (MOBOX_AREA_WIDTH + 2 + w) - ax - 3;
+				int ay = c->view->topoffset + 2 + oi * (pfy + 2);
+				if (ay + pfy < c->view->topoffset + h && aw > 20) {
+					XSetForeground(xc2->display, xc2->gc, fp2);
+					XFillRectangle(xc2->display, xc2->xid, xc2->gc, ax, ay, (unsigned int)aw, (unsigned int)(pfy + 1));
+					XSetForeground(xc2->display, xc2->gc, ap2);
+					XFillRectangle(xc2->display, xc2->xid, xc2->gc, ax, ay, 4, (unsigned int)(pfy + 1));
+					XSetForeground(xc2->display, xc2->gc, xc2->foreground);
+					char olbl[256];
+					snprintf(olbl, sizeof(olbl), "%s (%s)", ovl[oi].summary, ovl[oi].source_name);
+					int mc = gr_nchars(aw - 10, olbl, pf2);
+					if ((int)strlen(olbl) > mc && mc >= 0) olbl[mc] = '\0';
+					gr_text(xc2, ax + 7, ay + pfy - 1, pf2, olbl, nullptr);
+				}
+				continue;
+			}
+			int smin = hour((Tick)ovl[oi].start_utc) * 60 + minute((Tick)ovl[oi].start_utc);
+			int emin = (ovl[oi].end_utc > ovl[oi].start_utc)
+				   ? (hour((Tick)ovl[oi].end_utc) * 60 + minute((Tick)ovl[oi].end_utc))
+				   : (smin + 60);
+			if (emin <= smin) emin = smin + 30;
+			if (emin <= begin_time * 60 || smin >= end_time * 60)
+				continue;
+			if (bcount == bcap) {
+				int ncap = bcap ? bcap * 2 : 32;
+				DtcmDayBlock *nb = (DtcmDayBlock *)realloc(blocks, (size_t)ncap * sizeof(DtcmDayBlock));
+				if (!nb) break;
+				blocks = nb;
+				bcap = ncap;
+			}
+			blocks[bcount].cache_idx = -(oi + 1);
+			blocks[bcount].start_min = smin;
+			blocks[bcount].end_min = emin;
+			blocks[bcount].col = 0;
+			blocks[bcount].num_cols = 1;
+			bcount++;
+		}
+
 		dtcm_layout_day_events(blocks, bcount);
 
 		new_XContext *xc = c->xcontext;
@@ -413,13 +472,21 @@ paint_dayview_appts(Calendar *c, Paint_cache *cache, int a_total, void *rect)
 			int blk_w = col_w - 3;
 			if (blk_w < 24) blk_w = 24;
 
-			char clean_sum[256], loc_buf[128], cat_buf[64];
-			dtcm_ics_decompose_what_ex(cache[idx].summary,
-				clean_sum, sizeof(clean_sum),
-				loc_buf, sizeof(loc_buf),
-				cat_buf, sizeof(cat_buf),
-				nullptr, 0);
-			DtcmCategory cat = dtcm_category_from_name(cat_buf);
+			char clean_sum[256] = "", loc_buf[128] = "", cat_buf[64] = "";
+			DtcmCategory cat = DTCM_CAT_NONE;
+			if (idx >= 0) {
+				dtcm_ics_decompose_what_ex(cache[idx].summary,
+					clean_sum, sizeof(clean_sum),
+					loc_buf, sizeof(loc_buf),
+					cat_buf, sizeof(cat_buf),
+					nullptr, 0);
+				cat = dtcm_category_from_name(cat_buf);
+			} else {
+				int oi = -idx - 1;
+				snprintf(clean_sum, sizeof(clean_sum), "%s (%s)", ovl[oi].summary, ovl[oi].source_name);
+				snprintf(loc_buf, sizeof(loc_buf), "%s", ovl[oi].location);
+				cat = ovl[oi].color;
+			}
 
 			unsigned short pr, pg, pb, ar, ag, ab;
 			dtcm_category_pastel_rgb(cat, &pr, &pg, &pb);
@@ -450,9 +517,15 @@ paint_dayview_appts(Calendar *c, Paint_cache *cache, int a_total, void *rect)
 
 			/* Format line 1: time + clean summary */
 			char line1[320];
-			char *s_txt = clean_sum[0] ? clean_sum : (cache[idx].summary ? cache[idx].summary : "");
-			format_line(cache[idx].start_time, s_txt, line1, cache[idx].end_time,
-				    cache[idx].show_time, disp_t);
+			if (idx >= 0) {
+				char *s_txt = clean_sum[0] ? clean_sum : (cache[idx].summary ? cache[idx].summary : "");
+				format_line(cache[idx].start_time, s_txt, line1, cache[idx].end_time,
+					    cache[idx].show_time, disp_t);
+			} else {
+				int oi = -idx - 1;
+				format_line((Tick)ovl[oi].start_utc, clean_sum, line1, (Tick)ovl[oi].end_utc,
+					    1, disp_t);
+			}
 			int text_x = blk_x + 7;
 			int text_w = blk_w - 10;
 			if (text_w > 10) {
@@ -469,7 +542,8 @@ paint_dayview_appts(Calendar *c, Paint_cache *cache, int a_total, void *rect)
 				}
 			}
 
-			dtcm_hittest_add(blk_x, top_y, blk_w, blk_h, idx, c->view->date);
+			if (idx >= 0)
+				dtcm_hittest_add(blk_x, top_y, blk_w, blk_h, idx, c->view->date);
 		}
 		free(blocks);
 	}

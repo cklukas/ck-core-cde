@@ -6,7 +6,8 @@ EXTRA_DIST = tests/check-temp-file-create.py tests/check-temp-file-create.c \
              tests/check-sigint-signal.py tests/check-sigint-signal.c \
              tests/check-ics-io.py tests/ics-io-test.c \
              tests/check-caldav.py tests/check-notify-desktop.py \
-             tests/check-ux-helpers.py tests/check-undo-stack.py
+             tests/check-ux-helpers.py tests/check-undo-stack.py \
+             tests/check-overlay-store.py
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-temp-file-create.py
@@ -16,6 +17,7 @@ check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-notify-desktop.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-ux-helpers.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-undo-stack.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-overlay-store.py
 
 AM_CFLAGS = $(DT_INCDIR) $(CSA_INCDIR) -I$(top_srcdir)/lib/csa	\
 -I$(top_srcdir)/programs/dtcm/libDtCmP $(LIBCURL_CFLAGS) \
@@ -45,7 +47,8 @@ dtcm_SOURCES = MonthPanel.c    RFCMIME.c       about.c \
                icon.c          ics_csa.c       ics_csa.h \
                ics_io.c        ics_io.h        md5.c           misc.c \
                monthglance.c   namesvc.c       notify_desktop.c \
-               notify_desktop.h print.c \
+               notify_desktop.h overlay_store.c overlay_store.h \
+               overlay_ui.c    overlay_ui.h    print.c \
                props.c         props_pu.c      reminders.c \
                rfp.c           select.c        server_status.c \
                server_status.h session.c \

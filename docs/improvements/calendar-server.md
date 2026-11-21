@@ -267,6 +267,21 @@ while preserving the classic Motif look and 100% CSA storage compatibility:
 - **Undo & Reminder Snooze**: a 10-entry Undo ring buffer (`Ctrl+Z` or
   **Edit → Undo**) restores deleted appointments and reverts drag-moves/resizes
   (`tests/check-undo-stack.py`); alarm popups include a **Snooze 10m** action.
+- **Multi-day spanning bars**: events spanning multiple days render as
+  continuous horizontal pastel-tinted bars with category accent caps across
+  week rows in Month view (`dtcm_compute_multiday_spans()`), reserving top
+  lanes so single-day entries appear cleanly below.
+- **Multiple overlaid calendars**: subscribe to read-only `.ics` / `webcal://`
+  feeds or remote calendars via **View → Overlaid Calendars...** and toggle
+  visibility from the **View → Calendars Sidebar** (`Ctrl+B`) checklist strip.
+  Overlay sources are persisted in `~/.dt/dtcm_overlays` (`0600`), refreshed
+  asynchronously on a background thread (`overlay_store.c`, `overlay_ui.c`),
+  and merged into Month, Day, and Agenda views (`tests/check-overlay-store.py`).
+- **Extended `RRULE` & single-occurrence delete**: `ics_io.c` supports
+  `BYDAY` weekday lists, `UNTIL`, `EXDATE` exclusions, and occurrence expansion
+  (`dtcm_ics_expand_occurrences()`); deleting a recurring appointment via the
+  context menu prompts for **This Occurrence** (`CSA_SCOPE_ONE`) vs **All
+  Occurrences** (`CSA_SCOPE_ALL`).
 - Pure calendar/category/hit-test helpers (`ux_helpers.c`) are verified under
   ASan/UBSan by `programs/dtcm/dtcm/tests/check-ux-helpers.py`.
 

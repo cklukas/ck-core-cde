@@ -31,6 +31,8 @@
 #include "ics_io.h"
 #include "misc.h"
 #include "monthglance.h"
+#include "overlay_store.h"
+#include "overlay_ui.h"
 #include "ux_helpers.h"
 #include "weekglance.h"
 #include "yearglance.h"
@@ -46,12 +48,15 @@ static Boolean g_filter_visible = False;
 /* Agenda view widgets (occupies canvas slot when glance == agendaGlance) */
 static Widget g_agenda_form = nullptr;
 static Widget g_agenda_list = nullptr;
+static Widget g_agenda_left_widget = nullptr;
 static int g_agenda_days = 30;
 
 typedef struct {
     Tick start_time;
     Tick end_time;
     int show_time;
+    int is_overlay;
+    char source_name[128];
     char summary[1024];
 } AgendaRow;
 
@@ -300,7 +305,7 @@ agenda_activate_cb(Widget w, XtPointer cd, XtPointer call_data)
     if (idx < 0 || idx >= g_row_count)
         return;
     AgendaRow *r = &g_rows[idx];
-    if (r->start_time <= 0)
+    if (r->start_time <= 0 || r->is_overlay)
         return;
     g_cal->view->olddate = g_cal->view->date;
     g_cal->view->date = r->start_time;
@@ -319,7 +324,8 @@ ensure_agenda_widgets(Calendar *c)
         xmFormWidgetClass, c->form,
         XmNtopAttachment, XmATTACH_WIDGET,
         XmNtopWidget, g_filter_visible ? g_filter_form : c->toolbar,
-        XmNleftAttachment, XmATTACH_FORM,
+        XmNleftAttachment, g_agenda_left_widget ? XmATTACH_WIDGET : XmATTACH_FORM,
+        XmNleftWidget, g_agenda_left_widget,
         XmNrightAttachment, XmATTACH_FORM,
         XmNbottomAttachment, XmATTACH_WIDGET,
         XmNbottomWidget, c->message_text,
@@ -432,6 +438,7 @@ paint_agendaview(Calendar *c)
                 g_row_cap = ncap;
             }
             AgendaRow *r = &g_rows[g_row_count++];
+            memset(r, 0, sizeof(*r));
             r->start_time = st;
             r->end_time = et > st ? et : st;
             r->show_time = (appt->show_time && appt->show_time->value)
@@ -440,6 +447,34 @@ paint_agendaview(Calendar *c)
         }
         free_appt_struct(&appt);
         csa_free(list);
+    }
+
+    /* Merge enabled overlaid calendar occurrences */
+    DtcmOverlayOccurrence ovl[128];
+    int novl = dtcm_overlay_query_range((time_t)start, (time_t)stop, ovl, 128);
+    for (int i = 0; i < novl; i++) {
+        char composed[1024];
+        snprintf(composed, sizeof(composed), "%s%s%s",
+                 ovl[i].summary,
+                 ovl[i].location[0] ? "\n\tLocation: " : "",
+                 ovl[i].location);
+        if (!dtcm_filter_matches(composed))
+            continue;
+        if (g_row_count == g_row_cap) {
+            int ncap = g_row_cap ? g_row_cap * 2 : 64;
+            AgendaRow *nr = (AgendaRow *)realloc(g_rows, (size_t)ncap * sizeof(AgendaRow));
+            if (!nr) break;
+            g_rows = nr;
+            g_row_cap = ncap;
+        }
+        AgendaRow *r = &g_rows[g_row_count++];
+        memset(r, 0, sizeof(*r));
+        r->start_time = (Tick)ovl[i].start_utc;
+        r->end_time = (Tick)ovl[i].end_utc;
+        r->show_time = ovl[i].all_day ? 0 : 1;
+        r->is_overlay = 1;
+        snprintf(r->source_name, sizeof(r->source_name), "%s", ovl[i].source_name);
+        snprintf(r->summary, sizeof(r->summary), "%s", composed);
     }
 
     if (g_row_count > 1)
@@ -472,11 +507,14 @@ paint_agendaview(Calendar *c)
                                        loc, sizeof(loc), cat, sizeof(cat),
                                        nullptr, 0);
             char line[640];
-            snprintf(line, sizeof(line), "%s  %s  %s%s%s%s%s%s",
+            snprintf(line, sizeof(line), "%s  %s  %s%s%s%s%s%s%s%s%s",
                      date_buf, time_buf,
                      sum[0] ? sum : r->summary,
                      loc[0] ? "  @ " : "", loc,
-                     cat[0] ? "  [" : "", cat, cat[0] ? "]" : "");
+                     cat[0] ? "  [" : "", cat, cat[0] ? "]" : "",
+                     r->is_overlay ? "  (" : "",
+                     r->is_overlay ? r->source_name : "",
+                     r->is_overlay ? ")" : "");
             XmString xs = XmStringCreateLocalized(line);
             XmListAddItemUnselected(g_agenda_list, xs, 0);
             XmStringFree(xs);
@@ -487,6 +525,26 @@ paint_agendaview(Calendar *c)
     snprintf(status, sizeof(status), "Agenda: %d appointment(s) over next %d days",
              g_row_count, g_agenda_days);
     set_message(c->message_text, status);
+}
+
+void
+dtcm_agenda_set_left_widget(Widget left_w)
+{
+    g_agenda_left_widget = left_w;
+    if (g_agenda_form) {
+        if (left_w) {
+            XtVaSetValues(g_agenda_form,
+                XmNleftAttachment, XmATTACH_WIDGET,
+                XmNleftWidget, left_w,
+                XmNleftOffset, 2,
+                nullptr);
+        } else {
+            XtVaSetValues(g_agenda_form,
+                XmNleftAttachment, XmATTACH_FORM,
+                XmNleftOffset, 0,
+                nullptr);
+        }
+    }
 }
 
 void

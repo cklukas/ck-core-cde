@@ -1,4 +1,21 @@
 2026-11-21
+- Implement Phase 2 (Tier 2) power calendar features in `dtcm`:
+  - Render multi-day appointments and overlaid subscriptions as continuous
+    horizontal spanning pastel/accent bars across day cells in Month view
+    (`dtcm_compute_multiday_spans()` in `ux_helpers.{c,h}`, `monthglance.c`),
+    reserving top lanes so single-day entries paint cleanly below.
+  - Add multiple overlaid calendars (CalDAV / read-only `.ics` & `webcal://`
+    subscriptions) persisted in `~/.dt/dtcm_overlays` (mode `0600`) with
+    non-blocking background refresh (`overlay_store.{c,h}`,
+    `tests/check-overlay-store.py`), a **View → Overlaid Calendars...**
+    management dialog, and a toggleable left **Calendars Sidebar** (`Ctrl+B`)
+    (`overlay_ui.{c,h}`, `calendarA.c`, `monthglance.c`, `dayglance.c`,
+    `agenda_ui.c`).
+  - Extend `ics_io.{c,h}` with `RRULE` `BYDAY` lists, `UNTIL`, `EXDATE`
+    parsing/writing and `dtcm_ics_expand_occurrences()` (`tests/ics-io-test.c`),
+    and prompt **This Occurrence** vs **All Occurrences** (`CSA_SCOPE_ONE` vs
+    `CSA_SCOPE_ALL`) when deleting recurring appointments via context menu
+    (`context_menu.c`).
 - Implement Phase 1 (Tier 1) modern calendar UX upgrades in `dtcm`:
   - Render timed appointments in Day view as proportional, macOS-style
     pastel-tinted cards with a 4px left category accent bar and side-by-side

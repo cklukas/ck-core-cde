@@ -42,6 +42,17 @@ typedef struct {
 int dtcm_layout_day_events(DtcmDayBlock *blocks, int count);
 int dtcm_snap_minutes(int raw_mins, int step_mins);
 
+typedef struct {
+    int cache_idx;       /* index in paint_cache or negative for overlay */
+    int start_col;       /* inclusive day column [0..num_cols-1] */
+    int end_col;         /* inclusive day column [start_col..num_cols-1] */
+    int lane;            /* assigned vertical lane [0..] */
+    int continues_left;  /* 1 if event began before this row/week */
+    int continues_right; /* 1 if event continues past this row/week */
+} DtcmMultiDaySpan;
+
+int dtcm_compute_multiday_spans(DtcmMultiDaySpan *spans, int count, int num_cols);
+
 void dtcm_hittest_clear(void);
 void dtcm_hittest_add(int x, int y, int w, int h, int cache_idx, time_t day);
 const DtcmHitBox *dtcm_hittest_find(int x, int y);

@@ -244,6 +244,28 @@ static long parse_ics_duration_sec(const char *val)
     return total * sign;
 }
 
+static unsigned int parse_byday_list(const char *s)
+{
+    static const char *names[7] = { "SU", "MO", "TU", "WE", "TH", "FR", "SA" };
+    unsigned int mask = 0;
+    if (!s) return 0;
+    char copy[256];
+    snprintf(copy, sizeof(copy), "%s", s);
+    char *sp = NULL;
+    for (char *tok = strtok_r(copy, ",", &sp); tok != NULL; tok = strtok_r(NULL, ",", &sp)) {
+        /* Skip optional leading ordinal like +1MO or -1FR */
+        const char *p = tok;
+        while (*p && (*p == '+' || *p == '-' || isdigit((unsigned char)*p))) p++;
+        for (int d = 0; d < 7; d++) {
+            if (strncasecmp(p, names[d], 2) == 0) {
+                mask |= (1u << d);
+                break;
+            }
+        }
+    }
+    return mask;
+}
+
 static void parse_ics_rrule(const char *val, DtcmIcsEvent *ev)
 {
     if (!val || !ev) return;
@@ -252,6 +274,8 @@ static void parse_ics_rrule(const char *val, DtcmIcsEvent *ev)
 
     ev->interval = 1;
     ev->count = 0;
+    ev->byday_mask = 0;
+    ev->until_utc = 0;
     time_t until_ts = 0;
     int has_until = 0;
 
@@ -269,14 +293,18 @@ static void parse_ics_rrule(const char *val, DtcmIcsEvent *ev)
         } else if (strncasecmp(tok, "COUNT=", 6) == 0) {
             int cnt = atoi(tok + 6);
             if (cnt >= 1) ev->count = cnt;
+        } else if (strncasecmp(tok, "BYDAY=", 6) == 0) {
+            ev->byday_mask = parse_byday_list(tok + 6);
         } else if (strncasecmp(tok, "UNTIL=", 6) == 0) {
             if (parse_ics_datetime(tok + 6, NULL, &until_ts, NULL) == 0) {
                 has_until = 1;
+                ev->until_utc = until_ts;
             }
         }
     }
 
-    if (ev->freq != DTCM_ICS_ONCE && ev->count == 0 && has_until && until_ts > ev->start_utc) {
+    if (ev->freq != DTCM_ICS_ONCE && ev->count == 0 && ev->byday_mask == 0 &&
+        has_until && until_ts > ev->start_utc) {
         long span = (long)(until_ts - ev->start_utc);
         long step = 86400L;
         if (ev->freq == DTCM_ICS_WEEKLY) step = 7L * 86400L;
@@ -387,6 +415,17 @@ static void handle_unfolded_line(const char *line,
         *cur_duration = parse_ics_duration_sec(val);
     } else if (strcasecmp(key_part, "RRULE") == 0) {
         parse_ics_rrule(val, cur);
+    } else if (strcasecmp(key_part, "EXDATE") == 0) {
+        char copy[1024];
+        snprintf(copy, sizeof(copy), "%s", val);
+        char *sp = NULL;
+        for (char *tok = strtok_r(copy, ",", &sp); tok != NULL; tok = strtok_r(NULL, ",", &sp)) {
+            if (cur->exdate_count >= 32) break;
+            time_t ex_ts = 0;
+            if (parse_ics_datetime(tok, params, &ex_ts, NULL) == 0 && ex_ts > 0) {
+                cur->exdates[cur->exdate_count++] = ex_ts;
+            }
+        }
     }
 }
 
@@ -563,8 +602,36 @@ int dtcm_ics_write_file(const char *path, const DtcmIcsEvent *events, int count)
             else if (ev->freq == DTCM_ICS_YEARLY) fstr = "YEARLY";
             fprintf(fp, "RRULE:FREQ=%s", fstr);
             if (ev->interval > 1) fprintf(fp, ";INTERVAL=%d", ev->interval);
-            if (ev->count > 0) fprintf(fp, ";COUNT=%d", ev->count);
+            if (ev->byday_mask != 0) {
+                static const char *dnames[7] = { "SU", "MO", "TU", "WE", "TH", "FR", "SA" };
+                int first = 1;
+                fprintf(fp, ";BYDAY=");
+                for (int d = 0; d < 7; d++) {
+                    if (ev->byday_mask & (1u << d)) {
+                        fprintf(fp, "%s%s", first ? "" : ",", dnames[d]);
+                        first = 0;
+                    }
+                }
+            }
+            if (ev->until_utc > 0) {
+                char ubuf[32];
+                format_utc_stamp(ev->until_utc, 0, ubuf, sizeof(ubuf));
+                fprintf(fp, ";UNTIL=%s", ubuf);
+            } else if (ev->count > 0) {
+                fprintf(fp, ";COUNT=%d", ev->count);
+            }
             fprintf(fp, "\r\n");
+        }
+
+        if (ev->exdate_count > 0) {
+            for (int e = 0; e < ev->exdate_count && e < 32; e++) {
+                char exbuf[32];
+                format_utc_stamp(ev->exdates[e], ev->all_day, exbuf, sizeof(exbuf));
+                if (ev->all_day)
+                    fprintf(fp, "EXDATE;VALUE=DATE:%s\r\n", exbuf);
+                else
+                    fprintf(fp, "EXDATE:%s\r\n", exbuf);
+            }
         }
 
         fprintf(fp, "END:VEVENT\r\n");
@@ -662,4 +729,103 @@ void dtcm_ics_decompose_what(const char *what,
                                out_location, loc_len,
                                NULL, 0,
                                out_desc, desc_len);
+}
+
+static int is_exdate_match(const DtcmIcsEvent *ev, time_t candidate)
+{
+    if (!ev || ev->exdate_count <= 0) return 0;
+    struct tm ctm;
+    gmtime_r(&candidate, &ctm);
+    for (int i = 0; i < ev->exdate_count && i < 32; i++) {
+        if (ev->exdates[i] == candidate)
+            return 1;
+        struct tm etm;
+        gmtime_r(&ev->exdates[i], &etm);
+        if (etm.tm_year == ctm.tm_year &&
+            etm.tm_mon == ctm.tm_mon &&
+            etm.tm_mday == ctm.tm_mday)
+            return 1;
+    }
+    return 0;
+}
+
+int dtcm_ics_expand_occurrences(const DtcmIcsEvent *ev,
+                                time_t range_start,
+                                time_t range_end,
+                                time_t *out_starts,
+                                int max_out)
+{
+    if (!ev || !out_starts || max_out <= 0 || ev->start_utc <= 0 || range_end < range_start)
+        return 0;
+
+    int out = 0;
+    if (ev->freq == DTCM_ICS_ONCE) {
+        if (ev->start_utc >= range_start && ev->start_utc <= range_end &&
+            !is_exdate_match(ev, ev->start_utc)) {
+            out_starts[out++] = ev->start_utc;
+        }
+        return out;
+    }
+
+    int interval = ev->interval > 0 ? ev->interval : 1;
+    int max_count = ev->count > 0 ? ev->count : 0;
+    time_t hard_end = range_end;
+    if (ev->until_utc > 0 && ev->until_utc < hard_end)
+        hard_end = ev->until_utc;
+
+    int emitted_total = 0;
+    struct tm base_tm;
+    gmtime_r(&ev->start_utc, &base_tm);
+
+    if (ev->freq == DTCM_ICS_WEEKLY && ev->byday_mask != 0) {
+        /* Start from Sunday of the week containing start_utc */
+        time_t week_sun = ev->start_utc - (time_t)base_tm.tm_wday * 86400;
+        for (int w = 0; w < 2000 && out < max_out; w++) {
+            time_t wbase = week_sun + (time_t)w * (time_t)interval * 7 * 86400;
+            if (wbase > hard_end)
+                break;
+            for (int d = 0; d < 7 && out < max_out; d++) {
+                if (!(ev->byday_mask & (1u << d)))
+                    continue;
+                time_t cand = wbase + (time_t)d * 86400;
+                if (cand < ev->start_utc)
+                    continue;
+                if (cand > hard_end)
+                    return out;
+                emitted_total++;
+                if (max_count > 0 && emitted_total > max_count)
+                    return out;
+                if (cand >= range_start && !is_exdate_match(ev, cand))
+                    out_starts[out++] = cand;
+            }
+        }
+        return out;
+    }
+
+    for (int step = 0; step < 4000 && out < max_out; step++) {
+        time_t cand = 0;
+        if (ev->freq == DTCM_ICS_DAILY) {
+            cand = ev->start_utc + (time_t)step * (time_t)interval * 86400;
+        } else if (ev->freq == DTCM_ICS_WEEKLY) {
+            cand = ev->start_utc + (time_t)step * (time_t)interval * 7 * 86400;
+        } else if (ev->freq == DTCM_ICS_MONTHLY) {
+            struct tm t = base_tm;
+            t.tm_mon += step * interval;
+            cand = timegm(&t);
+        } else if (ev->freq == DTCM_ICS_YEARLY) {
+            struct tm t = base_tm;
+            t.tm_year += step * interval;
+            cand = timegm(&t);
+        } else {
+            break;
+        }
+        if (cand > hard_end)
+            break;
+        emitted_total++;
+        if (max_count > 0 && emitted_total > max_count)
+            break;
+        if (cand >= range_start && !is_exdate_match(ev, cand))
+            out_starts[out++] = cand;
+    }
+    return out;
 }

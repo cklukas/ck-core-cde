@@ -124,6 +124,7 @@ static  char sccsid[] = "@(#)calendarA.c 1.196 95/04/12 Copyr 1991 Sun Microsyst
 #include "ux_helpers.h"
 #include "undo_stack.h"
 #include "agenda_ui.h"
+#include "overlay_ui.h"
 #include "ics_csa.h"
 #include "caldav_ui.h"
 #include "server_status.h"
@@ -1011,6 +1012,8 @@ void view_year_cb( Widget w, XtPointer data, XtPointer cbs)
 }
 
 static void quick_filter_menu_cb(Widget, XtPointer, XtPointer);
+static void calendars_sidebar_menu_cb(Widget, XtPointer, XtPointer);
+static void overlaid_calendars_menu_cb(Widget, XtPointer, XtPointer);
 
 static void
 make_view_menu(Calendar *c)
@@ -1080,6 +1083,26 @@ make_view_menu(Calendar *c)
                               quick_filter_menu_cb, (XtPointer)c);
                 XmStringFree(filter_str);
                 XmStringFree(filter_acc);
+
+                XmString sb_str = XmStringCreateLocalized("Calendars Sidebar");
+                XmString sb_acc = XmStringCreateLocalized("Ctrl+B");
+                ac = 0;
+                XtSetArg(al[ac], XmNlabelString, sb_str); ac++;
+                XtSetArg(al[ac], XmNaccelerator, "Ctrl<Key>b"); ac++;
+                XtSetArg(al[ac], XmNacceleratorText, sb_acc); ac++;
+                Widget sb_mi = XmCreatePushButtonGadget(view_menu, "calendarsSidebarMenu", al, ac);
+                XtAddCallback(sb_mi, XmNactivateCallback,
+                              calendars_sidebar_menu_cb, (XtPointer)c);
+                XmStringFree(sb_str);
+                XmStringFree(sb_acc);
+
+                XmString ovl_str = XmStringCreateLocalized("Overlaid Calendars...");
+                ac = 0;
+                XtSetArg(al[ac], XmNlabelString, ovl_str); ac++;
+                Widget ovl_mi = XmCreatePushButtonGadget(view_menu, "overlaidCalendars", al, ac);
+                XtAddCallback(ovl_mi, XmNactivateCallback,
+                              overlaid_calendars_menu_cb, (XtPointer)c);
+                XmStringFree(ovl_str);
         }
 
 	ac = 0;
@@ -1379,6 +1402,21 @@ quick_filter_menu_cb(Widget w, XtPointer client_data, XtPointer call_data)
 {
         (void)w; (void)call_data;
         dtcm_filter_bar_toggle((Calendar *)client_data, True);
+}
+
+static void
+calendars_sidebar_menu_cb(Widget w, XtPointer client_data, XtPointer call_data)
+{
+        (void)w; (void)call_data;
+        Calendar *c = (Calendar *)client_data;
+        dtcm_overlay_sidebar_toggle(c, !dtcm_overlay_sidebar_is_visible());
+}
+
+static void
+overlaid_calendars_menu_cb(Widget w, XtPointer client_data, XtPointer call_data)
+{
+        (void)w; (void)call_data;
+        dtcm_overlay_show_dialog((Calendar *)client_data);
 }
 
 static void
@@ -3170,6 +3208,7 @@ init_calendar(int argc, char **argv)
 						gr_color, app);
 
 	gr_init(calendar->xcontext, calendar->canvas);
+	dtcm_overlay_ui_init(calendar);
 	set_default_view(calendar);
 
 	init_strings();   /* strings in timeops.c */

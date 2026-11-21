@@ -204,6 +204,58 @@ dtcm_snap_minutes(int raw_mins, int step_mins)
     return snapped;
 }
 
+static int
+cmp_multiday_span(const void *a, const void *b)
+{
+    const DtcmMultiDaySpan *sa = (const DtcmMultiDaySpan *)a;
+    const DtcmMultiDaySpan *sb = (const DtcmMultiDaySpan *)b;
+    if (sa->start_col != sb->start_col)
+        return sa->start_col - sb->start_col;
+    int la = sa->end_col - sa->start_col;
+    int lb = sb->end_col - sb->start_col;
+    if (la != lb)
+        return lb - la; /* wider spans first */
+    return sa->cache_idx - sb->cache_idx;
+}
+
+int
+dtcm_compute_multiday_spans(DtcmMultiDaySpan *spans, int count, int num_cols)
+{
+    if (!spans || count <= 0 || num_cols <= 0)
+        return 0;
+
+    for (int i = 0; i < count; i++) {
+        if (spans[i].start_col < 0) spans[i].start_col = 0;
+        if (spans[i].start_col >= num_cols) spans[i].start_col = num_cols - 1;
+        if (spans[i].end_col < spans[i].start_col) spans[i].end_col = spans[i].start_col;
+        if (spans[i].end_col >= num_cols) spans[i].end_col = num_cols - 1;
+        spans[i].lane = 0;
+    }
+
+    qsort(spans, (size_t)count, sizeof(DtcmMultiDaySpan), cmp_multiday_span);
+
+    int lane_ends[32];
+    int num_lanes = 0;
+    for (int i = 0; i < count; i++) {
+        int chosen = -1;
+        for (int l = 0; l < num_lanes; l++) {
+            if (lane_ends[l] < spans[i].start_col) {
+                chosen = l;
+                break;
+            }
+        }
+        if (chosen < 0) {
+            if (num_lanes < 32)
+                chosen = num_lanes++;
+            else
+                chosen = 31;
+        }
+        spans[i].lane = chosen;
+        lane_ends[chosen] = spans[i].end_col;
+    }
+    return num_lanes;
+}
+
 static DtcmHitBox *g_hitboxes = NULL;
 static int g_hitbox_count = 0;
 static int g_hitbox_cap = 0;

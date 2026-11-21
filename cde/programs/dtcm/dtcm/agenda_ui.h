@@ -11,6 +11,7 @@ Boolean dtcm_filter_bar_is_active(void);
 Boolean dtcm_filter_matches(const char *what);
 
 /* 5th Main View: Agenda (upcoming chronological schedule) */
+void dtcm_agenda_set_left_widget(Widget left_w);
 void agenda_button(Widget w, XtPointer client_data, XtPointer call_data);
 void paint_agendaview(Calendar *c);
 void cleanup_after_agenda(Calendar *c);

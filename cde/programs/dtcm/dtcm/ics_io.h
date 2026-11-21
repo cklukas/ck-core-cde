@@ -24,12 +24,25 @@ typedef struct {
     DtcmIcsFreq freq;
     int interval; /* >= 1 */
     int count;    /* 0 = forever (when freq != ONCE), >0 = bounded count */
+    unsigned int byday_mask; /* bit 0=SU, 1=MO, 2=TU, 3=WE, 4=TH, 5=FR, 6=SA */
+    time_t until_utc;        /* 0 = none */
+    time_t exdates[32];      /* excluded occurrence start timestamps */
+    int exdate_count;
 } DtcmIcsEvent;
 
 int dtcm_ics_parse_file(const char *path, DtcmIcsEvent **out_events, int *out_count);
 void dtcm_ics_free_events(DtcmIcsEvent *events);
 
 int dtcm_ics_write_file(const char *path, const DtcmIcsEvent *events, int count);
+
+/* Expands occurrences of ev whose start time falls in [range_start, range_end].
+ * Respects freq, interval, count, byday_mask, until_utc, and exdates.
+ * Returns number of occurrences written to out_starts (up to max_out). */
+int dtcm_ics_expand_occurrences(const DtcmIcsEvent *ev,
+                                time_t range_start,
+                                time_t range_end,
+                                time_t *out_starts,
+                                int max_out);
 
 void dtcm_ics_compose_what(const DtcmIcsEvent *ev, char *out_what, size_t out_len);
 void dtcm_ics_decompose_what(const char *what,

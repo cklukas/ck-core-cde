@@ -106,6 +106,7 @@ static  char sccsid[] = "@(#)monthglance.c 1.82 95/07/27 Copyr 1994 Sun Microsys
 #include "context_menu.h"
 #include "undo_stack.h"
 #include "agenda_ui.h"
+#include "overlay_store.h"
 
 #define XOS_USE_XT_LOCKING
 #define X_INCLUDE_TIME_H
@@ -115,7 +116,9 @@ static  char sccsid[] = "@(#)monthglance.c 1.82 95/07/27 Copyr 1994 Sun Microsys
 #include <X11/Xos_r.h>
 
 static void 	paint_day_entries(Tick, int, int, int, int,
-				  Paint_cache *, CSA_uint32, XRectangle *);
+				  Paint_cache *, CSA_uint32,
+				  const DtcmOverlayOccurrence *, int,
+				  XRectangle *);
 static Boolean	allocated(Calendar *);
 static void	allocator(Calendar *);
 static void	deallocator(Calendar *);
@@ -261,6 +264,16 @@ compute_pad_width(
 	return width;
 }
 
+static int
+is_multiday_event(Tick st, Tick en)
+{
+	if (en <= st)
+		return 0;
+	/* End strictly past midnight of the start day (allow 1s tolerance for 23:59:59) */
+	Tick next_mid = next_ndays(lowerbound(st), 1);
+	return (en > next_mid + 60) ? 1 : 0;
+}
+
 static void
 paint_day_entries(
 	Tick	day,
@@ -270,6 +283,8 @@ paint_day_entries(
 	int	h,
 	Paint_cache *cache,
 	CSA_uint32 appt_total,
+	const DtcmOverlayOccurrence *ovl,
+	int ovl_count,
 	XRectangle *rect)
 {
         char *buf;
@@ -299,6 +314,8 @@ paint_day_entries(
 		for (i = 0; i < appt_total; i++) {
 			if (!dtcm_filter_matches(cache[i].summary))
 				continue;
+			if (is_multiday_event(cache[i].start_time, cache[i].end_time))
+				continue; /* Painted as horizontal spanning bar */
 			start_tick = cache[i].start_time;
 	                if (start_tick >= lower && 
 			    start_tick < upper && 
@@ -385,6 +402,45 @@ paint_day_entries(
 	                else
 				continue;
 	        }
+	}
+
+	/* Paint single-day overlaid calendar occurrences in this day cell */
+	for (i = 0; i < ovl_count && nlines < maxlines; i++) {
+		if (!dtcm_filter_matches(ovl[i].summary))
+			continue;
+		if (is_multiday_event((Tick)ovl[i].start_utc, (Tick)ovl[i].end_utc))
+			continue;
+		if ((Tick)ovl[i].start_utc < lower || (Tick)ovl[i].start_utc >= upper)
+			continue;
+
+		unsigned short ar, ag, ab, pr, pg, pb;
+		Pixel apix, ppix;
+		dtcm_category_rgb(ovl[i].color, &ar, &ag, &ab);
+		dtcm_category_pastel_rgb(ovl[i].color, &pr, &pg, &pb);
+		if (rect)
+			XSetClipRectangles(xc->display, xc->gc, 0, 0, rect, 1, Unsorted);
+		if (alloc_rgb_pixel(xc, pr, pg, pb, &ppix)) {
+			XSetForeground(xc->display, xc->gc, ppix);
+			XFillRectangle(xc->display, xc->xid, xc->gc,
+				x, y - pfy + 2, w > 2 ? w - 1 : w, pfy > 2 ? pfy - 1 : pfy);
+		}
+		if (alloc_rgb_pixel(xc, ar, ag, ab, &apix)) {
+			XSetForeground(xc->display, xc->gc, apix);
+			XFillRectangle(xc->display, xc->xid, xc->gc,
+				x, y - pfy + 2, 3, pfy > 2 ? pfy - 1 : pfy);
+		}
+		XSetForeground(xc->display, xc->gc, xc->foreground);
+		if (rect)
+			XSetClipMask(xc->display, xc->gc, None);
+
+		char obuf[256];
+		snprintf(obuf, sizeof(obuf), "%s", ovl[i].summary);
+		maxchars = gr_nchars(w - 6, obuf, pf);
+		if ((int)cm_strlen(obuf) > maxchars && maxchars >= 0)
+			obuf[maxchars] = '\0';
+		(void)gr_text(xc, x + 5, y, pf, obuf, rect);
+		y += pfy;
+		nlines++;
 	}
 }
 
@@ -479,9 +535,158 @@ paint_month(Calendar *c, Tick key, XRectangle *rect)
 	CalFontExtents(c->fonts->viewfont, &fontextents);
 	default_height = fontextents.max_logical_extent.height;
 	dtcm_hittest_clear();
-        x = firstdom; y = 0;
         Tick today_tick = now();
- 
+
+	/* Query enabled overlaid calendars for this month */
+	DtcmOverlayOccurrence ovl[128];
+	int ovl_count = dtcm_overlay_query_range((time_t)lowerbound(day),
+						 (time_t)last_dom(day),
+						 ovl, 128);
+
+	/* Compute button height once for multi-day span bar placement */
+	btn_ht = 18;
+	if (m->ndays > 0 && m->hot_button[0]) {
+		XtVaGetValues(m->hot_button[0], XmNheight, &btn_ht,
+			XmNwidth, &btn_w, nullptr);
+	}
+
+	/* Paint continuous horizontal multi-day spanning bars per week row */
+	int row_reserved[6] = { 0, 0, 0, 0, 0, 0 };
+	int bar_h = default_height + 2;
+	if (bar_h < 14) bar_h = 14;
+	Tick month_first_day = lowerbound(day);
+	int total_rows = (firstdom + m->ndays + 6) / 7;
+	if (total_rows > 6) total_rows = 6;
+
+	for (int row = 0; row < total_rows; row++) {
+		DtcmMultiDaySpan spans[64];
+		int nspans = 0;
+		/* First day index (1-based) in this row, or <=0 if before month */
+		int row_first_dom = row * 7 - firstdom + 1;
+		int row_last_dom = row_first_dom + 6;
+		int vis_start_col = (row_first_dom < 1) ? (1 - row_first_dom) : 0;
+		int vis_end_col = (row_last_dom > m->ndays) ? (6 - (row_last_dom - m->ndays)) : 6;
+		if (vis_start_col > vis_end_col) continue;
+
+		Tick row_day0 = next_ndays(month_first_day, row_first_dom - 1);
+		Tick row_day6_end = next_ndays(row_day0, 7) - 1;
+
+		/* Primary calendar multi-day events */
+		for (CSA_uint32 ci = 0; ci < c->paint_cache_size && nspans < 64; ci++) {
+			Paint_cache *pc = &c->paint_cache[ci];
+			if (!dtcm_filter_matches(pc->summary))
+				continue;
+			if (!is_multiday_event(pc->start_time, pc->end_time))
+				continue;
+			if (pc->end_time < row_day0 || pc->start_time > row_day6_end)
+				continue;
+			int sc = (int)((lowerbound(pc->start_time) - row_day0) / 86400);
+			int ec = (int)((lowerbound(pc->end_time - 60) - row_day0) / 86400);
+			int cl = (sc < vis_start_col) ? 1 : 0;
+			int cr = (ec > vis_end_col) ? 1 : 0;
+			if (sc < vis_start_col) sc = vis_start_col;
+			if (ec > vis_end_col) ec = vis_end_col;
+			if (sc > ec) continue;
+			spans[nspans].cache_idx = (int)ci;
+			spans[nspans].start_col = sc;
+			spans[nspans].end_col = ec;
+			spans[nspans].lane = 0;
+			spans[nspans].continues_left = cl;
+			spans[nspans].continues_right = cr;
+			nspans++;
+		}
+		/* Overlay multi-day events (encoded as cache_idx = -(oi + 1)) */
+		for (int oi = 0; oi < ovl_count && nspans < 64; oi++) {
+			if (!dtcm_filter_matches(ovl[oi].summary))
+				continue;
+			if (!is_multiday_event((Tick)ovl[oi].start_utc, (Tick)ovl[oi].end_utc))
+				continue;
+			if ((Tick)ovl[oi].end_utc < row_day0 || (Tick)ovl[oi].start_utc > row_day6_end)
+				continue;
+			int sc = (int)((lowerbound((Tick)ovl[oi].start_utc) - row_day0) / 86400);
+			int ec = (int)((lowerbound((Tick)ovl[oi].end_utc - 60) - row_day0) / 86400);
+			int cl = (sc < vis_start_col) ? 1 : 0;
+			int cr = (ec > vis_end_col) ? 1 : 0;
+			if (sc < vis_start_col) sc = vis_start_col;
+			if (ec > vis_end_col) ec = vis_end_col;
+			if (sc > ec) continue;
+			spans[nspans].cache_idx = -(oi + 1);
+			spans[nspans].start_col = sc;
+			spans[nspans].end_col = ec;
+			spans[nspans].lane = 0;
+			spans[nspans].continues_left = cl;
+			spans[nspans].continues_right = cr;
+			nspans++;
+		}
+
+		if (nspans > 0) {
+			int nlanes = dtcm_compute_multiday_spans(spans, nspans, 7);
+			int max_vis_lanes = (boxh - btn_ht - 8) / (bar_h + 2);
+			if (max_vis_lanes > 3) max_vis_lanes = 3;
+			if (max_vis_lanes < 1) max_vis_lanes = 1;
+			int used = nlanes < max_vis_lanes ? nlanes : max_vis_lanes;
+			row_reserved[row] = used * (bar_h + 2);
+
+			int row_origin_y = (row * boxh) + dayname_height + c->view->topoffset;
+			for (int si = 0; si < nspans; si++) {
+				if (spans[si].lane >= max_vis_lanes)
+					continue;
+				int bx = (spans[si].start_col * boxw) + margin + 2;
+				int bw = ((spans[si].end_col - spans[si].start_col + 1) * boxw) - 4;
+				int by = row_origin_y + btn_ht + 2 + spans[si].lane * (bar_h + 2);
+				if (bw < 8) bw = 8;
+
+				DtcmCategory cat = DTCM_CAT_WORK;
+				char label[256] = "";
+				if (spans[si].cache_idx >= 0) {
+					Paint_cache *pc = &c->paint_cache[spans[si].cache_idx];
+					char csum[200], cloc[64], ccat[64];
+					dtcm_ics_decompose_what_ex(pc->summary, csum, sizeof(csum),
+						cloc, sizeof(cloc), ccat, sizeof(ccat), nullptr, 0);
+					DtcmCategory parsed = dtcm_category_from_name(ccat);
+					if (parsed != DTCM_CAT_NONE) cat = parsed;
+					snprintf(label, sizeof(label), "%s%s%s",
+						spans[si].continues_left ? "< " : "",
+						csum[0] ? csum : (pc->summary ? pc->summary : ""),
+						spans[si].continues_right ? " >" : "");
+					dtcm_hittest_add(bx, by, bw, bar_h, spans[si].cache_idx, pc->start_time);
+				} else {
+					int oi = -spans[si].cache_idx - 1;
+					cat = ovl[oi].color;
+					snprintf(label, sizeof(label), "%s%s%s",
+						spans[si].continues_left ? "< " : "",
+						ovl[oi].summary,
+						spans[si].continues_right ? " >" : "");
+				}
+
+				unsigned short pr, pg, pb, ar, ag, ab;
+				Pixel ppix, apix;
+				dtcm_category_pastel_rgb(cat, &pr, &pg, &pb);
+				dtcm_category_rgb(cat, &ar, &ag, &ab);
+				if (rect)
+					XSetClipRectangles(xc->display, xc->gc, 0, 0, rect, 1, Unsorted);
+				if (alloc_rgb_pixel(xc, pr, pg, pb, &ppix)) {
+					XSetForeground(xc->display, xc->gc, ppix);
+					XFillRectangle(xc->display, xc->xid, xc->gc, bx, by, (unsigned int)bw, (unsigned int)bar_h);
+				}
+				if (alloc_rgb_pixel(xc, ar, ag, ab, &apix)) {
+					XSetForeground(xc->display, xc->gc, apix);
+					XFillRectangle(xc->display, xc->xid, xc->gc, bx, by, 4, (unsigned int)bar_h);
+					XDrawRectangle(xc->display, xc->xid, xc->gc, bx, by, (unsigned int)(bw - 1), (unsigned int)(bar_h - 1));
+				}
+				XSetForeground(xc->display, xc->gc, xc->foreground);
+				if (rect)
+					XSetClipMask(xc->display, xc->gc, None);
+
+				int mc = gr_nchars(bw - 10, label, c->fonts->viewfont);
+				if ((int)cm_strlen(label) > mc && mc >= 0)
+					label[mc] = '\0';
+				(void)gr_text(xc, bx + 7, by + default_height - 1, c->fonts->viewfont, label, rect);
+			}
+		}
+	}
+
+        x = firstdom; y = 0;
         for(i = 1; i <= m->ndays; i++) {
 		int box_origin_x=0, box_origin_y=0;
 
@@ -507,13 +712,15 @@ paint_month(Calendar *c, Tick key, XRectangle *rect)
 			XmNwidth, &btn_w, nullptr);
 
 		/*
-		 * Paint the list of calendar entries for this day
+		 * Paint the list of calendar entries for this day below any multi-day bars
 		 */
+		int res_y = (y >= 0 && y < 6) ? row_reserved[y] : 0;
 		paint_day_entries(day,
 			box_origin_x + 2,
-                        box_origin_y + default_height + btn_ht, 
-			boxw - 4, boxh - btn_ht - 4,
-			c->paint_cache, c->paint_cache_size, rect);
+                        box_origin_y + default_height + btn_ht + res_y, 
+			boxw - 4, (boxh - btn_ht - 4 - res_y) > 0 ? (boxh - btn_ht - 4 - res_y) : 0,
+			c->paint_cache, c->paint_cache_size,
+			ovl, ovl_count, rect);
 
                 day = nextday(day);
                 x++;
