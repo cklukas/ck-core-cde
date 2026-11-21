@@ -438,9 +438,11 @@ synchronization:
   render a `336×84` 3D-beveled CDE OSD gauge (`_DT_OSD_STATE`, auto-hiding after
   `1.6 s`) without stealing focus from the active window.
 - **Scroll wheel settings, animated cursor previews, laptop touchpad settings (`dtstyle`), & 3-finger workspace swipe:** `dtstyle`
-  **Mouse** (`dtstyle -mouse`) renders premultiplied-ARGB Xcursor previews with
-  live multi-frame animation for animated busy cursors (such as `Adwaita`'s
-  `watch` spinner), adds an etched **Scroll Wheel** section controlling
+  **Mouse** (`dtstyle -mouse`) renders premultiplied-ARGB Xcursor previews
+  centered within fixed `72×72` 6-column slots across all `16`–`64` cursor sizes
+  (without clipping or label baseline shifts) and drives live multi-frame
+  animation for animated busy cursors (such as `Adwaita`'s `watch` spinner),
+  adds an etched **Scroll Wheel** section controlling
   *Direction* (*Standard* vs. *Natural* for physical/virtual mouse wheels,
   independent of touchpad natural scrolling), *Smooth Scrolling* (toggling
   CK Core Motif's ~83 Hz sub-line/pixel Wayland smooth interpolator vs. discrete

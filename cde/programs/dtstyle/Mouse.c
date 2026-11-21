@@ -348,6 +348,10 @@ typedef struct {
 #ifdef HAVE_XCURSOR
     XcursorImages *cursorPreviewAnim[CURSOR_PREVIEW_COUNT];
     int         cursorPreviewAnimFrame[CURSOR_PREVIEW_COUNT];
+    int         cursorPreviewCropX[CURSOR_PREVIEW_COUNT];
+    int         cursorPreviewCropY[CURSOR_PREVIEW_COUNT];
+    int         cursorPreviewCropW[CURSOR_PREVIEW_COUNT];
+    int         cursorPreviewCropH[CURSOR_PREVIEW_COUNT];
     XtIntervalId cursorPreviewAnimTimer;
 #endif
     Widget      scrollWheelFrame;
@@ -1300,11 +1304,109 @@ PackComponent(unsigned char component, unsigned long mask, int shift, int bits)
     return (value << shift) & mask;
 }
 
+#define CURSOR_PREVIEW_SLOT_SIZE 72
+
 #ifdef HAVE_XCURSOR
+static void
+ComputeXcursorImageVisibleBounds(const XcursorImage *img,
+                                 int *bxOut, int *byOut,
+                                 int *bwOut, int *bhOut)
+{
+    int minX, minY, maxX = -1, maxY = -1;
+    int x, y;
+
+    if (!img || img->width == 0 || img->height == 0 || !img->pixels)
+    {
+	if (bxOut) *bxOut = 0;
+	if (byOut) *byOut = 0;
+	if (bwOut) *bwOut = 0;
+	if (bhOut) *bhOut = 0;
+	return;
+    }
+
+    minX = (int)img->width;
+    minY = (int)img->height;
+    for (y = 0; y < (int)img->height; y++)
+    {
+	const XcursorPixel *row = img->pixels + (size_t)y * img->width;
+	for (x = 0; x < (int)img->width; x++)
+	{
+	    if ((row[x] >> 24) & 0xff)
+	    {
+		if (x < minX) minX = x;
+		if (y < minY) minY = y;
+		if (x > maxX) maxX = x;
+		if (y > maxY) maxY = y;
+	    }
+	}
+    }
+
+    if (maxX < minX || maxY < minY)
+    {
+	minX = 0;
+	minY = 0;
+	maxX = (int)img->width - 1;
+	maxY = (int)img->height - 1;
+    }
+
+    if (bxOut) *bxOut = minX;
+    if (byOut) *byOut = minY;
+    if (bwOut) *bwOut = maxX - minX + 1;
+    if (bhOut) *bhOut = maxY - minY + 1;
+}
+
+static void
+ComputeXcursorImagesVisibleBounds(const XcursorImages *imgs,
+                                  int *bxOut, int *byOut,
+                                  int *bwOut, int *bhOut)
+{
+    int uMinX = 0x7fffffff, uMinY = 0x7fffffff;
+    int uMaxX = -1, uMaxY = -1;
+    int fi;
+
+    if (!imgs || imgs->nimage <= 0)
+    {
+	if (bxOut) *bxOut = 0;
+	if (byOut) *byOut = 0;
+	if (bwOut) *bwOut = 0;
+	if (bhOut) *bhOut = 0;
+	return;
+    }
+
+    for (fi = 0; fi < imgs->nimage; fi++)
+    {
+	const XcursorImage *im = imgs->images[fi];
+	int bx = 0, by = 0, bw = 0, bh = 0;
+	if (!im)
+	    continue;
+	ComputeXcursorImageVisibleBounds(im, &bx, &by, &bw, &bh);
+	if (bw > 0 && bh > 0)
+	{
+	    if (bx < uMinX) uMinX = bx;
+	    if (by < uMinY) uMinY = by;
+	    if (bx + bw - 1 > uMaxX) uMaxX = bx + bw - 1;
+	    if (by + bh - 1 > uMaxY) uMaxY = by + bh - 1;
+	}
+    }
+
+    if (uMaxX < uMinX || uMaxY < uMinY)
+    {
+	ComputeXcursorImageVisibleBounds(imgs->images[0], bxOut, byOut, bwOut, bhOut);
+	return;
+    }
+
+    if (bxOut) *bxOut = uMinX;
+    if (byOut) *byOut = uMinY;
+    if (bwOut) *bwOut = uMaxX - uMinX + 1;
+    if (bhOut) *bhOut = uMaxY - uMinY + 1;
+}
+
 static Pixmap
-CreateCursorPreviewPixmapFromImage(const XcursorImage *image,
-                                   int previewW, int previewH,
-                                   int *width, int *height)
+CreateCursorPreviewPixmapFromImageCrop(const XcursorImage *image,
+                                       int cropX, int cropY,
+                                       int cropW, int cropH,
+                                       int previewW, int previewH,
+                                       int *width, int *height)
 {
     XColor bgColor;
     unsigned char bgR = 0, bgG = 0, bgB = 0;
@@ -1317,11 +1419,23 @@ CreateCursorPreviewPixmapFromImage(const XcursorImage *image,
     int redShift = 0, greenShift = 0, blueShift = 0;
     int redBits = 0, greenBits = 0, blueBits = 0;
     int x, y;
+    int drawW, drawH, maxFitW, maxFitH;
     int offsetX = 0, offsetY = 0;
 
     if (width) *width = 0;
     if (height) *height = 0;
     if (!image || previewW <= 0 || previewH <= 0)
+	return None;
+
+    if (cropW <= 0 || cropH <= 0)
+	ComputeXcursorImageVisibleBounds(image, &cropX, &cropY, &cropW, &cropH);
+    if (cropX < 0) cropX = 0;
+    if (cropY < 0) cropY = 0;
+    if (cropX + cropW > (int)image->width)
+	cropW = (int)image->width - cropX;
+    if (cropY + cropH > (int)image->height)
+	cropH = (int)image->height - cropY;
+    if (cropW <= 0 || cropH <= 0)
 	return None;
 
     bgColor.pixel = GetCursorPreviewBgPixel();
@@ -1378,13 +1492,39 @@ CreateCursorPreviewPixmapFromImage(const XcursorImage *image,
 	for (x = 0; x < previewW; x++)
 	    XPutPixel(ximage, x, y, bgPixel);
 
-    offsetX = (previewW - (int)image->width) / 2;
-    offsetY = (previewH - (int)image->height) / 2;
-    for (y = 0; y < (int)image->height; y++)
+    maxFitW = previewW > 4 ? (previewW - 4) : previewW;
+    maxFitH = previewH > 4 ? (previewH - 4) : previewH;
+    drawW = cropW;
+    drawH = cropH;
+    if (drawW > maxFitW || drawH > maxFitH)
     {
-	for (x = 0; x < (int)image->width; x++)
+	if (drawW * maxFitH >= drawH * maxFitW)
 	{
-	    unsigned long pixel = image->pixels[y * image->width + x];
+	    drawH = (drawH * maxFitW + drawW / 2) / drawW;
+	    drawW = maxFitW;
+	}
+	else
+	{
+	    drawW = (drawW * maxFitH + drawH / 2) / drawH;
+	    drawH = maxFitH;
+	}
+	if (drawW < 1) drawW = 1;
+	if (drawH < 1) drawH = 1;
+    }
+
+    offsetX = (previewW - drawW) / 2;
+    offsetY = (previewH - drawH) / 2;
+    for (y = 0; y < drawH; y++)
+    {
+	int srcY = cropY + (drawH == cropH ? y : (y * cropH) / drawH);
+	if (srcY < 0 || srcY >= (int)image->height)
+	    continue;
+	for (x = 0; x < drawW; x++)
+	{
+	    int srcX = cropX + (drawW == cropW ? x : (x * cropW) / drawW);
+	    if (srcX < 0 || srcX >= (int)image->width)
+		continue;
+	    unsigned long pixel = image->pixels[(size_t)srcY * image->width + (size_t)srcX];
 	    unsigned char a = (pixel >> 24) & 0xff;
 	    unsigned char r = (pixel >> 16) & 0xff;
 	    unsigned char g = (pixel >> 8) & 0xff;
@@ -1439,6 +1579,15 @@ CreateCursorPreviewPixmapFromImage(const XcursorImage *image,
     if (width) *width = previewW;
     if (height) *height = previewH;
     return pixmap;
+}
+
+static Pixmap
+CreateCursorPreviewPixmapFromImage(const XcursorImage *image,
+                                   int previewW, int previewH,
+                                   int *width, int *height)
+{
+    return CreateCursorPreviewPixmapFromImageCrop(
+	image, 0, 0, 0, 0, previewW, previewH, width, height);
 }
 #endif
 
@@ -1745,7 +1894,7 @@ CursorPreviewAnimTimerCB(XtPointer client_data, XtIntervalId *id)
 	return;
 
     Boolean anyAnimated = False;
-    int previewSz = mouse.cursorSize > 0 ? mouse.cursorSize : 24;
+    int previewSz = CURSOR_PREVIEW_SLOT_SIZE;
     for (int i = 0; i < CURSOR_PREVIEW_COUNT; i++)
     {
 	XcursorImages *imgs = mouse.cursorPreviewAnim[i];
@@ -1758,7 +1907,11 @@ CursorPreviewAnimTimerCB(XtPointer client_data, XtIntervalId *id)
 	mouse.cursorPreviewAnimFrame[i] = (mouse.cursorPreviewAnimFrame[i] + step) % imgs->nimage;
 	const XcursorImage *frameImg = imgs->images[mouse.cursorPreviewAnimFrame[i]];
 	int nw = 0, nh = 0;
-	Pixmap npix = CreateCursorPreviewPixmapFromImage(frameImg, previewSz, previewSz, &nw, &nh);
+	Pixmap npix = CreateCursorPreviewPixmapFromImageCrop(
+	    frameImg,
+	    mouse.cursorPreviewCropX[i], mouse.cursorPreviewCropY[i],
+	    mouse.cursorPreviewCropW[i], mouse.cursorPreviewCropH[i],
+	    previewSz, previewSz, &nw, &nh);
 	if (npix != None)
 	{
 	    if (mouse.cursorPreviewPixmaps[i] != None)
@@ -1857,9 +2010,15 @@ UpdateCursorPreview(void)
 	    cursorPreviewInfo[i].name, effectiveTheme, (int)effectiveSize);
 	if (mouse.cursorPreviewAnim[i] && mouse.cursorPreviewAnim[i]->nimage > 0)
 	{
-	    mouse.cursorPreviewPixmaps[i] = CreateCursorPreviewPixmapFromImage(
+	    ComputeXcursorImagesVisibleBounds(
+		mouse.cursorPreviewAnim[i],
+		&mouse.cursorPreviewCropX[i], &mouse.cursorPreviewCropY[i],
+		&mouse.cursorPreviewCropW[i], &mouse.cursorPreviewCropH[i]);
+	    mouse.cursorPreviewPixmaps[i] = CreateCursorPreviewPixmapFromImageCrop(
 		mouse.cursorPreviewAnim[i]->images[0],
-		(int)effectiveSize, (int)effectiveSize,
+		mouse.cursorPreviewCropX[i], mouse.cursorPreviewCropY[i],
+		mouse.cursorPreviewCropW[i], mouse.cursorPreviewCropH[i],
+		CURSOR_PREVIEW_SLOT_SIZE, CURSOR_PREVIEW_SLOT_SIZE,
 		&mouse.cursorPreviewPixmapW[i],
 		&mouse.cursorPreviewPixmapH[i]);
 	    if (mouse.cursorPreviewAnim[i]->nimage > 1)
@@ -1887,43 +2046,6 @@ UpdateCursorPreview(void)
 	    40, CursorPreviewAnimTimerCB, nullptr);
     }
 #endif
-
-    {
-	int maxW = 0;
-	int maxH = 0;
-	int pad = 12;
-	Dimension curW = 0;
-	Dimension curH = 0;
-
-	for (i = 0; i < CURSOR_PREVIEW_COUNT; i++)
-	{
-	    if (mouse.cursorPreviewPixmapW[i] > maxW)
-		maxW = mouse.cursorPreviewPixmapW[i];
-	    if (mouse.cursorPreviewPixmapH[i] > maxH)
-		maxH = mouse.cursorPreviewPixmapH[i];
-	}
-
-	if (mouse.cursorPreviewArea[0])
-	{
-	    XtVaGetValues(mouse.cursorPreviewArea[0],
-			  XmNwidth, &curW,
-			  XmNheight, &curH,
-			  nullptr);
-	}
-
-	if (maxW + pad > (int)curW || maxH + pad > (int)curH)
-	{
-	    for (i = 0; i < CURSOR_PREVIEW_COUNT; i++)
-	    {
-		if (!mouse.cursorPreviewArea[i])
-		    continue;
-		XtVaSetValues(mouse.cursorPreviewArea[i],
-			      XmNwidth, (Dimension)(maxW + pad),
-			      XmNheight, (Dimension)(maxH + pad),
-			      nullptr);
-	    }
-	}
-    }
 
     XFlush(style.display);
 }
@@ -2468,50 +2590,36 @@ build_mouseDialog( Widget shell )
     n = 0;
     XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET); n++;
     XtSetArg(args[n], XmNtopWidget, mouse.cursorPreviewHint); n++;
-    XtSetArg(args[n], XmNtopOffset, style.verticalSpacing); n++;
+    XtSetArg(args[n], XmNtopOffset, 4); n++;
     XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM); n++;
     XtSetArg(args[n], XmNbottomOffset, style.verticalSpacing); n++;
     XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
     XtSetArg(args[n], XmNleftOffset, style.horizontalSpacing); n++;
     XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
     XtSetArg(args[n], XmNrightOffset, style.horizontalSpacing); n++;
-    XtSetArg(args[n], XmNorientation, XmHORIZONTAL); n++;
-    XtSetArg(args[n], XmNpacking, XmPACK_TIGHT); n++;
-    XtSetArg(args[n], XmNspacing, style.horizontalSpacing); n++;
-    mouse.cursorPreviewGrid = XmCreateRowColumn(mouse.cursorPreviewForm, "cursorPreviewGrid", args, n);
+    XtSetArg(args[n], XmNfractionBase, CURSOR_PREVIEW_COUNT); n++;
+    mouse.cursorPreviewGrid = XmCreateForm(mouse.cursorPreviewForm, "cursorPreviewGrid", args, n);
     XtManageChild(mouse.cursorPreviewGrid);
 
     {
-	int previewSize = 48;
+	int previewSize = CURSOR_PREVIEW_SLOT_SIZE;
 
-    for (i = 0; i < CURSOR_PREVIEW_COUNT; i++)
-    {
-        Widget cell;
+	for (i = 0; i < CURSOR_PREVIEW_COUNT; i++)
+	{
+	    Widget cell;
 	    Widget previewLabel;
 	    XmString label;
 
 	    n = 0;
-	    XtSetArg(args[n], XmNorientation, XmVERTICAL); n++;
-	    XtSetArg(args[n], XmNpacking, XmPACK_TIGHT); n++;
-	    XtSetArg(args[n], XmNentryAlignment, XmALIGNMENT_CENTER); n++;
-	    XtSetArg(args[n], XmNmarginHeight, style.verticalSpacing); n++;
-	    XtSetArg(args[n], XmNmarginWidth, style.horizontalSpacing); n++;
-	    cell = XmCreateRowColumn(mouse.cursorPreviewGrid, "cursorPreviewCell", args, n);
+	    XtSetArg(args[n], XmNtopAttachment, XmATTACH_FORM); n++;
+	    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM); n++;
+	    XtSetArg(args[n], XmNleftAttachment, XmATTACH_POSITION); n++;
+	    XtSetArg(args[n], XmNleftPosition, i); n++;
+	    XtSetArg(args[n], XmNrightAttachment, XmATTACH_POSITION); n++;
+	    XtSetArg(args[n], XmNrightPosition, i + 1); n++;
+	    cell = XmCreateForm(mouse.cursorPreviewGrid, "cursorPreviewCell", args, n);
 	    mouse.cursorPreviewCell[i] = cell;
 	    XtManageChild(cell);
-
-	    n = 0;
-	    XtSetArg(args[n], XmNwidth, previewSize); n++;
-	    XtSetArg(args[n], XmNheight, previewSize); n++;
-	    XtSetArg(args[n], XmNmarginWidth, previewSize / 2); n++;
-	    XtSetArg(args[n], XmNmarginHeight, previewSize / 2); n++;
-	    XtSetArg(args[n], XmNshadowThickness, 1); n++;
-	    XtSetArg(args[n], XmNborderWidth, 1); n++;
-	    XtSetArg(args[n], XmNhighlightThickness, 1); n++;
-            mouse.cursorPreviewArea[i] = XmCreateDrawingArea(cell, "cursorPreviewArea", args, n);
-            XtManageChild(mouse.cursorPreviewArea[i]);
-            XtAddCallback(mouse.cursorPreviewArea[i], XmNexposeCallback,
-			  cursorPreviewExposeCB, (XtPointer)(intptr_t)i);
 
 	    n = 0;
 	    label = CMPSTR((char *)GETMESSAGE(9,
@@ -2519,10 +2627,33 @@ build_mouseDialog( Widget shell )
 			 cursorPreviewInfo[i].labelDefault));
 	    XtSetArg(args[n], XmNlabelString, label); n++;
 	    XtSetArg(args[n], XmNalignment, XmALIGNMENT_CENTER); n++;
+	    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM); n++;
+	    XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
+	    XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
 	    previewLabel = XmCreateLabelGadget(cell, "cursorPreviewLabel", args, n);
 	    mouse.cursorPreviewLabel[i] = previewLabel;
 	    XmStringFree(label);
 	    XtManageChild(previewLabel);
+
+	    n = 0;
+	    XtSetArg(args[n], XmNwidth, previewSize); n++;
+	    XtSetArg(args[n], XmNheight, previewSize); n++;
+	    XtSetArg(args[n], XmNmarginWidth, 0); n++;
+	    XtSetArg(args[n], XmNmarginHeight, 0); n++;
+	    XtSetArg(args[n], XmNshadowThickness, 0); n++;
+	    XtSetArg(args[n], XmNborderWidth, 0); n++;
+	    XtSetArg(args[n], XmNhighlightThickness, 0); n++;
+	    XtSetArg(args[n], XmNresizePolicy, XmRESIZE_NONE); n++;
+	    XtSetArg(args[n], XmNtopAttachment, XmATTACH_FORM); n++;
+	    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_WIDGET); n++;
+	    XtSetArg(args[n], XmNbottomWidget, previewLabel); n++;
+	    XtSetArg(args[n], XmNbottomOffset, 2); n++;
+	    XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
+	    XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
+	    mouse.cursorPreviewArea[i] = XmCreateDrawingArea(cell, "cursorPreviewArea", args, n);
+	    XtManageChild(mouse.cursorPreviewArea[i]);
+	    XtAddCallback(mouse.cursorPreviewArea[i], XmNexposeCallback,
+			  cursorPreviewExposeCB, (XtPointer)(intptr_t)i);
 	}
     }
 

@@ -1,4 +1,14 @@
 2026-11-22
+- Fix clipped large cursor previews (`48` / `64`) in `Style Manager - Mouse`
+  (`programs/dtstyle/Mouse.c`, `docs/improvements/wayland.md`):
+  - Replace the nested `XmRowColumn` preview strip (whose post-map `48 px` ->
+    `76 px` resize requests were rejected by the constrained dialog `XmForm` on
+    columns `0..4`, clipping `64 px` cursors and misaligning labels) with a
+    6-column `XmForm` grid pre-sized at `72×72` (`CURSOR_PREVIEW_SLOT_SIZE`,
+    `XmRESIZE_NONE`) and center each cursor by its non-transparent ARGB bounding
+    box (union across frames for animated cursors, with proportional fit
+    fallback for oversized theme assets) so `16`–`64` previews never clip or
+    jump.
 - Add `Style Manager - Mouse` scroll-wheel settings, fix animated premultiplied
   ARGB `Hourglass` cursor previews, and integrate native Wayland hover/smooth
   wheel scrolling (`programs/dtstyle/Mouse.c`, `lib/DtHelp/XUICreate.c`,
