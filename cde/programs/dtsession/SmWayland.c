@@ -318,13 +318,64 @@ static void ensure_ttsession_started(void) {
         }
         const char *tt_bin = CDE_INSTALLATION_TOP "/bin/ttsession";
         if (access(tt_bin, X_OK) == 0) {
-            pid_t pid = fork();
-            if (pid == 0) {
-                execl(tt_bin, "ttsession", "-s", (char *)nullptr);
-                _exit(127);
-            } else if (pid > 0) {
-                int st = 0;
-                (void)waitpid(pid, &st, 0);
+            const char *wl_act = getenv("CK_MOTIF_WAYLAND_ACTIVE");
+            const char *env_tt = getenv("TT_SESSION");
+            if (env_tt && env_tt[0]) {
+                setenv("_SUN_TT_SESSION", env_tt, 1);
+                XChangeProperty(dpy, root, sun_tt, XA_STRING, 8, PropModeReplace,
+                                (const unsigned char *)env_tt, (int)strlen(env_tt));
+                XFlush(dpy);
+            } else if (wl_act && strcmp(wl_act, "1") == 0) {
+                int pfd[2] = {-1, -1};
+                if (pipe(pfd) == 0) {
+                    pid_t pid = fork();
+                    if (pid == 0) {
+                        setsid();
+                        close(pfd[0]);
+                        dup2(pfd[1], STDOUT_FILENO);
+                        close(pfd[1]);
+                        int dn = open("/dev/null", O_RDWR);
+                        if (dn >= 0) {
+                            dup2(dn, STDIN_FILENO);
+                            dup2(dn, STDERR_FILENO);
+                            if (dn > 2) close(dn);
+                        }
+                        unsetenv("DISPLAY");
+                        execl(tt_bin, "ttsession", "-p", (char *)nullptr);
+                        _exit(127);
+                    }
+                    close(pfd[1]);
+                    if (pid > 0) {
+                        char line[256] = {0};
+                        size_t len = 0;
+                        while (len + 1 < sizeof(line)) {
+                            char ch = 0;
+                            ssize_t r = read(pfd[0], &ch, 1);
+                            if (r <= 0 || ch == '\n' || ch == '\r') break;
+                            line[len++] = ch;
+                        }
+                        line[len] = '\0';
+                        close(pfd[0]);
+                        if (len > 0) {
+                            setenv("TT_SESSION", line, 1);
+                            setenv("_SUN_TT_SESSION", line, 1);
+                            XChangeProperty(dpy, root, sun_tt, XA_STRING, 8, PropModeReplace,
+                                            (const unsigned char *)line, (int)len);
+                            XFlush(dpy);
+                        }
+                    } else {
+                        close(pfd[0]);
+                    }
+                }
+            } else {
+                pid_t pid = fork();
+                if (pid == 0) {
+                    execl(tt_bin, "ttsession", "-s", (char *)nullptr);
+                    _exit(127);
+                } else if (pid > 0) {
+                    int st = 0;
+                    (void)waitpid(pid, &st, 0);
+                }
             }
         }
         (void)XGetWindowProperty(dpy, root, sun_tt, 0, 256, False, AnyPropertyType,

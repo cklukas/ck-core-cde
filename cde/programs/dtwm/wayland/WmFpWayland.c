@@ -610,9 +610,25 @@ static void ensure_cde_search_paths(const char *argv0) {
 
 static void ensure_ttsession_running(Display *dpy, const char *argv0) {
     if (!dpy) return;
-    if (getenv("TT_SESSION") && getenv("TT_SESSION")[0]) return;
-
     Window root = DefaultRootWindow(dpy);
+    Atom a_sun_tt = XInternAtom(dpy, "_SUN_TT_SESSION", False);
+    Atom a_dt_tt = XInternAtom(dpy, "TT_SESSION", False);
+
+    const char *env_tt = getenv("TT_SESSION");
+    if (env_tt && env_tt[0]) {
+        setenv("_SUN_TT_SESSION", env_tt, 1);
+        XChangeProperty(
+            dpy, root, a_sun_tt, XA_STRING, 8, PropModeReplace,
+            (const unsigned char *)env_tt, (int)strlen(env_tt)
+        );
+        XChangeProperty(
+            dpy, root, a_dt_tt, XA_STRING, 8, PropModeReplace,
+            (const unsigned char *)env_tt, (int)strlen(env_tt)
+        );
+        XFlush(dpy);
+        return;
+    }
+
     const char *prop_names[2] = {"_SUN_TT_SESSION", "TT_SESSION"};
     for (int i = 0; i < 2; ++i) {
         Atom a = XInternAtom(dpy, prop_names[i], True);
@@ -622,14 +638,20 @@ static void ensure_ttsession_running(Display *dpy, const char *argv0) {
         unsigned long nitems = 0, after = 0;
         unsigned char *data = nullptr;
         if (XGetWindowProperty(
-                dpy, root, a, 0, 64, False, AnyPropertyType,
+                dpy, root, a, 0, 128, False, AnyPropertyType,
                 &actual, &fmt, &nitems, &after, &data
             ) == Success && data) {
-            bool non_empty = (nitems > 0 && data[0] != '\0');
-            XFree(data);
-            if (non_empty) {
+            if (nitems > 0 && data[0] != '\0') {
+                char sbuf[256];
+                size_t sn = nitems < sizeof(sbuf) - 1 ? (size_t)nitems : sizeof(sbuf) - 1;
+                memcpy(sbuf, data, sn);
+                sbuf[sn] = '\0';
+                setenv("TT_SESSION", sbuf, 1);
+                setenv("_SUN_TT_SESSION", sbuf, 1);
+                XFree(data);
                 return;
             }
+            XFree(data);
         }
     }
 
@@ -657,6 +679,58 @@ static void ensure_ttsession_running(Display *dpy, const char *argv0) {
         }
     }
     if (stat(tt_bin, &st) != 0 || !(st.st_mode & S_IXUSR)) {
+        return;
+    }
+
+    const char *wl_act = getenv("CK_MOTIF_WAYLAND_ACTIVE");
+    if (wl_act && strcmp(wl_act, "1") == 0) {
+        int pfd[2] = {-1, -1};
+        if (pipe(pfd) != 0) return;
+        pid_t pid = fork();
+        if (pid == 0) {
+            setsid();
+            close(pfd[0]);
+            dup2(pfd[1], STDOUT_FILENO);
+            close(pfd[1]);
+            int devnull = open("/dev/null", O_RDWR);
+            if (devnull >= 0) {
+                dup2(devnull, STDIN_FILENO);
+                dup2(devnull, STDERR_FILENO);
+                if (devnull > 2) close(devnull);
+            }
+            unsetenv("DISPLAY");
+            char *const args[] = {(char *)tt_bin, (char *)"-p", nullptr};
+            execv(tt_bin, args);
+            _exit(127);
+        }
+        close(pfd[1]);
+        if (pid > 0) {
+            char line[256] = {0};
+            size_t len = 0;
+            while (len + 1 < sizeof(line)) {
+                char ch = 0;
+                ssize_t r = read(pfd[0], &ch, 1);
+                if (r <= 0 || ch == '\n' || ch == '\r') break;
+                line[len++] = ch;
+            }
+            line[len] = '\0';
+            close(pfd[0]);
+            if (len > 0) {
+                setenv("TT_SESSION", line, 1);
+                setenv("_SUN_TT_SESSION", line, 1);
+                XChangeProperty(
+                    dpy, root, a_sun_tt, XA_STRING, 8, PropModeReplace,
+                    (const unsigned char *)line, (int)len
+                );
+                XChangeProperty(
+                    dpy, root, a_dt_tt, XA_STRING, 8, PropModeReplace,
+                    (const unsigned char *)line, (int)len
+                );
+                XSync(dpy, False);
+            }
+        } else {
+            close(pfd[0]);
+        }
         return;
     }
 

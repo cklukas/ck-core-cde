@@ -5850,6 +5850,13 @@ int main(int argc, char **argv) {
 
     setenv("WAYLAND_DISPLAY", socket, 1);
     start_native_ipc_server(&server);
+    {
+        const char *tts = getenv("TT_SESSION");
+        if (tts && tts[0]) {
+            dtwm_native_ipc_publish_prop(&server, "_SUN_TT_SESSION", tts, strlen(tts));
+            dtwm_native_ipc_publish_prop(&server, "TT_SESSION", tts, strlen(tts));
+        }
+    }
     if (server.num_workspaces > 0 && server.current_workspace < server.num_workspaces) {
         const char *wsn = server.workspaces[server.current_workspace].id_name;
         if (wsn[0]) {

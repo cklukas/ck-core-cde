@@ -1,4 +1,13 @@
 2026-11-21
+- Fix UTF-8 `XCreateFontSet` label rendering and ToolTalk `ttsession -p` bootstrap
+  under `dtwm-wayland --no-xwayland`:
+  - Bump pinned CK Core Motif ABI 9 to `b1c6fa1e08356336d7cee9282db972a87e664f5e` (`.ckgit/motif-revision`,
+    `.ckgit/ci.yml`).
+  - Bootstrap `ttsession -p` and synchronize `TT_SESSION` / `_SUN_TT_SESSION` over
+    the native Wayland session IPC bus in `dtwm-wayland`, `dtwm-panel`, and
+    `dtsession` so Front Panel actions (`Dtfile`, `Dtpad`, `Dtterm`) connect to
+    ToolTalk without `Xwayland` (`dtwm_wayland_main.c`, `WmFpWayland.c`,
+    `SmWayland.c`).
 - Show the active selected day button as pressed down with bold text in the
   `dtcm` Day-view 3-month mini-calendars (`MonthPanel.{c,h}`, `MonthPanelP.h`,
   `dayglance.c`):
