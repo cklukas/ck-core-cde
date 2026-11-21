@@ -1,3 +1,30 @@
+2026-11-22
+- Add automatic `~/.dt/errorlog` size trimming, default log-level filtering,
+  burst flood suppression, and fix `dtcalc` signed-overflow infinite `MPCHK`
+  loop (`lib/DtSvc/DtUtil2/MsgLog.c`, `lib/DtSvc/DtUtil2/UErrNoBMS.c`,
+  `lib/DtSvc/Makefile.am`, `lib/DtSvc/tests/check-msglog-trim.*`,
+  `programs/dtcalc/mp.c`, `programs/dtcalc/calctool.c`,
+  `programs/dtcalc/Makefile.am`, `programs/dtcalc/tests/check-mp-errorlog.*`,
+  `docs/improvements/session-manager.md`):
+  - Trim `$HOME/.dt/errorlog` in place when it exceeds `2 MiB` by default
+    (`DT_ERRORLOG_DEFAULT_MAX_BYTES`), preserving its inode and keeping the
+    newest ~half aligned to a `*** ` record boundary under an `fcntl` write
+    lock; configurable via `DT_ERRORLOG_MAX_BYTES` / `DT_ERRORLOG_MAX_SIZE` or
+    `$HOME/.dt/errorlog.conf` (`max_bytes=...`) and disableable via
+    `DT_ERRORLOG_TRIM=0` (`trim=false`) or `DT_ERRORLOG_MAX_BYTES=0`.
+  - Filter `DtMsgLogDebug` messages out of `~/.dt/errorlog` by default unless
+    `DT_ERRORLOG_LEVEL=debug` (or `CDE_DEBUG` is enabled), suppress tight-loop
+    duplicate bursts within 5 seconds (`DT_ERRORLOG_DEDUP`), and fix missing
+    `case` keywords in `UErrNoBMS.c` so `DtInformation` maps to
+    `DtMsgLogInformation` (instead of falling into `default:` as
+    `DtMsgLogError`) and `DtIgnore` maps to `DtMsgLogDebug`.
+  - Fix signed 32-bit `int` overflow undefined behavior in `dtcalc`'s `mpset()`
+    and `mpchk()` (`mp.c`) where `-O2` optimization evaluated `w = -1`,
+    `MP.m = 0 <= MP.t`, trapping `make_eng_sci()` / `make_fixed()` in an
+    infinite normalization loop that flooded `~/.dt/errorlog` with
+    `*** M .LE. T IN CALL TO MPCHK`; default `v->MPerrors` to `FALSE` unless
+    `-D` is given and emit MP internal diagnostics at `DtMsgLogDebug`.
+
 2026-11-21
 - Fix `dtfile` Shelf/object context menus and cursor-attached folder/file
   drag-and-drop icons on native Wayland

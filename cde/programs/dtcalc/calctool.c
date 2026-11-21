@@ -404,10 +404,10 @@ do_dtcalc(int argc, char **argv)
 void
 doerr(char *errmes)
 {
+  v->error = 1 ;
   if (!v->started) return ;
   strcpy(v->display, errmes) ;
   set_item(DISPLAYITEM, v->display) ;
-  v->error = 1 ;
   beep() ;
   set_item(OPITEM, vstrs[(int) V_CLR]) ;
 }
@@ -512,7 +512,8 @@ get_options(int argc, char *argv[])
         {
           switch (argv[0][1])
             {
-              case 'D' : v->MPdebug = TRUE ;   /* MP debug info. to stderr. */
+              case 'D' : v->MPdebug  = TRUE ;   /* MP debug info. */
+                         v->MPerrors = TRUE ;
                          break ;
               case 'a' : INC ;
                          getparam(next, argv, opts[(int) O_ACCVAL]) ;
@@ -885,7 +886,7 @@ init_vars(void)
                                 initially. */
   v->iconic     = FALSE ;    /* Calctool not iconic by default. */
   v->MPdebug    = FALSE ;    /* No debug info by default. */
-  v->MPerrors   = TRUE ;               /* No error information. */
+  v->MPerrors   = FALSE ;    /* No MP errorlog diagnostics unless -D. */
   acc           = MAX_DIGITS + 12 ;     /* MP internal accuracy. */
   size          = MP_SIZE ;
   mpset(&acc, &size, &size) ;
@@ -976,20 +977,24 @@ make_eng_sci(int *MPnumber)
   mpcim(&n, MP1) ;
   if (!mpeq(MPmant, MP1))
     {
-      while (mpge(MPmant, MP10base))
+      int iter_guard = 0 ;
+      while (!v->error && iter_guard++ < 100000 && mpge(MPmant, MP10base))
         {
           exp += 10 ;
           mpmul(MPmant, MPatmp, MPmant) ;
         }
 
-      while ((!eng &&  mpge(MPmant, MP1base)) ||
-              (eng && (mpge(MPmant, MP3base) || exp % 3 != 0)))
+      iter_guard = 0 ;
+      while (!v->error && iter_guard++ < 100000 &&
+             ((!eng &&  mpge(MPmant, MP1base)) ||
+              (eng && (mpge(MPmant, MP3base) || exp % 3 != 0))))
         {
           exp += 1 ;
           mpdiv(MPmant, MP1base, MPmant) ;
         }
 
-      while (mplt(MPmant, MPatmp))
+      iter_guard = 0 ;
+      while (!v->error && iter_guard++ < 100000 && mplt(MPmant, MPatmp))
         {
           exp -= 10 ;
           mpmul(MPmant, MP10base, MPmant) ;
@@ -997,7 +1002,9 @@ make_eng_sci(int *MPnumber)
 
       n = 1 ;
       mpcim(&n, MP1) ;
-      while (mplt(MPmant, MP1) || (eng && exp % 3 != 0))
+      iter_guard = 0 ;
+      while (!v->error && iter_guard++ < 100000 &&
+             (mplt(MPmant, MP1) || (eng && exp % 3 != 0)))
         {
           exp -= 1 ;
           mpmul(MPmant, MP1base, MPmant) ;
@@ -1021,7 +1028,7 @@ make_eng_sci(int *MPnumber)
   mpaddi(MP1, &exp, MPval) ;
   n = 1 ;
   mpcim(&n, MP1) ;
-  for (ddig = 0; mpge(MPval, MP1); ddig++)
+  for (ddig = 0; !v->error && ddig < 100000 && mpge(MPval, MP1); ddig++)
     mpdiv(MPval, MP1base, MPval) ;
 
   if (ddig == 0) *optr++ = '0' ;
@@ -1073,7 +1080,7 @@ make_fixed(int *MPnumber, int cmax)
       cmax-- ;
     }
   else
-    for (ddig = 0; mpge(MPval, MP2); ddig++)
+    for (ddig = 0; !v->error && ddig < 100000 && mpge(MPval, MP2); ddig++)
       mpdiv(MPval, MP1base, MPval) ;
 
   ndig = MIN(ddig + v->accuracy, --cmax) ;

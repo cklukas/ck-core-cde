@@ -17,9 +17,11 @@ EXTRA_DIST = tests/check-dts-buffers.py tests/dts-buffers.c tests/check-dts-mm.p
              tests/check-addtores-alloc.py tests/addtores-alloc-test.c \
              tests/check-dbreader-variables.py tests/check-dbreader-variables.c \
              tests/check-dtsmm-cache-bounds.py tests/check-dtsmm-cache-bounds.c \
-             tests/check-action-tt-reptype.py tests/check-action-tt-reptype.c
+             tests/check-action-tt-reptype.py tests/check-action-tt-reptype.c \
+             tests/check-msglog-trim.py tests/check-msglog-trim.c
 
 check-local:
+	CC="$(CC)" python3 $(srcdir)/tests/check-msglog-trim.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-dts-buffers.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-dts-mm.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-svc-pam.py

@@ -161,16 +161,17 @@ log_message(
     */
    switch (severity) {
       case DtError:
-	   DtFatalError:
-	   DtInternalError: 
+      case DtFatalError:
+      case DtInternalError:
 		msg_type = DtMsgLogError; break;
       case DtIgnore:
-	   DtInformation:
+		msg_type = DtMsgLogDebug; break;
+      case DtInformation:
 		msg_type = DtMsgLogInformation; break;
       case DtWarning:
 		msg_type = DtMsgLogWarning; break;
       default: 
-		msg_type = DtMsgLogError;
+		msg_type = DtMsgLogError; break;
    }
 
    (void) snprintf (format, sizeof format, "%%s%s%s",

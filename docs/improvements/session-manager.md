@@ -157,6 +157,17 @@ checked through PAM, and with no other password.
   directory the buffers were resized through the wrong pointer. The files are
   now renamed instead of linked and unlinked, so a file system without hard
   links, or an empty `errorlog.old`, no longer loses the log.
+- `libDtSvc` (`MsgLog.c` and `UErrNoBMS.c`) also caps `$HOME/.dt/errorlog` live
+  during a running session at `2 MiB` by default, trimming in place under an
+  advisory file lock to keep the newest ~`1 MiB` on a clean record boundary
+  while preserving the file's inode. Trimming and minimum severity can be
+  configured or disabled via environment variables (`DT_ERRORLOG_TRIM=0` or
+  `DT_ERRORLOG_MAX_BYTES=0` to disable, `DT_ERRORLOG_MAX_BYTES=4M` to resize,
+  `DT_ERRORLOG_LEVEL=debug|info|warning|error|off`, `DT_ERRORLOG_DEDUP=0|1`) or
+  persistently in `$HOME/.dt/errorlog.conf` (`trim`, `max_bytes`, `level`,
+  `dedup`). By default `DtMsgLogDebug` (and `DtIgnore`) diagnostics are
+  suppressed unless `DT_ERRORLOG_LEVEL=debug` or `CDE_DEBUG=1` is set, and
+  repeated identical tight-loop bursts are coalesced into a single summary line.
 - The paths of the session files are put together in fixed buffers. A home
   directory so long that they would not fit is refused like a home directory
   that cannot be written, and `dtsession` starts with the system defaults

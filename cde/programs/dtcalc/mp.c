@@ -50,10 +50,20 @@
  */
 
 #include <stdio.h>
+#include <limits.h>
 #include <math.h>
 #include "calctool.h"
 #include <Dt/Dt.h>
+#include <Dt/MsgLog.h>
 #include "text.h"
+
+static void
+mp_log_diag(const char *msg)
+{
+  if ((!v->MPerrors && !v->MPdebug) || msg == nullptr)
+    return ;
+  DtMsgLogMessage(v->appname, DtMsgLogDebug, "%s", msg) ;
+}
 
 struct {
   int b, t, m, mxr, r[MP_SIZE] ;
@@ -162,8 +172,8 @@ L40:
   mpchk(&c__1, &c__4) ;
   if (v->MPerrors)
     {
-      _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_ADD2A]) ;
-      _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_ADD2B]) ;
+      mp_log_diag (mpstrs[(int) MP_ADD2A]) ;
+      mp_log_diag (mpstrs[(int) MP_ADD2B]) ;
     }
 
   mperr() ;
@@ -442,7 +452,7 @@ mpart1(int *n, int *y)
   mpchk(&c__2, &c__6) ;
   if (*n > 1) goto L20 ;
 
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_PART1]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_PART1]) ;
 
   mperr() ;
   y[1] = 0 ;
@@ -548,7 +558,7 @@ mpasin(int *x, int *y)
   return ;
 
 L10:
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_ASIN]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_ASIN]) ;
 
   mperr() ;
 
@@ -669,7 +679,7 @@ L50:
 
 /* THE FOLLOWING MESSAGE MAY INDICATE THAT B**(T-1) IS TOO SMALL. */
 
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_ATAN]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_ATAN]) ;
 
   mperr() ;
   return ;
@@ -808,7 +818,7 @@ L130:
 void
 mpchk(int *i, int *j)
 {
-  static int ib, mx ;
+  static int mx ;
 
 /*  CHECKS LEGALITY OF B, T, M AND MXR.
  *  THE CONDITION ON MXR (THE DIMENSION OF R IN COMMON) IS THAT
@@ -821,8 +831,8 @@ mpchk(int *i, int *j)
 
   if (v->MPerrors)
     {
-      _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_CHKC]) ;
-      _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_CHKD]) ;
+      mp_log_diag (mpstrs[(int) MP_CHKC]) ;
+      mp_log_diag (mpstrs[(int) MP_CHKD]) ;
     }
   mperr() ;
 
@@ -831,8 +841,8 @@ L40:
 
   if (v->MPerrors)
     {
-      _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_CHKE]) ;
-      _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_CHKF]) ;
+      mp_log_diag (mpstrs[(int) MP_CHKE]) ;
+      mp_log_diag (mpstrs[(int) MP_CHKF]) ;
     }
   mperr() ;
 
@@ -841,21 +851,22 @@ L60:
 
   if (v->MPerrors)
     {
-      _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_CHKG]) ;
-      _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_CHKH]) ;
+      mp_log_diag (mpstrs[(int) MP_CHKG]) ;
+      mp_log_diag (mpstrs[(int) MP_CHKH]) ;
     }
   mperr() ;
 
 /*  8*B*B-1 SHOULD BE REPRESENTABLE, IF NOT WILL OVERFLOW
- *  AND MAY BECOME NEGATIVE, SO CHECK FOR THIS
+ *  AND MAY BECOME NEGATIVE, SO CHECK FOR THIS WITHOUT SIGNED OVERFLOW UB
  */
 
 L80:
-  ib = (MP.b << 2) * MP.b - 1 ;
-  if (ib > 0 && (ib << 1) + 1 > 0) goto L100 ;
+  if (MP.b > 0 &&
+      8LL * (long long) MP.b * (long long) MP.b - 1LL <= (long long) INT_MAX)
+    goto L100 ;
 
   if (v->MPerrors)
-    _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_CHKI]) ;
+    mp_log_diag (mpstrs[(int) MP_CHKI]) ;
 
   mperr() ;
 
@@ -871,13 +882,13 @@ L100:
     {
       char *msg;
 
-      _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_CHKJ]) ;
-      _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_CHKL]) ;
+      mp_log_diag (mpstrs[(int) MP_CHKJ]) ;
+      mp_log_diag (mpstrs[(int) MP_CHKL]) ;
       msg = (char *) XtMalloc(strlen( mpstrs[(int) MP_CHKM]) + 200);
       sprintf(msg, mpstrs[(int) MP_CHKM], *i, *j, mx) ;
-      _DtSimpleError (v->appname, DtWarning, nullptr, msg);
+      mp_log_diag (msg);
       sprintf(msg, mpstrs[(int) MP_CHKN], MP.mxr, MP.t) ;
-      _DtSimpleError (v->appname, DtWarning, nullptr, msg);
+      mp_log_diag (msg);
       XtFree(msg);
     }
 
@@ -1003,7 +1014,7 @@ L20:
  */
 
 L30:
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_CMD]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_CMD]) ;
 
   mperr() ;
   return ;
@@ -1294,7 +1305,7 @@ L20:
  */
 
 L30:
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_CMR]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_CMR]) ;
 
   mperr() ;
   return ;
@@ -1486,7 +1497,7 @@ mpcqm(int *i, int *j, int *q)
   else              goto L40 ;
 
 L10:
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_CQM]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_CQM]) ;
 
   mperr() ;
   q[1] = 0 ;
@@ -1648,7 +1659,7 @@ mpdiv(int *x, int *y, int *z)
 
   if (y[1] != 0) goto L20 ;
 
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_DIVA]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_DIVA]) ;
 
   mperr() ;
   z[1] = 0 ;
@@ -1703,7 +1714,7 @@ L40:
 
 /* OVERFLOW HERE */
 
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_DIVB]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_DIVB]) ;
 
   mpovfl(&z[1]) ;
   return ;
@@ -1732,7 +1743,7 @@ mpdivi(int *x, int *iy, int*z)
   else             goto L40 ;
 
 L10:
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_DIVIA]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_DIVIA]) ;
 
   goto L230 ;
 
@@ -1900,7 +1911,7 @@ L200:
 L210:
   mpchk(&c__1, &c__4) ;
 
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_DIVIB]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_DIVIB]) ;
 
 L230:
   mperr() ;
@@ -2005,7 +2016,7 @@ L40:
 /* OVERFLOW HERE */
 
 L50:
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_EXPA]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_EXPA]) ;
 
   mpovfl(&y[1]) ;
   return ;
@@ -2120,7 +2131,7 @@ L110:
  *  RESULT UNDERFLOWED.
  */
 
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_EXPB]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_EXPB]) ;
 
   mperr() ;
   return ;
@@ -2166,7 +2177,7 @@ L10:
 L20:
   if (x[2] <= 0) goto L40 ;
 
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_EXP1]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_EXP1]) ;
 
   mperr() ;
   goto L10 ;
@@ -2388,7 +2399,7 @@ mpln(int *x, int *y)
 /* CHECK THAT X IS POSITIVE */
   if (x[1] > 0) goto L20 ;
 
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_LNA]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_LNA]) ;
 
   mperr() ;
   y[1] = 0 ;
@@ -2436,7 +2447,7 @@ L30:
   ++k ;
   if (k < 10) goto L30 ;
 
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_LNB]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_LNB]) ;
 
   mperr() ;
   return ;
@@ -2485,7 +2496,7 @@ mplns(int *x, int *y)
 L10:
   if (x[2] + 1 <= 0) goto L30 ;
 
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_LNSA]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_LNSA]) ;
 
   mperr() ;
   y[1] = 0 ;
@@ -2546,8 +2557,8 @@ L60:
 
   if (v->MPerrors)
     {
-      _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_LNSB]) ;
-      _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_LNSC]) ;
+      mp_log_diag (mpstrs[(int) MP_LNSB]) ;
+      mp_log_diag (mpstrs[(int) MP_LNSC]) ;
     }
 
   mperr() ;
@@ -2737,15 +2748,15 @@ L60:
   return ;
 
 L70:
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_MULA]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_MULA]) ;
 
   goto L110 ;
 
 L90:
   if (v->MPerrors)
     {
-      _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_MULB]) ;
-      _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_MULC]) ;
+      mp_log_diag (mpstrs[(int) MP_MULB]) ;
+      mp_log_diag (mpstrs[(int) MP_MULC]) ;
     }
 
 L110:
@@ -2796,7 +2807,7 @@ L20:
 
   mpchk(&c__1, &c__4) ;
 
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_MUL2A]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_MUL2A]) ;
 
   mpovfl(&z[1]) ;
   return ;
@@ -2906,7 +2917,7 @@ L110:
 L130:
   mpchk(&c__1, &c__4) ;
 
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_MUL2B]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_MUL2B]) ;
 
   mperr() ;
   goto L10 ;
@@ -2946,7 +2957,7 @@ mpmulq(int *x, int *i, int *j, int *y)
   if (*j != 0) goto L20 ;
   mpchk(&c__1, &c__4) ;
 
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_MULQ]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_MULQ]) ;
 
   mperr() ;
   goto L30 ;
@@ -3025,8 +3036,8 @@ L20:
 
   if (v->MPerrors)
     {
-      _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_NZRA]) ;
-      _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_NZRB]) ;
+      mp_log_diag (mpstrs[(int) MP_NZRA]) ;
+      mp_log_diag (mpstrs[(int) MP_NZRB]) ;
     }
 
   mperr() ;
@@ -3124,7 +3135,7 @@ L130:
 L150:
   if (*re <= MP.m) goto L170 ;
 
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_NZRC]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_NZRC]) ;
 
   mpovfl(&z[1]) ;
   return ;
@@ -3172,7 +3183,7 @@ mpovfl(int *x)
 
   mpmaxr(&x[1]) ;
 
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_OVFL]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_OVFL]) ;
 
 /* TERMINATE EXECUTION BY CALLING MPERR */
 
@@ -3216,7 +3227,7 @@ mppi(int *x)
 
 /* FOLLOWING MESSAGE MAY INDICATE THAT B**(T-1) IS TOO SMALL */
 
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_PI]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_PI]) ;
 
   mperr() ;
   return ;
@@ -3257,8 +3268,8 @@ L20:
 
   if (v->MPerrors)
     {
-      _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_PWRA]) ;
-      _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_PWRB]) ;
+      mp_log_diag (mpstrs[(int) MP_PWRA]) ;
+      mp_log_diag (mpstrs[(int) MP_PWRB]) ;
     }
 
   mperr() ;
@@ -3325,7 +3336,7 @@ mppwr2(int *x, int *y, int *z)
   else                goto L70 ;
 
 L10:
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_PWR2A]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_PWR2A]) ;
 
   goto L50 ;
 
@@ -3334,7 +3345,7 @@ L10:
 L30:
   if (y[1] > 0) goto L60 ;
 
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_PWR2B]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_PWR2B]) ;
 
 L50:
   mperr() ;
@@ -3395,7 +3406,7 @@ mprec(int *x, int *y)
   i3 = i2 + MP.t + 2 ;
   if (x[1] != 0) goto L20 ;
 
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_RECA]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_RECA]) ;
 
   mperr() ;
   y[1] = 0 ;
@@ -3482,8 +3493,8 @@ L50:
 
   if (v->MPerrors)
     {
-      _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_RECB]) ;
-      _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_RECC]) ;
+      mp_log_diag (mpstrs[(int) MP_RECB]) ;
+      mp_log_diag (mpstrs[(int) MP_RECC]) ;
     }
 
   mperr() ;
@@ -3499,7 +3510,7 @@ L70:
   MP.m += -2 ;
   if (y[2] <= MP.m) return ;
 
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_RECD]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_RECD]) ;
 
   mpovfl(&y[1]) ;
   return ;
@@ -3541,7 +3552,7 @@ L10:
   i3 = i2 + MP.t + 2 ;
   if (*n != 0) goto L30 ;
 
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_ROOTA]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_ROOTA]) ;
 
   goto L50 ;
 
@@ -3552,7 +3563,7 @@ L30:
 
   if (np <= max(MP.b,64)) goto L60 ;
 
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_ROOTB]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_ROOTB]) ;
 
 L50:
   mperr() ;
@@ -3572,7 +3583,7 @@ L70:
   y[1] = 0 ;
   if (*n > 0) return ;
 
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_ROOTC]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_ROOTC]) ;
 
   goto L50 ;
 
@@ -3581,7 +3592,7 @@ L70:
 L90:
   if (np % 2 != 0) goto L110 ;
 
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_ROOTD]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_ROOTD]) ;
 
   goto L50 ;
 
@@ -3681,8 +3692,8 @@ L140:
 
   if (v->MPerrors)
     {
-      _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_ROOTE]) ;
-      _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_ROOTF]) ;
+      mp_log_diag (mpstrs[(int) MP_ROOTE]) ;
+      mp_log_diag (mpstrs[(int) MP_ROOTF]) ;
     }
 
   mperr() ;
@@ -3709,7 +3720,7 @@ mpset(int *idecpl, int *itmax2, int *maxdr)
 {
   int i__1 ;
 
-  static int i, k, w, i2, w2, wn ;
+  static int i, k, w, i2 ;
 
 /*  SETS BASE (B) AND NUMBER OF DIGITS (T) TO GIVE THE
  *  EQUIVALENT OF AT LEAST IDECPL DECIMAL DIGITS.
@@ -3736,42 +3747,32 @@ mpset(int *idecpl, int *itmax2, int *maxdr)
 
   MP.mxr = *maxdr ;
 
-/* DETERMINE LARGE REPRESENTABLE INTEGER W OF FORM 2**K - 1 */
+/* DETERMINE LARGE REPRESENTABLE INTEGER W OF FORM 2**K - 1
+ * WITHOUT RELYING ON SIGNED INTEGER OVERFLOW UNDEFINED BEHAVIOR.
+ */
 
   w = 0 ;
   k = 0 ;
+  {
+    unsigned long long uw = 0ULL ;
+    unsigned long long umax = (unsigned long long) INT_MAX ;
 
-/*  ON CYBER 76 HAVE TO FIND K .LE. 47, SO ONLY LOOP
- *  47 TIMES AT MOST.  IF GENUINE INTEGER WORDLENGTH
- *  EXCEEDS 47 BITS THIS RESTRICTION CAN BE RELAXED.
- */
-
-  for (i = 1; i <= 47; ++i)
-    {
-
-/*  INTEGER OVERFLOW WILL EVENTUALLY OCCUR HERE
- *  IF WORDLENGTH .LT. 48 BITS
- */
-
-      w2 = w + w ;
-      wn = w2 + 1 ;
-
-/*  APPARENTLY REDUNDANT TESTS MAY BE NECESSARY ON SOME
- *  MACHINES, DEPENDING ON HOW INTEGER OVERFLOW IS HANDLED
- */
-
-      if (wn <= w || wn <= w2 || wn <= 0) goto L40 ;
-      k = i ;
-      w = wn ;
-    }
+    for (i = 1; i <= 47; ++i)
+      {
+        unsigned long long wn_u = (uw << 1) | 1ULL ;
+        if (wn_u > umax) break ;
+        k = i ;
+        uw = wn_u ;
+        w = (int) uw ;
+      }
+  }
 
 /* SET MAXIMUM EXPONENT TO (W-1)/4 */
 
-L40:
   MP.m = w / 4 ;
   if (*idecpl > 0) goto L60 ;
 
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_SETB]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_SETB]) ;
 
   mperr() ;
   return ;
@@ -3796,11 +3797,11 @@ L60:
     {
       char *msg;
 
-      _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_SETC]) ;
-      _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_SETD]) ;
+      mp_log_diag (mpstrs[(int) MP_SETC]) ;
+      mp_log_diag (mpstrs[(int) MP_SETD]) ;
       msg = (char *) XtMalloc(strlen( mpstrs[(int) MP_SETE]) + 200);
       sprintf(msg, mpstrs[(int) MP_SETE], i2) ;
-      _DtSimpleError (v->appname, DtWarning, nullptr, msg);
+      mp_log_diag (msg);
       XtFree(msg);
     }
 
@@ -3924,7 +3925,7 @@ L50:
  *  B**(T-1) IS TOO SMALL.
  */
 
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_SIN]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_SIN]) ;
 
   mperr() ;
   return ;
@@ -3970,7 +3971,7 @@ L20:
   mpmul(&x[1], &x[1], &MP.r[i3 - 1]) ;
   if (mpcmpi(&MP.r[i3 - 1], &c__1) <= 0) goto L40 ;
 
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_SIN1]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_SIN1]) ;
 
   mperr() ;
   goto L10 ;
@@ -4119,7 +4120,7 @@ mpsqrt(int *x, int *y)
   else                goto L40 ;
 
 L10:
-  if (v->MPerrors) _DtSimpleError (v->appname, DtWarning, nullptr, mpstrs[(int) MP_SQRT]) ;
+  if (v->MPerrors) mp_log_diag (mpstrs[(int) MP_SQRT]) ;
 
   mperr() ;
 
