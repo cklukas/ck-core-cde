@@ -1,4 +1,11 @@
 2026-11-21
+- Fix `dtfile` drag-icon mask alignment for centered `DtIconGadget` items
+  (notably Shelf slots stretched wider than their icon/label content) by
+  computing `ShelfCreateDragMask` and `GetDragIconMask` mask coordinates
+  relative to the gadget's `(XmNx, XmNy)` + `XmNhighlightThickness` origin
+  instead of subtracting `min(pRect.x, lRect.x)`, preventing dragged Shelf
+  icons and labels from being clipped on the right
+  (`cde/programs/dtfile/{FileMgr.c,File.c}`).
 - Pin CK Core Motif ABI 9 `7070cf1ca861` so `DropSMgr.c` (`DoAnimation`) skips
   unmanaged/hidden sibling drop sites (such as `dtfile`'s hidden `search_bar`
   `XmTextField` children) when computing drop-site clip regions and

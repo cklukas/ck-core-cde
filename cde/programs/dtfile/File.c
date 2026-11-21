@@ -1820,11 +1820,11 @@ GetDragIconMask(
    XRectangle pRect, lRect;
    GC fillGC;
    XGCValues values;
-   Arg args[8];
-   Dimension shadowThickness;
-   Dimension marginWidth, marginHeight;
-   int minX, minY;
-   Boolean minXUndefined, minYUndefined;
+   Arg args[6];
+   Position gadgetX = 0, gadgetY = 0;
+   Dimension highlightThickness = 0;
+   Dimension marginWidth = 0, marginHeight = 0;
+   Pixmap iconMask = XmUNSPECIFIED_PIXMAP;
 
    dragMask = XCreatePixmap(dpy, RootWindowOfScreen (XtScreenOfObject(w)),
                             wid, hei, 1);
@@ -1840,45 +1840,62 @@ GetDragIconMask(
   /* Create the drag pixmap, and the associated mask bitmap */
    _DtIconGetIconRects((DtIconGadget)w, &flags, &pRect, &lRect);
 
-   minX= 0;
-   minY= 0;
-   minXUndefined = minYUndefined = True;
+   XtSetArg(args[0], XmNx, &gadgetX);
+   XtSetArg(args[1], XmNy, &gadgetY);
+   XtSetArg(args[2], XmNhighlightThickness, &highlightThickness);
+   XtSetArg(args[3], XmNmarginWidth, &marginWidth);
+   XtSetArg(args[4], XmNmarginHeight, &marginHeight);
+   XtSetArg(args[5], XmNmask, &iconMask);
+   XtGetValues(w, args, 6);
+
    if (flags & XmPIXMAP_RECT)
    {
-       minX = pRect.x;
-       minY = pRect.y;
-       minXUndefined = minYUndefined = False;
+      int px = (int)pRect.x - (int)gadgetX - (int)highlightThickness + (int)marginWidth;
+      int py = (int)pRect.y - (int)gadgetY - (int)highlightThickness + (int)marginHeight;
+      int pw = (int)pRect.width - 2 * (int)marginHeight;
+      int ph = (int)pRect.height - 2 * (int)marginWidth;
+      Boolean copiedMask = False;
+
+      if (pw > 0 && ph > 0)
+      {
+         if (iconMask != None && iconMask != XmUNSPECIFIED_PIXMAP)
+         {
+            Window root = None;
+            int mx = 0, my = 0;
+            unsigned int mw = 0, mh = 0, mb = 0, md = 0;
+            if (XGetGeometry(dpy, iconMask, &root, &mx, &my,
+                             &mw, &mh, &mb, &md) != 0 &&
+                md == 1 && mw > 0 && mh > 0)
+            {
+               unsigned int copyW = (mw < (unsigned int)pw) ? mw : (unsigned int)pw;
+               unsigned int copyH = (mh < (unsigned int)ph) ? mh : (unsigned int)ph;
+               XCopyArea(dpy, iconMask, dragMask, fillGC, 0, 0,
+                         copyW, copyH, px, py);
+               copiedMask = True;
+            }
+         }
+         if (!copiedMask)
+         {
+            XFillRectangle(dpy, dragMask, fillGC, px, py,
+                           (unsigned int)pw, (unsigned int)ph);
+         }
+      }
    }
    if (flags & XmLABEL_RECT)
    {
-      if ((lRect.x < minX) || minXUndefined)
-         minX = lRect.x;
-      if ((lRect.y < minY) || minYUndefined)
-         minY = lRect.y;
+      int lx = (int)lRect.x - (int)gadgetX - (int)highlightThickness + (int)marginWidth;
+      int ly = (int)lRect.y - (int)gadgetY - (int)highlightThickness + (int)marginHeight;
+      int lw = (int)lRect.width - 2 * (int)marginHeight;
+      int lh = (int)lRect.height - 2 * (int)marginWidth;
+      if (lw > 0 && lh > 0)
+      {
+         XFillRectangle(dpy, dragMask, fillGC, lx, ly,
+                        (unsigned int)lw, (unsigned int)lh);
+      }
    }
+   XFreeGC(dpy, fillGC);
 
-    XtSetArg (args[0], XmNshadowThickness, &shadowThickness);
-    XtSetArg (args[1], XmNmarginWidth, &marginWidth);
-    XtSetArg (args[2], XmNmarginHeight, &marginHeight);
-    XtGetValues (w, args, 3);
-
-    if (flags & XmPIXMAP_RECT)
-       XFillRectangle(dpy, dragMask, fillGC,
-                      pRect.x - minX + shadowThickness + marginWidth,
-                      pRect.y - minY + shadowThickness + marginHeight,
-                      pRect.width - 2*marginWidth,
-                      pRect.height - 2*marginHeight);
-    if (flags & XmLABEL_RECT)
-    {
-      XFillRectangle(dpy, dragMask, fillGC,
-                     lRect.x - minX + shadowThickness + marginWidth,
-                     lRect.y - minY + shadowThickness + marginHeight,
-                     lRect.width - 2*marginWidth,
-                     lRect.height - 2*marginHeight);
-    }
-    XFreeGC(dpy, fillGC);
-
-    return (dragMask);
+   return (dragMask);
 }
 
 static Widget
