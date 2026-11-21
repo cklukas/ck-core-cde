@@ -53,6 +53,8 @@ static char sccsid[] = "@(#)dayglance.c 1.76 95/04/24 Copyr 1991 Sun Microsystem
 
 #include <EUSCompat.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <X11/cursorfont.h>
 #include <Xm/Xm.h>
 #include <Xm/Form.h>
 #include <Xm/Text.h>
@@ -101,6 +103,25 @@ static void update_quarter(Calendar *);
 static Boolean in_moboxes(Calendar *, int, int);
 
 #define INSIDE_MARGIN 6
+
+extern int
+dtcm_day_mobox_width(Calendar *c)
+{
+	if (!c || !c->view)
+		return 240;
+	int winw = c->view->winw;
+	int def_w = (int)(winw * 0.4);
+	Day *d = (Day *)c->view->day_info;
+	if (!d || d->split_x <= 0)
+		return def_w;
+	int min_w = 180;
+	int max_w = (winw > 420) ? (winw - 220) : def_w;
+	if (max_w < min_w)
+		return def_w;
+	if (d->split_x < min_w) return min_w;
+	if (d->split_x > max_w) return max_w;
+	return d->split_x;
+}
 
 extern void
 paint_day_header(Calendar *c, Tick date, void *rect)
@@ -234,6 +255,7 @@ paint_dayview_appts(Calendar *c, Paint_cache *cache, int a_total, void *rect)
 	}
 
 	/* draw in appointments */
+	dtcm_hittest_clear();
 
 	x = MOBOX_AREA_WIDTH + hrbox_margin + 6;
 	pfy = fontextents2.max_logical_extent.height;
@@ -280,6 +302,8 @@ paint_dayview_appts(Calendar *c, Paint_cache *cache, int a_total, void *rect)
 					gr_text(c->xcontext, x, y,
 					   pf2, appt_str, rect);
 
+				int entry_top = y - pfy + 2;
+				int entry_lines = 1;
 				free(appt_str); appt_str = nullptr;
 				curr_line++;
 				if (curr_line < maxlines && lines != nullptr) {
@@ -306,8 +330,12 @@ paint_dayview_appts(Calendar *c, Paint_cache *cache, int a_total, void *rect)
 						   pf2, appt_str, rect);
 
 					curr_line++;
+					entry_lines++;
 					free(appt_str); appt_str = nullptr;
 				}
+				dtcm_hittest_add(MOBOX_AREA_WIDTH + 3, entry_top,
+					w > 6 ? w - 6 : w, entry_lines * pfy + 4,
+					i, c->view->date);
 				destroy_lines(headlines); lines=nullptr;
 			}
 		}
@@ -350,6 +378,8 @@ paint_dayview_appts(Calendar *c, Paint_cache *cache, int a_total, void *rect)
 					gr_text(c->xcontext, x, y,
 					   pf2, appt_str, rect);
 
+				int entry_top = y - pfy + 2;
+				int entry_lines = 1;
 				free(appt_str); appt_str = nullptr;
 				curr_line++;
 				if (curr_line < maxlines && lines != nullptr) {
@@ -376,8 +406,12 @@ paint_dayview_appts(Calendar *c, Paint_cache *cache, int a_total, void *rect)
 						   pf2, appt_str, rect);
 
 					curr_line++;
+					entry_lines++;
 					free(appt_str); appt_str = nullptr;
 				}
+				dtcm_hittest_add(MOBOX_AREA_WIDTH + 3, entry_top,
+					w > 6 ? w - 6 : w, entry_lines * pfy + 4,
+					i, c->view->date);
 				destroy_lines(headlines); lines=nullptr;
 			}
 		}
@@ -686,6 +720,12 @@ paint_dayview(Calendar *c, Boolean repaint, XRectangle *rect, Boolean update_mon
         	gr_draw_line(c->xcontext, (int)MOBOX_AREA_WIDTH+2, 
 			 0, (int)MOBOX_AREA_WIDTH+2,
                          line_length, gr_solid, rect);
+		/* Subtle sash handle centered on the resizable divider */
+		{
+			int mid_y = line_length / 2;
+			int sx = (int)MOBOX_AREA_WIDTH - 1;
+			gr_draw_box(c->xcontext, sx, mid_y - 12, 5, 24, rect);
+		}
         	gr_draw_line(c->xcontext, (int)MOBOX_AREA_WIDTH+2, 
 			 c->view->topoffset-1, c->view->winw,
                          c->view->topoffset-1,  gr_solid, rect);
@@ -990,6 +1030,8 @@ day_event(XEvent *event)
 {
         static int lastcol, lastrow;
         static XEvent lastevent;
+        static Boolean divider_dragging = False;
+        static Cursor divider_cursor = None;
         pr_pos xy;
         int x, y, i, j;
         int boxw, boxh, margin, id;
@@ -1006,6 +1048,37 @@ day_event(XEvent *event)
         margin  = c->view->outside_margin;
         x       = event->xbutton.x;
         y       = event->xbutton.y;
+
+        /* Resizable divider between left 3-month panel and right schedule pane */
+        if (event->type == ButtonPress && event->xbutton.button == Button1 &&
+            abs(x - ((int)MOBOX_AREA_WIDTH + 1)) <= 6) {
+                divider_dragging = True;
+                if (divider_cursor == None)
+                        divider_cursor = XCreateFontCursor(XtDisplay(c->canvas), XC_sb_h_double_arrow);
+                XDefineCursor(XtDisplay(c->canvas), XtWindow(c->canvas), divider_cursor);
+                return;
+        }
+        if (divider_dragging) {
+                if (event->type == MotionNotify) {
+                        int min_w = 180;
+                        int max_w = (c->view->winw > 420) ? (c->view->winw - 220) : min_w;
+                        int nx = x;
+                        if (nx < min_w) nx = min_w;
+                        if (nx > max_w) nx = max_w;
+                        if (nx != day_info->split_x) {
+                                day_info->split_x = nx;
+                                cache_dims(c, c->view->winw, c->view->winh);
+                                init_mo(c);
+                                display_monthpanels(c);
+                                paint_dayview(c, True, nullptr, False);
+                                calendar_select(c, hourSelect, (caddr_t)nullptr);
+                        }
+                } else if (event->type == ButtonRelease) {
+                        divider_dragging = False;
+                        XUndefineCursor(XtDisplay(c->canvas), XtWindow(c->canvas));
+                }
+                return;
+        }
  
         /* boundary conditions */
         if ((!(in_mbox = in_moboxes(c, x, y)) && x < MOBOX_AREA_WIDTH+2)
@@ -1040,20 +1113,29 @@ day_event(XEvent *event)
         case ButtonPress:
 		if (event->xbutton.button == Button3 && !in_mbox) {
 			j = day_xytoclock(c, xy.x, xy.y, date);
-			dtcm_context_menu_popup(c, &event->xbutton, j >= 0 ? j : c->view->date, -1);
+			const DtcmHitBox *hb = dtcm_hittest_find(x, y);
+			dtcm_context_menu_popup(c, &event->xbutton, j >= 0 ? j : c->view->date,
+						hb ? hb->cache_idx : -1);
 			break;
 		}
 		if (ds_is_double_click(&lastevent, event)) {
 			_DtTurnOnHourGlass(c->frame);
 			j = day_xytoclock(c, xy.x, xy.y, date);
-			if (lastcol == xy.x && lastrow == xy.y)
+			const DtcmHitBox *hb = !in_mbox ? dtcm_hittest_find(x, y) : nullptr;
+			if (hb && c->paint_cache && hb->cache_idx >= 0 &&
+			    hb->cache_idx < c->paint_cache_size) {
+				Paint_cache *pc = &c->paint_cache[hb->cache_idx];
+				show_editor(c, pc->start_time, pc->end_time,
+					    pc->show_time ? False : True);
+			} else if (lastcol == xy.x && lastrow == xy.y && !in_mbox) {
 				show_editor(c, j, next_nhours(j, 1), xy.y == 0 ? True : False);
-			if (in_mbox) {
+			} else if (in_mbox) {
 				monthbox_deselect(c);
 				monthbox_xytodate(c, x, y);
 				monthbox_select(c);
-			} else
+			} else {
 				show_editor(c, j, next_nhours(j, 1), xy.y == 0 ? True : False);
+			}
 			_DtTurnOffHourGlass(c->frame);
 		} else {
 			if (in_mbox) {
@@ -1108,7 +1190,8 @@ day_event(XEvent *event)
         default:
         	break;
         };            /* switch */
-        lastevent = *event;
+        if (event->type == ButtonPress && event->xbutton.button == Button1)
+                lastevent = *event;
 }
 
 static void

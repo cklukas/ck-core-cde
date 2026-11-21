@@ -55,7 +55,8 @@
 #include <csa.h>
 #include "props.h"
 
-#define MOBOX_AREA_WIDTH	(int)(c->view->winw*.4)
+extern int	dtcm_day_mobox_width(Calendar *);
+#define MOBOX_AREA_WIDTH	dtcm_day_mobox_width(c)
 #define APPT_AREA_WIDTH		(c->view->winw-MOBOX_AREA_WIDTH-2)
 #define HRBOX_MARGIN		30
 
@@ -72,6 +73,7 @@ typedef struct dayglance {
 	int col_w;  		/* width of month box col */
 	int row_h;  		/* height of month box row */
 	int mobox_width;  	/* width of month box row */
+	int split_x;		/* user-resizable divider X position (0 = default 40%) */
 	int day_selected;
 	int day_selected_x;
 	int day_selected_y;

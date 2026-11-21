@@ -76,6 +76,7 @@ static  char sccsid[] = "@(#)calendarA.c 1.196 95/04/12 Copyr 1991 Sun Microsyst
 #include <netinet/in.h>
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
+#include <X11/cursorfont.h>
 #include <Xm/Xm.h>
 #include <Xm/ArrowBG.h>
 #include <Xm/DrawingA.h>
@@ -2453,6 +2454,21 @@ canvas_hover_handler(Widget w, XtPointer client_data, XEvent *event, Boolean *co
                 return;
         if (event->xmotion.state & (Button1Mask | Button2Mask | Button3Mask))
                 return;
+        if (c->view->glance == dayGlance) {
+                static Boolean on_divider = False;
+                static Cursor div_cursor = None;
+                Boolean near = (abs(event->xmotion.x - (MOBOX_AREA_WIDTH + 1)) <= 6);
+                if (near && !on_divider) {
+                        if (div_cursor == None)
+                                div_cursor = XCreateFontCursor(XtDisplay(c->canvas), XC_sb_h_double_arrow);
+                        XDefineCursor(XtDisplay(c->canvas), XtWindow(c->canvas), div_cursor);
+                        on_divider = True;
+                } else if (!near && on_divider) {
+                        XUndefineCursor(XtDisplay(c->canvas), XtWindow(c->canvas));
+                        on_divider = False;
+                }
+                return;
+        }
         if (c->view->glance != monthGlance)
                 return;
 

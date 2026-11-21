@@ -976,7 +976,8 @@ month_event(XEvent *event)
         default:
         break;
         };              /* switch */
-        lastevent = *event;
+        if (event->type == ButtonPress && event->xbutton.button == Button1)
+                lastevent = *event;
 }
  
 static int

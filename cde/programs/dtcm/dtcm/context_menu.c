@@ -26,6 +26,7 @@
 #include "weekglance.h"
 
 static Widget g_ctx_menu = nullptr;
+static Widget g_ctx_switch_view = nullptr;
 static Widget g_ctx_edit_appt = nullptr;
 static Widget g_ctx_del_appt = nullptr;
 static Calendar *g_ctx_cal = nullptr;
@@ -65,7 +66,10 @@ ctx_day_view_cb(Widget w, XtPointer cd, XtPointer call_data)
         g_ctx_cal->view->olddate = g_ctx_cal->view->date;
         g_ctx_cal->view->date = g_ctx_day;
     }
-    day_button(g_ctx_cal->canvas, nullptr, nullptr);
+    if (g_ctx_cal->view->glance == dayGlance)
+        month_button(g_ctx_cal->canvas, nullptr, nullptr);
+    else
+        day_button(g_ctx_cal->canvas, nullptr, nullptr);
 }
 
 static void
@@ -192,8 +196,8 @@ dtcm_context_menu_popup(Calendar *c, XButtonEvent *ev, Tick day, int appt_cache_
         Widget b_todo = XmCreatePushButtonGadget(g_ctx_menu, "ctxNewTodo",
                                                  (Arg[]){{XmNlabelString, (XtArgVal)s_todo}}, 1);
         Widget b_sep1 = XmCreateSeparatorGadget(g_ctx_menu, "ctxSep1", nullptr, 0);
-        Widget b_day = XmCreatePushButtonGadget(g_ctx_menu, "ctxDayView",
-                                                (Arg[]){{XmNlabelString, (XtArgVal)s_day}}, 1);
+        g_ctx_switch_view = XmCreatePushButtonGadget(g_ctx_menu, "ctxDayView",
+                                                     (Arg[]){{XmNlabelString, (XtArgVal)s_day}}, 1);
         Widget b_today = XmCreatePushButtonGadget(g_ctx_menu, "ctxToday",
                                                   (Arg[]){{XmNlabelString, (XtArgVal)s_today}}, 1);
         Widget b_sep2 = XmCreateSeparatorGadget(g_ctx_menu, "ctxSep2", nullptr, 0);
@@ -204,7 +208,7 @@ dtcm_context_menu_popup(Calendar *c, XButtonEvent *ev, Tick day, int appt_cache_
 
         XtAddCallback(b_new, XmNactivateCallback, ctx_new_appt_cb, nullptr);
         XtAddCallback(b_todo, XmNactivateCallback, ctx_new_todo_cb, nullptr);
-        XtAddCallback(b_day, XmNactivateCallback, ctx_day_view_cb, nullptr);
+        XtAddCallback(g_ctx_switch_view, XmNactivateCallback, ctx_day_view_cb, nullptr);
         XtAddCallback(b_today, XmNactivateCallback, ctx_today_cb, nullptr);
         XtAddCallback(g_ctx_edit_appt, XmNactivateCallback, ctx_edit_appt_cb, nullptr);
         XtAddCallback(g_ctx_del_appt, XmNactivateCallback, ctx_delete_appt_cb, nullptr);
@@ -212,7 +216,7 @@ dtcm_context_menu_popup(Calendar *c, XButtonEvent *ev, Tick day, int appt_cache_
         XtManageChild(b_new);
         XtManageChild(b_todo);
         XtManageChild(b_sep1);
-        XtManageChild(b_day);
+        XtManageChild(g_ctx_switch_view);
         XtManageChild(b_today);
         XtManageChild(b_sep2);
         XtManageChild(g_ctx_edit_appt);
@@ -224,6 +228,13 @@ dtcm_context_menu_popup(Calendar *c, XButtonEvent *ev, Tick day, int appt_cache_
         XmStringFree(s_today);
         XmStringFree(s_edit);
         XmStringFree(s_del);
+    }
+
+    if (g_ctx_switch_view) {
+        XmString sw = XmStringCreateLocalized(
+            c->view->glance == dayGlance ? "Switch to Month View" : "Switch to Day View");
+        XtVaSetValues(g_ctx_switch_view, XmNlabelString, sw, nullptr);
+        XmStringFree(sw);
     }
 
     Boolean has_appt = (appt_cache_idx >= 0) ? True : False;

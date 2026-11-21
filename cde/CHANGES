@@ -1,4 +1,17 @@
 2026-11-21
+- Polish `dtcm` Day view, context menu, double-click, and To Do Editor layout:
+  - Add a draggable vertical divider sash between the left 3-month mini-panels
+    and the Day schedule pane (`dayglance.{c,h}`, `calendarA.c`).
+  - Highlight both the current month header and Today's day button on the
+    `XmMonthPanel` mini-calendars (`MonthPanel.c`).
+  - Fix double-click detection (`lastevent` updated only on `Button1` press)
+    across Month, Week, and Day views; register Day-view appointment hit boxes
+    so double-click opens the editor on that entry and right-click enables
+    *Edit Appointment...* / *Delete Appointment* (`dayglance.c`,
+    `monthglance.c`, `weekglance.c`).
+  - Switch the context menu label to *Switch to Month View* when already in
+    Day view (`context_menu.c`), and hide appointment-only duration/location/
+    category widgets in the To Do Editor to prevent widget overlap (`todo.c`).
 - Upgrade CDE Calendar Manager (`dtcm`) visual clarity, navigation, editor
   ergonomics, and drag-and-drop workflows while preserving 100% CSA storage
   compatibility:

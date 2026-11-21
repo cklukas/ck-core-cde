@@ -1532,7 +1532,7 @@ t_make_todo(Calendar *c)
                 ~c ~s ~m ~a <Btn2Up>:ListEndSelect()\n\
                 c ~s ~m ~a <Btn2Up>:ListEndToggle()";
 	WidgetList	children;
-	Widget		widgets[20];
+	Widget		widgets[32];
 	int		i = 0,
 			j = 0,
 			n;
@@ -1875,16 +1875,27 @@ t_make_todo(Calendar *c)
                 XmNnumChildren,         &n,
                 nullptr);
 
-        /* We don't want to manage some of the widgets */
+        /* We don't want to manage appointment-only widgets in the To Do dialog */
+	if (t->dssw.dur_rc) XtUnmanageChild(t->dssw.dur_rc);
+	if (t->dssw.location_label) XtUnmanageChild(t->dssw.location_label);
+	if (t->dssw.location_text) XtUnmanageChild(t->dssw.location_text);
+	if (t->dssw.category_label) XtUnmanageChild(t->dssw.category_label);
+	if (t->dssw.category_menu) XtUnmanageChild(t->dssw.category_menu);
 	for (i = 0; i < n; i++) {
 		if ((children[i] == t->dssw.stop_label) ||
 		    (children[i] == t->dssw.stop_menu) ||
 		    (children[i] == t->dssw.stop_ampm_rc_mgr) ||
-		    (children[i] == t->dssw.stop_text))
+		    (children[i] == t->dssw.stop_text) ||
+		    (children[i] == t->dssw.dur_rc) ||
+		    (children[i] == t->dssw.location_label) ||
+		    (children[i] == t->dssw.location_text) ||
+		    (children[i] == t->dssw.category_label) ||
+		    (children[i] == t->dssw.category_menu))
 			continue;
-		widgets[j++] = children[i];
+		if (j < (int)(sizeof(widgets) / sizeof(widgets[0])))
+			widgets[j++] = children[i];
 	}
-        XtManageChildren(widgets, n - 4);
+        XtManageChildren(widgets, j);
 
 	/*
 	**  Build the list and separators

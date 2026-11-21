@@ -61,6 +61,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <Xm/ManagerP.h>
+#include <Xm/PushB.h>
 #include <Xm/PushBG.h>
 #include <Xm/SeparatoG.h>
 #include <Xm/LabelG.h>
@@ -118,6 +119,7 @@ static XtGeometryResult GeometryManager( Widget, XtWidgetGeometry *, XtWidgetGeo
 static void DayCallback(Widget, XtPointer, XtPointer);
 static void MonthCallback(Widget, XtPointer, XtPointer);
 static void set_header_string(XmMonthPanelWidget);
+static void update_today_highlights(XmMonthPanelWidget);
 static Boolean clipped(Widget);
 /********    End Static Function Declarations    ********/
 
@@ -308,8 +310,11 @@ Initialize( Widget rw, Widget nw, ArgList args, Cardinal *num_args )
  */
 
 	if (new_w->month_panel.active_header) {
+	   Arg hargs[2];
+	   XtSetArg(hargs[0], XmNhighlightThickness, 0);
+	   XtSetArg(hargs[1], XmNshadowThickness, 1);
 	   new_w->month_panel.header =
-		XmCreatePushButtonGadget((Widget)new_w, "header", nullptr, 0);
+		XmCreatePushButton((Widget)new_w, "header", hargs, 2);
 	   XtAddCallback(new_w->month_panel.header, XmNactivateCallback,
 		MonthCallback, nullptr);
 	   new_w->month_panel.separator = (Widget) nullptr;
@@ -388,7 +393,9 @@ Initialize( Widget rw, Widget nw, ArgList args, Cardinal *num_args )
 
 /* choose between buttons or labels for day objects */
 	   if (new_w->month_panel.active_days) {
-		btn = XmCreatePushButtonGadget((Widget)new_w, buf, wargs, 1);
+		XtSetArg(wargs[1], XmNhighlightThickness, 0);
+		XtSetArg(wargs[2], XmNshadowThickness, 1);
+		btn = XmCreatePushButton((Widget)new_w, buf, wargs, 3);
 		XtAddCallback(btn, XmNactivateCallback, DayCallback,
 			(XtPointer) (intptr_t) (i+1));
 	   }
@@ -407,6 +414,74 @@ Initialize( Widget rw, Widget nw, ArgList args, Cardinal *num_args )
 	scale_components(new_w);
 
 	DoLayout(new_w);
+	update_today_highlights(new_w);
+}
+
+static void
+update_today_highlights(XmMonthPanelWidget mw)
+{
+	Display *dpy = XtDisplay((Widget)mw);
+	if (!dpy)
+		return;
+
+	time_t timer;
+	struct tm *tm_now;
+	_Xltimeparams localtime_buf;
+	time(&timer);
+	tm_now = _XLocaltime(&timer, localtime_buf);
+	if (!tm_now)
+		return;
+
+	int today_y = 1900 + tm_now->tm_year;
+	int today_m = tm_now->tm_mon + 1;
+	int today_d = tm_now->tm_mday;
+	Boolean is_cur_month = (mw->month_panel.year == today_y &&
+				mw->month_panel.month == today_m);
+
+	Pixel def_bg = 0, def_fg = 0;
+	Colormap cmap = DefaultColormap(dpy, DefaultScreen(dpy));
+	XtVaGetValues((Widget)mw,
+		XmNbackground, &def_bg,
+		XmNforeground, &def_fg,
+		XmNcolormap, &cmap,
+		nullptr);
+
+	XColor white_c, month_c, day_c;
+	white_c.red = 0xffff; white_c.green = 0xffff; white_c.blue = 0xffff;
+	white_c.flags = DoRed | DoGreen | DoBlue;
+	Pixel white_pix = XAllocColor(dpy, cmap, &white_c) ? white_c.pixel : WhitePixel(dpy, DefaultScreen(dpy));
+
+	month_c.red = 0x2c00; month_c.green = 0x6e00; month_c.blue = 0x8a00;
+	month_c.flags = DoRed | DoGreen | DoBlue;
+	Pixel month_bg = XAllocColor(dpy, cmap, &month_c) ? month_c.pixel : def_bg;
+
+	day_c.red = 0xc000; day_c.green = 0x3900; day_c.blue = 0x2b00;
+	day_c.flags = DoRed | DoGreen | DoBlue;
+	Pixel day_bg = XAllocColor(dpy, cmap, &day_c) ? day_c.pixel : def_bg;
+
+	if (mw->month_panel.active_header && mw->month_panel.header) {
+		if (is_cur_month) {
+			XmChangeColor(mw->month_panel.header, month_bg);
+			XtVaSetValues(mw->month_panel.header, XmNforeground, white_pix, nullptr);
+		} else {
+			XmChangeColor(mw->month_panel.header, def_bg);
+			XtVaSetValues(mw->month_panel.header, XmNforeground, def_fg, nullptr);
+		}
+	}
+
+	if (mw->month_panel.active_days && mw->month_panel.days) {
+		for (int i = 0; i < 31; i++) {
+			Widget btn = mw->month_panel.days[i];
+			if (!btn) continue;
+			if (is_cur_month && (i + 1) == today_d) {
+				XmChangeColor(btn, day_bg);
+				XtVaSetValues(btn, XmNforeground, white_pix, nullptr);
+			} else {
+				XmChangeColor(btn, def_bg);
+				XtVaSetValues(btn, XmNforeground, def_fg, nullptr);
+			}
+		}
+	}
 }
 
 static void
@@ -856,6 +931,7 @@ SetValues( Widget cw, Widget rw, Widget nw, ArgList args, Cardinal *num_args )
 
     if (new_date) {
 	set_header_string(new_w);
+	update_today_highlights(new_w);
 	relayout = TRUE;
     }
 
