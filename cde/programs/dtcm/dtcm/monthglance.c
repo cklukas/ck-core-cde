@@ -944,8 +944,18 @@ month_event(XEvent *event)
 		if (ds_is_double_click(&lastevent, event)) {
 			drag_cache_idx = -1;
 			_DtTurnOnHourGlass(c->frame);
-			if (lastcol == col && lastrow == row)
-				show_editor(c, 0, 0, False);
+			if (lastcol == col && lastrow == row) {
+				const DtcmHitBox *hb = dtcm_hittest_find(x, y);
+				if (hb && c->paint_cache && hb->cache_idx >= 0 &&
+				    hb->cache_idx < c->paint_cache_size) {
+					Paint_cache *pc = &c->paint_cache[hb->cache_idx];
+					show_editor(c, pc->start_time, pc->end_time,
+						    pc->show_time ? False : True);
+					editor_select_appt(c, pc->start_time, pc->summary);
+				} else {
+					show_editor(c, 0, 0, False);
+				}
+			}
 			_DtTurnOffHourGlass(c->frame);
 		}
 		else {

@@ -1127,6 +1127,7 @@ day_event(XEvent *event)
 				Paint_cache *pc = &c->paint_cache[hb->cache_idx];
 				show_editor(c, pc->start_time, pc->end_time,
 					    pc->show_time ? False : True);
+				editor_select_appt(c, pc->start_time, pc->summary);
 			} else if (lastcol == xy.x && lastrow == xy.y && !in_mbox) {
 				show_editor(c, j, next_nhours(j, 1), xy.y == 0 ? True : False);
 			} else if (in_mbox) {

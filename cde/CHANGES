@@ -6,9 +6,11 @@
     `XmMonthPanel` mini-calendars (`MonthPanel.c`).
   - Fix double-click detection (`lastevent` updated only on `Button1` press)
     across Month, Week, and Day views; register Day-view appointment hit boxes
-    so double-click opens the editor on that entry and right-click enables
-    *Edit Appointment...* / *Delete Appointment* (`dayglance.c`,
-    `monthglance.c`, `weekglance.c`).
+    and add `editor_select_appt()` so double-clicking an appointment or choosing
+    *Edit Appointment...* selects that exact entry in the Appointment Editor
+    (populating `Location:`, `Category:`, `What:` and enabling **Change** /
+    **Delete**) (`editor.{c,h}`, `dayglance.c`, `monthglance.c`, `weekglance.c`,
+    `context_menu.c`).
   - Switch the context menu label to *Switch to Month View* when already in
     Day view (`context_menu.c`), and hide appointment-only duration/location/
     category widgets in the To Do Editor to prevent widget overlap (`todo.c`).

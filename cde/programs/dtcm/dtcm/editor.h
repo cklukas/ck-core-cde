@@ -134,6 +134,7 @@ extern void	set_editor_defaults(Editor*, Tick, Tick, Boolean);
 extern void	set_editor_title(Editor*, char *);
 extern void	set_editor_vals	(Editor*, Tick, Tick);
 extern void	show_editor	(Calendar*, Tick, Tick, Boolean);
+extern void	editor_select_appt(Calendar*, Tick, const char*);
 extern void	show_editor_view(Calendar*, Glance);
 extern void	e_make_editor(Calendar*);
 

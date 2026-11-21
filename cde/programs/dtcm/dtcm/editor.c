@@ -1919,6 +1919,51 @@ show_editor(Calendar *c, time_t start, time_t stop, Boolean show_notime) {
 }
 
 extern void
+editor_select_appt(Calendar *c, Tick start_time, const char *summary)
+{
+	if (!c || !c->editor)
+		return;
+	Editor *e = (Editor *)c->editor;
+	if (!e->appt_list || e->appt_count <= 0)
+		return;
+
+	Dtcm_appointment *appt = allocate_appt_struct(appt_read,
+						      c->general->version,
+						      CSA_ENTRY_ATTR_START_DATE_I,
+						      CSA_ENTRY_ATTR_SUMMARY_I,
+						      nullptr);
+	int exact_idx = -1;
+	int time_idx = -1;
+	for (int i = 0; i < e->appt_count; i++) {
+		CSA_entry_handle h = editor_nth_appt(e, i);
+		if (!h)
+			continue;
+		if (query_appt_struct(c->cal_handle, h, appt) == CSA_SUCCESS) {
+			Tick st = 0;
+			if (appt->time && appt->time->value && appt->time->value->item.date_time_value)
+				_csa_iso8601_to_tick(appt->time->value->item.date_time_value, &st);
+			const char *sum = (appt->what && appt->what->value && appt->what->value->item.string_value)
+					  ? appt->what->value->item.string_value : "";
+			if (st == start_time) {
+				if (time_idx < 0)
+					time_idx = i;
+				if (summary && strcmp(sum, summary) == 0) {
+					exact_idx = i;
+					break;
+				}
+			}
+		}
+	}
+	free_appt_struct(&appt);
+
+	int pick = (exact_idx >= 0) ? exact_idx : time_idx;
+	if (pick >= 0) {
+		XmListSelectPos(e->appt_list, pick + 1, True);
+		XmListSetPos(e->appt_list, pick + 1);
+	}
+}
+
+extern void
 show_editor_view(Calendar *c, Glance glance) {
 	Editor		*e = (Editor *)c->editor;
 	Props_pu	*p = (Props_pu *)c->properties_pu;

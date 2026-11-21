@@ -94,6 +94,7 @@ ctx_edit_appt_cb(Widget w, XtPointer cd, XtPointer call_data)
         g_ctx_cal->view->date = pc->start_time;
     }
     show_editor(g_ctx_cal, pc->start_time, pc->end_time, pc->show_time ? False : True);
+    editor_select_appt(g_ctx_cal, pc->start_time, pc->summary);
 }
 
 static void
