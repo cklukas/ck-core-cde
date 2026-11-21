@@ -750,8 +750,10 @@ SONAME collisions with system `libxm4`. `ck-core-cde` ships `dtwm-wayland`,
 `dtwm-panel`, `/usr/dt/bin/Xsession.wayland`, `/usr/share/xsessions/cde.desktop`,
 `/usr/share/wayland-sessions/cde-wayland.desktop`, and
 `/lib/systemd/system/rpc-cmsd.service` (initializing `/var/spool/calendar` and
-enabling/starting `rpcbind.service` and `rpc-cmsd.service` on install so `dtcm`
-works immediately), while `ck-core-dtlogin`
+enabling/starting `rpc-cmsd.service` in `AF_UNIX` + `SO_PEERCRED` mode with
+`PrivateNetwork=yes` and zero open TCP/UDP ports so `dtcm` works immediately
+and securely, plus optional `libcurl` HTTPS CalDAV sync and SSH socket
+forwarding), while `ck-core-dtlogin`
 provides `/lib/systemd/system/dtlogin.service`, the unprivileged `_dtgreeter`
 account and `/etc/pam.d/dtlogin-greeter` PAM `greeter` stack, `pam_systemd.so`
 session hooks, and `shared/default-x-display-manager` `debconf` integration.
