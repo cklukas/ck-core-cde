@@ -318,8 +318,8 @@ _DtHelpWheelScrollEH(
         step = 1;
 
     max_val = maximum - slider;
-    if (max_val < minimum)
-        max_val = minimum;
+    if (max_val <= minimum)
+        return;
 
     new_val = scroll_up ? (val - step) : (val + step);
     if (new_val < minimum)

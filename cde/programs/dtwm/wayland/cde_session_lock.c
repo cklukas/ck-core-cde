@@ -430,6 +430,51 @@ void dtwm_hw_apply_input_device(DtwmServer *server, struct wlr_input_device *dev
     apply_libinput_ptr_config(server, dev);
 }
 
+bool dtwm_hw_pointer_needs_hires_boost(struct wlr_pointer *wlr_ptr) {
+    if (!wlr_ptr) return false;
+    struct wlr_input_device *dev = &wlr_ptr->base;
+    if (dev->name &&
+        (strstr(dev->name, "Virtual USB Digitizer") != nullptr ||
+         strstr(dev->name, "VZ Digitizer") != nullptr)) {
+        return true;
+    }
+    if (wlr_input_device_is_libinput(dev)) {
+        struct libinput_device *ldev = wlr_libinput_get_device_handle(dev);
+        if (ldev &&
+            libinput_device_get_id_vendor(ldev) == 0x05ac &&
+            libinput_device_get_id_product(ldev) == 0x8106) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool dtwm_hw_pointer_is_touchpad(struct wlr_pointer *wlr_ptr) {
+    if (!wlr_ptr) return false;
+    struct wlr_input_device *dev = &wlr_ptr->base;
+    if (wlr_input_device_is_libinput(dev)) {
+        struct libinput_device *ldev = wlr_libinput_get_device_handle(dev);
+        if (ldev && libinput_device_config_tap_get_finger_count(ldev) > 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void dtwm_hw_publish_wheel_ipc(DtwmServer *server) {
+    if (!server) return;
+    char wbuf[64];
+    int wn = snprintf(
+        wbuf, sizeof(wbuf), "%d %d %d",
+        server->wheel_natural_scroll ? 1 : 0,
+        server->wheel_scroll_speed > 0 ? server->wheel_scroll_speed : 3,
+        server->wheel_smooth_scroll ? 1 : 0
+    );
+    if (wn > 0) {
+        dtwm_native_ipc_publish_prop(server, "_DT_WAYLAND_WHEEL", wbuf, (size_t)wn);
+    }
+}
+
 void dtwm_hw_apply_keyboard_defaults(DtwmServer *server, struct wlr_keyboard *wlr_kbd) {
     if (!server || !wlr_kbd) return;
     struct xkb_context *ctx = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
@@ -638,6 +683,20 @@ bool dtwm_hw_handle_wm_request(DtwmServer *server, const char *cmd) {
         return true;
     }
 
+    if (strncmp(cmd, "f.set_scroll_wheel", 18) == 0) {
+        int nat = 0, spd = 3, sm = 1;
+        if (sscanf(cmd + 18, "%d %d %d", &nat, &spd, &sm) >= 3) {
+            if (spd < 1) spd = 1;
+            if (spd > 10) spd = 10;
+            server->wheel_natural_scroll = (nat != 0);
+            server->wheel_scroll_speed = spd;
+            server->wheel_smooth_scroll = (sm != 0);
+            dtwm_hw_publish_wheel_ipc(server);
+            dtwm_hw_publish_state(server);
+        }
+        return true;
+    }
+
     if (strncmp(cmd, "f.set_touchpad", 14) == 0) {
         int tap = 1, nat = 0, cf = 1, dwt = 1, dext = 0;
         if (sscanf(cmd + 14, "%d %d %d %d %d", &tap, &nat, &cf, &dwt, &dext) >= 3) {
@@ -684,6 +743,9 @@ void dtwm_lock_init(DtwmServer *server) {
     server->tp_clickfinger = true;
     server->tp_dwt = true;
     server->tp_disable_with_ext_mouse = false;
+    server->wheel_natural_scroll = false;
+    server->wheel_scroll_speed = 3;
+    server->wheel_smooth_scroll = true;
     server->key_repeat_enabled = true;
     server->key_repeat_delay = 600;
     server->key_repeat_rate = 25;

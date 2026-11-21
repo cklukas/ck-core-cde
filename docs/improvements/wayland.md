@@ -437,8 +437,17 @@ synchronization:
   (`dtaction LockDisplay`). Volume, microphone, backlight, and media actions
   render a `336×84` 3D-beveled CDE OSD gauge (`_DT_OSD_STATE`, auto-hiding after
   `1.6 s`) without stealing focus from the active window.
-- **Laptop touchpad settings (`dtstyle`) & 3-finger workspace swipe:** `dtstyle`
-  **Mouse** (`dtstyle -mouse`) adds an etched **Touchpad** section controlling
+- **Scroll wheel settings, animated cursor previews, laptop touchpad settings (`dtstyle`), & 3-finger workspace swipe:** `dtstyle`
+  **Mouse** (`dtstyle -mouse`) renders premultiplied-ARGB Xcursor previews with
+  live multi-frame animation for animated busy cursors (such as `Adwaita`'s
+  `watch` spinner), adds an etched **Scroll Wheel** section controlling
+  *Direction* (*Standard* vs. *Natural* for physical/virtual mouse wheels,
+  independent of touchpad natural scrolling), *Smooth Scrolling* (toggling
+  CK Core Motif's ~83 Hz sub-line/pixel Wayland smooth interpolator vs. discrete
+  notches), and *Speed* (`1..10`, default `3` lines per notch, persisted in
+  `*mouseWheelNatural`, `*mouseWheelSpeed`, and `*mouseWheelSmooth` and applied
+  live via `f.set_scroll_wheel` / `_DT_WAYLAND_WHEEL` on Wayland and XInput2 on
+  X11), and provides an etched **Touchpad** section controlling
   *Tap to Click*, *Natural Scrolling*, *Two-Finger Right-Click* (`clickfinger`
   vs. button areas), *Disable While Typing*, and *Disable With External Mouse*,
   persisting `*touchpad*` X resources while driving `libinput` IPC

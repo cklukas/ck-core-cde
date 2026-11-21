@@ -172,6 +172,12 @@ require the use of Button 1."))
 #define TP_CLICKFINGER_MSG ((char *)GETMESSAGE(9, 35, "Two-Finger Right-Click"))
 #define TP_DWT_MSG         ((char *)GETMESSAGE(9, 36, "Disable While Typing"))
 #define TP_DEXT_MSG        ((char *)GETMESSAGE(9, 37, "Disable With External Mouse"))
+#define WHEEL_FRAME_MSG    ((char *)GETMESSAGE(9, 38, "Scroll Wheel"))
+#define WHEEL_DIR_MSG      ((char *)GETMESSAGE(9, 39, "Direction:"))
+#define WHEEL_STD_MSG      ((char *)GETMESSAGE(9, 40, "Standard"))
+#define WHEEL_NAT_MSG      ((char *)GETMESSAGE(9, 41, "Natural"))
+#define WHEEL_SMOOTH_MSG   ((char *)GETMESSAGE(9, 42, "Smooth Scrolling"))
+#define WHEEL_SPEED_MSG    ((char *)GETMESSAGE(9, 43, "Speed:"))
 
 #define B2	        "Dtms2B.bm"
 #define B2_REV	        "Dtms2BR.bm"
@@ -339,6 +345,28 @@ typedef struct {
     Pixmap      cursorPreviewPixmaps[CURSOR_PREVIEW_COUNT];
     int         cursorPreviewPixmapW[CURSOR_PREVIEW_COUNT];
     int         cursorPreviewPixmapH[CURSOR_PREVIEW_COUNT];
+#ifdef HAVE_XCURSOR
+    XcursorImages *cursorPreviewAnim[CURSOR_PREVIEW_COUNT];
+    int         cursorPreviewAnimFrame[CURSOR_PREVIEW_COUNT];
+    XtIntervalId cursorPreviewAnimTimer;
+#endif
+    Widget      scrollWheelFrame;
+    Widget      scrollWheelFrameTitle;
+    Widget      scrollWheelForm;
+    Widget      wheelDirLabel;
+    Widget      wheelDirRC;
+    Widget      wheelStandardToggle;
+    Widget      wheelNaturalToggle;
+    Widget      wheelSmoothToggle;
+    Widget      wheelSpeedLabel;
+    Widget      wheelSpeedScale;
+    Boolean     wheelNatural;
+    int         wheelSpeed;
+    Boolean     wheelSmooth;
+    Boolean     origWheelNatural;
+    int         origWheelSpeed;
+    Boolean     origWheelSmooth;
+    Boolean     wheelChanged;
     Widget      touchpadFrame;
     Widget      touchpadFrameTitle;
     Widget      touchpadForm;
@@ -969,6 +997,210 @@ ApplyAndPersistTouchpadCLI(int tap, int nat, int cf, int dwt, int dext)
 }
 
 static void
+LoadScrollWheelResources(Boolean *natOut, int *speedOut, Boolean *smoothOut)
+{
+    Boolean nat = False, smooth = True;
+    int speed = 3;
+    Atom actualType = None;
+    int actualFormat = 0;
+    unsigned long nitems = 0, bytesAfter = 0;
+    unsigned char *prop = nullptr;
+    XrmDatabase db = nullptr;
+    Boolean freeDb = False;
+
+    if (style.display && style.root != None &&
+	XGetWindowProperty(style.display, style.root, XA_RESOURCE_MANAGER,
+			   0, 65536, False, XA_STRING, &actualType,
+			   &actualFormat, &nitems, &bytesAfter, &prop) == Success &&
+	prop && actualFormat == 8)
+    {
+	db = XrmGetStringDatabase((const char *)prop);
+	freeDb = (db != nullptr);
+    }
+    if (prop)
+	XFree(prop);
+    if (!db && style.display)
+	db = XrmGetDatabase(style.display);
+
+    if (db)
+    {
+	char *typeRet = nullptr;
+	XrmValue val = { 0, nullptr };
+	if (XrmGetResource(db, "dtstyle.mouseWheelNatural",
+			   "Dtstyle.MouseWheelNatural", &typeRet, &val) && val.addr)
+	    nat = ParseBoolValue(val.addr, nat);
+	if (XrmGetResource(db, "dtstyle.mouseWheelSpeed",
+			   "Dtstyle.MouseWheelSpeed", &typeRet, &val) && val.addr)
+	{
+	    int s = atoi(val.addr);
+	    if (s >= 1 && s <= 10)
+		speed = s;
+	}
+	if (XrmGetResource(db, "dtstyle.mouseWheelSmooth",
+			   "Dtstyle.MouseWheelSmooth", &typeRet, &val) && val.addr)
+	    smooth = ParseBoolValue(val.addr, smooth);
+	if (freeDb)
+	    XrmDestroyDatabase(db);
+    }
+
+    if (natOut)    *natOut    = nat;
+    if (speedOut)  *speedOut  = speed;
+    if (smoothOut) *smoothOut = smooth;
+}
+
+static void
+ApplyScrollWheelBackend(Boolean nat, int speed, Boolean smooth)
+{
+    if (!style.display)
+	return;
+    if (speed < 1) speed = 1;
+    if (speed > 10) speed = 10;
+
+    if (DtstyleWaylandActive())
+    {
+	char cmd[128];
+	snprintf(cmd, sizeof(cmd), "f.set_scroll_wheel %d %d %d",
+		 nat ? 1 : 0, speed, smooth ? 1 : 0);
+	DtstyleSendWaylandRequest(cmd);
+	return;
+    }
+
+    /* Classic X11 / XLibre backend: configure non-touchpad XI2 pointer natural scroll */
+    {
+	struct LocalXIDeviceInfo {
+	    int deviceid;
+	    char *name;
+	    int use;
+	    int attachment;
+	    Bool enabled;
+	    int num_classes;
+	    void **classes;
+	};
+	typedef int (*pfn_XIQueryVersion)(Display *, int *, int *);
+	typedef struct LocalXIDeviceInfo *(*pfn_XIQueryDevice)(Display *, int, int *);
+	typedef void (*pfn_XIFreeDeviceInfo)(struct LocalXIDeviceInfo *);
+	typedef Atom *(*pfn_XIListProperties)(Display *, int, int *);
+	typedef void (*pfn_XIChangeProperty)(Display *, int, Atom, Atom, int, int,
+					     unsigned char *, int);
+
+	int evBase = 0, errBase = 0, xiOp = 0;
+	void *xiLib = nullptr;
+	if (XQueryExtension(style.display, "XInputExtension", &xiOp, &evBase, &errBase))
+	    xiLib = dlopen("libXi.so.6", RTLD_LAZY | RTLD_LOCAL);
+	if (xiLib)
+	{
+	    pfn_XIQueryVersion fnVer = (pfn_XIQueryVersion)dlsym(xiLib, "XIQueryVersion");
+	    pfn_XIQueryDevice fnQuery = (pfn_XIQueryDevice)dlsym(xiLib, "XIQueryDevice");
+	    pfn_XIFreeDeviceInfo fnFree = (pfn_XIFreeDeviceInfo)dlsym(xiLib, "XIFreeDeviceInfo");
+	    pfn_XIListProperties fnList = (pfn_XIListProperties)dlsym(xiLib, "XIListProperties");
+	    pfn_XIChangeProperty fnChange = (pfn_XIChangeProperty)dlsym(xiLib, "XIChangeProperty");
+	    int maj = 2, min = 0;
+	    if (fnVer && fnQuery && fnFree && fnList && fnChange &&
+		fnVer(style.display, &maj, &min) == Success)
+	    {
+		Atom aTap = XInternAtom(style.display, "libinput Tapping Enabled", False);
+		Atom aNat = XInternAtom(style.display, "libinput Natural Scrolling Enabled", False);
+		int (*oldHandler)(Display *, XErrorEvent *) = XSetErrorHandler(IgnoreXiError);
+		int ndevs = 0;
+		struct LocalXIDeviceInfo *devs = fnQuery(style.display, 0 /* XIAllDevices */, &ndevs);
+		if (devs)
+		{
+		    int di;
+		    for (di = 0; di < ndevs; ++di)
+		    {
+			int nprops = 0;
+			Atom *props = fnList(style.display, devs[di].deviceid, &nprops);
+			if (!props)
+			    continue;
+			if (!DeviceHasPropertyAtom(props, nprops, aTap) &&
+			    DeviceHasPropertyAtom(props, nprops, aNat))
+			{
+			    unsigned char vNat = nat ? 1 : 0;
+			    fnChange(style.display, devs[di].deviceid, aNat, XA_INTEGER,
+				     8, PropModeReplace, &vNat, 1);
+			}
+			XFree(props);
+		    }
+		    fnFree(devs);
+		}
+		XSync(style.display, False);
+		XSetErrorHandler(oldHandler);
+	    }
+	    dlclose(xiLib);
+	}
+    }
+}
+
+static void
+PersistScrollWheelResources(Boolean nat, int speed, Boolean smooth)
+{
+    char res[256];
+    int flags = style.xrdb.writeXrdbImmediate
+	? (_DT_ATR_RESMGR | _DT_ATR_PREFS)
+	: _DT_ATR_PREFS;
+    if (speed < 1) speed = 1;
+    if (speed > 10) speed = 10;
+
+    snprintf(res, sizeof(res),
+	     "*mouseWheelNatural: %s\n"
+	     "*mouseWheelSpeed: %d\n"
+	     "*mouseWheelSmooth: %s\n",
+	     nat ? "True" : "False",
+	     speed,
+	     smooth ? "True" : "False");
+    _DtAddResString(style.display, res, flags);
+    XSync(style.display, False);
+    RefreshXrmDatabaseFromRoot();
+}
+
+static void
+SyncScrollWheelControlsFromState(void)
+{
+    if (mouse.wheelStandardToggle)
+	XmToggleButtonGadgetSetState(mouse.wheelStandardToggle, !mouse.wheelNatural, False);
+    if (mouse.wheelNaturalToggle)
+	XmToggleButtonGadgetSetState(mouse.wheelNaturalToggle, mouse.wheelNatural, False);
+    if (mouse.wheelSmoothToggle)
+	XmToggleButtonGadgetSetState(mouse.wheelSmoothToggle, mouse.wheelSmooth, False);
+    if (mouse.wheelSpeedScale)
+    {
+	int spd = mouse.wheelSpeed;
+	if (spd < 1) spd = 1;
+	if (spd > 10) spd = 10;
+	XtVaSetValues(mouse.wheelSpeedScale, XmNvalue, spd, nullptr);
+    }
+}
+
+static void
+scrollWheelChangedCB(Widget w, XtPointer client_data, XtPointer call_data)
+{
+    (void)client_data;
+    (void)call_data;
+    if (w == mouse.wheelStandardToggle)
+    {
+	if (!XmToggleButtonGadgetGetState(mouse.wheelStandardToggle))
+	    return;
+	mouse.wheelNatural = False;
+    }
+    else if (w == mouse.wheelNaturalToggle)
+    {
+	if (!XmToggleButtonGadgetGetState(mouse.wheelNaturalToggle))
+	    return;
+	mouse.wheelNatural = True;
+    }
+    if (mouse.wheelSmoothToggle)
+	mouse.wheelSmooth = XmToggleButtonGadgetGetState(mouse.wheelSmoothToggle);
+    if (mouse.wheelSpeedScale)
+	mouse.wheelSpeed = getValue(mouse.wheelSpeedScale);
+    if (mouse.wheelSpeed < 1) mouse.wheelSpeed = 1;
+    if (mouse.wheelSpeed > 10) mouse.wheelSpeed = 10;
+
+    mouse.wheelChanged = True;
+    mouse.systemDefaultFlag = False;
+    ApplyScrollWheelBackend(mouse.wheelNatural, mouse.wheelSpeed, mouse.wheelSmooth);
+}
+
+static void
 ApplyDialogBgFg(Widget reference, Widget target)
 {
     Pixel bg;
@@ -1068,49 +1300,29 @@ PackComponent(unsigned char component, unsigned long mask, int shift, int bits)
     return (value << shift) & mask;
 }
 
-static Pixmap
-CreateCursorPreviewPixmap(int index, const char *theme,
-                          int previewSize, int *width, int *height)
-{
 #ifdef HAVE_XCURSOR
+static Pixmap
+CreateCursorPreviewPixmapFromImage(const XcursorImage *image,
+                                   int previewW, int previewH,
+                                   int *width, int *height)
+{
     XColor bgColor;
-    unsigned char bgR = 0;
-    unsigned char bgG = 0;
-    unsigned char bgB = 0;
-    XcursorImage *image;
+    unsigned char bgR = 0, bgG = 0, bgB = 0;
     Pixmap pixmap;
     Visual *visual;
     int depth;
     GC gc;
     XImage *ximage;
     unsigned char *data;
-    int redShift = 0;
-    int greenShift = 0;
-    int blueShift = 0;
-    int redBits = 0;
-    int greenBits = 0;
-    int blueBits = 0;
-    int x;
-    int y;
-    int offsetX = 0;
-    int offsetY = 0;
-    const char *effectiveTheme =
-	(theme && theme[0]) ? theme :
-	(mouse.cursorTheme && mouse.cursorTheme[0]) ?
-	mouse.cursorTheme : XcursorGetTheme(style.display);
-    unsigned int effectiveSize = (previewSize > 0) ? (unsigned int)previewSize :
-	(mouse.cursorSize > 0) ? (unsigned int)mouse.cursorSize :
-	CURSOR_THEME_PREVIEW_ICON_SIZE;
-    int previewW = (previewSize > 0) ? previewSize : (int)effectiveSize;
-    int previewH = previewW;
-
-    if (previewW <= 0)
-	previewW = CURSOR_THEME_PREVIEW_ICON_SIZE;
-    if (previewH <= 0)
-	previewH = previewW;
+    int redShift = 0, greenShift = 0, blueShift = 0;
+    int redBits = 0, greenBits = 0, blueBits = 0;
+    int x, y;
+    int offsetX = 0, offsetY = 0;
 
     if (width) *width = 0;
     if (height) *height = 0;
+    if (!image || previewW <= 0 || previewH <= 0)
+	return None;
 
     bgColor.pixel = GetCursorPreviewBgPixel();
     if (XQueryColor(style.display, style.colormap, &bgColor))
@@ -1120,29 +1332,17 @@ CreateCursorPreviewPixmap(int index, const char *theme,
 	bgB = (unsigned char)(bgColor.blue >> 8);
     }
 
-    image = XcursorShapeLoadImage(cursorPreviewInfo[index].fontShape,
-				  effectiveTheme,
-				  effectiveSize);
-    if (!image)
-    {
-	return None;
-    }
-
     visual = DefaultVisual(style.display, DefaultScreen(style.display));
     depth = DefaultDepth(style.display, DefaultScreen(style.display));
     pixmap = XCreatePixmap(style.display, style.root,
 			   (unsigned int)previewW, (unsigned int)previewH, depth);
     if (pixmap == None)
-    {
-	XcursorImageDestroy(image);
 	return None;
-    }
 
     gc = XCreateGC(style.display, pixmap, 0, nullptr);
     if (!gc)
     {
 	XFreePixmap(style.display, pixmap);
-	XcursorImageDestroy(image);
 	return None;
     }
 
@@ -1152,7 +1352,6 @@ CreateCursorPreviewPixmap(int index, const char *theme,
     {
 	XFreeGC(style.display, gc);
 	XFreePixmap(style.display, pixmap);
-	XcursorImageDestroy(image);
 	return None;
     }
 
@@ -1161,7 +1360,6 @@ CreateCursorPreviewPixmap(int index, const char *theme,
     {
 	XFreeGC(style.display, gc);
 	XFreePixmap(style.display, pixmap);
-	XcursorImageDestroy(image);
 	XDestroyImage(ximage);
 	return None;
     }
@@ -1177,10 +1375,8 @@ CreateCursorPreviewPixmap(int index, const char *theme,
 	PackComponent(bgB, visual->blue_mask, blueShift, blueBits);
 
     for (y = 0; y < previewH; y++)
-    {
 	for (x = 0; x < previewW; x++)
 	    XPutPixel(ximage, x, y, bgPixel);
-    }
 
     offsetX = (previewW - (int)image->width) / 2;
     offsetY = (previewH - (int)image->height) / 2;
@@ -1193,11 +1389,12 @@ CreateCursorPreviewPixmap(int index, const char *theme,
 	    unsigned char r = (pixel >> 16) & 0xff;
 	    unsigned char g = (pixel >> 8) & 0xff;
 	    unsigned char b = pixel & 0xff;
-	    unsigned char outR;
-	    unsigned char outG;
-	    unsigned char outB;
+	    unsigned char outR, outG, outB;
 	    unsigned long outPixel;
 
+	    /* Xcursor pixels are already premultiplied ARGB: composite with
+	     * Porter-Duff OVER (src + dst * (1 - alpha)) without re-multiplying
+	     * src by alpha a second time. */
 	    if (a == 255)
 	    {
 		outR = r;
@@ -1212,9 +1409,12 @@ CreateCursorPreviewPixmap(int index, const char *theme,
 	    }
 	    else
 	    {
-		outR = (unsigned char)((r * a + bgR * (255 - a) + 127) / 255);
-		outG = (unsigned char)((g * a + bgG * (255 - a) + 127) / 255);
-		outB = (unsigned char)((b * a + bgB * (255 - a) + 127) / 255);
+		int br = (int)r + ((int)bgR * (255 - (int)a) + 127) / 255;
+		int bg = (int)g + ((int)bgG * (255 - (int)a) + 127) / 255;
+		int bb = (int)b + ((int)bgB * (255 - (int)a) + 127) / 255;
+		outR = (unsigned char)(br > 255 ? 255 : br);
+		outG = (unsigned char)(bg > 255 ? 255 : bg);
+		outB = (unsigned char)(bb > 255 ? 255 : bb);
 	    }
 
 	    outPixel = PackComponent(outR, visual->red_mask, redShift, redBits) |
@@ -1238,12 +1438,50 @@ CreateCursorPreviewPixmap(int index, const char *theme,
     XDestroyImage(ximage);
     if (width) *width = previewW;
     if (height) *height = previewH;
+    return pixmap;
+}
+#endif
+
+static Pixmap
+CreateCursorPreviewPixmap(int index, const char *theme,
+                          int previewSize, int *width, int *height)
+{
+#ifdef HAVE_XCURSOR
+    XcursorImage *image;
+    Pixmap pixmap;
+    const char *effectiveTheme =
+	(theme && theme[0]) ? theme :
+	(mouse.cursorTheme && mouse.cursorTheme[0]) ?
+	mouse.cursorTheme : XcursorGetTheme(style.display);
+    unsigned int effectiveSize = (previewSize > 0) ? (unsigned int)previewSize :
+	(mouse.cursorSize > 0) ? (unsigned int)mouse.cursorSize :
+	CURSOR_THEME_PREVIEW_ICON_SIZE;
+    int previewW = (previewSize > 0) ? previewSize : (int)effectiveSize;
+    int previewH = previewW;
+
+    if (previewW <= 0)
+	previewW = CURSOR_THEME_PREVIEW_ICON_SIZE;
+    if (previewH <= 0)
+	previewH = previewW;
+
+    if (width) *width = 0;
+    if (height) *height = 0;
+
+    image = XcursorShapeLoadImage(cursorPreviewInfo[index].fontShape,
+				  effectiveTheme,
+				  effectiveSize);
+    if (!image)
+	return None;
+
+    pixmap = CreateCursorPreviewPixmapFromImage(image, previewW, previewH, width, height);
     XcursorImageDestroy(image);
     return pixmap;
 #else
     if (width) *width = 0;
     if (height) *height = 0;
     (void)index;
+    (void)theme;
+    (void)previewSize;
     return None;
 #endif
 }
@@ -1485,15 +1723,90 @@ SetRootCursorNow(void)
     }
 }
 
+#ifdef HAVE_XCURSOR
+static void
+StopCursorPreviewAnimTimer(void)
+{
+    if (mouse.cursorPreviewAnimTimer != 0)
+    {
+	XtRemoveTimeOut(mouse.cursorPreviewAnimTimer);
+	mouse.cursorPreviewAnimTimer = 0;
+    }
+}
+
+static void
+CursorPreviewAnimTimerCB(XtPointer client_data, XtIntervalId *id)
+{
+    (void)client_data;
+    (void)id;
+    mouse.cursorPreviewAnimTimer = 0;
+
+    if (!style.mouseDialog || !XtIsManaged(style.mouseDialog))
+	return;
+
+    Boolean anyAnimated = False;
+    int previewSz = mouse.cursorSize > 0 ? mouse.cursorSize : 24;
+    for (int i = 0; i < CURSOR_PREVIEW_COUNT; i++)
+    {
+	XcursorImages *imgs = mouse.cursorPreviewAnim[i];
+	if (!imgs || imgs->nimage <= 1 || !mouse.cursorPreviewArea[i] ||
+	    !XtIsRealized(mouse.cursorPreviewArea[i]))
+	    continue;
+
+	anyAnimated = True;
+	int step = (imgs->images[0] && imgs->images[0]->delay > 0 && imgs->images[0]->delay < 25) ? 2 : 1;
+	mouse.cursorPreviewAnimFrame[i] = (mouse.cursorPreviewAnimFrame[i] + step) % imgs->nimage;
+	const XcursorImage *frameImg = imgs->images[mouse.cursorPreviewAnimFrame[i]];
+	int nw = 0, nh = 0;
+	Pixmap npix = CreateCursorPreviewPixmapFromImage(frameImg, previewSz, previewSz, &nw, &nh);
+	if (npix != None)
+	{
+	    if (mouse.cursorPreviewPixmaps[i] != None)
+		XFreePixmap(style.display, mouse.cursorPreviewPixmaps[i]);
+	    mouse.cursorPreviewPixmaps[i] = npix;
+	    mouse.cursorPreviewPixmapW[i] = nw;
+	    mouse.cursorPreviewPixmapH[i] = nh;
+
+	    Window win = XtWindow(mouse.cursorPreviewArea[i]);
+	    int wWidth = XtWidth(mouse.cursorPreviewArea[i]);
+	    int wHeight = XtHeight(mouse.cursorPreviewArea[i]);
+	    int dstX = (wWidth - nw) / 2;
+	    int dstY = (wHeight - nh) / 2;
+	    if (dstX < 0) dstX = 0;
+	    if (dstY < 0) dstY = 0;
+	    GC gc = XCreateGC(style.display, win, 0, nullptr);
+	    if (gc)
+	    {
+		XCopyArea(style.display, npix, win, gc, 0, 0, (unsigned)nw, (unsigned)nh, dstX, dstY);
+		XFreeGC(style.display, gc);
+	    }
+	}
+    }
+    XFlush(style.display);
+    if (anyAnimated)
+    {
+	mouse.cursorPreviewAnimTimer = XtAppAddTimeOut(
+	    XtWidgetToApplicationContext(style.mouseDialog),
+	    40, CursorPreviewAnimTimerCB, nullptr);
+    }
+}
+#endif
+
 static void
 UpdateCursorPreview(void)
 {
     int i;
-
 #ifdef HAVE_XCURSOR
+    Boolean anyAnimated = False;
+    const char *effectiveTheme =
+	(mouse.cursorTheme && mouse.cursorTheme[0]) ?
+	mouse.cursorTheme : XcursorGetTheme(style.display);
+    unsigned int effectiveSize = (mouse.cursorSize > 0) ? (unsigned int)mouse.cursorSize : 24;
+
+    StopCursorPreviewAnimTimer();
     if (mouse.cursorTheme && mouse.cursorTheme[0])
 	XcursorSetTheme(style.display, mouse.cursorTheme);
-    XcursorSetDefaultSize(style.display, (unsigned int)mouse.cursorSize);
+    XcursorSetDefaultSize(style.display, effectiveSize);
 #endif
 
     for (i = 0; i < CURSOR_PREVIEW_COUNT; i++)
@@ -1508,6 +1821,14 @@ UpdateCursorPreview(void)
 	    XFreePixmap(style.display, mouse.cursorPreviewPixmaps[i]);
 	    mouse.cursorPreviewPixmaps[i] = None;
 	}
+#ifdef HAVE_XCURSOR
+	if (mouse.cursorPreviewAnim[i] != nullptr)
+	{
+	    XcursorImagesDestroy(mouse.cursorPreviewAnim[i]);
+	    mouse.cursorPreviewAnim[i] = nullptr;
+	}
+	mouse.cursorPreviewAnimFrame[i] = 0;
+#endif
 	mouse.cursorPreviewPixmapW[i] = 0;
 	mouse.cursorPreviewPixmapH[i] = 0;
     }
@@ -1531,15 +1852,41 @@ UpdateCursorPreview(void)
 			  mouse.cursorPreviewCursors[i]);
 	}
 
-	mouse.cursorPreviewPixmaps[i] =
-	    CreateCursorPreviewPixmap(i,
-				      mouse.cursorTheme,
-				      mouse.cursorSize,
-				      &mouse.cursorPreviewPixmapW[i],
-				      &mouse.cursorPreviewPixmapH[i]);
+#ifdef HAVE_XCURSOR
+	mouse.cursorPreviewAnim[i] = XcursorLibraryLoadImages(
+	    cursorPreviewInfo[i].name, effectiveTheme, (int)effectiveSize);
+	if (mouse.cursorPreviewAnim[i] && mouse.cursorPreviewAnim[i]->nimage > 0)
+	{
+	    mouse.cursorPreviewPixmaps[i] = CreateCursorPreviewPixmapFromImage(
+		mouse.cursorPreviewAnim[i]->images[0],
+		(int)effectiveSize, (int)effectiveSize,
+		&mouse.cursorPreviewPixmapW[i],
+		&mouse.cursorPreviewPixmapH[i]);
+	    if (mouse.cursorPreviewAnim[i]->nimage > 1)
+		anyAnimated = True;
+	}
+	else
+#endif
+	{
+	    mouse.cursorPreviewPixmaps[i] =
+		CreateCursorPreviewPixmap(i,
+					  mouse.cursorTheme,
+					  mouse.cursorSize,
+					  &mouse.cursorPreviewPixmapW[i],
+					  &mouse.cursorPreviewPixmapH[i]);
+	}
 	XClearArea(style.display, XtWindow(mouse.cursorPreviewArea[i]),
 		   0, 0, 0, 0, True);
     }
+
+#ifdef HAVE_XCURSOR
+    if (anyAnimated && style.mouseDialog && XtIsManaged(style.mouseDialog))
+    {
+	mouse.cursorPreviewAnimTimer = XtAppAddTimeOut(
+	    XtWidgetToApplicationContext(style.mouseDialog),
+	    40, CursorPreviewAnimTimerCB, nullptr);
+    }
+#endif
 
     {
 	int maxW = 0;
@@ -1617,7 +1964,7 @@ build_mouseDialog( Widget shell )
     XmString         button_string[NUM_LABELS]; 
     Widget           form;
     int              count = 0;
-    Widget           widget_list[32]; 
+    Widget           widget_list[48]; 
     XmString         string;
     
     Dimension        MaxLabelWidth1;
@@ -2179,6 +2526,139 @@ build_mouseDialog( Widget shell )
 	}
     }
 
+    /* Scroll Wheel configuration frame (Direction, Smooth Scrolling, Speed) */
+    LoadScrollWheelResources(&mouse.wheelNatural, &mouse.wheelSpeed, &mouse.wheelSmooth);
+    mouse.origWheelNatural = mouse.wheelNatural;
+    mouse.origWheelSpeed = mouse.wheelSpeed;
+    mouse.origWheelSmooth = mouse.wheelSmooth;
+    mouse.wheelChanged = False;
+
+    n = 0;
+    XtSetArg(args[n], XmNshadowType, XmSHADOW_ETCHED_IN); n++;
+    XtSetArg(args[n], XmNmarginWidth, style.horizontalSpacing); n++;
+    XtSetArg(args[n], XmNmarginHeight, style.verticalSpacing); n++;
+    widget_list[count++] =
+    mouse.scrollWheelFrame = XmCreateFrame(form, "scrollWheelFrame", args, n);
+
+    n = 0;
+    string = CMPSTR(WHEEL_FRAME_MSG);
+    XtSetArg(args[n], XmNchildType, XmFRAME_TITLE_CHILD); n++;
+    XtSetArg(args[n], XmNchildHorizontalAlignment, XmALIGNMENT_BEGINNING); n++;
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    mouse.scrollWheelFrameTitle =
+	XmCreateLabelGadget(mouse.scrollWheelFrame, "scrollWheelFrameTitle", args, n);
+    XmStringFree(string);
+    XtManageChild(mouse.scrollWheelFrameTitle);
+
+    n = 0;
+    XtSetArg(args[n], XmNfractionBase, 100); n++;
+    XtSetArg(args[n], XmNhorizontalSpacing, style.horizontalSpacing); n++;
+    XtSetArg(args[n], XmNverticalSpacing, 2); n++;
+    mouse.scrollWheelForm =
+	XmCreateForm(mouse.scrollWheelFrame, "scrollWheelForm", args, n);
+    XtManageChild(mouse.scrollWheelForm);
+
+    n = 0;
+    string = CMPSTR(WHEEL_DIR_MSG);
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    XtSetArg(args[n], XmNalignment, XmALIGNMENT_BEGINNING); n++;
+    XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
+    mouse.wheelDirLabel =
+	XmCreateLabelGadget(mouse.scrollWheelForm, "wheelDirLabel", args, n);
+    XmStringFree(string);
+    XtManageChild(mouse.wheelDirLabel);
+
+    n = 0;
+    XtSetArg(args[n], XmNorientation, XmHORIZONTAL); n++;
+    XtSetArg(args[n], XmNpacking, XmPACK_TIGHT); n++;
+    XtSetArg(args[n], XmNmarginHeight, 0); n++;
+    XtSetArg(args[n], XmNtopAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNleftAttachment, XmATTACH_WIDGET); n++;
+    XtSetArg(args[n], XmNleftWidget, mouse.wheelDirLabel); n++;
+    XtSetArg(args[n], XmNleftOffset, style.horizontalSpacing); n++;
+    mouse.wheelDirRC =
+	XmCreateRadioBox(mouse.scrollWheelForm, "wheelDirRC", args, n);
+    XtManageChild(mouse.wheelDirRC);
+
+    XtVaSetValues(mouse.wheelDirLabel,
+		  XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
+		  XmNtopWidget, mouse.wheelDirRC,
+		  XmNbottomAttachment, XmATTACH_OPPOSITE_WIDGET,
+		  XmNbottomWidget, mouse.wheelDirRC,
+		  nullptr);
+
+    n = 0;
+    string = CMPSTR(WHEEL_STD_MSG);
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    XtSetArg(args[n], XmNindicatorType, XmONE_OF_MANY); n++;
+    mouse.wheelStandardToggle =
+	XmCreateToggleButtonGadget(mouse.wheelDirRC, "wheelStandardToggle", args, n);
+    XmStringFree(string);
+    XtManageChild(mouse.wheelStandardToggle);
+    XtAddCallback(mouse.wheelStandardToggle, XmNvalueChangedCallback, scrollWheelChangedCB, nullptr);
+
+    n = 0;
+    string = CMPSTR(WHEEL_NAT_MSG);
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    XtSetArg(args[n], XmNindicatorType, XmONE_OF_MANY); n++;
+    mouse.wheelNaturalToggle =
+	XmCreateToggleButtonGadget(mouse.wheelDirRC, "wheelNaturalToggle", args, n);
+    XmStringFree(string);
+    XtManageChild(mouse.wheelNaturalToggle);
+    XtAddCallback(mouse.wheelNaturalToggle, XmNvalueChangedCallback, scrollWheelChangedCB, nullptr);
+
+    n = 0;
+    string = CMPSTR(WHEEL_SMOOTH_MSG);
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    XtSetArg(args[n], XmNalignment, XmALIGNMENT_BEGINNING); n++;
+    XtSetArg(args[n], XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET); n++;
+    XtSetArg(args[n], XmNtopWidget, mouse.wheelDirRC); n++;
+    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_OPPOSITE_WIDGET); n++;
+    XtSetArg(args[n], XmNbottomWidget, mouse.wheelDirRC); n++;
+    XtSetArg(args[n], XmNleftAttachment, XmATTACH_POSITION); n++;
+    XtSetArg(args[n], XmNleftPosition, 58); n++;
+    XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
+    mouse.wheelSmoothToggle =
+	XmCreateToggleButtonGadget(mouse.scrollWheelForm, "wheelSmoothToggle", args, n);
+    XmStringFree(string);
+    XtManageChild(mouse.wheelSmoothToggle);
+    XtAddCallback(mouse.wheelSmoothToggle, XmNvalueChangedCallback, scrollWheelChangedCB, nullptr);
+
+    n = 0;
+    string = CMPSTR(WHEEL_SPEED_MSG);
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    XtSetArg(args[n], XmNalignment, XmALIGNMENT_BEGINNING); n++;
+    XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNbottomOffset, 2); n++;
+    mouse.wheelSpeedLabel =
+	XmCreateLabelGadget(mouse.scrollWheelForm, "wheelSpeedLabel", args, n);
+    XmStringFree(string);
+    XtManageChild(mouse.wheelSpeedLabel);
+
+    n = 0;
+    XtSetArg(args[n], XmNorientation, XmHORIZONTAL); n++;
+    XtSetArg(args[n], XmNminimum, 1); n++;
+    XtSetArg(args[n], XmNmaximum, 10); n++;
+    XtSetArg(args[n], XmNvalue, mouse.wheelSpeed); n++;
+    XtSetArg(args[n], XmNshowValue, True); n++;
+    XtSetArg(args[n], XmNscaleMultiple, 1); n++;
+    XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET); n++;
+    XtSetArg(args[n], XmNtopWidget, mouse.wheelDirRC); n++;
+    XtSetArg(args[n], XmNtopOffset, 2); n++;
+    XtSetArg(args[n], XmNleftAttachment, XmATTACH_WIDGET); n++;
+    XtSetArg(args[n], XmNleftWidget, mouse.wheelSpeedLabel); n++;
+    XtSetArg(args[n], XmNleftOffset, style.horizontalSpacing); n++;
+    XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM); n++;
+    mouse.wheelSpeedScale =
+	XmCreateScale(mouse.scrollWheelForm, "wheelSpeedScale", args, n);
+    XtManageChild(mouse.wheelSpeedScale);
+    XtAddCallback(mouse.wheelSpeedScale, XmNvalueChangedCallback, scrollWheelChangedCB, nullptr);
+    XtAddCallback(mouse.wheelSpeedScale, XmNdragCallback, scrollWheelChangedCB, nullptr);
+
+    SyncScrollWheelControlsFromState();
+
     /* Touchpad configuration frame (libinput on Wayland, XInput2 on X11) */
     LoadTouchpadResources(&mouse.tpTap, &mouse.tpNatural, &mouse.tpClickfinger,
 			  &mouse.tpDwt, &mouse.tpDext);
@@ -2313,6 +2793,16 @@ build_mouseDialog( Widget shell )
 	ApplyDialogBgFg(colorRef, mouse.cursorPreviewForm);
 	ApplyDialogBgFg(colorRef, mouse.cursorPreviewGrid);
 	ApplyDialogBgFg(colorRef, mouse.cursorPreviewHint);
+	ApplyDialogBgFg(colorRef, mouse.scrollWheelFrame);
+	ApplyDialogBgFg(colorRef, mouse.scrollWheelFrameTitle);
+	ApplyDialogBgFg(colorRef, mouse.scrollWheelForm);
+	ApplyDialogBgFg(colorRef, mouse.wheelDirLabel);
+	ApplyDialogBgFg(colorRef, mouse.wheelDirRC);
+	ApplyDialogBgFg(colorRef, mouse.wheelStandardToggle);
+	ApplyDialogBgFg(colorRef, mouse.wheelNaturalToggle);
+	ApplyDialogBgFg(colorRef, mouse.wheelSmoothToggle);
+	ApplyDialogBgFg(colorRef, mouse.wheelSpeedLabel);
+	ApplyDialogBgFg(colorRef, mouse.wheelSpeedScale);
 	ApplyDialogBgFg(colorRef, mouse.touchpadFrame);
 	ApplyDialogBgFg(colorRef, mouse.touchpadFrameTitle);
 	ApplyDialogBgFg(colorRef, mouse.touchpadForm);
@@ -2740,10 +3230,22 @@ formLayoutCB(
     XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
     XtSetValues (mouse.cursorPreviewForm, args, n);
 
-    /* Touchpad Frame */
+    /* Scroll Wheel Frame */
     n=0;
     XtSetArg(args[n], XmNtopAttachment,    XmATTACH_WIDGET);    n++;
     XtSetArg(args[n], XmNtopWidget,        mouse.cursorPreviewFrame); n++;
+    XtSetArg(args[n], XmNtopOffset,        style.verticalSpacing); n++;
+    XtSetArg(args[n], XmNleftAttachment,   XmATTACH_FORM);      n++;
+    XtSetArg(args[n], XmNleftOffset,       style.horizontalSpacing); n++;
+    XtSetArg(args[n], XmNrightAttachment,  XmATTACH_FORM);      n++;
+    XtSetArg(args[n], XmNrightOffset,      style.horizontalSpacing); n++;
+    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_NONE);      n++;
+    XtSetValues (mouse.scrollWheelFrame, args, n);
+
+    /* Touchpad Frame */
+    n=0;
+    XtSetArg(args[n], XmNtopAttachment,    XmATTACH_WIDGET);    n++;
+    XtSetArg(args[n], XmNtopWidget,        mouse.scrollWheelFrame); n++;
     XtSetArg(args[n], XmNtopOffset,        style.verticalSpacing); n++;
     XtSetArg(args[n], XmNleftAttachment,   XmATTACH_FORM);      n++;
     XtSetArg(args[n], XmNleftOffset,       style.horizontalSpacing); n++;
@@ -2917,6 +3419,14 @@ _DtmapCB_mouseDialog(
 
 	UpdateCursorPreview();
     }
+
+    /* Scroll Wheel controls */
+    LoadScrollWheelResources(&mouse.wheelNatural, &mouse.wheelSpeed, &mouse.wheelSmooth);
+    mouse.origWheelNatural = mouse.wheelNatural;
+    mouse.origWheelSpeed = mouse.wheelSpeed;
+    mouse.origWheelSmooth = mouse.wheelSmooth;
+    mouse.wheelChanged = False;
+    SyncScrollWheelControlsFromState();
 
     /* Touchpad controls */
     LoadTouchpadResources(&mouse.tpTap, &mouse.tpNatural, &mouse.tpClickfinger,
@@ -3555,6 +4065,15 @@ systemDefaultCB(
       UpdateCursorPreview();
   }
 
+  /* reset scroll wheel settings to defaults */
+  mouse.wheelNatural = False;
+  mouse.wheelSpeed = 3;
+  mouse.wheelSmooth = True;
+  mouse.wheelChanged = True;
+  SyncScrollWheelControlsFromState();
+  ApplyScrollWheelBackend(mouse.wheelNatural, mouse.wheelSpeed, mouse.wheelSmooth);
+  PersistScrollWheelResources(mouse.wheelNatural, mouse.wheelSpeed, mouse.wheelSmooth);
+
   /* reset touchpad settings to defaults */
   mouse.tpTap = True;
   mouse.tpNatural = False;
@@ -3598,6 +4117,9 @@ ButtonCB(
     {
       case OK_BUTTON:
 
+#ifdef HAVE_XCURSOR
+         StopCursorPreviewAnimTimer();
+#endif
          XtUnmanageChild(w);
 
          /* if sendSettings is true send data to Session Manager */
@@ -3734,6 +4256,20 @@ ButtonCB(
 	     }
 	 }
 
+	 /* Scroll Wheel settings */
+	 if (mouse.wheelChanged ||
+	     mouse.wheelNatural != mouse.origWheelNatural ||
+	     mouse.wheelSpeed != mouse.origWheelSpeed ||
+	     mouse.wheelSmooth != mouse.origWheelSmooth)
+	 {
+	     ApplyScrollWheelBackend(mouse.wheelNatural, mouse.wheelSpeed, mouse.wheelSmooth);
+	     PersistScrollWheelResources(mouse.wheelNatural, mouse.wheelSpeed, mouse.wheelSmooth);
+	     mouse.origWheelNatural = mouse.wheelNatural;
+	     mouse.origWheelSpeed = mouse.wheelSpeed;
+	     mouse.origWheelSmooth = mouse.wheelSmooth;
+	     mouse.wheelChanged = False;
+	 }
+
 	 /* Touchpad settings */
 	 if (mouse.tpChanged ||
 	     mouse.tpTap != mouse.origTpTap ||
@@ -3758,6 +4294,9 @@ ButtonCB(
 	 
        case CANCEL_BUTTON:
 	 
+#ifdef HAVE_XCURSOR
+	 StopCursorPreviewAnimTimer();
+#endif
 	 XtUnmanageChild(w);
 	 
 	 /* check if values and changePonterControl only if needed */
@@ -3856,6 +4395,19 @@ ButtonCB(
 		 XmToggleButtonGadgetSetState(mouse.transferToggle, False, False);
 		 XmToggleButtonGadgetSetState(mouse.adjustToggle, True, True);
 	       }
+	   }
+
+	 if (mouse.wheelChanged ||
+	     mouse.wheelNatural != mouse.origWheelNatural ||
+	     mouse.wheelSpeed != mouse.origWheelSpeed ||
+	     mouse.wheelSmooth != mouse.origWheelSmooth)
+	   {
+	     mouse.wheelNatural = mouse.origWheelNatural;
+	     mouse.wheelSpeed = mouse.origWheelSpeed;
+	     mouse.wheelSmooth = mouse.origWheelSmooth;
+	     mouse.wheelChanged = False;
+	     SyncScrollWheelControlsFromState();
+	     ApplyScrollWheelBackend(mouse.wheelNatural, mouse.wheelSpeed, mouse.wheelSmooth);
 	   }
 
 	 if (mouse.tpChanged ||

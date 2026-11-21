@@ -1,4 +1,34 @@
 2026-11-22
+- Add `Style Manager - Mouse` scroll-wheel settings, fix animated premultiplied
+  ARGB `Hourglass` cursor previews, and integrate native Wayland hover/smooth
+  wheel scrolling (`programs/dtstyle/Mouse.c`, `lib/DtHelp/XUICreate.c`,
+  `programs/dtwm/wayland/cde_icons.c`,
+  `programs/dtwm/wayland/cde_session_lock.c`,
+  `programs/dtwm/wayland/cde_workspace.c`,
+  `programs/dtwm/wayland/dtwm_wayland.h`,
+  `programs/dtwm/wayland/dtwm_wayland_main.c`, `.ckgit/motif-revision`,
+  `.ckgit/ci.yml`, `docs/improvements/wayland.md`):
+  - Bump pinned CK Core Motif ABI 9 to `194479714b7ef60fa97d5a3e35aaac14927cdaf5`
+    for unfocused hover-pointer wheel routing across all `XmScrolledWindow`
+    modes, ~83 Hz sub-line/pixel smooth scrolling on Wayland, and live
+    `_DT_WAYLAND_WHEEL` speed and smooth-scroll IPC updates.
+  - Add an etched **Scroll Wheel** section to **Style Manager → Mouse**
+    (`dtstyle -mouse`) controlling **Direction** (`Standard` / `Natural`),
+    **Smooth Scrolling** (`True` by default), and **Speed** (`1..10`, default
+    `3`), with immediate live preview (`f.set_scroll_wheel` / `_DT_WAYLAND_WHEEL`
+    on Wayland and XInput2 `libinput Natural Scrolling Enabled` on non-touchpad
+    pointers on X11), `Default` reset, `Cancel` rollback, and `OK` persistence
+    (`*mouseWheelNatural`, `*mouseWheelSpeed`, `*mouseWheelSmooth`).
+  - Normalize `05ac:8106` (`Apple Inc. Virtual USB Digitizer`) 8x `v120` wheel
+    axis deltas in `dtwm-wayland`, scale `Icons` (Icon Box) wheel steps by
+    `wheel_scroll_speed`, and skip swallowing wheel events in
+    `_DtHelpWheelScrollEH` when a `DtHelp` pane's scrollbar has zero range.
+  - Fix premultiplied-ARGB alpha blending in `CreateCursorPreviewPixmapFromImage`
+    (`Mouse.c`) so translucent Xcursor highlights are composited with
+    Porter-Duff `OVER` instead of multiplying RGB by alpha a second time, and
+    animate multi-frame Xcursor previews (`XcursorLibraryLoadImages` at 25 fps)
+    so animated busy cursors such as `Adwaita`'s 60-frame `watch` spinner spin
+    cleanly instead of freezing dark frame 0.
 - Add automatic `~/.dt/errorlog` size trimming, default log-level filtering,
   burst flood suppression, and fix `dtcalc` signed-overflow infinite `MPCHK`
   loop (`lib/DtSvc/DtUtil2/MsgLog.c`, `lib/DtSvc/DtUtil2/UErrNoBMS.c`,

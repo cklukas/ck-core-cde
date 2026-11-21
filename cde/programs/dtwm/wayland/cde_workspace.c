@@ -1895,6 +1895,7 @@ void dtwm_apply_resource_manager_string(DtwmServer *server, const char *raw_data
             int xcursor_size = server->cursor_size > 0 ? server->cursor_size : 24;
             bool cursor_changed = false;
             bool tp_changed = false;
+            bool wheel_changed = false;
             bool has_auto_raise = false;
             snprintf(xcursor_theme, sizeof(xcursor_theme), "%s", server->cursor_theme);
 
@@ -2052,10 +2053,26 @@ void dtwm_apply_resource_manager_string(DtwmServer *server, const char *raw_data
                 } else if (xrdb_key_matches(line, klen, "touchpadDisableWithExternalMouse")) {
                     server->tp_disable_with_ext_mouse = parse_xrdb_bool(val, server->tp_disable_with_ext_mouse);
                     tp_changed = true;
+                } else if (xrdb_key_matches(line, klen, "mouseWheelNatural")) {
+                    server->wheel_natural_scroll = parse_xrdb_bool(val, server->wheel_natural_scroll);
+                    wheel_changed = true;
+                } else if (xrdb_key_matches(line, klen, "mouseWheelSpeed")) {
+                    int spd = atoi(val);
+                    if (spd >= 1 && spd <= 10) {
+                        server->wheel_scroll_speed = spd;
+                        wheel_changed = true;
+                    }
+                } else if (xrdb_key_matches(line, klen, "mouseWheelSmooth")) {
+                    server->wheel_smooth_scroll = parse_xrdb_bool(val, server->wheel_smooth_scroll);
+                    wheel_changed = true;
                 }
             }
             if (cursor_changed) {
                 dtwm_reload_cursor_theme(server, xcursor_theme, xcursor_size);
+            }
+            if (wheel_changed) {
+                dtwm_hw_publish_wheel_ipc(server);
+                dtwm_hw_publish_state(server);
             }
             if (tp_changed) {
                 dtwm_hw_reapply_all_pointers(server);

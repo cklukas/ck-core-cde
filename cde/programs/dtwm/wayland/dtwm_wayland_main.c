@@ -2979,16 +2979,54 @@ static void handle_cursor_axis(struct wl_listener *listener, void *data) {
     struct wlr_pointer_axis_event *ev = data;
     uint32_t t_ms = ev->time_msec ? ev->time_msec : dtwm_now_msec();
     dtwm_lock_notify_activity(server);
-    if (dtwm_a11y_handle_axis(server, ev->orientation, ev->delta, ev->delta_discrete)) {
+
+    double delta = ev->delta;
+    int32_t delta_discrete = ev->delta_discrete;
+    if (fabs(delta) < 1e-4 && delta_discrete != 0) {
+        delta = (double)delta_discrete * (15.0 / 120.0);
+    }
+    /* Apple Virtualization.framework's Virtual USB Digitizer (05ac:8106)
+     * advertises HID Resolution Multiplier = 120 to Linux hid-input while
+     * forwarding unmultiplied host scroll deltas (1..15 units instead of 120),
+     * attenuating wheel/trackpad scroll range by ~8x unless normalized. */
+    if (dtwm_hw_pointer_needs_hires_boost(ev->pointer) &&
+        ((delta_discrete > -60 && delta_discrete < 60 && delta_discrete != 0) ||
+         (delta_discrete == 0 && fabs(delta) > 1e-4 && fabs(delta) < 7.5))) {
+        delta *= 8.0;
+        delta_discrete *= 8;
+    }
+
+    enum wl_pointer_axis_relative_direction rel_dir = ev->relative_direction;
+    if (server->wheel_natural_scroll && !dtwm_hw_pointer_is_touchpad(ev->pointer)) {
+        delta = -delta;
+        delta_discrete = -delta_discrete;
+        rel_dir = (rel_dir == WL_POINTER_AXIS_RELATIVE_DIRECTION_IDENTICAL)
+                      ? WL_POINTER_AXIS_RELATIVE_DIRECTION_INVERTED
+                      : WL_POINTER_AXIS_RELATIVE_DIRECTION_IDENTICAL;
+    }
+
+    if (dtwm_a11y_handle_axis(server, ev->orientation, delta, delta_discrete)) {
         return;
     }
     if (ev->orientation == WL_POINTER_AXIS_VERTICAL_SCROLL &&
-        dtwm_icon_box_handle_axis(server, ev->delta, ev->delta_discrete)) {
+        dtwm_icon_box_handle_axis(server, delta, delta_discrete)) {
         return;
     }
+    if (!server->session_locked && server->seat->drag == nullptr &&
+        server->pointer_buttons_down == 0 &&
+        server->cursor_mode == DTWM_CURSOR_PASSTHROUGH && !server->menu_visible) {
+        double sx = 0.0, sy = 0.0;
+        struct wlr_surface *surface = nullptr;
+        DtwmFramePart part = DTWM_PART_NONE;
+        (void)desktop_view_at(server, server->cursor->x, server->cursor->y, &surface, &sx, &sy, &part);
+        if (surface) {
+            wlr_seat_pointer_notify_enter(server->seat, surface, sx, sy);
+            wlr_seat_pointer_notify_motion(server->seat, t_ms, sx, sy);
+        }
+    }
     wlr_seat_pointer_notify_axis(
-        server->seat, t_ms, ev->orientation, ev->delta,
-        ev->delta_discrete, ev->source, ev->relative_direction
+        server->seat, t_ms, ev->orientation, delta,
+        delta_discrete, ev->source, rel_dir
     );
 }
 

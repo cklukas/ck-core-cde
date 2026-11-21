@@ -3563,7 +3563,19 @@ bool dtwm_icon_box_handle_axis(DtwmServer *server, double delta, int32_t discret
     if (server->icon_box_max_scroll_y <= 0) {
         return true;
     }
-    int step = discrete != 0 ? (discrete * 36) : (int)(delta * 2.4);
+    int spd = server->wheel_scroll_speed > 0 ? server->wheel_scroll_speed : 3;
+    int base_px = 12 * spd;
+    int step = 0;
+    if (discrete != 0) {
+        if (discrete >= 15 || discrete <= -15) {
+            step = (discrete * base_px) / 120;
+            if (step == 0) step = (discrete > 0) ? 1 : -1;
+        } else {
+            step = discrete * base_px;
+        }
+    } else {
+        step = (int)(delta * (0.8 * spd));
+    }
     int next = server->icon_box_scroll_y + step;
     if (next < 0) next = 0;
     if (next > server->icon_box_max_scroll_y) next = server->icon_box_max_scroll_y;

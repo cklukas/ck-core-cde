@@ -599,6 +599,9 @@ struct DtwmServer {
     int pointer_buttons_down;
     uint32_t pointer_buttons_mask;
     uint32_t last_pointer_button;
+    bool wheel_natural_scroll;
+    int wheel_scroll_speed;
+    bool wheel_smooth_scroll;
 
     struct wl_event_source *sigint_source;
     struct wl_event_source *sigterm_source;
@@ -739,6 +742,9 @@ bool dtwm_lock_is_sm_lock_window(DtwmServer *server, xcb_window_t win);
 void dtwm_lock_focus_surface(DtwmServer *server, struct wlr_surface *surf);
 struct wlr_surface *dtwm_lock_surface_at(DtwmServer *server, double lx, double ly, double *sx, double *sy);
 void dtwm_hw_apply_input_device(DtwmServer *server, struct wlr_input_device *dev);
+bool dtwm_hw_pointer_needs_hires_boost(struct wlr_pointer *wlr_ptr);
+bool dtwm_hw_pointer_is_touchpad(struct wlr_pointer *wlr_ptr);
+void dtwm_hw_publish_wheel_ipc(DtwmServer *server);
 void dtwm_hw_reapply_all_pointers(DtwmServer *server);
 void dtwm_hw_apply_keyboard_defaults(DtwmServer *server, struct wlr_keyboard *wlr_kbd);
 bool dtwm_hw_handle_wm_request(DtwmServer *server, const char *cmd);
