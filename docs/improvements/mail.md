@@ -461,3 +461,24 @@ local `/usr/sbin/sendmail` MTA to be usable on a modern desktop:
   `xdg-open` fallback).
 - Verified under ASan/UBSan by `tests/check-mail-accounts.py`,
   `tests/check-html-readable.py`, and `tests/check-curl-mail.py`.
+
+## Modern daily mail UX (Folders Sidebar, Quick Filter, Rules, Undo Send & Drafts)
+
+- **Accounts & Folders Sidebar**: `FolderSidebar.C` embeds a collapsible 205px
+  left sidebar (open by default, toggleable via **View → Folders Sidebar** or
+  `Ctrl+B`) showing Local Inbox, Drafts, and each configured account's folders
+  with live message counts, plus quick `Sync` and `Accounts...` controls.
+- **Inline Quick Filter & Mail Rules**: `MailQuickFilter.C` adds an inline
+  filter bar (`Ctrl+/` or `/`) with live search and `All`/`Unread`/`Starred`/
+  `Attach` filter chips, alongside **Mailbox → Mail Rules...** managing local
+  filter/junk rules in `~/.dt/dtmail_rules` (`0600`).
+- **Conversation Threading, Context Menu & Shortcuts**: **View → Thread by
+  Conversation** groups replies by normalized subject/thread, while the message
+  list provides a right-click context menu (*Reply*, *Reply All*, *Forward*,
+  *Delete*), keyboard shortcuts (`R`/`A`/`F`/`Del`/`J`/`K`/`Ctrl+N`), and
+  desktop new-mail notifications (`notify-send`).
+- **30-second Auto-saved Drafts & 5-second Undo Send**: `SendMsgDialog.C`
+  auto-saves compose drafts every 30 seconds into `Drafts` and displays a
+  5-second `Sending in Ns... [Cancel Send]` countdown bar before dispatching
+  remote SMTP mail.
+- Verified under ASan/UBSan by `tests/check-thread-rules.py`.

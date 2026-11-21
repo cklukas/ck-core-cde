@@ -1,4 +1,22 @@
 2026-11-21
+- Implement Phase 2 (Tier 2) modern daily mail UX in `dtmail`
+  (`programs/dtmail/dtmail/`):
+  - Add a persistent collapsible left **Accounts & Folders** sidebar
+    (`FolderSidebar.{C,h}`, open by default, toggleable via **View → Folders
+    Sidebar** or `Ctrl+B`) listing Local Inbox, Drafts, and per-account folders
+    (`INBOX`, `Drafts`, `Sent`, `Archive`, `Trash`, `Junk`) with live message
+    counts plus one-click `Sync` and `Accounts...` actions.
+  - Add a collapsible inline **Quick Filter** bar (`MailQuickFilter.{C,h}`,
+    `Ctrl+/` or `/`) with live search, `All`/`Unread`/`Starred`/`Attach` filter
+    chips, match count indicator, and **Mailbox → Mail Rules...** dialog
+    persisting rules in `~/.dt/dtmail_rules` (`0600`).
+  - Add conversation threading (`MailThreadRules.{C,h}`, **View → Thread by
+    Conversation**), right-click message context menu (*Reply*, *Reply All*,
+    *Forward*, *Delete*), keyboard shortcuts (`R`/`A`/`F`/`Del`/`J`/`K`/`Ctrl+N`/
+    `Ctrl+B`/`Ctrl+/`), desktop new-mail notifications via `notify-send`,
+    30-second auto-saved drafts into `Drafts`, and a **5-second Undo Send**
+    countdown bar before SMTP dispatch (`RoamMenuWindow.{h,C}`,
+    `SendMsgDialog.{h,C}`, `tests/check-thread-rules.py`).
 - Align native Wayland Front Panel subpanels above their control arrows and fix
   drag-icon scene use-after-free in `dtwm-wayland` (`Callback.c`, `Session.c`,
   `WmFpWayland.c`, `dtwm_wayland.h`, `dtwm_wayland_main.c`,

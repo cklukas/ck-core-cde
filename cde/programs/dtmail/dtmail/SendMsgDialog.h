@@ -234,6 +234,23 @@ class SendMsgDialog : public MenuWindow, public AbstractEditorParent {
     char * _auto_save_file;
     
     char * _dead_letter_buf;
+
+    /* 5-second Undo Send countdown state */
+    Widget _undo_send_bar;
+    Widget _undo_send_label;
+    XtIntervalId _undo_send_timer;
+    int    _undo_send_remaining;
+    char  *_pending_smtp_raw;
+    size_t _pending_smtp_len;
+    char   _pending_smtp_rcpts[1024];
+    char   _pending_smtp_acct_id[64];
+
+    static void undoSendTickCB(XtPointer, XtIntervalId *);
+    static void cancelUndoSendCB(Widget, XtPointer, XtPointer);
+    void   startUndoSendCountdown(const char *acct_id, const char *rcpts,
+                                  char *raw, size_t raw_len);
+    void   finishUndoSendDispatch();
+    void   cancelUndoSend();
     
     DtMailBoolean _log_msg;
     

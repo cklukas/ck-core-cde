@@ -249,6 +249,14 @@ _header_list(16)
     _auto_save_path = NULL;
     _auto_save_file = NULL;
     _dead_letter_buf = NULL;
+    _undo_send_bar = NULL;
+    _undo_send_label = NULL;
+    _undo_send_timer = 0;
+    _undo_send_remaining = 0;
+    _pending_smtp_raw = NULL;
+    _pending_smtp_len = 0;
+    _pending_smtp_rcpts[0] = '\0';
+    _pending_smtp_acct_id[0] = '\0';
     
     _file_include = NULL;
     _file_save_as = NULL;
@@ -405,6 +413,7 @@ SendMsgDialog::~SendMsgDialog()
     if (_dead_letter_buf) {
         delete [] _dead_letter_buf;
     }
+    cancelUndoSend();
 
     delete _attachmentMenuList;
     delete _attachmentPopupMenuList;
@@ -698,6 +707,40 @@ SendMsgDialog::doAutoSave(char *filename)
     if((DTMailError_t) error == DTME_OutOfSpace )
     {
        RoamMenuWindow::ShowErrMsg((char *)error.getClient(),TRUE,this );
+    } else {
+        /* Also mirror latest draft into ~/.dt/mail/Drafts (or active account Drafts) */
+        char *body_txt = _my_editor && _my_editor->textEditor()
+                         ? _my_editor->textEditor()->get_contents() : NULL;
+        if (body_txt && body_txt[0]) {
+            char draft_path[1024] = "";
+            const char *from_addr = "draft@localhost";
+            if (dtmail_accounts_count() > 0 && dtmail_accounts_get(0)) {
+                const DtMailAccount *a0 = dtmail_accounts_get(0);
+                from_addr = a0->email[0] ? a0->email : "draft@localhost";
+                (void)dtmail_account_folder_path(a0->id, "Drafts", draft_path, sizeof(draft_path));
+            } else {
+                const char *home = getenv("HOME");
+                if (home && home[0]) {
+                    snprintf(draft_path, sizeof(draft_path), "%s/.dt/mail/Drafts", home);
+                }
+            }
+            if (draft_path[0]) {
+                char hdr[512];
+                int hl = snprintf(hdr, sizeof(hdr),
+                    "From: %s\r\nSubject: (Auto-saved Draft)\r\nMIME-Version: 1.0\r\n"
+                    "Content-Type: text/plain; charset=UTF-8\r\n\r\n", from_addr);
+                size_t bl = strlen(body_txt);
+                char *buf = (char *)malloc((size_t)hl + bl + 1);
+                if (buf && hl > 0) {
+                    memcpy(buf, hdr, (size_t)hl);
+                    memcpy(buf + hl, body_txt, bl);
+                    buf[hl + bl] = '\0';
+                    (void)dtmail_mbox_append_rfc5322(draft_path, from_addr, buf, (size_t)hl + bl);
+                    free(buf);
+                }
+            }
+        }
+        if (body_txt) free(body_txt);
     }
     normalCursor();
     clearStatus();
@@ -724,11 +767,11 @@ SendMsgDialog::getAutoSaveInterval(void)
     const char * value = NULL;
     mail_rc->getValue(error, "composeinterval", &value);
     if (error.isSet() || value == NULL) {
-	save_interval = 10 * 60 * 1000; // 10 minutes
+	save_interval = 30 * 1000; // 30-second auto-saved drafts
     }
     else {
 	save_interval = (int) strtol(value, NULL, 10) * 60 * 1000;
-	save_interval = (save_interval <= 0) ? 10 * 60 * 1000 : save_interval;
+	save_interval = (save_interval <= 0) ? 30 * 1000 : save_interval;
     }
     if (NULL != value)
       free((void*) value);
@@ -1292,58 +1335,13 @@ SendMsgDialog::send_message(const char * trans_impl, int trans_type)
                     raw[hlen + blen] = '\0';
                 }
 
-                /* Collect recipients from To, Cc, Bcc */
-                char rcpt_buf[1024];
-                snprintf(rcpt_buf, sizeof(rcpt_buf), "%s,%s,%s", to_s, cc_s, bcc_s);
-                const char *rcpts[64];
-                int nrcpts = 0;
-                char *sp = NULL;
-                for (char *tok = strtok_r(rcpt_buf, ",;", &sp);
-                     tok && nrcpts < 64;
-                     tok = strtok_r(NULL, ",;", &sp)) {
-                    while (*tok == ' ' || *tok == '\t') tok++;
-                    char *lt = strchr(tok, '<');
-                    char *gt = lt ? strchr(lt + 1, '>') : NULL;
-                    if (lt && gt) { *gt = '\0'; tok = lt + 1; }
-                    size_t tl = strlen(tok);
-                    while (tl > 0 && (tok[tl - 1] == ' ' || tok[tl - 1] == '\t'))
-                        tok[--tl] = '\0';
-                    if (tok[0]) rcpts[nrcpts++] = tok;
-                }
-
-                char secret[512] = "";
-                const char *kind = (smtp_acct->auth_mode == DTMAIL_AUTH_OAUTH2) ? "oauth_access" : "password";
-                (void)dtmail_keyring_lookup(smtp_acct->id, kind, secret, sizeof(secret));
-
-                char serr[256] = "";
-                int sres = dtmail_smtp_send(smtp_acct, secret, smtp_acct->email,
-                                            rcpts, nrcpts, raw, (size_t)hlen + blen,
-                                            serr, sizeof(serr));
-                if (sres == 0) {
-                    char sent_path[1024];
-                    if (dtmail_account_folder_path(smtp_acct->id, "Sent", sent_path, sizeof(sent_path)) == 0) {
-                        (void)dtmail_mbox_append_rfc5322(sent_path, smtp_acct->email, raw, (size_t)hlen + blen);
-                    }
-                    free(raw);
-                    if (body_txt) free(body_txt);
-                    _already_sending = FALSE;
-                    _takeDown = TRUE;
-                    this->reset();
-                    delete [] buf;
-                    return;
-                } else {
-                    free(raw);
-                    if (body_txt) free(body_txt);
-                    this->manage();
-                    _send_button->activate();
-                    _close_button->activate();
-                    _already_sending = FALSE;
-                    _genDialog->setToErrorDialog((char *)"Mailer",
-                        serr[0] ? serr : (char *)"SMTP send failed.");
-                    _genDialog->post_and_return((char *)"OK", DTMAILHELPERROR);
-                    delete [] buf;
-                    return;
-                }
+                /* Queue 5-second Undo Send countdown before SMTP dispatch */
+                char rcpt_csv[1024];
+                snprintf(rcpt_csv, sizeof(rcpt_csv), "%s,%s,%s", to_s, cc_s, bcc_s);
+                startUndoSendCountdown(smtp_acct->id, rcpt_csv, raw, (size_t)hlen + blen);
+                if (body_txt) free(body_txt);
+                delete [] buf;
+                return;
             }
             if (body_txt) free(body_txt);
         }
@@ -1592,6 +1590,36 @@ SendMsgDialog::createWorkArea ( Widget parent )
     
     XtManageChild(ci->baseWidget());
     ci->manage();
+
+    /* 5-second Undo Send countdown bar (hidden until Send is clicked) */
+    _undo_send_bar = XtVaCreateWidget("UndoSendBar", xmFormWidgetClass, send_form,
+        XmNleftAttachment, XmATTACH_WIDGET,
+        XmNleftWidget, ci->baseWidget(),
+        XmNleftOffset, 16,
+        XmNrightAttachment, XmATTACH_FORM,
+        XmNrightOffset, 8,
+        XmNbottomAttachment, XmATTACH_FORM,
+        XmNbottomOffset, 4,
+        NULL);
+    XmString us_lbl = XmStringCreateLocalized((char *)"Sending in 5s...");
+    _undo_send_label = XtVaCreateManagedWidget("UndoSendLabel", xmLabelWidgetClass, _undo_send_bar,
+        XmNlabelString, us_lbl,
+        XmNleftAttachment, XmATTACH_FORM,
+        XmNtopAttachment, XmATTACH_FORM,
+        XmNbottomAttachment, XmATTACH_FORM,
+        NULL);
+    XmStringFree(us_lbl);
+    XmString us_cancel = XmStringCreateLocalized((char *)"Cancel Send");
+    Widget cancel_btn = XtVaCreateManagedWidget("UndoSendCancelBtn", xmPushButtonWidgetClass, _undo_send_bar,
+        XmNlabelString, us_cancel,
+        XmNleftAttachment, XmATTACH_WIDGET,
+        XmNleftWidget, _undo_send_label,
+        XmNleftOffset, 8,
+        XmNtopAttachment, XmATTACH_FORM,
+        XmNbottomAttachment, XmATTACH_FORM,
+        NULL);
+    XmStringFree(us_cancel);
+    XtAddCallback(cancel_btn, XmNactivateCallback, &SendMsgDialog::cancelUndoSendCB, this);
     
     // Now attach the editor to the form and to the rowCol
     // And the rowCol to the bottom of the form.
@@ -4141,4 +4169,152 @@ SendMsgDialog::hasAddressee()
     }
   }
   return(FALSE);		// no field has contents 
+}
+
+void
+SendMsgDialog::cancelUndoSendCB(Widget, XtPointer client_data, XtPointer)
+{
+    SendMsgDialog *self = (SendMsgDialog *)client_data;
+    if (self) self->cancelUndoSend();
+}
+
+void
+SendMsgDialog::undoSendTickCB(XtPointer client_data, XtIntervalId *id)
+{
+    SendMsgDialog *self = (SendMsgDialog *)client_data;
+    if (!self || self->_undo_send_timer != *id) return;
+    self->_undo_send_timer = 0;
+
+    self->_undo_send_remaining--;
+    if (self->_undo_send_remaining > 0) {
+        char lbl[64];
+        snprintf(lbl, sizeof(lbl), "Sending in %ds...", self->_undo_send_remaining);
+        if (self->_undo_send_label) {
+            XmString s = XmStringCreateLocalized(lbl);
+            XtVaSetValues(self->_undo_send_label, XmNlabelString, s, NULL);
+            XmStringFree(s);
+        }
+        self->_undo_send_timer = XtAppAddTimeOut(
+            theApplication->appContext(), 1000,
+            &SendMsgDialog::undoSendTickCB, self);
+    } else {
+        self->finishUndoSendDispatch();
+    }
+}
+
+void
+SendMsgDialog::startUndoSendCountdown(const char *acct_id, const char *rcpts,
+                                      char *raw, size_t raw_len)
+{
+    cancelUndoSend();
+    _pending_smtp_raw = raw;
+    _pending_smtp_len = raw_len;
+    snprintf(_pending_smtp_acct_id, sizeof(_pending_smtp_acct_id), "%s", acct_id ? acct_id : "");
+    snprintf(_pending_smtp_rcpts, sizeof(_pending_smtp_rcpts), "%s", rcpts ? rcpts : "");
+    _undo_send_remaining = 5;
+
+    if (_undo_send_label) {
+        XmString s = XmStringCreateLocalized((char *)"Sending in 5s...");
+        XtVaSetValues(_undo_send_label, XmNlabelString, s, NULL);
+        XmStringFree(s);
+    }
+    if (_undo_send_bar) XtManageChild(_undo_send_bar);
+    this->manage();
+    _undo_send_timer = XtAppAddTimeOut(
+        theApplication->appContext(), 1000,
+        &SendMsgDialog::undoSendTickCB, this);
+}
+
+void
+SendMsgDialog::cancelUndoSend()
+{
+    if (_undo_send_timer) {
+        XtRemoveTimeOut(_undo_send_timer);
+        _undo_send_timer = 0;
+    }
+    if (_pending_smtp_raw) {
+        free(_pending_smtp_raw);
+        _pending_smtp_raw = NULL;
+        _pending_smtp_len = 0;
+    }
+    _undo_send_remaining = 0;
+    if (_undo_send_bar && XtIsManaged(_undo_send_bar)) {
+        XtUnmanageChild(_undo_send_bar);
+    }
+    if (_already_sending) {
+        _already_sending = FALSE;
+        if (_send_button) _send_button->activate();
+        if (_close_button) _close_button->activate();
+        setStatus((char *)"Send cancelled.");
+    }
+}
+
+void
+SendMsgDialog::finishUndoSendDispatch()
+{
+    if (_undo_send_bar && XtIsManaged(_undo_send_bar)) {
+        XtUnmanageChild(_undo_send_bar);
+    }
+    if (!_pending_smtp_raw) {
+        _already_sending = FALSE;
+        return;
+    }
+
+    int idx = dtmail_accounts_find_by_id(_pending_smtp_acct_id);
+    const DtMailAccount *smtp_acct = (idx >= 0) ? dtmail_accounts_get(idx) : NULL;
+    if (!smtp_acct) {
+        cancelUndoSend();
+        return;
+    }
+
+    char rcpt_buf[1024];
+    snprintf(rcpt_buf, sizeof(rcpt_buf), "%s", _pending_smtp_rcpts);
+    const char *rcpts[64];
+    int nrcpts = 0;
+    char *sp = NULL;
+    for (char *tok = strtok_r(rcpt_buf, ",;", &sp);
+         tok && nrcpts < 64;
+         tok = strtok_r(NULL, ",;", &sp)) {
+        while (*tok == ' ' || *tok == '\t') tok++;
+        char *lt = strchr(tok, '<');
+        char *gt = lt ? strchr(lt + 1, '>') : NULL;
+        if (lt && gt) { *gt = '\0'; tok = lt + 1; }
+        size_t tl = strlen(tok);
+        while (tl > 0 && (tok[tl - 1] == ' ' || tok[tl - 1] == '\t'))
+            tok[--tl] = '\0';
+        if (tok[0]) rcpts[nrcpts++] = tok;
+    }
+
+    char secret[512] = "";
+    const char *kind = (smtp_acct->auth_mode == DTMAIL_AUTH_OAUTH2) ? "oauth_access" : "password";
+    (void)dtmail_keyring_lookup(smtp_acct->id, kind, secret, sizeof(secret));
+
+    char serr[256] = "";
+    int sres = dtmail_smtp_send(smtp_acct, secret, smtp_acct->email,
+                                rcpts, nrcpts, _pending_smtp_raw, _pending_smtp_len,
+                                serr, sizeof(serr));
+    if (sres == 0) {
+        char sent_path[1024];
+        if (dtmail_account_folder_path(smtp_acct->id, "Sent", sent_path, sizeof(sent_path)) == 0) {
+            (void)dtmail_mbox_append_rfc5322(sent_path, smtp_acct->email,
+                                             _pending_smtp_raw, _pending_smtp_len);
+        }
+        free(_pending_smtp_raw);
+        _pending_smtp_raw = NULL;
+        _pending_smtp_len = 0;
+        _already_sending = FALSE;
+        _takeDown = TRUE;
+        this->reset();
+    } else {
+        free(_pending_smtp_raw);
+        _pending_smtp_raw = NULL;
+        _pending_smtp_len = 0;
+        this->manage();
+        if (_send_button) _send_button->activate();
+        if (_close_button) _close_button->activate();
+        _already_sending = FALSE;
+        _genDialog->setToErrorDialog((char *)"Mailer",
+            serr[0] ? serr : (char *)"SMTP send failed.");
+        _genDialog->post_and_return((char *)"OK", DTMAILHELPERROR);
+    }
 }

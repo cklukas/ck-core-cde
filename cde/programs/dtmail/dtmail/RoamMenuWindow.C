@@ -101,6 +101,12 @@
 #include "RoamMenuWindow.h"
 #include "AccountSetupDialog.h"
 #include "MailAccountStore.h"
+#include "FolderSidebar.h"
+#include "MailQuickFilter.h"
+#include "MailThreadRules.h"
+#include <X11/keysym.h>
+#include <Xm/RowColumn.h>
+#include <Xm/PushB.h>
 
 extern "C" int dtmail_current_msg_has_html(void);
 extern "C" int dtmail_open_current_html_in_browser(void);
@@ -405,6 +411,10 @@ RoamMenuWindow::RoamMenuWindow (char *name) : MenuWindow ("dtmail", True)
     _replySender_button = NULL;
     _print_button = NULL;
     _move_copy_button = NULL;
+    _folder_sidebar = NULL;
+    _quick_filter = NULL;
+    _thread_mode = FALSE;
+    _msg_context_menu = NULL;
 
     
     _mailbox    = NULL;
@@ -553,6 +563,15 @@ RoamMenuWindow::~RoamMenuWindow()
     // Attachment menu
     delete 	_att_cmdlist;
     delete	_att_save;
+
+    if (_folder_sidebar) {
+        dtmail_folder_sidebar_destroy(_folder_sidebar);
+        _folder_sidebar = NULL;
+    }
+    if (_quick_filter) {
+        dtmail_quick_filter_destroy(_quick_filter);
+        _quick_filter = NULL;
+    }
     delete	_att_select_all;
 
     // View Menu
@@ -739,6 +758,46 @@ RoamMenuWindow::createWorkArea(Widget parent)
 	XmNsashHeight, 12,
 	NULL );
 
+    /* Persistent collapsible left Accounts & Folders sidebar (open by default, Ctrl+B) */
+    _folder_sidebar = dtmail_folder_sidebar_create(
+        form1, panedW,
+        [](const char *mbox_path, void *ud) {
+            RoamMenuWindow *r = (RoamMenuWindow *)ud;
+            if (r) r->openFolderFromSidebar(mbox_path);
+        },
+        [](void *ud) {
+            RoamMenuWindow *r = (RoamMenuWindow *)ud;
+            if (!r) return;
+            if (dtmail_accounts_count() <= 0) {
+                dtmail_show_accounts_dialog(r->baseWidget(), NULL, NULL);
+            } else {
+                r->message((char *)"Syncing remote mail...");
+                dtmail_start_async_sync(XtWidgetToApplicationContext(r->baseWidget()),
+                    [](int added, const char *msg, void *u) {
+                        RoamMenuWindow *rw = (RoamMenuWindow *)u;
+                        if (!rw) return;
+                        rw->refreshFolderSidebar();
+                        if (added > 0) {
+                            DtMailEnv e;
+                            rw->checkForMail(e);
+                            dtmail_notify_new_mail(added, "Mail", msg);
+                        }
+                        if (msg && msg[0]) rw->message((char *)msg);
+                    }, r);
+            }
+        },
+        [](void *ud) {
+            RoamMenuWindow *r = (RoamMenuWindow *)ud;
+            if (r) {
+                dtmail_show_accounts_dialog(r->baseWidget(),
+                    [](int, const char *, void *u) {
+                        RoamMenuWindow *rw = (RoamMenuWindow *)u;
+                        if (rw) rw->refreshFolderSidebar();
+                    }, r);
+            }
+        },
+        this);
+
 
     form2 = XtCreateManagedWidget("form2", xmFormWidgetClass, panedW, NULL, 0);
     XtVaSetValues(form2, XmNallowResize, True, NULL);
@@ -766,8 +825,18 @@ RoamMenuWindow::createWorkArea(Widget parent)
 		  XmNentryAlignment, XmALIGNMENT_CENTER,
 		  NULL);
 
+    /* Inline Quick-Filter bar (Ctrl+/ or /) above message list headers */
+    _quick_filter = dtmail_quick_filter_create(
+        form2, _rowOfLabels,
+        [](const char *query, DtMailFilterMode mode, void *ud) {
+            RoamMenuWindow *r = (RoamMenuWindow *)ud;
+            if (r) r->applyQuickFilter(query, (int)mode);
+        },
+        this);
+
     _list = new MsgScrollingList( this, form2, "Message_List");
     msgListDragSetup();
+    setupModernInteractions();
 
     DtMailEnv error;
     DtMail::Session *d_session = theRoamApp.session()->session();
@@ -3358,13 +3427,59 @@ void dtmail_rmw_sync_done_cb(int total_added, const char *status_msg, void *ud)
 {
     RoamMenuWindow *rmw = (RoamMenuWindow *)ud;
     if (!rmw) return;
+    rmw->refreshFolderSidebar();
     if (total_added > 0) {
         DtMailEnv err;
         rmw->checkForMail(err);
+        dtmail_notify_new_mail(total_added, "Mail", status_msg);
     }
     if (status_msg && status_msg[0])
         rmw->message((char *)status_msg);
 }
+
+class MailRulesCmd : public NoUndoCmd {
+    RoamMenuWindow *_rmw;
+public:
+    MailRulesCmd(char *name, char *label, int active, RoamMenuWindow *rmw)
+        : NoUndoCmd(name, label, active), _rmw(rmw) {}
+    void doit() override {
+        if (_rmw) dtmail_rules_dialog_open(_rmw->baseWidget());
+    }
+    const char *const className() override { return "MailRulesCmd"; }
+};
+
+class ToggleSidebarCmd : public NoUndoCmd {
+    RoamMenuWindow *_rmw;
+public:
+    ToggleSidebarCmd(char *name, char *label, int active, RoamMenuWindow *rmw)
+        : NoUndoCmd(name, label, active), _rmw(rmw) {}
+    void doit() override {
+        if (_rmw) _rmw->toggleFolderSidebar();
+    }
+    const char *const className() override { return "ToggleSidebarCmd"; }
+};
+
+class ToggleQuickFilterCmd : public NoUndoCmd {
+    RoamMenuWindow *_rmw;
+public:
+    ToggleQuickFilterCmd(char *name, char *label, int active, RoamMenuWindow *rmw)
+        : NoUndoCmd(name, label, active), _rmw(rmw) {}
+    void doit() override {
+        if (_rmw) _rmw->toggleQuickFilter();
+    }
+    const char *const className() override { return "ToggleQuickFilterCmd"; }
+};
+
+class ToggleThreadModeCmd : public NoUndoCmd {
+    RoamMenuWindow *_rmw;
+public:
+    ToggleThreadModeCmd(char *name, char *label, int active, RoamMenuWindow *rmw)
+        : NoUndoCmd(name, label, active), _rmw(rmw) {}
+    void doit() override {
+        if (_rmw) _rmw->toggleThreadMode();
+    }
+    const char *const className() override { return "ToggleThreadModeCmd"; }
+};
 
 class AccountsSetupCmd : public NoUndoCmd {
     RoamMenuWindow *_rmw;
@@ -3502,6 +3617,7 @@ RoamMenuWindow::construct_file_menu()
     cmdList->add(_file_destroy_deleted_msgs);
     cmdList->add(new AccountsSetupCmd((char *)"AccountsSetup", (char *)"Accounts & Servers...", TRUE, this));
     cmdList->add(new SyncRemoteMailCmd((char *)"SyncRemoteMail", (char *)"Sync Remote Mail", TRUE, this));
+    cmdList->add(new MailRulesCmd((char *)"MailRules", (char *)"Mail Rules...", TRUE, this));
     cmdList->add(new OpenHtmlBrowserCmd((char *)"OpenHtmlBrowser", (char *)"Open HTML in Browser", TRUE, this));
     cmdList->add(theRoamApp.mailOptions());
     cmdList->add(_file_separator);
@@ -3882,6 +3998,10 @@ void RoamMenuWindow::construct_view_menu()
     cmdList->add(_view_sortSubject);
     cmdList->add(_view_sortSize);
     cmdList->add(_view_sortStatus);
+    cmdList->add(_view_separator);
+    cmdList->add(new ToggleSidebarCmd((char *)"ToggleSidebar", (char *)"Folders Sidebar (Ctrl+B)", TRUE, this));
+    cmdList->add(new ToggleQuickFilterCmd((char *)"ToggleQuickFilter", (char *)"Quick Filter (Ctrl+/)", TRUE, this));
+    cmdList->add(new ToggleThreadModeCmd((char *)"ToggleThreadMode", (char *)"Thread by Conversation", TRUE, this));
     
     _menuBar->addCommands ( cmdList );
 }
@@ -5578,4 +5698,224 @@ RoamMenuWindow::sync_work_area_size(void)
     }
     _workarea_width = width;
     _workarea_height = height;
+}
+
+static void dtmail_ctx_reply_cb(Widget, XtPointer cd, XtPointer)
+{
+    RoamMenuWindow *r = (RoamMenuWindow *)cd;
+    if (r) r->invokeReplySender();
+}
+
+static void dtmail_ctx_reply_all_cb(Widget, XtPointer cd, XtPointer)
+{
+    RoamMenuWindow *r = (RoamMenuWindow *)cd;
+    if (r) r->invokeReplyAll();
+}
+
+static void dtmail_ctx_forward_cb(Widget, XtPointer cd, XtPointer)
+{
+    RoamMenuWindow *r = (RoamMenuWindow *)cd;
+    if (r) r->invokeForward();
+}
+
+static void dtmail_ctx_delete_cb(Widget, XtPointer cd, XtPointer)
+{
+    RoamMenuWindow *r = (RoamMenuWindow *)cd;
+    if (r) r->invokeDelete();
+}
+
+static void dtmail_ctx_popup_handler(Widget w, XtPointer cd, XEvent *ev, Boolean *cont)
+{
+    (void)w;
+    (void)cont;
+    Widget popup = (Widget)cd;
+    if (!popup || !ev || ev->type != ButtonPress) return;
+    if (ev->xbutton.button != Button3) return;
+    XmMenuPosition(popup, &ev->xbutton);
+    XtManageChild(popup);
+}
+
+static void dtmail_list_key_handler(Widget, XtPointer cd, XEvent *ev, Boolean *)
+{
+    RoamMenuWindow *r = (RoamMenuWindow *)cd;
+    if (!r || !ev || ev->type != KeyPress) return;
+    KeySym ks = XLookupKeysym(&ev->xkey, 0);
+    r->dispatchShortcutKey((unsigned long)ks, ev->xkey.state);
+}
+
+void
+RoamMenuWindow::setupModernInteractions()
+{
+    if (!_list) return;
+    Widget lw = _list->get_scrolling_list();
+    if (!lw) return;
+
+    if (!_msg_context_menu) {
+        _msg_context_menu = XmCreatePopupMenu(lw, (char *)"MsgContextMenu", NULL, 0);
+        Widget b1 = XtVaCreateManagedWidget("CtxReply", xmPushButtonWidgetClass,
+            _msg_context_menu, XmNlabelString, XmStringCreateLocalized((char *)"Reply (R)"), NULL);
+        XtAddCallback(b1, XmNactivateCallback, dtmail_ctx_reply_cb, this);
+        Widget b2 = XtVaCreateManagedWidget("CtxReplyAll", xmPushButtonWidgetClass,
+            _msg_context_menu, XmNlabelString, XmStringCreateLocalized((char *)"Reply All (A)"), NULL);
+        XtAddCallback(b2, XmNactivateCallback, dtmail_ctx_reply_all_cb, this);
+        Widget b3 = XtVaCreateManagedWidget("CtxForward", xmPushButtonWidgetClass,
+            _msg_context_menu, XmNlabelString, XmStringCreateLocalized((char *)"Forward (F)"), NULL);
+        XtAddCallback(b3, XmNactivateCallback, dtmail_ctx_forward_cb, this);
+        Widget b4 = XtVaCreateManagedWidget("CtxDelete", xmPushButtonWidgetClass,
+            _msg_context_menu, XmNlabelString, XmStringCreateLocalized((char *)"Delete (Del)"), NULL);
+        XtAddCallback(b4, XmNactivateCallback, dtmail_ctx_delete_cb, this);
+
+        XtAddEventHandler(lw, ButtonPressMask, False,
+                          dtmail_ctx_popup_handler, (XtPointer)_msg_context_menu);
+    }
+    XtAddEventHandler(lw, KeyPressMask, False, dtmail_list_key_handler, (XtPointer)this);
+}
+
+void
+RoamMenuWindow::dispatchShortcutKey(unsigned long keysym, unsigned int state)
+{
+    Boolean ctrl = (state & ControlMask) != 0;
+    if (ctrl && (keysym == XK_b || keysym == XK_B)) {
+        toggleFolderSidebar();
+        return;
+    }
+    if ((ctrl && keysym == XK_slash) || (!ctrl && keysym == XK_slash)) {
+        focusQuickFilter();
+        return;
+    }
+    if (ctrl && (keysym == XK_n || keysym == XK_N)) {
+        invokeComposeNew();
+        return;
+    }
+    if (ctrl || (state & Mod1Mask)) return;
+    switch (keysym) {
+        case XK_j:
+        case XK_J:
+            if (_list) _list->select_next_item();
+            break;
+        case XK_k:
+        case XK_K:
+            if (_list) _list->select_prev_item();
+            break;
+        case XK_r:
+        case XK_R:
+            invokeReplySender();
+            break;
+        case XK_a:
+        case XK_A:
+            invokeReplyAll();
+            break;
+        case XK_f:
+        case XK_F:
+            invokeForward();
+            break;
+        case XK_Delete:
+            invokeDelete();
+            break;
+        default:
+            break;
+    }
+}
+
+void
+RoamMenuWindow::toggleFolderSidebar()
+{
+    if (!_folder_sidebar) return;
+    int vis = dtmail_folder_sidebar_is_visible(_folder_sidebar);
+    dtmail_folder_sidebar_set_visible(_folder_sidebar, !vis);
+}
+
+void
+RoamMenuWindow::toggleQuickFilter()
+{
+    if (!_quick_filter) return;
+    int vis = dtmail_quick_filter_is_visible(_quick_filter);
+    dtmail_quick_filter_set_visible(_quick_filter, !vis);
+}
+
+void
+RoamMenuWindow::focusQuickFilter()
+{
+    if (_quick_filter) dtmail_quick_filter_focus(_quick_filter);
+}
+
+void
+RoamMenuWindow::toggleThreadMode()
+{
+    _thread_mode = !_thread_mode;
+    if (_thread_mode) {
+        if (_view_sortSubject) _view_sortSubject->execute();
+        this->message((char *)"Conversation threading enabled (grouped by subject/thread).");
+    } else {
+        if (_view_sortTD) _view_sortTD->execute();
+        this->message((char *)"Conversation threading disabled (sorted by date/time).");
+    }
+}
+
+void
+RoamMenuWindow::refreshFolderSidebar()
+{
+    if (_folder_sidebar) dtmail_folder_sidebar_refresh(_folder_sidebar);
+}
+
+void
+RoamMenuWindow::openFolderFromSidebar(const char *mbox_path)
+{
+    if (!mbox_path || !mbox_path[0]) return;
+    if (_mailbox_fullpath && strcmp(_mailbox_fullpath, mbox_path) == 0) {
+        return;
+    }
+    char *copy = strdup(mbox_path);
+    if (!copy) return;
+    view_mail_file(copy, DTM_TRUE);
+    free(copy);
+}
+
+void
+RoamMenuWindow::applyQuickFilter(const char *query, int mode)
+{
+    if (!_list || !_quick_filter) return;
+    Widget lw = _list->get_scrolling_list();
+    if (!lw) return;
+
+    XmStringTable items = NULL;
+    int count = 0;
+    XtVaGetValues(lw, XmNitems, &items, XmNitemCount, &count, NULL);
+
+    if ((!query || !query[0]) && mode == DTMAIL_FILTER_ALL) {
+        dtmail_quick_filter_set_status(_quick_filter, "");
+        return;
+    }
+
+    int matches = 0;
+    int first_match = 0;
+    XmListDeselectAllItems(lw);
+
+    for (int i = 0; i < count; i++) {
+        char *row_txt = NULL;
+        if (!XmStringGetLtoR(items[i], XmFONTLIST_DEFAULT_TAG, &row_txt) || !row_txt) {
+            continue;
+        }
+        int is_unread = (row_txt[0] == 'N' || row_txt[0] == 'U') ? 1 : 0;
+        int is_starred = (strchr(row_txt, '*') != NULL) ? 1 : 0;
+        int has_attach = (strstr(row_txt, "Att") != NULL || strchr(row_txt, '+') != NULL) ? 1 : 0;
+        if (dtmail_quick_filter_matches(row_txt, row_txt, "",
+                                        is_unread, is_starred, has_attach,
+                                        query ? query : "",
+                                        (DtMailFilterMode)mode)) {
+            matches++;
+            if (first_match == 0) first_match = i + 1;
+            XmListSelectPos(lw, i + 1, False);
+        }
+        XtFree(row_txt);
+    }
+
+    char buf[64];
+    if (matches > 0) {
+        snprintf(buf, sizeof(buf), "%d / %d", matches, count);
+        XmListSetPos(lw, first_match);
+    } else {
+        snprintf(buf, sizeof(buf), "0 / %d", count);
+    }
+    dtmail_quick_filter_set_status(_quick_filter, buf);
 }

@@ -146,6 +146,9 @@
 #define ROMENU_MOVE	469
 #define ROMENU_RELNOTES	470
     
+struct DtMailFolderSidebar;
+struct DtMailQuickFilterBar;
+
 class RoamMenuWindow : public MenuWindow, public AbstractEditorParent
 {
   public:	
@@ -548,7 +551,27 @@ class RoamMenuWindow : public MenuWindow, public AbstractEditorParent
     void	mapnotify();
 
     
+  public:
+    void	toggleFolderSidebar();
+    void	toggleQuickFilter();
+    void	focusQuickFilter();
+    void	toggleThreadMode();
+    void	refreshFolderSidebar();
+    void	applyQuickFilter(const char *query, int mode);
+    void	openFolderFromSidebar(const char *mbox_path);
+    void	setupModernInteractions();
+    void	dispatchShortcutKey(unsigned long keysym, unsigned int state);
+    void	invokeReplySender() { if (_comp_replySender) _comp_replySender->execute(); }
+    void	invokeReplyAll() { if (_comp_replyAll) _comp_replyAll->execute(); }
+    void	invokeForward() { if (_comp_forward) _comp_forward->execute(); }
+    void	invokeDelete() { if (_msg_delete) _msg_delete->execute(); }
+    void	invokeComposeNew() { if (_comp_new) _comp_new->execute(); }
+
   private:
+    DtMailFolderSidebar *_folder_sidebar;
+    DtMailQuickFilterBar *_quick_filter;
+    Boolean		_thread_mode;
+    Widget		_msg_context_menu;
     
     static XtResource	_resources[];
     static char		*_supported[];

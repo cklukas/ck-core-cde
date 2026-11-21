@@ -32,13 +32,16 @@ dtmail_SOURCES = AccountSetupDialog.C            AccountSetupDialog.h \
 		 DtMailGenDialog.C		 DtMailWDM.C \
 		 Editor.C			 EncryptedTextFieldUiItem.C \
 		 FindDialog.C			 Fonts.C \
+		 FolderSidebar.C                 FolderSidebar.h \
 		 HtmlReadable.C                  HtmlReadable.h \
 		 Icon.C				 IgnoreListUiItem.C \
 		 InboxTextFieldUiItem.C		 \
 		 IndexedOptionMenu.C		 IndexedOptionMenuUiItem.C \
 		 ListUiItem.C			 MailAccountStore.C \
-		 MailAccountStore.h              MailRcSource.C \
+		 MailAccountStore.h              MailQuickFilter.C \
+		 MailQuickFilter.h               MailRcSource.C \
 		 MailRetrievalOptions.C		 MailSession.C \
+		 MailThreadRules.C               MailThreadRules.h \
 		 MoveMenuListUiItem.C            MsgHndArray.C \
 		 MsgScrollingList.C              NoOpCmd.C \
 		 OptCmd.C                        PasswordDialogManager.C \
