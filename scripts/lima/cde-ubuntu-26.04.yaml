@@ -70,6 +70,35 @@ provision:
     if ! grep -Eq "^[[:space:]]*127\\.0\\.1\\.1[[:space:]]+$(hostname)(\$|[[:space:]])" /etc/hosts; then
       sed -i "1a 127.0.1.1\t$(hostname)" /etc/hosts
     fi
+    # Enable rpcbind and install the CDE Calendar Manager service unit (rpc-cmsd.service)
+    # so dtcm works out of the box both for source installs and ck-core-cde .deb installs.
+    mkdir -p /var/spool/calendar
+    chown daemon:daemon /var/spool/calendar
+    chmod 1777 /var/spool/calendar
+    cat > /lib/systemd/system/rpc-cmsd.service <<'CMSDEOF'
+    [Unit]
+    Description=CK Core CDE Calendar Manager Service Daemon (rpc.cmsd)
+    Documentation=man:rpc.cmsd(1)
+    Requires=rpcbind.service
+    After=network.target rpcbind.service
+    ConditionPathExists=/usr/dt/bin/rpc.cmsd
+
+    [Service]
+    Type=simple
+    ExecStart=/usr/dt/bin/rpc.cmsd -s
+    KillSignal=SIGHUP
+    Restart=on-failure
+    RestartSec=2
+
+    [Install]
+    WantedBy=multi-user.target
+    CMSDEOF
+    systemctl daemon-reload
+    systemctl enable --now rpcbind.service || true
+    systemctl enable rpc-cmsd.service || true
+    if [ -x /usr/dt/bin/rpc.cmsd ]; then
+      systemctl restart rpc-cmsd.service || true
+    fi
     # Configure WirePlumber for virtio_snd on Apple Virtualization.framework (vz),
     # where cpu.vm.name is unset so stock alsa-vm.conf misses virtio_snd and
     # leaves mmap=true / period-size=120 / headroom=0 (causing virtqueue stalls).

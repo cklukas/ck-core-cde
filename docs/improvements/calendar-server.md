@@ -6,9 +6,17 @@ description: How rpc.cmsd validates requests, stores calendars and gives up priv
 # Calendar server
 
 `rpc.cmsd` serves calendars to Calendar Manager and other CSA clients over RPC.
-It is started by `inetd` or `xinetd` as `root`, switches to the calendar owner's
-identity and handles requests from the network. The request path is validated
-before data is used.
+It can be started on demand by `inetd` or `xinetd` or run as a standalone
+systemd service (`rpc-cmsd.service`, `rpc.cmsd -s`, ordered after
+`rpcbind.service`). Starting as `root`, it initializes `/var/spool/calendar`,
+drops effective privileges to `daemon`, switches to the calendar owner's
+identity only for file-ownership updates, and handles requests from the
+network. The request path is validated before data is used.
+
+On Debian/Ubuntu, the `ck-core-cde` package installs
+`/lib/systemd/system/rpc-cmsd.service`, initializes `/var/spool/calendar`, and
+enables and starts `rpcbind.service` and `rpc-cmsd.service` automatically during
+package configuration so `dtcm` works out of the box after `apt install`.
 
 ## Requests
 

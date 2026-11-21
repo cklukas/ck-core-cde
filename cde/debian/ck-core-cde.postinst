@@ -1,0 +1,24 @@
+#!/bin/sh
+set -e
+
+ldconfig
+
+if [ "$1" = "configure" ]; then
+    mkdir -p /var/spool/calendar
+    chown daemon:daemon /var/spool/calendar 2>/dev/null || true
+    chmod 1777 /var/spool/calendar 2>/dev/null || true
+
+    if command -v systemctl >/dev/null 2>&1; then
+        if [ -d /run/systemd/system ]; then
+            systemctl daemon-reload >/dev/null 2>&1 || true
+            systemctl enable rpcbind.service >/dev/null 2>&1 || true
+            systemctl start rpcbind.service >/dev/null 2>&1 || true
+            systemctl enable rpc-cmsd.service >/dev/null 2>&1 || true
+            systemctl restart rpc-cmsd.service >/dev/null 2>&1 || true
+        else
+            systemctl enable rpc-cmsd.service >/dev/null 2>&1 || true
+        fi
+    fi
+fi
+
+exit 0

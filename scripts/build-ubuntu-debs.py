@@ -320,6 +320,8 @@ def guest_build_and_verify(args: argparse.Namespace) -> int:
         shutil.copy2(deb_meta / "cde-portals.conf", r_cde / "usr" / "share" / "xdg-desktop-portal" / "cde-portals.conf")
     shutil.copy2(deb_meta / "Xsession.wayland", r_cde / "usr" / "dt" / "bin" / "Xsession.wayland")
     os.chmod(r_cde / "usr" / "dt" / "bin" / "Xsession.wayland", 0o755)
+    (r_cde / "lib" / "systemd" / "system").mkdir(parents=True, exist_ok=True)
+    shutil.copy2(deb_meta / "rpc-cmsd.service", r_cde / "lib" / "systemd" / "system" / "rpc-cmsd.service")
 
     (r_cde / "etc" / "profile.d").mkdir(parents=True, exist_ok=True)
     (r_cde / "etc" / "profile.d" / "ck-core-cde.sh").write_text(
@@ -358,10 +360,10 @@ def guest_build_and_verify(args: argparse.Namespace) -> int:
             " Modernized C23 Common Desktop Environment built against CK Core Motif ABI 9.",
         },
     )
-    for script_name in ("postinst", "postrm"):
-        sp = r_cde / "DEBIAN" / script_name
-        sp.write_text("#!/bin/sh\nset -e\nldconfig\nexit 0\n", encoding="utf-8")
-        os.chmod(sp, 0o755)
+    for sfx in ("postinst", "prerm", "postrm"):
+        dst_s = r_cde / "DEBIAN" / sfx
+        shutil.copy2(deb_meta / f"ck-core-cde.{sfx}", dst_s)
+        os.chmod(dst_s, 0o755)
     deb_cde = out_dir / f"ck-core-cde_3.0.0-1_{arch}.deb"
     build_deb(r_cde, deb_cde)
     built_debs["ck-core-cde"] = deb_cde
@@ -549,11 +551,13 @@ def guest_build_and_verify(args: argparse.Namespace) -> int:
                 Path("/usr/dt/bin/dtwm-wayland"),
                 Path("/usr/dt/bin/dtwm-panel"),
                 Path("/usr/dt/bin/dtsession"),
+                Path("/usr/dt/bin/rpc.cmsd"),
                 Path("/usr/dt/bin/dtlogin"),
                 Path("/usr/dt/bin/dtgreet"),
                 Path("/usr/dt/bin/Xsession.wayland"),
                 Path("/usr/share/xsessions/cde.desktop"),
                 Path("/usr/share/wayland-sessions/cde-wayland.desktop"),
+                Path("/lib/systemd/system/rpc-cmsd.service"),
                 Path("/lib/systemd/system/dtlogin.service"),
                 Path("/etc/pam.d/dtlogin"),
                 Path("/etc/pam.d/dtlogin-greeter"),
@@ -570,6 +574,20 @@ def guest_build_and_verify(args: argparse.Namespace) -> int:
             pam_txt = Path("/etc/pam.d/dtlogin").read_text(encoding="utf-8")
             if "pam_systemd.so" not in pam_txt:
                 raise SystemExit("/etc/pam.d/dtlogin is missing pam_systemd.so")
+
+            if Path("/run/systemd/system").is_dir():
+                cmsd_state = subprocess.run(
+                    ["systemctl", "is-active", "rpc-cmsd.service"],
+                    capture_output=True,
+                    text=True,
+                )
+                if cmsd_state.returncode != 0:
+                    raise SystemExit(
+                        f"rpc-cmsd.service is not active after ck-core-cde install: {cmsd_state.stdout.strip()} {cmsd_state.stderr.strip()}"
+                    )
+                rpc_out = subprocess.check_output(["rpcinfo", "-p"], text=True)
+                if "100068" not in rpc_out:
+                    raise SystemExit("rpc.cmsd (RPC program 100068) is not registered with rpcbind after ck-core-cde install")
 
             # 1) Boot installed CDE (Wayland) desktop session WITHOUT LD_LIBRARY_PATH, verify libXm.so.9 maps,
             #    and capture full desktop via installed /usr/bin/ck-grab --capture --full-screen!

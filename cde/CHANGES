@@ -1,4 +1,15 @@
 2026-11-21
+- Package and enable the CDE Calendar Manager daemon (`rpc-cmsd.service`) in
+  `ck-core-cde` Debian/Ubuntu packages and the Lima Ubuntu 26.04 VM template:
+  install `/lib/systemd/system/rpc-cmsd.service` (running `/usr/dt/bin/rpc.cmsd -s`
+  after `rpcbind.service` with `KillSignal=SIGHUP`), initialize
+  `/var/spool/calendar`, enable and start `rpcbind.service` and
+  `rpc-cmsd.service` in `ck-core-cde.postinst`, stop/disable on removal in
+  `ck-core-cde.prerm`, and verify `rpc-cmsd.service` and RPC program `100068`
+  registration in `scripts/build-ubuntu-debs.py --verify-install`
+  (`cde/debian/{rpc-cmsd.service,ck-core-cde.{postinst,prerm,postrm}}`,
+  `scripts/{build-ubuntu-debs.py,lima/cde-ubuntu-26.04.yaml}`,
+  `docs/{build.md,improvements/calendar-server.md}`).
 - Fix `dtfile` drag-icon mask alignment for centered `DtIconGadget` items
   (notably Shelf slots stretched wider than their icon/label content) by
   computing `ShelfCreateDragMask` and `GetDragIconMask` mask coordinates

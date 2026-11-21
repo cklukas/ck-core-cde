@@ -748,7 +748,10 @@ All runtime libraries and executables install beneath `/usr/dt` with
 `RUNPATH=/usr/dt/lib` and `/etc/ld.so.conf.d/ck-core-cde.conf`, avoiding file or
 SONAME collisions with system `libxm4`. `ck-core-cde` ships `dtwm-wayland`,
 `dtwm-panel`, `/usr/dt/bin/Xsession.wayland`, `/usr/share/xsessions/cde.desktop`,
-and `/usr/share/wayland-sessions/cde-wayland.desktop`, while `ck-core-dtlogin`
+`/usr/share/wayland-sessions/cde-wayland.desktop`, and
+`/lib/systemd/system/rpc-cmsd.service` (initializing `/var/spool/calendar` and
+enabling/starting `rpcbind.service` and `rpc-cmsd.service` on install so `dtcm`
+works immediately), while `ck-core-dtlogin`
 provides `/lib/systemd/system/dtlogin.service`, the unprivileged `_dtgreeter`
 account and `/etc/pam.d/dtlogin-greeter` PAM `greeter` stack, `pam_systemd.so`
 session hooks, and `shared/default-x-display-manager` `debconf` integration.

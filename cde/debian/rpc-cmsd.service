@@ -1,0 +1,16 @@
+[Unit]
+Description=CK Core CDE Calendar Manager Service Daemon (rpc.cmsd)
+Documentation=man:rpc.cmsd(1)
+Requires=rpcbind.service
+After=network.target rpcbind.service
+ConditionPathExists=/usr/dt/bin/rpc.cmsd
+
+[Service]
+Type=simple
+ExecStart=/usr/dt/bin/rpc.cmsd -s
+KillSignal=SIGHUP
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

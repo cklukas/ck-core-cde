@@ -1,0 +1,13 @@
+#!/bin/sh
+set -e
+
+if [ "$1" = "remove" ] || [ "$1" = "deconfigure" ]; then
+    if command -v systemctl >/dev/null 2>&1; then
+        if [ -d /run/systemd/system ]; then
+            systemctl stop rpc-cmsd.service >/dev/null 2>&1 || true
+        fi
+        systemctl disable rpc-cmsd.service >/dev/null 2>&1 || true
+    fi
+fi
+
+exit 0
