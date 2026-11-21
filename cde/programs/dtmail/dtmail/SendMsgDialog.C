@@ -45,6 +45,8 @@
 #include "Attachment.h"
 #include "RoamApp.h"
 #include "SendMsgDialog.h"
+#include "MailAccountStore.h"
+#include "CurlMailEngine.h"
 #include "NoOpCmd.h"
 #include "RoamCmds.h"
 #include "ComposeCmds.hh"
@@ -1237,6 +1239,116 @@ SendMsgDialog::send_message(const char * trans_impl, int trans_type)
 	}
     }
    
+    // Modern TLS SMTP dispatch when a configured SMTP account is active
+    {
+        const DtMailAccount *smtp_acct = NULL;
+        for (int ai = 0; ai < dtmail_accounts_count(); ai++) {
+            const DtMailAccount *cand = dtmail_accounts_get(ai);
+            if (cand && cand->enabled &&
+                cand->auth_mode != DTMAIL_AUTH_SENDMAIL_LOCAL &&
+                cand->smtp_host[0]) {
+                smtp_acct = cand;
+                break;
+            }
+        }
+        if (smtp_acct) {
+            DtMailEnv henv;
+            DtMail::Envelope *env = _msgHandle->getEnvelope(henv);
+            DtMailValueSeq to_v, cc_v, bcc_v, sub_v;
+            const char *to_s = "", *cc_s = "", *bcc_s = "", *sub_s = "";
+            if (env) {
+                env->getHeader(henv, DtMailMessageTo, DTM_FALSE, to_v);
+                if (!henv.isSet() && to_v.length() > 0) to_s = *(to_v[0]);
+                henv.clear();
+                env->getHeader(henv, DtMailMessageCc, DTM_FALSE, cc_v);
+                if (!henv.isSet() && cc_v.length() > 0) cc_s = *(cc_v[0]);
+                henv.clear();
+                env->getHeader(henv, DtMailMessageBcc, DTM_FALSE, bcc_v);
+                if (!henv.isSet() && bcc_v.length() > 0) bcc_s = *(bcc_v[0]);
+                henv.clear();
+                env->getHeader(henv, DtMailMessageSubject, DTM_FALSE, sub_v);
+                if (!henv.isSet() && sub_v.length() > 0) sub_s = *(sub_v[0]);
+            }
+
+            char *body_txt = editor->textEditor()->get_contents();
+            size_t blen = body_txt ? strlen(body_txt) : 0;
+            size_t rcap = blen + 2048;
+            char *raw = (char *)malloc(rcap);
+            if (raw) {
+                int hlen = snprintf(raw, rcap,
+                    "From: %s\r\n"
+                    "To: %s\r\n"
+                    "%s%s%s"
+                    "Subject: %s\r\n"
+                    "MIME-Version: 1.0\r\n"
+                    "Content-Type: text/plain; charset=UTF-8\r\n"
+                    "\r\n",
+                    smtp_acct->email,
+                    to_s,
+                    cc_s[0] ? "Cc: " : "", cc_s, cc_s[0] ? "\r\n" : "",
+                    sub_s);
+                if (hlen > 0 && blen > 0) {
+                    memcpy(raw + hlen, body_txt, blen);
+                    raw[hlen + blen] = '\0';
+                }
+
+                /* Collect recipients from To, Cc, Bcc */
+                char rcpt_buf[1024];
+                snprintf(rcpt_buf, sizeof(rcpt_buf), "%s,%s,%s", to_s, cc_s, bcc_s);
+                const char *rcpts[64];
+                int nrcpts = 0;
+                char *sp = NULL;
+                for (char *tok = strtok_r(rcpt_buf, ",;", &sp);
+                     tok && nrcpts < 64;
+                     tok = strtok_r(NULL, ",;", &sp)) {
+                    while (*tok == ' ' || *tok == '\t') tok++;
+                    char *lt = strchr(tok, '<');
+                    char *gt = lt ? strchr(lt + 1, '>') : NULL;
+                    if (lt && gt) { *gt = '\0'; tok = lt + 1; }
+                    size_t tl = strlen(tok);
+                    while (tl > 0 && (tok[tl - 1] == ' ' || tok[tl - 1] == '\t'))
+                        tok[--tl] = '\0';
+                    if (tok[0]) rcpts[nrcpts++] = tok;
+                }
+
+                char secret[512] = "";
+                const char *kind = (smtp_acct->auth_mode == DTMAIL_AUTH_OAUTH2) ? "oauth_access" : "password";
+                (void)dtmail_keyring_lookup(smtp_acct->id, kind, secret, sizeof(secret));
+
+                char serr[256] = "";
+                int sres = dtmail_smtp_send(smtp_acct, secret, smtp_acct->email,
+                                            rcpts, nrcpts, raw, (size_t)hlen + blen,
+                                            serr, sizeof(serr));
+                if (sres == 0) {
+                    char sent_path[1024];
+                    if (dtmail_account_folder_path(smtp_acct->id, "Sent", sent_path, sizeof(sent_path)) == 0) {
+                        (void)dtmail_mbox_append_rfc5322(sent_path, smtp_acct->email, raw, (size_t)hlen + blen);
+                    }
+                    free(raw);
+                    if (body_txt) free(body_txt);
+                    _already_sending = FALSE;
+                    _takeDown = TRUE;
+                    this->reset();
+                    delete [] buf;
+                    return;
+                } else {
+                    free(raw);
+                    if (body_txt) free(body_txt);
+                    this->manage();
+                    _send_button->activate();
+                    _close_button->activate();
+                    _already_sending = FALSE;
+                    _genDialog->setToErrorDialog((char *)"Mailer",
+                        serr[0] ? serr : (char *)"SMTP send failed.");
+                    _genDialog->post_and_return((char *)"OK", DTMAILHELPERROR);
+                    delete [] buf;
+                    return;
+                }
+            }
+            if (body_txt) free(body_txt);
+        }
+    }
+
     // Determine which transport mechanism will be used.
     if ( trans_type ) {   // Default
 	// Only register XtAppAddInput once

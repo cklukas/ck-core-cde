@@ -206,9 +206,10 @@ AttachArea::initialize()
     XmFontList fl;
     XmString xms;
 
-    int         colorUse;
-    short       act, inact, prim, second, text;
+    int         colorUse = 0;
+    short       act = 0, inact = 0, prim = 0, second = 0, text = 0;
     XmPixelSet  pixels[XmCO_NUM_COLORS];
+    memset(pixels, 0, sizeof(pixels));
 
 
     _w = XtVaCreateManagedWidget (
@@ -216,11 +217,18 @@ AttachArea::initialize()
 			xmFormWidgetClass, _parent, 
 			NULL);
 
-    // Get pixel data.
-    XmeGetColorObjData(XtScreen(_parent), &colorUse, pixels, XmCO_NUM_COLORS,
-		       &act, &inact, &prim, &second, &text);
-    _foreground = pixels[text].fg;
-    _background = pixels[text].sc;
+    // Get pixel data (fall back to widget fg/bg if no CDE color server is active).
+    if (XmeGetColorObjData(XtScreen(_parent), &colorUse, pixels, XmCO_NUM_COLORS,
+			   &act, &inact, &prim, &second, &text) &&
+	text >= 0 && text < XmCO_NUM_COLORS) {
+	_foreground = pixels[text].fg;
+	_background = pixels[text].sc;
+    } else {
+	XtVaGetValues(_w,
+		      XmNforeground, &_foreground,
+		      XmNbackground, &_background,
+		      NULL);
+    }
 
     parWid = _myOwner->textEditor()->get_text_width();
 

@@ -52,6 +52,43 @@
 #include "Editor.hh"
 #include "str_utils.h"
 
+#include "HtmlReadable.h"
+#include <ctype.h>
+#include <strings.h>
+
+static char *g_last_html_body = NULL;
+static size_t g_last_html_len = 0;
+
+extern "C" int dtmail_current_msg_has_html(void)
+{
+    return (g_last_html_body && g_last_html_len > 0) ? 1 : 0;
+}
+
+extern "C" int dtmail_open_current_html_in_browser(void)
+{
+    if (!g_last_html_body || g_last_html_len == 0)
+        return -1;
+    return dtmail_open_html_in_browser(g_last_html_body, g_last_html_len);
+}
+
+static int is_html_body(const char *type, const char *contents, size_t size)
+{
+    if (type && (strcasestr(type, "html") != NULL || strcasecmp(type, "HTML") == 0))
+        return 1;
+    if (!contents || size < 6)
+        return 0;
+    size_t i = 0;
+    while (i < size && isspace((unsigned char)contents[i])) i++;
+    if (i + 5 < size &&
+        (strncasecmp(contents + i, "<html", 5) == 0 ||
+         strncasecmp(contents + i, "<!doc", 5) == 0 ||
+         strncasecmp(contents + i, "<body", 5) == 0 ||
+         strncasecmp(contents + i, "<div", 4) == 0 ||
+         strncasecmp(contents + i, "<table", 6) == 0))
+        return 1;
+    return 0;
+}
+
 Editor::Editor()
        : UIComponent("Editor")
 {
@@ -217,15 +254,40 @@ Editor::set_message(DtMail::Message * msg,
 	    bp->lockContents(error, DtMailLockRead);
 	    bp->getContents(error, &contents, &size, NULL, NULL, NULL, NULL);
 
+	    char *rendered_html = NULL;
+	    const char *display_ptr = (const char *)contents;
+	    unsigned long display_size = size;
+
+	    if (format != IF_INDENTED) {
+		free(g_last_html_body);
+		g_last_html_body = NULL;
+		g_last_html_len = 0;
+	    }
+	    if (contents && size > 0 && is_html_body(type, (const char *)contents, (size_t)size)) {
+		if (format != IF_INDENTED) {
+		    g_last_html_body = (char *)malloc((size_t)size + 1);
+		    if (g_last_html_body) {
+			memcpy(g_last_html_body, contents, (size_t)size);
+			g_last_html_body[size] = '\0';
+			g_last_html_len = (size_t)size;
+		    }
+		}
+		rendered_html = dtmail_html_to_readable_text((const char *)contents, (size_t)size);
+		if (rendered_html) {
+		    display_ptr = rendered_html;
+		    display_size = (unsigned long)strlen(rendered_html);
+		}
+	    }
+
 	    if (format == IF_INDENTED) {
 		int byte_count = 0;
-		int content_count = (int) size;
+		int content_count = (int) display_size;
 		const char *last = NULL, *content_ptr = NULL;
 		// Parse the result of getContents().
 		// Spit out indent string with each line.
 		// Is contents NULL terminated???
-		for ( last = (const char *)contents, 
-		    content_ptr = (const char *)contents;
+		for ( last = display_ptr, 
+		    content_ptr = display_ptr;
 		    content_count > 0;
 		    content_ptr++, 
 		    byte_count++, 
@@ -250,8 +312,9 @@ Editor::set_message(DtMail::Message * msg,
 		    }
 		}  // end of for loop
 	    } else {
-	       append_to_contents((const char *)contents, size);
+	       append_to_contents(display_ptr, display_size);
 	    }
+	    free(rendered_html);
 	    bp->unlockContents(error);
 	    firstBPHandled = DTM_TRUE;
 	}

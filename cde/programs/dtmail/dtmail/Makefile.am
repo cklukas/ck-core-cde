@@ -11,15 +11,18 @@ dtmail_CXXFLAGS = -I../include -I../include/MotifApp -I../include/utils \
 		  -I$(top_srcdir)/programs/dtmail/libDtMail/RFC \
 		  -I$(srcdir)/lib -I../../dthelp -DRELEASE_NOTES \
 		  -I$(top_srcdir)/programs/dthelp \
-		  -DDTMAIL_TOOLTALK -DDTEDITOR
+		  -DDTMAIL_TOOLTALK -DDTEDITOR \
+		  $(LIBCURL_CFLAGS) -DHAVE_LIBCURL=1
 
 dtmail_LDADD = ../libDtMail/libDtMail.a ../MotifApp/libMotifApp.a \
-		$(DTCLIENTLIBS) $(XTOOLLIB) $(TIRPCLIB)
+		$(DTCLIENTLIBS) $(XTOOLLIB) $(TIRPCLIB) $(LIBCURL_LIBS)
 
-dtmail_SOURCES = AliasListUiItem.C               AlternatesListUiItem.C \
+dtmail_SOURCES = AccountSetupDialog.C            AccountSetupDialog.h \
+		 AliasListUiItem.C               AlternatesListUiItem.C \
 		 AntiCheckBoxUiItem.C            AttachArea.C \
 		 Attachment.C			 CheckBoxUiItem.C \
 		 CheckForMailUiItem.C		 ComposeCmds.C \
+		 CurlMailEngine.C                CurlMailEngine.h \
 		 CustomListUiItem.C		 Dialog.C \
 		 DialogShell.C			 DmxMailbox.C \
 		 DmxMessage.C			 DmxPrintJob.C \
@@ -29,10 +32,12 @@ dtmail_SOURCES = AliasListUiItem.C               AlternatesListUiItem.C \
 		 DtMailGenDialog.C		 DtMailWDM.C \
 		 Editor.C			 EncryptedTextFieldUiItem.C \
 		 FindDialog.C			 Fonts.C \
+		 HtmlReadable.C                  HtmlReadable.h \
 		 Icon.C				 IgnoreListUiItem.C \
 		 InboxTextFieldUiItem.C		 \
 		 IndexedOptionMenu.C		 IndexedOptionMenuUiItem.C \
-		 ListUiItem.C			 MailRcSource.C \
+		 ListUiItem.C			 MailAccountStore.C \
+		 MailAccountStore.h              MailRcSource.C \
 		 MailRetrievalOptions.C		 MailSession.C \
 		 MoveMenuListUiItem.C            MsgHndArray.C \
 		 MsgScrollingList.C              NoOpCmd.C \

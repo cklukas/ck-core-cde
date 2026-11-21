@@ -435,3 +435,29 @@ that gencat refuses).
 enumeration, has no comments that name the errors and is not part of the build
 (only de_DE, es_ES, fr_FR, it_IT and ja_JP are installed); the test can check
 its numbers and conversions but not what its messages say.
+
+## Modern IMAP/SMTP transport, fallback inbox, and HTML viewing
+
+`dtmail` no longer requires a preconfigured local `/var/mail/$USER` spool or
+local `/usr/sbin/sendmail` MTA to be usable on a modern desktop:
+
+- **Graceful local fallback inbox**: when no remote account is configured and
+  `/var/mail/$USER` does not exist or is inaccessible, `dtmail` automatically
+  creates and opens `~/.dt/mail/Inbox` (`0600`) instead of failing on startup.
+- **Multi-account store & desktop keyring**: **Mailbox → Accounts & Servers...**
+  manages accounts in `~/.dt/dtmail_accounts` (`0600`) with presets for Gmail,
+  iCloud, Fastmail, Microsoft 365, Custom IMAP/SMTP, and Local UNIX spool.
+  Passwords and OAuth tokens are never written to disk; they are stored in the
+  desktop keyring via `secret-tool` (`fork`/`execvp`).
+- **TLS IMAP sync & SMTP submission (`libcurl`)**: `CurlMailEngine.C` syncs
+  remote folders over IMAPS (993) or IMAP+STARTTLS (143) incrementally by UID
+  into `~/.dt/mail/<account>/<folder>` on a background thread (`pthread` +
+  `XtAppAddInput`), and submits outgoing mail over SMTPS (465) or
+  SMTP+STARTTLS (587) with `Sent` folder archival.
+- **Safe HTML-to-readable-text rendering**: HTML-only and HTML body parts are
+  converted in-process (`HtmlReadable.C`) into clean readable text with
+  `<script>`, `<style>`, comments, and non-HTTP links stripped, plus
+  **Mailbox → Open HTML in Browser** launching `ck-browser` (or `$BROWSER` /
+  `xdg-open` fallback).
+- Verified under ASan/UBSan by `tests/check-mail-accounts.py`,
+  `tests/check-html-readable.py`, and `tests/check-curl-mail.py`.

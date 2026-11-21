@@ -116,6 +116,7 @@
 #include "MemUtils.hh"
 #include "MailMsg.h"
 #include "RoamApp.h"
+#include "MailAccountStore.h"
 #include "RoamMenuWindow.h"
 #include "RoamCmds.h"
 #include "SendMsgDialog.h"
@@ -1384,6 +1385,9 @@ void RoamApp::initialize(int *argcp, char **argv)
     // inbox. We do this by querying the current implementation for
     // the path to its inbox.
     //
+    // Load configured accounts and resolve startup inbox with graceful
+    // ~/.dt/mail/Inbox fallback when /var/mail/$USER is unavailable.
+    dtmail_accounts_init();
     if (!mail_file) {
 	DtMailObjectSpace space;
 
@@ -1392,6 +1396,13 @@ void RoamApp::initialize(int *argcp, char **argv)
 			     DtMailCapabilityInboxName,
 			     &space,
 			     &mail_file);
+	char resolved_inbox[1024];
+	int used_fb = 0;
+	if (dtmail_resolve_startup_inbox(mail_file, resolved_inbox,
+					 sizeof(resolved_inbox), &used_fb) == 0) {
+	    if (mail_file) free(mail_file);
+	    mail_file = strdup(resolved_inbox);
+	}
     }
 
     // We need to determine which transport to use. The order of preference

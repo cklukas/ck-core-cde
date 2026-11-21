@@ -99,6 +99,11 @@
 #include <DtMail/TextBuffer.hh>
 #include "SelectFileCmd.h"
 #include "RoamMenuWindow.h"
+#include "AccountSetupDialog.h"
+#include "MailAccountStore.h"
+
+extern "C" int dtmail_current_msg_has_html(void);
+extern "C" int dtmail_open_current_html_in_browser(void);
 #include "RoamApp.h"
 #include "ButtonInterface.h"
 #include "WorkingDialogManager.h"
@@ -3348,6 +3353,69 @@ RoamMenuWindow::createOpenContainerList(CmdList * open_container)
 }
 
 
+namespace {
+void dtmail_rmw_sync_done_cb(int total_added, const char *status_msg, void *ud)
+{
+    RoamMenuWindow *rmw = (RoamMenuWindow *)ud;
+    if (!rmw) return;
+    if (total_added > 0) {
+        DtMailEnv err;
+        rmw->checkForMail(err);
+    }
+    if (status_msg && status_msg[0])
+        rmw->message((char *)status_msg);
+}
+
+class AccountsSetupCmd : public NoUndoCmd {
+    RoamMenuWindow *_rmw;
+public:
+    AccountsSetupCmd(char *name, char *label, int active, RoamMenuWindow *rmw)
+        : NoUndoCmd(name, label, active), _rmw(rmw) {}
+    void doit() override {
+        if (_rmw)
+            dtmail_show_accounts_dialog(_rmw->baseWidget(), dtmail_rmw_sync_done_cb, _rmw);
+    }
+    const char *const className() override { return "AccountsSetupCmd"; }
+};
+
+class SyncRemoteMailCmd : public NoUndoCmd {
+    RoamMenuWindow *_rmw;
+public:
+    SyncRemoteMailCmd(char *name, char *label, int active, RoamMenuWindow *rmw)
+        : NoUndoCmd(name, label, active), _rmw(rmw) {}
+    void doit() override {
+        if (!_rmw) return;
+        if (dtmail_accounts_count() <= 0) {
+            dtmail_show_accounts_dialog(_rmw->baseWidget(), dtmail_rmw_sync_done_cb, _rmw);
+            return;
+        }
+        _rmw->message((char *)"Syncing remote mail...");
+        dtmail_start_async_sync(XtWidgetToApplicationContext(_rmw->baseWidget()),
+                                dtmail_rmw_sync_done_cb, _rmw);
+    }
+    const char *const className() override { return "SyncRemoteMailCmd"; }
+};
+
+class OpenHtmlBrowserCmd : public NoUndoCmd {
+    RoamMenuWindow *_rmw;
+public:
+    OpenHtmlBrowserCmd(char *name, char *label, int active, RoamMenuWindow *rmw)
+        : NoUndoCmd(name, label, active), _rmw(rmw) {}
+    void doit() override {
+        if (!_rmw) return;
+        if (!dtmail_current_msg_has_html()) {
+            _rmw->message((char *)"Current message does not have an HTML body.");
+            return;
+        }
+        if (dtmail_open_current_html_in_browser() == 0)
+            _rmw->message((char *)"Opened HTML message in browser.");
+        else
+            _rmw->message((char *)"Could not launch browser for HTML message.");
+    }
+    const char *const className() override { return "OpenHtmlBrowserCmd"; }
+};
+} // namespace
+
 void
 RoamMenuWindow::construct_file_menu()
 {
@@ -3432,6 +3500,9 @@ RoamMenuWindow::construct_file_menu()
     cmdList->add(_open_container_cmdlist);
     cmdList->add(_file_separator);
     cmdList->add(_file_destroy_deleted_msgs);
+    cmdList->add(new AccountsSetupCmd((char *)"AccountsSetup", (char *)"Accounts & Servers...", TRUE, this));
+    cmdList->add(new SyncRemoteMailCmd((char *)"SyncRemoteMail", (char *)"Sync Remote Mail", TRUE, this));
+    cmdList->add(new OpenHtmlBrowserCmd((char *)"OpenHtmlBrowser", (char *)"Open HTML in Browser", TRUE, this));
     cmdList->add(theRoamApp.mailOptions());
     cmdList->add(_file_separator);
     cmdList->add(_file_quit);
