@@ -7,10 +7,14 @@ ConditionPathExists=/usr/dt/bin/rpc.cmsd
 
 [Service]
 Type=simple
-ExecStart=/usr/dt/bin/rpc.cmsd -s
+ExecStart=/usr/dt/bin/rpc.cmsd -s -l
 KillSignal=SIGHUP
 Restart=on-failure
 RestartSec=2
+IPAddressDeny=any
+IPAddressAllow=localhost
+NoNewPrivileges=yes
+ProtectHome=read-only
 
 [Install]
 WantedBy=multi-user.target

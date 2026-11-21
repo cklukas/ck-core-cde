@@ -14,7 +14,7 @@ check-local:
 AM_CFLAGS = $(DT_INCDIR) $(CSA_INCDIR) -I$(top_srcdir)/lib/csa	\
 -I$(top_srcdir)/programs/dtcm/libDtCmP
 
-LDADD = ../libDtCmP/libDtCmP.a $(LIBCSA) $(DTCLIENTLIBS) $(XTOOLLIB)
+LDADD = ../libDtCmP/libDtCmP.a $(LIBCSA) $(DTCLIENTLIBS) $(TIRPCLIB) $(XTOOLLIB)
 
 if FREEBSD
 LDADD += -lcompat -lutil
@@ -36,7 +36,8 @@ dtcm_SOURCES = MonthPanel.c    RFCMIME.c       about.c \
                ics_io.c        ics_io.h        md5.c           misc.c \
                monthglance.c   namesvc.c       print.c \
                props.c         props_pu.c      reminders.c \
-               rfp.c           select.c        session.c \
+               rfp.c           select.c        server_status.c \
+               server_status.h session.c \
 	       submit.c        tempbr.c        timezone.c \
                todo.c          weekglance.c    x_graphics.c \
                yearglance.c

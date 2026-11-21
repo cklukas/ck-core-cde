@@ -809,6 +809,38 @@ get_new_client_handle(_DtCm_Connection *conn)
 }
 
 /*
+ * On Debian/Ubuntu hosts where /etc/hosts maps the local hostname to
+ * 127.0.1.1 (while lo's primary address is 127.0.0.1), rpcbind's
+ * mergeaddr() falls back to the external LAN IP when queried on 127.0.1.1.
+ * Connect to 127.0.0.1 directly for local-host calendars so loopback-only
+ * rpc.cmsd (-l) is always reached over lo without touching LAN interfaces.
+ */
+static const char *
+normalize_local_rpc_host(const char *host)
+{
+	char local[256];
+	char *dot;
+
+	if (host == nullptr || host[0] == '\0')
+		return ("127.0.0.1");
+	if (strcmp(host, "localhost") == 0 || strcmp(host, "127.0.0.1") == 0)
+		return ("127.0.0.1");
+
+	memset(local, 0, sizeof(local));
+	if (gethostname(local, sizeof(local) - 1) == 0 && local[0] != '\0') {
+		if (strcmp(host, local) == 0)
+			return ("127.0.0.1");
+		dot = strchr(local, '.');
+		if (dot != nullptr) {
+			*dot = '\0';
+			if (strcmp(host, local) == 0)
+				return ("127.0.0.1");
+		}
+	}
+	return (host);
+}
+
+/*
  * Get a client handle to a server that supports the highest
  * version between the given range.
  */
@@ -826,6 +858,7 @@ get_client_handle(
 	u_int	vers;
 	struct timeval tv;
 	enum clnt_stat status;
+	const char *rpc_host = normalize_local_rpc_host(host);
 
 	tv.tv_sec = 1;
 	tv.tv_usec = 0;
@@ -833,7 +866,7 @@ get_client_handle(
 	*clnt = nullptr;
 	for (vers = vers_high; vers >= vers_low; vers--) {
 
-		if ((cl = clnt_create(host, prognum, vers, nettype)) != nullptr) {
+		if ((cl = clnt_create(rpc_host, prognum, vers, nettype)) != nullptr) {
 			clnt_control(cl, CLSET_TIMEOUT, (char *)&tv);
 			status = clnt_call(cl, 0, _DtCm_xdr_void,
 					   (char *)nullptr, _DtCm_xdr_void,

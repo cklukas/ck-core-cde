@@ -7,16 +7,31 @@ description: How rpc.cmsd validates requests, stores calendars and gives up priv
 
 `rpc.cmsd` serves calendars to Calendar Manager and other CSA clients over RPC.
 It can be started on demand by `inetd` or `xinetd` or run as a standalone
-systemd service (`rpc-cmsd.service`, `rpc.cmsd -s`, ordered after
+systemd service (`rpc-cmsd.service`, `rpc.cmsd -s -l`, ordered after
 `rpcbind.service`). Starting as `root`, it initializes `/var/spool/calendar`,
 drops effective privileges to `daemon`, switches to the calendar owner's
-identity only for file-ownership updates, and handles requests from the
-network. The request path is validated before data is used.
+identity only for file-ownership updates, and handles requests. The request
+path is validated before data is used.
+
+By default in standalone mode (`-l`), `rpc.cmsd` restricts access to the local
+host only: it binds its UDP and TCP sockets to the loopback interface (`lo` via
+`SO_BINDTODEVICE`, falling back to `127.0.0.1`), registers `127.0.0.1` with
+`rpcbind`, and rejects any non-loopback RPC caller with `AUTH_TOOWEAK`.
+Administrators who explicitly want classic multi-host LAN calendar sharing can
+pass `-n` (and adjust the systemd unit's `IPAddressDeny`/`IPAddressAllow`
+directives). `libcsa` (`connection.c`) connects to `127.0.0.1` directly for
+local-host calendars so Debian/Ubuntu hosts mapping `<hostname>` to `127.0.1.1`
+stay strictly on loopback.
 
 On Debian/Ubuntu, the `ck-core-cde` package installs
-`/lib/systemd/system/rpc-cmsd.service`, initializes `/var/spool/calendar`, and
-enables and starts `rpcbind.service` and `rpc-cmsd.service` automatically during
-package configuration so `dtcm` works out of the box after `apt install`.
+`/lib/systemd/system/rpc-cmsd.service` (with `IPAddressDeny=any`,
+`IPAddressAllow=localhost`, `NoNewPrivileges=yes`, and
+`ProtectHome=read-only`), initializes `/var/spool/calendar`, and enables and
+starts `rpcbind.service` and `rpc-cmsd.service` automatically during package
+configuration so `dtcm` works out of the box after `apt install`. Calendar
+Manager also provides **View → Server & Network Status...** to inspect live
+`rpc.cmsd`/`rpcbind` reachability, socket binding, systemd firewall policy, and
+local spool status.
 
 ## Requests
 

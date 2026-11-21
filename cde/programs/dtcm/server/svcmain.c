@@ -42,6 +42,8 @@
 #include <time.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 #ifdef SVR4
 #ifndef _NETINET_IN_H
 #include <netinet/in.h>
@@ -53,6 +55,9 @@
 #include <netdir.h>
 #include <sys/stropts.h>
 #include <tiuser.h>
+#elif defined(OPT_TIRPC)
+#include <netconfig.h>
+#include <rpc/rpcb_clnt.h>
 #endif /* SunOS */
 #include <sys/param.h>
 #include <sys/stat.h>
@@ -85,6 +90,7 @@
 
 int debug;
 static int standalone;			/* default is 0 */
+static int network_bind;		/* default 0: loopback-only; 1 (-n): all interfaces */
 static int garbage_collection_time = 240; /* in min; default time is 4:00am */
 
 char	*pgname;
@@ -139,7 +145,7 @@ parse_args(int argc, char **argv)
 	else
 		pgname = argv[0];
 
-	while ((opt = getopt (argc, argv, "dsg:")) != -1)
+	while ((opt = getopt (argc, argv, "dsg:ln")) != -1)
 	{
 		switch (opt)
 		{
@@ -148,6 +154,12 @@ parse_args(int argc, char **argv)
 			break;
 		case 's':
 			standalone = 1;
+			break;
+		case 'l':
+			network_bind = 0;
+			break;
+		case 'n':
+			network_bind = 1;
 			break;
 		case 'g':
 			if (_GetGtime(optarg))
@@ -202,7 +214,7 @@ parse_args(int argc, char **argv)
 #endif
 		
 error:
-	fprintf (stderr, "Usage: %s [-d] [-s] [-g hhmm]\n", pgname);
+	fprintf (stderr, "Usage: %s [-d] [-s] [-l | -n] [-g hhmm]\n", pgname);
 	exit (-1);
 }
 
@@ -379,6 +391,100 @@ lock_it(void)
 	return (0);
 }
 
+static int
+create_loopback_socket(int type)
+{
+	int fd;
+	struct sockaddr_in addr;
+	int bound_to_lo = 0;
+
+	fd = socket(AF_INET, type, 0);
+	if (fd < 0)
+		return (-1);
+
+#if defined(__linux__) && defined(SO_BINDTODEVICE)
+	/*
+	 * Bind to the loopback interface ("lo") so both 127.0.0.1 (localhost)
+	 * and 127.0.1.1 (<hostname> on Debian/Ubuntu) remain reachable locally
+	 * while external network interfaces are rejected by the kernel.
+	 */
+	if (setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, "lo", 3) == 0)
+		bound_to_lo = 1;
+#endif
+
+	memset(&addr, 0, sizeof(addr));
+	addr.sin_family = AF_INET;
+	addr.sin_addr.s_addr = bound_to_lo ? htonl(INADDR_ANY) : htonl(INADDR_LOOPBACK);
+	addr.sin_port = 0;
+
+	if (bind(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+		close(fd);
+		return (-1);
+	}
+
+	if (type == SOCK_STREAM && listen(fd, SOMAXCONN) < 0) {
+		close(fd);
+		return (-1);
+	}
+
+	return (fd);
+}
+
+#if defined(OPT_TIRPC) && !defined(SunOS)
+static int
+register_loopback_rpcb(SVCXPRT *transp, unsigned long prog, unsigned long vers,
+                       const char *netid)
+{
+	struct netconfig *nconf;
+	struct sockaddr_in sin;
+	struct netbuf addr;
+	bool_t ok;
+
+	nconf = getnetconfigent(netid);
+	if (nconf == nullptr)
+		return (0);
+
+	memset(&sin, 0, sizeof(sin));
+	sin.sin_family = AF_INET;
+	sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+	sin.sin_port = htons(transp->xp_port);
+
+	addr.buf = &sin;
+	addr.len = sizeof(sin);
+	addr.maxlen = sizeof(sin);
+
+	ok = rpcb_set((rpcprog_t)prog, (rpcvers_t)vers, nconf, &addr);
+	freenetconfigent(nconf);
+	return (ok ? 1 : 0);
+}
+#endif
+
+static int
+caller_is_loopback(SVCXPRT *transp)
+{
+	const struct sockaddr *sa = (const struct sockaddr *)svc_getcaller(transp);
+
+	if (sa == nullptr)
+		return (0);
+	if (sa->sa_family == AF_INET) {
+		const struct sockaddr_in *sin = (const struct sockaddr_in *)sa;
+		return ((ntohl(sin->sin_addr.s_addr) & 0xff000000U) == 0x7f000000U);
+	}
+#ifdef AF_INET6
+	if (sa->sa_family == AF_INET6) {
+		const struct sockaddr_in6 *sin6 = (const struct sockaddr_in6 *)sa;
+		if (IN6_IS_ADDR_LOOPBACK(&sin6->sin6_addr))
+			return (1);
+		if (IN6_IS_ADDR_V4MAPPED(&sin6->sin6_addr)) {
+			uint32_t v4;
+			memcpy(&v4, &sin6->sin6_addr.s6_addr[12], sizeof(v4));
+			return ((ntohl(v4) & 0xff000000U) == 0x7f000000U);
+		}
+	}
+#endif
+	return (0);
+}
+
 static void
 program(struct svc_req *rqstp, SVCXPRT *transp)
 {
@@ -386,6 +492,11 @@ program(struct svc_req *rqstp, SVCXPRT *transp)
         char *argument = nullptr;
         program_handle ph = getph();
         struct rpcgen_table *proc;
+
+        if (!network_bind && !caller_is_loopback(transp)) {
+                svcerr_weakauth(transp);
+                return;
+        }
 
         /* first do some bounds checking: */
         if (rqstp->rq_vers >= ph->nvers) {
@@ -652,7 +763,15 @@ main(int argc, char **argv)
 			(void) pmap_unset(ph->program_num, version);
 
 		if (udp_transp == (SVCXPRT *)-1) {
-			udp_transp = svcudp_create(standalone ? RPC_ANYSOCK : 0
+			int udp_sock = standalone ? RPC_ANYSOCK : 0;
+			if (standalone && !network_bind) {
+				udp_sock = create_loopback_socket(SOCK_DGRAM);
+				if (udp_sock < 0) {
+					perror("rpc.cmsd: cannot bind loopback udp socket");
+					exit(1);
+				}
+			}
+			udp_transp = svcudp_create(udp_sock
 #if defined(_AIX) || defined(__linux__) || defined(CSRG_BASED)
 					);
 #else
@@ -665,6 +784,15 @@ main(int argc, char **argv)
                 	}
 		}
 
+#if defined(OPT_TIRPC)
+		if (standalone && !network_bind) {
+			if (!svc_register(udp_transp, ph->program_num, version, program, 0) ||
+			    !register_loopback_rpcb(udp_transp, ph->program_num, version, "udp")) {
+				(void)fprintf(stderr, "rtable_main.c: unable to register(udp)\n");
+				exit(1);
+			}
+		} else
+#endif
 		if (!svc_register(udp_transp, ph->program_num, version, program,
 				standalone ? IPPROTO_UDP : 0)) {
 			(void)fprintf(stderr, "rtable_main.c: unable to register");
@@ -677,7 +805,15 @@ main(int argc, char **argv)
 		/* with rpcbind ourselves.			*/
 
 		if (tcp_transp == (SVCXPRT *)-1) {
-			tcp_transp = svctcp_create(RPC_ANYSOCK, 0, 0);
+			int tcp_sock = RPC_ANYSOCK;
+			if (!network_bind) {
+				tcp_sock = create_loopback_socket(SOCK_STREAM);
+				if (tcp_sock < 0) {
+					perror("rpc.cmsd: cannot bind loopback tcp socket");
+					exit(1);
+				}
+			}
+			tcp_transp = svctcp_create(tcp_sock, 0, 0);
 			if (tcp_transp == nullptr) {
 				(void)fprintf(stderr,
 				"rtable_main.c: cannot create tcp service.\n");
@@ -685,6 +821,15 @@ main(int argc, char **argv)
 			}
 		}
 
+#if defined(OPT_TIRPC)
+		if (!network_bind) {
+			if (!svc_register(tcp_transp, ph->program_num, version, program, 0) ||
+			    !register_loopback_rpcb(tcp_transp, ph->program_num, version, "tcp")) {
+				(void)fprintf(stderr, "rtable_main.c: unable to register(tcp)\n");
+				exit(1);
+			}
+		} else
+#endif
 		if (!svc_register(tcp_transp, ph->program_num, version, program,
 				IPPROTO_TCP)) {
 			(void)fprintf(stderr, "rtable_main.c: unable to register(tcp)");

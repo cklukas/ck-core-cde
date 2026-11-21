@@ -1,4 +1,23 @@
 2026-11-21
+- Harden `rpc.cmsd` defaults to loopback-only and add a live **View → Server &
+  Network Status...** dialog to `dtcm`:
+  - Default `rpc.cmsd` standalone mode (`-l`, with `-n` opt-in for LAN) to
+    loopback-only: bind UDP/TCP sockets to `lo` (`SO_BINDTODEVICE`, falling
+    back to `127.0.0.1`), call `listen()` on pre-bound TCP sockets, register
+    `127.0.0.1` with `rpcbind` via `rpcb_set`, and reject non-loopback callers
+    in `program()` (`cde/programs/dtcm/server/svcmain.c`).
+  - Route local-host CSA connections in `libcsa` (`get_client_handle`) to
+    `127.0.0.1` so Debian/Ubuntu `127.0.1.1 <hostname>` mappings remain on
+    loopback instead of hitting `rpcbind`'s LAN-IP `mergeaddr()` fallback
+    (`cde/lib/csa/connection.c`).
+  - Add `IPAddressDeny=any`, `IPAddressAllow=localhost`, `NoNewPrivileges=yes`,
+    and `ProtectHome=read-only` to `rpc-cmsd.service` and the Lima template
+    (`cde/debian/rpc-cmsd.service`, `scripts/lima/cde-ubuntu-26.04.yaml`).
+  - Add **View → Server & Network Status...** to `dtcm` showing active
+    calendar, CSA handle state, live `rpcbind`/`rpc.cmsd` TCP & UDP probes,
+    systemd unit and firewall policy, loopback vs. LAN reachability, and local
+    spool status (`cde/programs/dtcm/dtcm/{server_status.{c,h},calendarA.c,Makefile.am}`,
+    `docs/improvements/calendar-server.md`).
 - Pin CK Core Motif ABI 9 `58f2066b5d9c` so `_XmAllocReceiverInfo` /
   `GetDestinationInfo` zero-initialize `flags` for local Motif shells (so
   `FinishAction` never misclassifies local drops as external XDND targets and

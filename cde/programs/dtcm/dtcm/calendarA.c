@@ -119,6 +119,7 @@ static  char sccsid[] = "@(#)calendarA.c 1.196 95/04/12 Copyr 1991 Sun Microsyst
 #include "alarm.h"
 #include "dayglance.h"
 #include "ics_csa.h"
+#include "server_status.h"
 #include "yearglance.h"
 #include "monthglance.h"
 #include "weekglance.h"
@@ -1079,6 +1080,8 @@ make_view_menu(Calendar *c)
         XtSetArg(al[ac], XmNlabelString, tz_str); ac++;
         tz = XmCreatePushButtonGadget(view_menu, "timeZone", al, ac);
         XtAddCallback(tz, XmNactivateCallback, timezone_cb, nullptr);
+
+        dtcm_server_status_add_menu_item(c, view_menu);
 
 	ManageChildren(view_menu);
 
