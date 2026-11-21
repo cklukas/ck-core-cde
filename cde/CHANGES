@@ -1,4 +1,9 @@
 2026-11-21
+- Pin CK Core Motif ABI 9 `7070cf1ca861` so `DropSMgr.c` (`DoAnimation`) skips
+  unmanaged/hidden sibling drop sites (such as `dtfile`'s hidden `search_bar`
+  `XmTextField` children) when computing drop-site clip regions and
+  `DragUnder.c` draws and clears `XmDRAG_WINDOW` drop highlights cleanly across
+  hover, drop, and *Remove from Shelf* (`.ckgit/{motif-revision,ci.yml}`).
 - Record standalone dual-environment (Wayland + X11/XLibre) qualification
   receipts for `WP-15`, `WP-17`, and `WP-19`, retire the obsolete `x11_wayland`
   branch note, expand the detailed Track 2 (`WP-21`–`WP-24`) XWayland-free
