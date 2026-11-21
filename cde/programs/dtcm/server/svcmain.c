@@ -29,7 +29,9 @@
  */
 
 #if defined(__linux__)
-#define _POSIX_C_SOURCE 2
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
 #endif
 
 #include <EUSCompat.h>
@@ -43,6 +45,7 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <sys/socket.h>
+#include <sys/un.h>
 #include <netinet/in.h>
 #ifdef SVR4
 #ifndef _NETINET_IN_H
@@ -88,9 +91,13 @@
 
 #define S_MASK  (S_INPUT|S_HIPRI|S_ERROR|S_HANGUP)
 
+#define _DtCMS_DEFAULT_UNIX_SOCK "/run/rpc.cmsd/cmsd.sock"
+
 int debug;
 static int standalone;			/* default is 0 */
 static int network_bind;		/* default 0: loopback-only; 1 (-n): all interfaces */
+static int unix_only;			/* 1 (-u): AF_UNIX only, no TCP/UDP/rpcbind */
+static const char *unix_sock_path = _DtCMS_DEFAULT_UNIX_SOCK;
 static int garbage_collection_time = 240; /* in min; default time is 4:00am */
 
 char	*pgname;
@@ -145,7 +152,7 @@ parse_args(int argc, char **argv)
 	else
 		pgname = argv[0];
 
-	while ((opt = getopt (argc, argv, "dsg:ln")) != -1)
+	while ((opt = getopt (argc, argv, "dsg:lnuU:")) != -1)
 	{
 		switch (opt)
 		{
@@ -157,9 +164,18 @@ parse_args(int argc, char **argv)
 			break;
 		case 'l':
 			network_bind = 0;
+			unix_only = 0;
 			break;
 		case 'n':
 			network_bind = 1;
+			unix_only = 0;
+			break;
+		case 'u':
+			unix_only = 1;
+			network_bind = 0;
+			break;
+		case 'U':
+			unix_sock_path = optarg;
 			break;
 		case 'g':
 			if (_GetGtime(optarg))
@@ -214,7 +230,7 @@ parse_args(int argc, char **argv)
 #endif
 		
 error:
-	fprintf (stderr, "Usage: %s [-d] [-s] [-l | -n] [-g hhmm]\n", pgname);
+	fprintf (stderr, "Usage: %s [-d] [-s] [-u | -l | -n] [-U unix_sock] [-g hhmm]\n", pgname);
 	exit (-1);
 }
 
@@ -485,6 +501,114 @@ caller_is_loopback(SVCXPRT *transp)
 	return (0);
 }
 
+static int
+create_unix_socket(const char *path)
+{
+	int fd;
+	struct sockaddr_un sun;
+	char dirbuf[MAXPATHLEN];
+	char *slash;
+	mode_t old_umask;
+
+	if (path == nullptr || path[0] == '\0' || strlen(path) >= sizeof(sun.sun_path))
+		return (-1);
+
+	/* Ensure parent directory exists (e.g. /run/rpc.cmsd) */
+	snprintf(dirbuf, sizeof(dirbuf), "%s", path);
+	slash = strrchr(dirbuf, '/');
+	if (slash != nullptr && slash != dirbuf) {
+		*slash = '\0';
+		if (mkdir(dirbuf, 0755) < 0 && errno != EEXIST)
+			return (-1);
+		(void)chmod(dirbuf, 0755);
+	}
+
+	(void)unlink(path);
+
+	fd = socket(AF_UNIX, SOCK_STREAM, 0);
+	if (fd < 0)
+		return (-1);
+
+	memset(&sun, 0, sizeof(sun));
+	sun.sun_family = AF_UNIX;
+	snprintf(sun.sun_path, sizeof(sun.sun_path), "%s", path);
+
+	old_umask = umask(0);
+	if (bind(fd, (struct sockaddr *)&sun, sizeof(sun)) < 0) {
+		umask(old_umask);
+		close(fd);
+		return (-1);
+	}
+	umask(old_umask);
+
+	/* All local users may connect; SO_PEERCRED enforces true UID per call */
+	if (chmod(path, 0666) < 0) {
+		close(fd);
+		(void)unlink(path);
+		return (-1);
+	}
+
+	if (listen(fd, SOMAXCONN) < 0) {
+		close(fd);
+		(void)unlink(path);
+		return (-1);
+	}
+
+	return (fd);
+}
+
+/*
+ * Check whether transp is an AF_UNIX socket.
+ * Returns:
+ *   1 if AF_UNIX and peer credentials match (or NULLPROC ping),
+ *  -1 if AF_UNIX and peer credentials are forged / unreadable (caller rejected),
+ *   0 if not AF_UNIX (caller is TCP/UDP).
+ */
+static int
+verify_unix_peercred(struct svc_req *rqstp, SVCXPRT *transp)
+{
+	struct sockaddr_storage ss;
+	socklen_t sslen = sizeof(ss);
+
+	if (transp == nullptr || transp->xp_fd < 0)
+		return (0);
+
+	memset(&ss, 0, sizeof(ss));
+	if (getsockname(transp->xp_fd, (struct sockaddr *)&ss, &sslen) != 0)
+		return (0);
+	if (ss.ss_family != AF_UNIX)
+		return (0);
+
+#if defined(__linux__) && defined(SO_PEERCRED)
+	{
+		struct ucred cred;
+		socklen_t credlen = sizeof(cred);
+
+		if (getsockopt(transp->xp_fd, SOL_SOCKET, SO_PEERCRED,
+		               &cred, &credlen) != 0)
+			return (-1);
+
+		/* Allow NULLPROC (RPC ping) without AUTH_UNIX */
+		if (rqstp->rq_proc == NULLPROC)
+			return (1);
+
+		if (rqstp->rq_cred.oa_flavor == AUTH_UNIX) {
+			struct authunix_parms *aup =
+				(struct authunix_parms *)rqstp->rq_clntcred;
+			if (aup == nullptr || (uid_t)aup->aup_uid != cred.uid) {
+				if (debug)
+					fprintf(stderr,
+						"rpc.cmsd: rejected spoofed AUTH_UNIX uid=%u (SO_PEERCRED uid=%u pid=%d)\n",
+						aup ? (unsigned)aup->aup_uid : 0U,
+						(unsigned)cred.uid, (int)cred.pid);
+				return (-1);
+			}
+		}
+	}
+#endif
+	return (1);
+}
+
 static void
 program(struct svc_req *rqstp, SVCXPRT *transp)
 {
@@ -492,8 +616,13 @@ program(struct svc_req *rqstp, SVCXPRT *transp)
         char *argument = nullptr;
         program_handle ph = getph();
         struct rpcgen_table *proc;
+        int unix_check = verify_unix_peercred(rqstp, transp);
 
-        if (!network_bind && !caller_is_loopback(transp)) {
+        if (unix_check < 0) {
+                svcerr_weakauth(transp);
+                return;
+        }
+        if (unix_check == 0 && !network_bind && !caller_is_loopback(transp)) {
                 svcerr_weakauth(transp);
                 return;
         }
@@ -594,6 +723,7 @@ main(int argc, char **argv)
 	socklen_t asize = sizeof (saddr);
 	SVCXPRT *tcp_transp = (SVCXPRT *)-1;
 	SVCXPRT *udp_transp = (SVCXPRT *)-1;
+	SVCXPRT *unix_transp = (SVCXPRT *)-1;
 	int	fd, error;
 
 #if defined(SunOS)
@@ -759,6 +889,42 @@ main(int argc, char **argv)
 		/* don't register unsupported versions: */
 		if (ph->prog[version].nproc == 0) continue;
 
+		/* Always provide AF_UNIX listener in standalone mode for
+		 * SO_PEERCRED-authenticated local access (no open ports). */
+		if (standalone && unix_sock_path != nullptr && unix_sock_path[0] != '\0') {
+			if (unix_transp == (SVCXPRT *)-1) {
+				int unix_sock = create_unix_socket(unix_sock_path);
+				if (unix_sock < 0) {
+					perror("rpc.cmsd: cannot bind unix socket");
+					if (unix_only)
+						exit(1);
+					unix_transp = nullptr;
+				} else {
+#if defined(OPT_TIRPC)
+					unix_transp = svc_vc_create(unix_sock, 0, 0);
+#else
+					unix_transp = svctcp_create(unix_sock, 0, 0);
+#endif
+					if (unix_transp == nullptr) {
+						(void)fprintf(stderr,
+							"rtable_main.c: cannot create unix service.\n");
+						close(unix_sock);
+						if (unix_only)
+							exit(1);
+					}
+				}
+			}
+			if (unix_transp != nullptr &&
+			    !svc_register(unix_transp, ph->program_num, version, program, 0)) {
+				(void)fprintf(stderr, "rtable_main.c: unable to register(unix)\n");
+				if (unix_only)
+					exit(1);
+			}
+		}
+
+		if (unix_only)
+			continue;
+
 		if (standalone)
 			(void) pmap_unset(ph->program_num, version);
 
@@ -865,6 +1031,9 @@ main(int argc, char **argv)
 			if (debug)
 				fprintf(stderr,
 					"rpc.cmsd: received SIGHUP, exiting\n");
+			if (standalone && unix_transp != (SVCXPRT *)-1 &&
+			    unix_transp != nullptr && unix_sock_path != nullptr)
+				(void)unlink(unix_sock_path);
 			exit(0);
 		}
 	}

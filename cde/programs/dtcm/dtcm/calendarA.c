@@ -119,6 +119,7 @@ static  char sccsid[] = "@(#)calendarA.c 1.196 95/04/12 Copyr 1991 Sun Microsyst
 #include "alarm.h"
 #include "dayglance.h"
 #include "ics_csa.h"
+#include "caldav_ui.h"
 #include "server_status.h"
 #include "yearglance.h"
 #include "monthglance.h"
@@ -1305,6 +1306,7 @@ make_file_menu(Calendar *c)
 	XmStringFree(xmstr);
 
 	dtcm_ics_add_menu_items(c, file_menu);
+	dtcm_caldav_add_menu_item(c, file_menu);
 
 	ac = 0;
 	sep = XmCreateSeparatorGadget(file_menu, "separator1", al, ac);

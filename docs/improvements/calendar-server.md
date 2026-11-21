@@ -7,31 +7,48 @@ description: How rpc.cmsd validates requests, stores calendars and gives up priv
 
 `rpc.cmsd` serves calendars to Calendar Manager and other CSA clients over RPC.
 It can be started on demand by `inetd` or `xinetd` or run as a standalone
-systemd service (`rpc-cmsd.service`, `rpc.cmsd -s -l`, ordered after
-`rpcbind.service`). Starting as `root`, it initializes `/var/spool/calendar`,
-drops effective privileges to `daemon`, switches to the calendar owner's
-identity only for file-ownership updates, and handles requests. The request
-path is validated before data is used.
+systemd service (`rpc-cmsd.service`, `rpc.cmsd -s -u`). Starting as `root`, it
+initializes `/var/spool/calendar`, drops effective privileges to `daemon`,
+switches to the calendar owner's identity only for file-ownership updates, and
+handles requests. The request path is validated before data is used.
 
-By default in standalone mode (`-l`), `rpc.cmsd` restricts access to the local
-host only: it binds its UDP and TCP sockets to the loopback interface (`lo` via
-`SO_BINDTODEVICE`, falling back to `127.0.0.1`), registers `127.0.0.1` with
-`rpcbind`, and rejects any non-loopback RPC caller with `AUTH_TOOWEAK`.
-Administrators who explicitly want classic multi-host LAN calendar sharing can
-pass `-n` (and adjust the systemd unit's `IPAddressDeny`/`IPAddressAllow`
-directives). `libcsa` (`connection.c`) connects to `127.0.0.1` directly for
-local-host calendars so Debian/Ubuntu hosts mapping `<hostname>` to `127.0.1.1`
-stay strictly on loopback.
+### Local `AF_UNIX` transport & `SO_PEERCRED` (default)
+
+In standalone mode, `rpc.cmsd` listens on `/run/rpc.cmsd/cmsd.sock` (or `-U <path>`)
+and verifies the caller's real kernel UID via `SO_PEERCRED` on Linux, rejecting
+any forged `AUTH_UNIX` UID with `AUTH_TOOWEAK`. Passing `-u` (the default in
+`rpc-cmsd.service`) runs strictly over `AF_UNIX` with **zero open TCP/UDP ports**
+and **no `rpcbind` dependency**. `libcsa` (`connection.c`) connects to
+`/run/rpc.cmsd/cmsd.sock` first for local calendars (overridable via
+`DTCM_UNIX_SOCK`), falling back to loopback TCP/UDP (`127.0.0.1`) only when
+speaking to a legacy daemon.
 
 On Debian/Ubuntu, the `ck-core-cde` package installs
-`/lib/systemd/system/rpc-cmsd.service` (with `IPAddressDeny=any`,
-`IPAddressAllow=localhost`, `NoNewPrivileges=yes`, and
-`ProtectHome=read-only`), initializes `/var/spool/calendar`, and enables and
-starts `rpcbind.service` and `rpc-cmsd.service` automatically during package
-configuration so `dtcm` works out of the box after `apt install`. Calendar
-Manager also provides **View → Server & Network Status...** to inspect live
-`rpc.cmsd`/`rpcbind` reachability, socket binding, systemd firewall policy, and
-local spool status.
+`/lib/systemd/system/rpc-cmsd.service` with `RuntimeDirectory=rpc.cmsd`,
+`PrivateNetwork=yes`, `RestrictAddressFamilies=AF_UNIX`, `NoNewPrivileges=yes`,
+and `ProtectHome=read-only`, initializes `/var/spool/calendar`, and enables and
+starts `rpc-cmsd.service` automatically on `apt install`. Legacy loopback
+TCP/UDP (`-l`) and opt-in LAN (`-n`) modes remain available when explicitly
+configured.
+
+### Encrypted calendar sharing: CalDAV (HTTPS) & SSH socket forwarding
+
+- **CalDAV (`File → CalDAV Sync...`)**: Calendar Manager (`caldav_client.c`,
+  `caldav_ui.c`) reuses `ics_io.c` and `libcurl` to sync with standard HTTPS
+  CalDAV servers (Nextcloud, Radicale, Baïkal, Fastmail, etc.) using `PROPFIND`,
+  `GET`, and `PUT` with TLS certificate verification enabled by default.
+  Profiles are saved to `~/.dt/dtcm_caldav.conf` (`0600`) without persisting
+  plaintext passwords; UID filenames are sanitized against path traversal.
+- **SSH Unix-socket forwarding (`lib/csa/ssh_tunnel.c`)**: For classic
+  `user@remotehost` CDE-to-CDE calendars without opening LAN RPC ports, enable
+  **Use SSH socket tunnel for remote calendars** in **View → Server & Network
+  Status...** (or set `DTCM_SSH_TUNNEL=1` / browse `user@ssh://remotehost`).
+  `libcsa` opens an encrypted `ssh -N -T -L <private_sock>:/run/rpc.cmsd/cmsd.sock`
+  tunnel (`0700` directory, `0600` socket, `BatchMode=yes`, strict hostname
+  validation) and cleans it up on exit.
+- **Live diagnostics (`View → Server & Network Status...`)**: Reports active
+  calendar, CSA handle state, `AF_UNIX`/`SO_PEERCRED` status, any active TCP/UDP
+  ports, systemd isolation policy, SSH tunnel toggle, and local spool status.
 
 ## Requests
 

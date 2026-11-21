@@ -17,6 +17,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/socket.h>
+#include <sys/un.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -31,15 +32,18 @@
 #include <Xm/PushBG.h>
 #include <Xm/SeparatoG.h>
 #include <Xm/Text.h>
+#include <Xm/ToggleBG.h>
 
 #include "server_status.h"
 
 #define CMSD_RPC_PROG   100068UL
 #define CMSD_RPC_VERS_5 5UL
 #define CMSD_RPC_VERS_4 4UL
+#define CMSD_UNIX_SOCK  "/run/rpc.cmsd/cmsd.sock"
 
 static Widget g_status_dialog = nullptr;
 static Widget g_status_text = nullptr;
+static Widget g_ssh_toggle = nullptr;
 
 static int
 run_cmd_capture(char *const argv[], char *out, size_t out_sz)
@@ -176,6 +180,44 @@ resolve_ipv4(const char *host, struct sockaddr_in *sin_out, char *ip_str, size_t
 }
 
 static int
+probe_cmsd_unix_nullproc(const char *sock_path, unsigned long *vers_out)
+{
+#if defined(OPT_TIRPC) && !defined(SunOS)
+    static const unsigned long versions[] = { CMSD_RPC_VERS_5, CMSD_RPC_VERS_4 };
+    struct sockaddr_un sun;
+    struct timeval tv;
+
+    if (!sock_path || !sock_path[0] || strlen(sock_path) >= sizeof(sun.sun_path))
+        return 0;
+
+    tv.tv_sec = 2;
+    tv.tv_usec = 0;
+
+    for (size_t i = 0; i < sizeof(versions) / sizeof(versions[0]); i++) {
+        int sock = RPC_ANYSOCK;
+        memset(&sun, 0, sizeof(sun));
+        sun.sun_family = AF_UNIX;
+        snprintf(sun.sun_path, sizeof(sun.sun_path), "%s", sock_path);
+        CLIENT *cl = clntunix_create(&sun, CMSD_RPC_PROG, versions[i], &sock, 0, 0);
+        if (!cl)
+            continue;
+        enum clnt_stat st = clnt_call(cl, NULLPROC, (xdrproc_t)xdr_void, nullptr,
+                                      (xdrproc_t)xdr_void, nullptr, tv);
+        clnt_destroy(cl);
+        if (st == RPC_SUCCESS) {
+            if (vers_out)
+                *vers_out = versions[i];
+            return 1;
+        }
+    }
+#else
+    (void)sock_path;
+    (void)vers_out;
+#endif
+    return 0;
+}
+
+static int
 probe_cmsd_nullproc(const char *host, const char *proto, unsigned long *vers_out)
 {
     static const unsigned long versions[] = { CMSD_RPC_VERS_5, CMSD_RPC_VERS_4 };
@@ -261,9 +303,15 @@ build_status_report(Calendar *c, char *buf, size_t bufsz)
     unsigned short tcp_port = 0;
     unsigned long tcp_vers = 0;
     unsigned long udp_vers = 0;
+    unsigned long unix_vers = 0;
     int tcp_ping_ok = 0;
     int udp_ping_ok = 0;
+    int unix_ping_ok = 0;
+    const char *unix_sock = getenv("DTCM_UNIX_SOCK");
     size_t off = 0;
+
+    if (!unix_sock || !unix_sock[0])
+        unix_sock = CMSD_UNIX_SOCK;
 
     memset(local_host, 0, sizeof(local_host));
     if (gethostname(local_host, sizeof(local_host) - 1) != 0)
@@ -283,6 +331,9 @@ build_status_report(Calendar *c, char *buf, size_t bufsz)
     const char *probe_host = local ? "127.0.0.1" : cal_host;
     resolved = resolve_ipv4(probe_host, &sin, ip_str, sizeof(ip_str));
 
+    if (local)
+        unix_ping_ok = probe_cmsd_unix_nullproc(unix_sock, &unix_vers);
+
     if (resolved) {
         udp_port = pmap_getport(&sin, CMSD_RPC_PROG, CMSD_RPC_VERS_5, IPPROTO_UDP);
         if (udp_port == 0)
@@ -301,19 +352,28 @@ build_status_report(Calendar *c, char *buf, size_t bufsz)
         "Calendar & Connection\n"
         "------------------------------------------------------------\n"
         "  Active calendar : %s\n"
-        "  Target host     : %s (%s, %s)\n"
+        "  Target host     : %s (%s)\n"
         "  CSA session     : %s\n"
         "\n"
-        "RPC Service (rpc.cmsd / rpcbind)\n"
+        "RPC Service (rpc.cmsd)\n"
         "------------------------------------------------------------\n",
         (c && c->calname) ? c->calname : "(none)",
         cal_host,
-        local ? "local host" : "remote host",
-        ip_str,
+        local ? (unix_ping_ok ? "local host via AF_UNIX" : "local host") : ip_str,
         (c && c->cal_handle != 0) ? "Connected (active CSA handle)" :
                                     "Not connected (offline / in-memory fallback)");
 
-    if (udp_port != 0 || tcp_port != 0) {
+    if (local) {
+        off += (size_t)snprintf(buf + off, bufsz - off,
+            "  Unix socket     : %s (%s%s%s)\n",
+            unix_sock,
+            unix_ping_ok ? "responding, SO_PEERCRED enforced" : "not listening",
+            unix_ping_ok ? ", v" : "",
+            unix_ping_ok ? (unix_vers == 5 ? "5" : "4") : "");
+    }
+
+    int net_ports_active = (tcp_ping_ok || udp_ping_ok);
+    if (net_ports_active || (!unix_ping_ok && (udp_port != 0 || tcp_port != 0))) {
         char tcp_state[64];
         char udp_state[64];
 
@@ -332,31 +392,36 @@ build_status_report(Calendar *c, char *buf, size_t bufsz)
             snprintf(udp_state, sizeof(udp_state), "port %u (not responding)", udp_port);
 
         off += (size_t)snprintf(buf + off, bufsz - off,
-            "  rpcbind (111)   : Reachable (RPC program %lu registered)\n"
+            "  rpcbind (111)   : Registered (RPC program %lu)\n"
             "  TCP endpoint    : %s\n"
             "  UDP endpoint    : %s\n",
             CMSD_RPC_PROG, tcp_state, udp_state);
+    } else if (unix_ping_ok) {
+        off += (size_t)snprintf(buf + off, bufsz - off,
+            "  TCP / UDP ports : None (Unix-socket-only mode; rpcbind not required)\n");
     } else {
         off += (size_t)snprintf(buf + off, bufsz - off,
-            "  rpcbind (111)   : Program %lu (rpc.cmsd) is NOT registered\n"
-            "  Action needed   : Start rpcbind.service and rpc-cmsd.service\n"
-            "                    (sudo systemctl enable --now rpc-cmsd.service)\n",
-            CMSD_RPC_PROG);
+            "  Status          : rpc.cmsd is NOT running\n"
+            "  Action needed   : sudo systemctl enable --now rpc-cmsd.service\n");
     }
 
     if (local) {
         char svc_state[128];
         char show_out[512];
-        char tcp_bind[64] = "(n/a)";
-        char udp_bind[64] = "(n/a)";
+        char tcp_bind[64] = "none";
+        char udp_bind[64] = "none";
         int tcp_lo_ip = 0;
         int udp_lo_ip = 0;
         int has_ip_deny = 0;
         int has_ip_allow_lo = 0;
+        int has_priv_net = 0;
+        int has_unix_only_af = 0;
         int has_net_flag = 0;
         char *argv_active[] = { "systemctl", "is-active", "rpc-cmsd.service", nullptr };
         char *argv_show[] = {
             "systemctl", "show",
+            "-p", "PrivateNetwork",
+            "-p", "RestrictAddressFamilies",
             "-p", "IPAddressDeny",
             "-p", "IPAddressAllow",
             "-p", "ExecStart",
@@ -367,6 +432,10 @@ build_status_report(Calendar *c, char *buf, size_t bufsz)
             snprintf(svc_state, sizeof(svc_state), "(systemd unavailable)");
 
         if (run_cmd_capture(argv_show, show_out, sizeof(show_out)) == 0) {
+            if (strstr(show_out, "PrivateNetwork=yes"))
+                has_priv_net = 1;
+            if (strstr(show_out, "RestrictAddressFamilies=AF_UNIX"))
+                has_unix_only_af = 1;
             if (strstr(show_out, "IPAddressDeny=any") ||
                 strstr(show_out, "IPAddressDeny=0.0.0.0/0"))
                 has_ip_deny = 1;
@@ -390,29 +459,37 @@ build_status_report(Calendar *c, char *buf, size_t bufsz)
             "\nNetwork Exposure & Security (Local Host)\n"
             "------------------------------------------------------------\n"
             "  systemd unit    : rpc-cmsd.service (%s)\n"
-            "  Socket bind     : TCP %s, UDP %s\n"
-            "  Firewall policy : %s\n",
+            "  Socket bind     : %s\n"
+            "  Isolation       : %s\n",
             svc_state,
-            tcp_bind,
-            udp_bind,
-            (has_ip_deny && has_ip_allow_lo)
-                ? "systemd cgroup BPF (IPAddressDeny=any, Allow=localhost)"
-                : "no systemd IPAddressDeny restriction detected");
+            (!net_ports_active && unix_ping_ok)
+                ? "AF_UNIX only (zero TCP/UDP ports open)"
+                : (!net_ports_active)
+                    ? "none"
+                    : tcp_bind,
+            (has_priv_net && has_unix_only_af)
+                ? "PrivateNetwork=yes + RestrictAddressFamilies=AF_UNIX + SO_PEERCRED"
+                : (has_ip_deny && has_ip_allow_lo)
+                    ? "systemd cgroup BPF (IPAddressDeny=any, Allow=localhost)"
+                    : "standard");
 
-        if (udp_port == 0 && tcp_port == 0) {
+        if (!net_ports_active && unix_ping_ok) {
             off += (size_t)snprintf(buf + off, bufsz - off,
-                "  Reachability    : Stopped (no calendar ports listening)\n");
+                "  Reachability    : Local AF_UNIX only (SO_PEERCRED) -- zero LAN/multi-user exposure\n");
+        } else if (!net_ports_active) {
+            off += (size_t)snprintf(buf + off, bufsz - off,
+                "  Reachability    : Stopped (no calendar service listening)\n");
         } else if (!has_net_flag && ((has_ip_deny && has_ip_allow_lo) || (tcp_lo_ip && udp_lo_ip))) {
             off += (size_t)snprintf(buf + off, bufsz - off,
                 "  Reachability    : Localhost only (127.0.0.0/8 / lo) -- protected from LAN\n");
         } else if (!has_net_flag) {
             off += (size_t)snprintf(buf + off, bufsz - off,
-                "  Reachability    : Loopback-enforced by rpc.cmsd (-l default)\n");
+                "  Reachability    : Loopback-enforced by rpc.cmsd (-l)\n");
         } else {
             off += (size_t)snprintf(buf + off, bufsz - off,
                 "  Reachability    : WARNING -- Network mode (-n) enabled on LAN!\n"
                 "                    ONC RPC AUTH_UNIX is unauthenticated; restrict\n"
-                "                    with a host firewall or switch back to -l.\n");
+                "                    with a host firewall or switch to -u / CalDAV.\n");
         }
 
         struct stat st_dir, st_cal;
@@ -427,12 +504,24 @@ build_status_report(Calendar *c, char *buf, size_t bufsz)
                 ? "present" : "missing",
             cal_file,
             (stat(cal_file, &st_cal) == 0) ? "present" : "not created yet");
+        off += (size_t)snprintf(buf + off, bufsz - off,
+            "\nRemote Calendar Sharing Options\n"
+            "------------------------------------------------------------\n"
+            "  SSH tunnel      : %s\n"
+            "  CalDAV (HTTPS)  : Available via File -> CalDAV Sync...\n",
+            (getenv("DTCM_SSH_TUNNEL") && strcmp(getenv("DTCM_SSH_TUNNEL"), "1") == 0)
+                ? "Enabled (remote Browse uses SSH StreamLocalForward -> remote cmsd.sock)"
+                : "Disabled (check box below or browse user@ssh://remotehost)");
     } else {
+        int ssh_on = (strncmp(cal_host, "ssh://", 6) == 0) ||
+                     (getenv("DTCM_SSH_TUNNEL") && strcmp(getenv("DTCM_SSH_TUNNEL"), "1") == 0);
         off += (size_t)snprintf(buf + off, bufsz - off,
             "\nNetwork Note (Remote Calendar)\n"
             "------------------------------------------------------------\n"
-            "  Viewing a remote calendar over ONC RPC (AUTH_UNIX).\n"
-            "  Ensure traffic is protected on a trusted LAN or VPN.\n");
+            "  Transport       : %s\n",
+            ssh_on
+                ? "Encrypted SSH StreamLocalForward -> remote /run/rpc.cmsd/cmsd.sock (SO_PEERCRED)"
+                : "Direct ONC RPC (AUTH_UNIX, unencrypted) -- enable SSH tunnel or use CalDAV");
     }
 }
 
@@ -449,6 +538,18 @@ refresh_status_cb(Widget w, XtPointer client_data, XtPointer call_data)
 
     build_status_report(c, report, sizeof(report));
     XmTextSetString(g_status_text, report);
+}
+
+static void
+ssh_toggle_cb(Widget w, XtPointer client_data, XtPointer call_data)
+{
+    (void)call_data;
+    Calendar *c = (Calendar *)client_data;
+    if (XmToggleButtonGadgetGetState(w))
+        setenv("DTCM_SSH_TUNNEL", "1", 1);
+    else
+        unsetenv("DTCM_SSH_TUNNEL");
+    refresh_status_cb(w, (XtPointer)c, nullptr);
 }
 
 static void
@@ -483,6 +584,7 @@ dtcm_server_status_show(Calendar *c)
         XmString title = XmStringCreateLocalized("Calendar : Server & Network Status");
         XmString refresh_lbl = XmStringCreateLocalized("Refresh");
         XmString close_lbl = XmStringCreateLocalized("Close");
+        XmString ssh_lbl = XmStringCreateLocalized("Use SSH socket tunnel for remote calendars");
 
         XtSetArg(al[ac], XmNdialogTitle, title); ac++;
         XtSetArg(al[ac], XmNautoUnmanage, False); ac++;
@@ -511,6 +613,14 @@ dtcm_server_status_show(Calendar *c)
         XtManageChild(refresh_btn);
 
         ac = 0;
+        XtSetArg(al[ac], XmNlabelString, ssh_lbl); ac++;
+        XtSetArg(al[ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
+        XtSetArg(al[ac], XmNleftAttachment, XmATTACH_FORM); ac++;
+        g_ssh_toggle = XmCreateToggleButtonGadget(g_status_dialog, "sshTunnelToggle", al, ac);
+        XtAddCallback(g_ssh_toggle, XmNvalueChangedCallback, ssh_toggle_cb, (XtPointer)c);
+        XtManageChild(g_ssh_toggle);
+
+        ac = 0;
         XtSetArg(al[ac], XmNleftAttachment, XmATTACH_FORM); ac++;
         XtSetArg(al[ac], XmNrightAttachment, XmATTACH_FORM); ac++;
         XtSetArg(al[ac], XmNbottomAttachment, XmATTACH_WIDGET); ac++;
@@ -523,8 +633,8 @@ dtcm_server_status_show(Calendar *c)
         XtSetArg(al[ac], XmNeditMode, XmMULTI_LINE_EDIT); ac++;
         XtSetArg(al[ac], XmNeditable, False); ac++;
         XtSetArg(al[ac], XmNcursorPositionVisible, False); ac++;
-        XtSetArg(al[ac], XmNrows, 24); ac++;
-        XtSetArg(al[ac], XmNcolumns, 80); ac++;
+        XtSetArg(al[ac], XmNrows, 26); ac++;
+        XtSetArg(al[ac], XmNcolumns, 82); ac++;
         XtSetArg(al[ac], XmNscrollHorizontal, True); ac++;
         XtSetArg(al[ac], XmNscrollVertical, True); ac++;
         XtSetArg(al[ac], XmNtopAttachment, XmATTACH_FORM); ac++;
@@ -542,6 +652,12 @@ dtcm_server_status_show(Calendar *c)
         XmStringFree(title);
         XmStringFree(refresh_lbl);
         XmStringFree(close_lbl);
+        XmStringFree(ssh_lbl);
+    }
+
+    if (g_ssh_toggle) {
+        int on = (getenv("DTCM_SSH_TUNNEL") && strcmp(getenv("DTCM_SSH_TUNNEL"), "1") == 0);
+        XmToggleButtonGadgetSetState(g_ssh_toggle, on ? True : False, False);
     }
 
     build_status_report(c, report, sizeof(report));

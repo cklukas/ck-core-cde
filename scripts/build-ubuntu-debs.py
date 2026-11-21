@@ -585,9 +585,8 @@ def guest_build_and_verify(args: argparse.Namespace) -> int:
                     raise SystemExit(
                         f"rpc-cmsd.service is not active after ck-core-cde install: {cmsd_state.stdout.strip()} {cmsd_state.stderr.strip()}"
                     )
-                rpc_out = subprocess.check_output(["rpcinfo", "-p"], text=True)
-                if "100068" not in rpc_out:
-                    raise SystemExit("rpc.cmsd (RPC program 100068) is not registered with rpcbind after ck-core-cde install")
+                if not Path("/run/rpc.cmsd/cmsd.sock").is_socket():
+                    raise SystemExit("/run/rpc.cmsd/cmsd.sock is missing after ck-core-cde install")
 
             # 1) Boot installed CDE (Wayland) desktop session WITHOUT LD_LIBRARY_PATH, verify libXm.so.9 maps,
             #    and capture full desktop via installed /usr/bin/ck-grab --capture --full-screen!

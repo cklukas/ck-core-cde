@@ -42,8 +42,8 @@ libcsa_la_SOURCES = agent.c         agent_xdr.c     api.c \
 		    reparser.c	    rescan.c        rpccalls.c \
 		    rtable2_clnt.c  rtable2_xdr.c   rtable3_clnt.c \
 		    rtable3_xdr.c   rtable4_clnt.c  rtable4_xdr.c \
-		    table.c         updateattrs.c   xtclient.c \
-		    ansi_c.c
+		    ssh_tunnel.c    ssh_tunnel.h    table.c \
+		    updateattrs.c   xtclient.c      ansi_c.c
 
 reparser.c reparser.h: reparser.y
 	$(YACC) $(AM_YFLAGS) $<
@@ -84,7 +84,8 @@ agent.h:
 # routines it checks, so it runs the code that is shipped.
 EXTRA_DIST = tests/check-xdr.py tests/xdr-test.c cmlimits.h cmxdrlist.h \
              tests/check-duration-iso8601.py tests/duration-iso8601.c \
-             tests/check-name-table-alloc.py tests/check-name-table-alloc.c
+             tests/check-name-table-alloc.py tests/check-name-table-alloc.c \
+             tests/check-ssh-tunnel.py
 
 check-local:
 	CSA_COMPILE='$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcsa_la_CFLAGS) $(AM_CFLAGS) $(CFLAGS)' \
@@ -93,3 +94,4 @@ check-local:
 	python3 $(srcdir)/tests/check-xdr.py $(srcdir)
 	CC="$(CC)" python3 $(srcdir)/tests/check-duration-iso8601.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-name-table-alloc.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-ssh-tunnel.py

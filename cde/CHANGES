@@ -1,4 +1,49 @@
 2026-11-21
+- Add `AF_UNIX` + `SO_PEERCRED` local transport, HTTPS CalDAV sync, and
+  optional SSH Unix-socket forwarding to CDE Calendar (`rpc.cmsd`, `libcsa`,
+  `dtcm`):
+  - Add `/run/rpc.cmsd/cmsd.sock` (`AF_UNIX`) listener (`-u` Unix-only mode,
+    `-U <path>` override) and kernel `SO_PEERCRED` UID verification in
+    `rpc.cmsd` (rejecting forged `AUTH_UNIX` UIDs with `AUTH_TOOWEAK`),
+    connect via `clntunix_create` first in `libcsa` (`connection.c`), and
+    default `rpc-cmsd.service` and the Lima template to `-s -u` with
+    `PrivateNetwork=yes` and `RestrictAddressFamilies=AF_UNIX` — zero open
+    TCP/UDP ports and no `rpcbind` requirement for local calendars
+    (`cde/programs/dtcm/server/{svcmain.c,Makefile.am,tests/check-peercred.py}`,
+    `cde/lib/csa/connection.c`, `cde/debian/rpc-cmsd.service`,
+    `scripts/{lima/cde-ubuntu-26.04.yaml,build-ubuntu-debs.py}`).
+  - Add HTTPS CalDAV (RFC 4791) calendar sync to `dtcm` (**File → CalDAV
+    Sync...**) reusing `ics_io.c` and optional `libcurl` (`configure.ac`,
+    `cde/debian/control`), supporting `PROPFIND`, `GET`, and `PUT` with TLS
+    verification on by default, UID filename traversal sanitization, mode
+    `0600` profile storage without plaintext passwords, and standalone
+    ASan/UBSan end-to-end test coverage
+    (`cde/programs/dtcm/dtcm/{caldav_client.{c,h},caldav_ui.{c,h},calendarA.c,Makefile.am,tests/check-caldav.py}`).
+  - Add optional SSH Unix-socket forwarding (`StreamLocalForward` to remote
+    `/run/rpc.cmsd/cmsd.sock`) in `libcsa` (`ssh_tunnel.{c,h}`, enabled via
+    `user@ssh://host`, `DTCM_SSH_TUNNEL=1`, or the toggle in **View → Server &
+    Network Status...**) with strict hostname validation, `0700`/`0600`
+    per-tunnel socket permissions, `atexit` cleanup, and ASan/UBSan test
+    coverage (`cde/lib/csa/{ssh_tunnel.{c,h},connection.c,Makefile.am,tests/check-ssh-tunnel.py}`,
+    `cde/programs/dtcm/dtcm/server_status.c`,
+    `docs/improvements/calendar-server.md`).
+- Enable end-to-end execution of **Mirror** (`CKFSP_MIRROR`) and **Synchronize
+  two ways** (`SYNC_PROFILE_TWO_WAY`) via **Apply reviewed plan** in
+  `dtfile_sync` (*Compare / Synchronize Folders*) on top of `ck-core-fs-lib`
+  ABI 0.5 (`ckfet_start_with_journal_root_v2` / `ckfss_two_way_open_tree_v1`):
+  - Wire multi-page destination deletion approval (`Approve proposed
+    destination deletions (Mirror)`), recursive folder creation and post-order
+    folder removal, and retained destination file replacement into `SyncJob`
+    and `dtfile_sync`.
+  - Add `"Synchronize two ways"` (`profile:6`) with durable per-folder-pair
+    session baselines, first-run baseline approval (`Approve initial two-way
+    baseline (first run)`), directional conflict choices (`Keep Left`,
+    `Keep Right`, `Restore deleted`, `Keep edited`, `Delete edited`), retained
+    versions, recursive directory-tree synchronization, saved-profile
+    persistence, and baseline-generation diagnostics
+    (`cde/programs/dtfile/dtsync/{SyncJob.{c,h},SyncProfiles.c,main.c,dtfile_sync.msg}`,
+    `cde/programs/dtfile/tests/{sync-controller.c,check-sync-controller.py,check-sync-retry-ui.py,check-sync-mirror-twoway.py}`,
+    `cde/programs/dtfile/Makefile.am`, `docs/improvements/folder-comparison.md`).
 - Harden `rpc.cmsd` defaults to loopback-only and add a live **View → Server &
   Network Status...** dialog to `dtcm`:
   - Default `rpc.cmsd` standalone mode (`-l`, with `-n` opt-in for LAN) to

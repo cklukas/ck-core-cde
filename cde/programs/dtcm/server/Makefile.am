@@ -41,11 +41,13 @@ parser.c parser.h: parser.y
 EXTRA_DIST = tests/check-requests.py tests/requests-test.c \
 	     tests/check-loop.py tests/loop-test.c \
 	     tests/check-rb-status.py tests/check-rb-status.c \
-	     tests/check-tree-list-alloc.py tests/check-tree-list-alloc.c
+	     tests/check-tree-list-alloc.py tests/check-tree-list-alloc.c \
+	     tests/check-peercred.py
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-rb-status.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-tree-list-alloc.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-peercred.py
 	CMSD_COMPILE='$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rpc_cmsd_CFLAGS) $(AM_CFLAGS) $(CFLAGS)' \
 	CMSD_LINK='$(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS)' \
 	CMSD_LIBS='$(rpc_cmsd_LDADD) $(LIBS)' \

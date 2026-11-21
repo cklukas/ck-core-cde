@@ -39,6 +39,8 @@
 #include <time.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 #include "connection.h"
 #include "rtable2.h"
 #include "rtable3.h"
@@ -49,6 +51,7 @@
 #include "convert2-4.h"
 #include "convert3-4.h"
 #include "rpccalls.h"
+#include "ssh_tunnel.h"
 
 #define MAX_COUNT	40
 
@@ -808,6 +811,33 @@ get_new_client_handle(_DtCm_Connection *conn)
 	}
 }
 
+#define _DtCMS_DEFAULT_UNIX_SOCK "/run/rpc.cmsd/cmsd.sock"
+
+static int
+is_local_rpc_host(const char *host)
+{
+	char local[256];
+	char *dot;
+
+	if (host == nullptr || host[0] == '\0')
+		return (1);
+	if (strcmp(host, "localhost") == 0 || strcmp(host, "127.0.0.1") == 0)
+		return (1);
+
+	memset(local, 0, sizeof(local));
+	if (gethostname(local, sizeof(local) - 1) == 0 && local[0] != '\0') {
+		if (strcmp(host, local) == 0)
+			return (1);
+		dot = strchr(local, '.');
+		if (dot != nullptr) {
+			*dot = '\0';
+			if (strcmp(host, local) == 0)
+				return (1);
+		}
+	}
+	return (0);
+}
+
 /*
  * On Debian/Ubuntu hosts where /etc/hosts maps the local hostname to
  * 127.0.1.1 (while lo's primary address is 127.0.0.1), rpcbind's
@@ -818,27 +848,29 @@ get_new_client_handle(_DtCm_Connection *conn)
 static const char *
 normalize_local_rpc_host(const char *host)
 {
-	char local[256];
-	char *dot;
-
-	if (host == nullptr || host[0] == '\0')
+	if (is_local_rpc_host(host))
 		return ("127.0.0.1");
-	if (strcmp(host, "localhost") == 0 || strcmp(host, "127.0.0.1") == 0)
-		return ("127.0.0.1");
-
-	memset(local, 0, sizeof(local));
-	if (gethostname(local, sizeof(local) - 1) == 0 && local[0] != '\0') {
-		if (strcmp(host, local) == 0)
-			return ("127.0.0.1");
-		dot = strchr(local, '.');
-		if (dot != nullptr) {
-			*dot = '\0';
-			if (strcmp(host, local) == 0)
-				return ("127.0.0.1");
-		}
-	}
 	return (host);
 }
+
+#if defined(OPT_TIRPC) && !defined(SunOS)
+static CLIENT *
+create_unix_client(const char *sock_path, const u_long prognum, const u_long vers)
+{
+	struct sockaddr_un sun;
+	int sock = RPC_ANYSOCK;
+
+	if (sock_path == nullptr || sock_path[0] == '\0' ||
+	    strlen(sock_path) >= sizeof(sun.sun_path))
+		return (nullptr);
+
+	memset(&sun, 0, sizeof(sun));
+	sun.sun_family = AF_UNIX;
+	snprintf(sun.sun_path, sizeof(sun.sun_path), "%s", sock_path);
+
+	return clntunix_create(&sun, prognum, vers, &sock, 0, 0);
+}
+#endif
 
 /*
  * Get a client handle to a server that supports the highest
@@ -859,11 +891,70 @@ get_client_handle(
 	struct timeval tv;
 	enum clnt_stat status;
 	const char *rpc_host = normalize_local_rpc_host(host);
+	int local = is_local_rpc_host(host);
 
 	tv.tv_sec = 1;
 	tv.tv_usec = 0;
 
 	*clnt = nullptr;
+
+#if defined(OPT_TIRPC) && !defined(SunOS)
+	/*
+	 * Prefer the local AF_UNIX socket (/run/rpc.cmsd/cmsd.sock) for local
+	 * calendars so SO_PEERCRED authenticates the real kernel UID without
+	 * requiring rpcbind or any open TCP/UDP ports.
+	 */
+	if (local) {
+		const char *sock_path = getenv("DTCM_UNIX_SOCK");
+		if (sock_path == nullptr || sock_path[0] == '\0')
+			sock_path = _DtCMS_DEFAULT_UNIX_SOCK;
+
+		for (vers = vers_high; vers >= vers_low; vers--) {
+			cl = create_unix_client(sock_path, prognum, vers);
+			if (cl != nullptr) {
+				clnt_control(cl, CLSET_TIMEOUT, (char *)&tv);
+				status = clnt_call(cl, 0, _DtCm_xdr_void,
+						   (char *)nullptr, _DtCm_xdr_void,
+						   (char *)nullptr, tv);
+				if (status == RPC_SUCCESS) {
+					*vers_outp = vers;
+					*clnt = cl;
+					return (CSA_SUCCESS);
+				}
+				clnt_destroy(cl);
+				if (status != RPC_PROGVERSMISMATCH)
+					break;
+			} else {
+				break;
+			}
+		}
+	} else if (_DtCm_ssh_tunnel_requested(host)) {
+		char tunnel_sock[320];
+		if (_DtCm_ssh_tunnel_open(host, tunnel_sock, sizeof(tunnel_sock)) == 0) {
+			for (vers = vers_high; vers >= vers_low; vers--) {
+				cl = create_unix_client(tunnel_sock, prognum, vers);
+				if (cl != nullptr) {
+					clnt_control(cl, CLSET_TIMEOUT, (char *)&tv);
+					status = clnt_call(cl, 0, _DtCm_xdr_void,
+							   (char *)nullptr, _DtCm_xdr_void,
+							   (char *)nullptr, tv);
+					if (status == RPC_SUCCESS) {
+						*vers_outp = vers;
+						*clnt = cl;
+						return (CSA_SUCCESS);
+					}
+					clnt_destroy(cl);
+					if (status != RPC_PROGVERSMISMATCH)
+						break;
+				} else {
+					break;
+				}
+			}
+		}
+		return (CSA_E_SERVICE_UNAVAILABLE);
+	}
+#endif
+
 	for (vers = vers_high; vers >= vers_low; vers--) {
 
 		if ((cl = clnt_create(rpc_host, prognum, vers, nettype)) != nullptr) {

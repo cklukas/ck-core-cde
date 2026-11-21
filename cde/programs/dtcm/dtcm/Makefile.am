@@ -4,17 +4,20 @@ bin_PROGRAMS = dtcm dtcm_delete dtcm_insert dtcm_lookup dtcm_editor
 
 EXTRA_DIST = tests/check-temp-file-create.py tests/check-temp-file-create.c \
              tests/check-sigint-signal.py tests/check-sigint-signal.c \
-             tests/check-ics-io.py tests/ics-io-test.c
+             tests/check-ics-io.py tests/ics-io-test.c \
+             tests/check-caldav.py
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-temp-file-create.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-sigint-signal.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-ics-io.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-caldav.py
 
 AM_CFLAGS = $(DT_INCDIR) $(CSA_INCDIR) -I$(top_srcdir)/lib/csa	\
--I$(top_srcdir)/programs/dtcm/libDtCmP
+-I$(top_srcdir)/programs/dtcm/libDtCmP $(LIBCURL_CFLAGS) \
+-DHAVE_LIBCURL=$(DTCM_CALDAV_ENABLED)
 
-LDADD = ../libDtCmP/libDtCmP.a $(LIBCSA) $(DTCLIENTLIBS) $(TIRPCLIB) $(XTOOLLIB)
+LDADD = ../libDtCmP/libDtCmP.a $(LIBCSA) $(DTCLIENTLIBS) $(TIRPCLIB) $(LIBCURL_LIBS) $(XTOOLLIB)
 
 if FREEBSD
 LDADD += -lcompat -lutil
@@ -26,7 +29,8 @@ endif
 
 dtcm_SOURCES = MonthPanel.c    RFCMIME.c       about.c \
                alarm.c         blist.c         browser.c \
-               calendarA.c     cm_i18n.c       cmtt.c \
+               calendarA.c     caldav_client.c caldav_client.h \
+               caldav_ui.c     caldav_ui.h     cm_i18n.c       cmtt.c \
                datefield.c     dayglance.c     deskset.c \
                dnd.c           dssw.c          editor.c \
                find.c          fns.c           font.c \

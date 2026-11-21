@@ -43,6 +43,7 @@ Build-Depends: debhelper-compat (= 13),
                libpam0g-dev,
                libutempter-dev,
                libarchive-dev,
+               libcurl4-openssl-dev,
                libdbus-1-dev,
                ck-core-motif9 (>= 2.4.0),
                ck-core-fs-lib (>= 0.3.0)
