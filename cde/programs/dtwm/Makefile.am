@@ -21,6 +21,7 @@ EXTRA_DIST = tests/check-property-readers.py tests/property-client.c \
              tests/check-dtwm-wayland-wp16.py tests/check-dtwm-wayland-wp17.py \
              tests/check-dtwm-wayland-wp18.py tests/check-dtwm-wayland-wp19.py \
              tests/check-dtwm-wayland-wp20.py \
+             tests/check-dtwm-wayland-wp24-noxwayland.py \
              tests/check-dtwm-wayland-menus.py \
              tests/check-dtwm-wayland-busy-light.py \
              tests/check-dtwm-wayland-panel-dnd.py \
@@ -60,6 +61,7 @@ if BUILD_DTWM_WAYLAND
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp18.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp19.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp20.py --compositor ./dtwm-wayland
+	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp24-noxwayland.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-menus.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-busy-light.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-panel-dnd.py --compositor ./dtwm-wayland

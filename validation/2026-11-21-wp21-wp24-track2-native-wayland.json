@@ -1,0 +1,38 @@
+{
+  "work_package": "WP-21 – WP-24 (Track 2 Complete: Pure XWayland-Free Native Motif Runtime)",
+  "date": "2026-11-21",
+  "branch": "master",
+  "host_vm": "cde-ubuntu2604 (Ubuntu 26.04.1 LTS aarch64, Linux 7.0.0-34-generic, clang 21, wlroots 0.19)",
+  "motif_revision": "7686d1a37ef9aa623b3104d464dae591597fda5f",
+  "fs_lib_revision": "edd7db6a2bcbf3ea15cfc0d32be31ddc837321e8",
+  "build_timing": {
+    "motif_elapsed_seconds": 19,
+    "cde_elapsed_seconds": 3,
+    "mode": "incremental (-j6) in /var/tmp/ck-wayland-build/wp00 across ck-core-motif (libXm.so.9.0.0 with --enable-wayland) and ck-core-cde (dtwm-wayland, dtwm-panel, dtwm, dtsession)"
+  },
+  "built_sha256": {
+    "/var/tmp/ck-wayland-build/wp00/motif-prefix/lib/libXm.so.9.0.0": "2bf8c821d19df0a2963ce29ea1f6840fc8565f60bb1364eddccdab37b0521f9d",
+    "/var/tmp/ck-wayland-build/wp00/cde-build/programs/dtwm/dtwm-wayland": "ff8e298628ad90cd96697951283d9cc4f944494eecd0a5fa1f1035d2f518e2d2",
+    "/var/tmp/ck-wayland-build/wp00/cde-build/programs/dtwm/.libs/dtwm-panel": "b329e05e2222571451bee4575e02bf4bcbe37c678fa20ea9096931d679a7ca64",
+    "/var/tmp/ck-wayland-build/wp00/cde-build/programs/dtsession/.libs/dtsession": "3d0f84dc7df186f56253f23bc92489c5eee16e57260fe9981036dda622bf3f9e"
+  },
+  "features_verified": [
+    "WP-21: Dual Xlib/Xt display seam in libXm.so.9 (CK_MOTIF_BACKEND=auto|wayland|x11) backed by private 0700 $XDG_RUNTIME_DIR/ck-wlx11-<pid>-XXXXXX/S:0 UNIX stream virtualizer with child-process socket isolation, xdg_toplevel server-side bevel decoration negotiation, xdg_toplevel_icon_v1 dynamic icons, and public <Xm/Wayland.h> subsurface API",
+    "WP-22: 32-bit Pixman + double-buffered wl_shm widget rasterizer implementing core X11 GC primitives, FreeType/Fontconfig core fonts, RENDER 0.11 (Composite, Trapezoids, Triangles, gradients, glyph sets for libXft/HarfBuzz), and constrained xdg_popup + xdg_positioner menu/tooltip shells",
+    "WP-23: Native Wayland CLIPBOARD (wl_data_device) & PRIMARY (zwp_primary_selection_v1) across UTF8_STRING/text/uri-list/image/png, bidirectional wl_data_device drag-and-drop with 32-bit ARGB drag-icon surfaces, zwp_text_input_v3 IME preedit/commit on XmText/XmTextField, and wp_fractional_scale_v1 + wp_viewporter HiDPI buffer scaling preserving 96-DPI logical coordinates",
+    "WP-24: dtwm-wayland --no-xwayland and dtsession --wayland --no-xwayland pure XWayland-free session mode (zero Xwayland processes), native DTWM_VIEW_XDG Front Panel & Subpanel docking for dtwm-panel, $XDG_RUNTIME_DIR/dtwm-wayland-<WAYLAND_DISPLAY>.ipc session bus (RESOURCE_MANAGER, _DT_WM_REQUEST, _DT_WORKSPACE_CURRENT_NAME), and native execution of dtstyle, dtfile, dtpad, ck-clock, ck-coins, and ck-browser (wl_subsurface CEF OSR)"
+  ],
+  "commands": [
+    "python3 /var/tmp/ck-wayland-build/wp00/motif-src/tests/automated/run-wayland-backend.py --prefix /var/tmp/ck-wayland-build/wp00/motif-prefix --out ... (PASS: shells, popups, XRender/FreeType, clipboard, DnD, zwp_text_input_v3, 2.0x HiDPI + logical zoom)",
+    "MOTIF_PREFIX=/var/tmp/ck-wayland-build/wp00/motif-prefix CC=clang python3 cde/programs/dtwm/tests/check-dtwm-wayland-wp24-noxwayland.py --compositor /var/tmp/ck-wayland-build/wp00/cde-build/programs/dtwm/dtwm-wayland (PASS in 6.39s: Xwayland=0, dtwm-panel+dtstyle+dtfile+dtpad+ck-clock+ck-coins libXm.so.9 verified, ws0->ws1->ws0 IPC OK, luma 152.8->43.9, plus hybrid Wayland+XWayland check)",
+    "MOTIF_PREFIX=/var/tmp/ck-wayland-build/wp00/motif-prefix CC=clang python3 cde/programs/dtwm/tests/check-dtwm-wayland-workspaces.py --compositor /var/tmp/ck-wayland-build/wp00/cde-build/programs/dtwm/dtwm-wayland (PASS)",
+    "MOTIF_PREFIX=/var/tmp/ck-wayland-build/wp00/motif-prefix CC=clang python3 cde/programs/dtwm/tests/check-dtwm-wayland-wp17.py --compositor /var/tmp/ck-wayland-build/wp00/cde-build/programs/dtwm/dtwm-wayland (PASS)",
+    "MOTIF_PREFIX=/var/tmp/ck-wayland-build/wp00/motif-prefix CC=clang python3 cde/programs/dtwm/tests/check-dtwm-wayland-exit-session.py --compositor /var/tmp/ck-wayland-build/wp00/cde-build/programs/dtwm/dtwm-wayland (PASS)",
+    "ckdocs check --config ckdocs.yml --strict && ckdocs build --config ckdocs.yml --strict"
+  ],
+  "screenshots": {
+    "noxwayland_classic_session": "wp24_noxwayland_classic.png",
+    "noxwayland_modern_dark_live_ipc": "wp24_noxwayland_modern_dark.png"
+  },
+  "result": "pass"
+}

@@ -45,6 +45,7 @@ typedef struct SmWlOutputNode {
 
 static struct {
     Boolean wayland_mode;
+    Boolean no_xwayland;
     pid_t compositor_pid;
     char status_path[512];
 
@@ -351,10 +352,10 @@ static void ensure_ttsession_started(void) {
     XCloseDisplay(dpy);
 }
 
-static void spawn_compositor_if_needed(void) {
+static void spawn_compositor_if_needed(char **orig_argv) {
     const char *wl_env = getenv("WAYLAND_DISPLAY");
     const char *x_env = getenv("DISPLAY");
-    if (wl_env && *wl_env && x_env && *x_env) {
+    if (wl_env && *wl_env && ((x_env && *x_env) || g_smwl.no_xwayland)) {
         return;
     }
 
@@ -390,7 +391,11 @@ static void spawn_compositor_if_needed(void) {
         sigset_t empty;
         sigemptyset(&empty);
         sigprocmask(SIG_SETMASK, &empty, nullptr);
-        execl(comp_bin, "dtwm-wayland", "--status-file", g_smwl.status_path, (char *)nullptr);
+        if (g_smwl.no_xwayland) {
+            execl(comp_bin, "dtwm-wayland", "--no-xwayland", "--status-file", g_smwl.status_path, (char *)nullptr);
+        } else {
+            execl(comp_bin, "dtwm-wayland", "--status-file", g_smwl.status_path, (char *)nullptr);
+        }
         _exit(127);
     }
     if (pid < 0) return;
@@ -408,6 +413,7 @@ static void spawn_compositor_if_needed(void) {
             char line[256];
             char got_wl[128] = {0};
             char got_x[128] = {0};
+            bool got_no_xw = false;
             while (fgets(line, sizeof(line), fp)) {
                 size_t l = strlen(line);
                 while (l > 0 && (line[l - 1] == '\n' || line[l - 1] == '\r')) line[--l] = '\0';
@@ -415,12 +421,21 @@ static void spawn_compositor_if_needed(void) {
                     snprintf(got_wl, sizeof(got_wl), "%s", line + 16);
                 } else if (strncmp(line, "DISPLAY=", 8) == 0) {
                     snprintf(got_x, sizeof(got_x), "%s", line + 8);
+                } else if (strcmp(line, "NO_XWAYLAND=1") == 0) {
+                    got_no_xw = true;
                 }
             }
             fclose(fp);
-            if (got_wl[0] && got_x[0]) {
+            if (got_wl[0] && (got_x[0] || got_no_xw)) {
                 setenv("WAYLAND_DISPLAY", got_wl, 1);
-                setenv("DISPLAY", got_x, 1);
+                if (got_x[0]) {
+                    setenv("DISPLAY", got_x, 1);
+                } else {
+                    unsetenv("DISPLAY");
+                    setenv("DTWM_WAYLAND_NO_XWAYLAND", "1", 1);
+                    setenv("CK_MOTIF_BACKEND", "wayland", 1);
+                    g_smwl.no_xwayland = True;
+                }
                 setenv("XDG_SESSION_TYPE", "wayland", 1);
                 if (!getenv("XDG_CURRENT_DESKTOP")) {
                     setenv("XDG_CURRENT_DESKTOP", "CDE", 1);
@@ -436,6 +451,17 @@ static void spawn_compositor_if_needed(void) {
                 }
                 unlink(g_smwl.status_path);
                 g_smwl.status_path[0] = '\0';
+                /* If started before WAYLAND_DISPLAY existed in --no-xwayland mode,
+                 * re-exec self (preserving PID and child compositor ownership) so libXm
+                 * initializes its in-process native Wayland backend before XtOpenDisplay. */
+                const char *wl_act = getenv("CK_MOTIF_WAYLAND_ACTIVE");
+                if (got_no_xw && (!wl_act || strcmp(wl_act, "1") != 0) && orig_argv && orig_argv[0]) {
+                    char pid_buf[32];
+                    snprintf(pid_buf, sizeof(pid_buf), "%d", (int)g_smwl.compositor_pid);
+                    setenv("DTSESSION_MANAGED_COMPOSITOR_PID", pid_buf, 1);
+                    execv("/proc/self/exe", orig_argv);
+                    execvp(orig_argv[0], orig_argv);
+                }
                 /* Publish live WAYLAND_DISPLAY / DISPLAY to D-Bus & systemd user activation
                  * so xdg-desktop-portal / xdg-desktop-portal-wlr (WebRTC screen sharing),
                  * Secret Service (gnome-keyring-daemon), Polkit authentication (ck-polkit-agent),
@@ -581,7 +607,7 @@ static void ensure_appmanager_gathered_wl(void) {
     }
 
     const char *csync_bin = CDE_INSTALLATION_TOP "/bin/cde-color-sync";
-    if (access(csync_bin, X_OK) == 0) {
+    if (!g_smwl.no_xwayland && access(csync_bin, X_OK) == 0) {
         pid_t cpid = fork();
         if (cpid == 0) {
             setsid();
@@ -596,14 +622,30 @@ void SmWaylandPreInit(int *argc, char **argv) {
     int out = 1;
     Boolean req_wayland = False;
 
+    const char *env_nox = getenv("DTWM_WAYLAND_NO_XWAYLAND");
+    if (env_nox && (!strcmp(env_nox, "1") || !strcasecmp(env_nox, "true"))) {
+        g_smwl.no_xwayland = True;
+    }
+    const char *inherited_cpid = getenv("DTSESSION_MANAGED_COMPOSITOR_PID");
+    if (inherited_cpid && inherited_cpid[0]) {
+        int cpid = atoi(inherited_cpid);
+        if (cpid > 1) g_smwl.compositor_pid = (pid_t)cpid;
+        unsetenv("DTSESSION_MANAGED_COMPOSITOR_PID");
+    }
+
     for (int i = 1; i < *argc; ++i) {
         if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-help") == 0) {
-            printf("Usage: %s [--wayland] [-norestore] [-session name]\n", argv[0]);
+            printf("Usage: %s [--wayland] [--no-xwayland] [-norestore] [-session name]\n", argv[0]);
             fflush(stdout);
             _exit(0);
         }
         if (strcmp(argv[i], "--wayland") == 0) {
             req_wayland = True;
+            continue;
+        }
+        if (strcmp(argv[i], "--no-xwayland") == 0) {
+            req_wayland = True;
+            g_smwl.no_xwayland = True;
             continue;
         }
         argv[out++] = argv[i];
@@ -614,10 +656,10 @@ void SmWaylandPreInit(int *argc, char **argv) {
     const char *wl_env = getenv("WAYLAND_DISPLAY");
     if (req_wayland || (wl_env && *wl_env)) {
         g_smwl.wayland_mode = True;
-        ensure_appmanager_gathered_wl();
         if (req_wayland) {
-            spawn_compositor_if_needed();
+            spawn_compositor_if_needed(argv);
         }
+        ensure_appmanager_gathered_wl();
         ensure_ttsession_started();
     }
 }
@@ -783,6 +825,14 @@ static void request_external_compositor_quit(void) {
             XChangeProperty(dpy, wm_win, wm_req, XA_STRING, 8, PropModeAppend,
                             (const unsigned char *)quit_cmd, (int)sizeof(quit_cmd));
             XSync(dpy, False);
+        } else {
+            const char *wl_act = getenv("CK_MOTIF_WAYLAND_ACTIVE");
+            if (wl_act && strcmp(wl_act, "1") == 0 && wm_req != None) {
+                static const char quit_cmd[] = "f.quit_mwm";
+                XChangeProperty(dpy, root, wm_req, XA_STRING, 8, PropModeReplace,
+                                (const unsigned char *)quit_cmd, (int)sizeof(quit_cmd));
+                XSync(dpy, False);
+            }
         }
     }
     XSetErrorHandler(prev_handler);

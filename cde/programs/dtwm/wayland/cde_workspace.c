@@ -542,7 +542,7 @@ void dtwm_get_usable_output_box(DtwmServer *server, double ref_x, double ref_y, 
 void dtwm_update_front_panel(DtwmServer *server) {
     if (!server) return;
     DtwmView *pv = server->panel_view;
-    if (!pv || !pv->mapped || !pv->xwayland_surface) {
+    if (!pv || !pv->mapped) {
         return;
     }
     if (!server->show_front_panel) {
@@ -583,13 +583,15 @@ void dtwm_update_front_panel(DtwmServer *server) {
         wlr_scene_node_set_position(&pv->frame_tree->node, pv->x, pv->y);
         wlr_scene_node_set_enabled(&pv->frame_tree->node, !pv->minimized);
     }
-    wlr_xwayland_surface_configure(
-        pv->xwayland_surface,
-        (int16_t)(pv->x + l),
-        (int16_t)(pv->y + t),
-        (uint16_t)pv->client_w,
-        (uint16_t)pv->client_h
-    );
+    if (pv->xwayland_surface) {
+        wlr_xwayland_surface_configure(
+            pv->xwayland_surface,
+            (int16_t)(pv->x + l),
+            (int16_t)(pv->y + t),
+            (uint16_t)pv->client_w,
+            (uint16_t)pv->client_h
+        );
+    }
     dtwm_view_update_frame(pv);
     dtwm_icons_reposition_swallowed(server);
 }
@@ -606,15 +608,22 @@ static const char *profile_cli_name(DtwmAppearanceProfile prof) {
 
 static void spawn_genuine_front_panel(DtwmServer *server) {
     if (!server || !server->show_front_panel || server->panel_pid > 0) return;
-    if (!server->xwayland || !server->xwayland->display_name) return;
+    if (!server->no_xwayland && (!server->xwayland || !server->xwayland->display_name)) return;
+    if (server->no_xwayland && !server->wayland_socket) return;
 
+    char cand_libs[1152] = {0};
     char cand1[1152] = {0};
     const char *panel_bin = nullptr;
     struct stat st;
     if (server->exe_dir[0] != '\0') {
-        snprintf(cand1, sizeof(cand1), "%s/dtwm-panel", server->exe_dir);
-        if (stat(cand1, &st) == 0 && (st.st_mode & S_IXUSR)) {
-            panel_bin = cand1;
+        snprintf(cand_libs, sizeof(cand_libs), "%s/.libs/dtwm-panel", server->exe_dir);
+        if (stat(cand_libs, &st) == 0 && (st.st_mode & S_IXUSR)) {
+            panel_bin = cand_libs;
+        } else {
+            snprintf(cand1, sizeof(cand1), "%s/dtwm-panel", server->exe_dir);
+            if (stat(cand1, &st) == 0 && (st.st_mode & S_IXUSR)) {
+                panel_bin = cand1;
+            }
         }
     }
     if (!panel_bin && stat(CDE_INSTALLATION_TOP "/bin/dtwm-panel", &st) == 0 &&
@@ -634,7 +643,12 @@ static void spawn_genuine_front_panel(DtwmServer *server) {
         sigset_t empty_mask;
         sigemptyset(&empty_mask);
         sigprocmask(SIG_SETMASK, &empty_mask, nullptr);
-        setenv("DISPLAY", server->xwayland->display_name, 1);
+        if (server->xwayland && server->xwayland->display_name) {
+            setenv("DISPLAY", server->xwayland->display_name, 1);
+        } else {
+            unsetenv("DISPLAY");
+            setenv("CK_MOTIF_BACKEND", "wayland", 1);
+        }
         if (server->wayland_socket) {
             setenv("WAYLAND_DISPLAY", server->wayland_socket, 1);
         }
@@ -650,6 +664,10 @@ static void spawn_genuine_front_panel(DtwmServer *server) {
     if (pid > 0) {
         server->panel_pid = pid;
     }
+}
+
+void dtwm_spawn_front_panel(DtwmServer *server) {
+    spawn_genuine_front_panel(server);
 }
 
 /* --- Workspace Occupancy & Switching --- */
@@ -817,6 +835,14 @@ static void xcb_write_ws_info(DtwmServer *server, DtwmWorkspace *ws) {
 }
 
 static void xcb_sync_wm_properties(DtwmServer *server) {
+    if (server && server->num_workspaces > 0 && server->current_workspace < server->num_workspaces) {
+        const char *cur_name = server->workspaces[server->current_workspace].id_name;
+        if (cur_name[0]) {
+            dtwm_native_ipc_publish_prop(
+                server, "_DT_WORKSPACE_CURRENT_NAME", cur_name, strlen(cur_name) + 1
+            );
+        }
+    }
     if (!server->xcb_conn || server->xcb_wm_win == XCB_WINDOW_NONE) return;
 
     xcb_atom_t list[DTWM_MAX_WORKSPACES];
@@ -1737,6 +1763,22 @@ void dtwm_server_apply_appearance_profile(DtwmServer *server, DtwmAppearanceProf
     spawn_color_sync_for_profile(server, profile);
 }
 
+void dtwm_dispatch_wm_request_bytes(DtwmServer *server, const char *data, size_t len) {
+    if (!server || !data || len == 0) return;
+    size_t pos = 0;
+    while (pos < len) {
+        size_t slen = strnlen(data + pos, len - pos);
+        if (slen > 0) {
+            char item[1024];
+            size_t cp = slen < sizeof(item) - 1 ? slen : sizeof(item) - 1;
+            memcpy(item, data + pos, cp);
+            item[cp] = '\0';
+            handle_dt_wm_request_item(server, item);
+        }
+        pos += slen + 1;
+    }
+}
+
 static void xcb_drain_dt_wm_requests(DtwmServer *server, xcb_window_t req_win) {
     if (!server->xcb_conn || req_win == XCB_WINDOW_NONE) return;
     /* Atomically read & delete _DT_WM_REQUEST (same pattern as classic dtwm WmIPC.c) */
@@ -1754,19 +1796,9 @@ static void xcb_drain_dt_wm_requests(DtwmServer *server, xcb_window_t req_win) {
 
     int len = xcb_get_property_value_length(rep);
     if (len > 0) {
-        const char *data = (const char *)xcb_get_property_value(rep);
-        int pos = 0;
-        while (pos < len) {
-            int slen = (int)strnlen(data + pos, (size_t)(len - pos));
-            if (slen > 0) {
-                char item[1024];
-                size_t cp = (size_t)slen < sizeof(item) - 1 ? (size_t)slen : sizeof(item) - 1;
-                memcpy(item, data + pos, cp);
-                item[cp] = '\0';
-                handle_dt_wm_request_item(server, item);
-            }
-            pos += slen + 1;
-        }
+        dtwm_dispatch_wm_request_bytes(
+            server, (const char *)xcb_get_property_value(rep), (size_t)len
+        );
     }
     free(rep);
 }
@@ -1814,18 +1846,13 @@ static bool parse_xrdb_bool(const char *val, bool fallback) {
     return fallback;
 }
 
-static void sync_xcb_resource_manager_profile(DtwmServer *server) {
-    if (!server || !server->xcb_conn || server->xcb_root == XCB_WINDOW_NONE) return;
-    xcb_get_property_cookie_t ck = xcb_get_property(
-        server->xcb_conn, 0, server->xcb_root, XCB_ATOM_RESOURCE_MANAGER, XCB_ATOM_STRING, 0, 16384
-    );
-    xcb_get_property_reply_t *rep = xcb_get_property_reply(server->xcb_conn, ck, nullptr);
-    if (!rep) return;
-    int len = xcb_get_property_value_length(rep);
-    if (len > 0) {
-        char *txt = calloc((size_t)len + 1, 1);
+void dtwm_apply_resource_manager_string(DtwmServer *server, const char *raw_data, size_t len) {
+    if (!server || !raw_data || len == 0) return;
+    char *txt = calloc(len + 1, 1);
+    if (!txt) return;
+    memcpy(txt, raw_data, len);
+    {
         if (txt) {
-            memcpy(txt, xcb_get_property_value(rep), (size_t)len);
             const char *last_prof = nullptr;
             const char *last_pal = nullptr;
             char xcursor_theme[128] = {0};
@@ -2009,6 +2036,21 @@ static void sync_xcb_resource_manager_profile(DtwmServer *server) {
             }
             free(txt);
         }
+    }
+}
+
+static void sync_xcb_resource_manager_profile(DtwmServer *server) {
+    if (!server || !server->xcb_conn || server->xcb_root == XCB_WINDOW_NONE) return;
+    xcb_get_property_cookie_t ck = xcb_get_property(
+        server->xcb_conn, 0, server->xcb_root, XCB_ATOM_RESOURCE_MANAGER, XCB_ATOM_STRING, 0, 16384
+    );
+    xcb_get_property_reply_t *rep = xcb_get_property_reply(server->xcb_conn, ck, nullptr);
+    if (!rep) return;
+    int len = xcb_get_property_value_length(rep);
+    if (len > 0) {
+        dtwm_apply_resource_manager_string(
+            server, (const char *)xcb_get_property_value(rep), (size_t)len
+        );
     }
     free(rep);
 }

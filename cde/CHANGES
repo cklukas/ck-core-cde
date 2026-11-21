@@ -1,4 +1,25 @@
 2026-11-21
+- Deliver Track 2 (`WP-21` – `WP-24`) pure XWayland-free native Wayland session
+  mode (`--no-xwayland`):
+  - Pin CK Core Motif ABI 9 to `7686d1a37ef9aa623b3104d464dae591597fda5f`
+    (providing the XWayland-free `libXm.so.9` Wayland runtime backend and
+    `<Xm/Wayland.h>` subsurface API) and `ck-core-fs-lib` to
+    `edd7db6a2bcbf3ea15cfc0d32be31ddc837321e8` (`.ckgit/motif-revision`,
+    `.ckgit/ci.yml`).
+  - Add `--no-xwayland` (`-X` and `DTWM_WAYLAND_NO_XWAYLAND=1`) to `dtwm-wayland`
+    and `dtsession --wayland`, emitting `NO_XWAYLAND=1` in `--status-file`,
+    docking native `xdg_toplevel` `dtwm-panel` (`dtwm-front-panel`) and
+    `dtwm-subpanel` surfaces without `Xwayland`, and hosting a `0600` session IPC
+    bus (`$XDG_RUNTIME_DIR/dtwm-wayland-<WAYLAND_DISPLAY>.ipc`) synchronizing
+    `RESOURCE_MANAGER`, `_DT_WM_REQUEST`, and `_DT_WORKSPACE_CURRENT_NAME` across
+    native Motif clients (`cde/programs/dtwm/wayland/dtwm_wayland.h`,
+    `dtwm_wayland_main.c`, `cde_workspace.c`, `WmFpWayland.c`,
+    `cde/programs/dtsession/SmWayland.c`).
+  - Add `cde/programs/dtwm/tests/check-dtwm-wayland-wp24-noxwayland.py` (and
+    harden `check-dtwm-wayland-wp17.py` to stage the built `sys.dtwmrc` in test
+    `$HOME/.dt/dtwmrc` and select a free X11 display), update
+    `wayland_work_plan.md` and `docs/improvements/wayland.md`, and record
+    `validation/2026-11-21-wp21-wp24-track2-native-wayland.json`.
 - Implement Phase 3 (Tier 3) iTIP / iMIP meeting invitations in `dtcm`:
   - Parse RFC 5546 `METHOD:`, `ORGANIZER`, and `ATTENDEE` (`CN=`, `PARTSTAT=`,
     `mailto:`) properties and generate `METHOD:REPLY` `.ics` payloads via

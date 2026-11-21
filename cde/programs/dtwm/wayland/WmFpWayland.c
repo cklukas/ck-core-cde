@@ -122,20 +122,126 @@ static Window find_mwm_window(Display *dpy) {
     return win;
 }
 
+static Window g_localMwmWin = None;
+
 static void send_dt_wm_request(Display *dpy, const char *req) {
     if (!dpy || !req || !req[0]) return;
-    if (g_mwmWin == None) {
-        g_mwmWin = find_mwm_window(dpy);
-    }
-    if (g_mwmWin == None) return;
     if (g_atomWmRequest == None) {
         g_atomWmRequest = XInternAtom(dpy, "_DT_WM_REQUEST", False);
     }
+    const char *wl_act = getenv("CK_MOTIF_WAYLAND_ACTIVE");
+    if (wl_act && strcmp(wl_act, "1") == 0) {
+        XChangeProperty(
+            dpy, DefaultRootWindow(dpy), g_atomWmRequest, XA_STRING, 8, PropModeReplace,
+            (const unsigned char *)req, (int)strlen(req) + 1
+        );
+        XFlush(dpy);
+        return;
+    }
+    if (g_mwmWin == None) {
+        g_mwmWin = find_mwm_window(dpy);
+    }
+    if (g_mwmWin != None) {
+        XChangeProperty(
+            dpy, g_mwmWin, g_atomWmRequest, XA_STRING, 8, PropModeAppend,
+            (const unsigned char *)req, (int)strlen(req) + 1
+        );
+        XFlush(dpy);
+    }
+}
+
+static void bootstrap_local_wsm_properties_if_needed(Display *dpy) {
+    if (!dpy) return;
+    Window root = DefaultRootWindow(dpy);
+    Atom *existing_list = nullptr;
+    int existing_cnt = 0;
+    if (DtWsmGetWorkspaceList(dpy, root, &existing_list, &existing_cnt) == Success &&
+        existing_list && existing_cnt > 0) {
+        XFree(existing_list);
+        return;
+    }
+    if (existing_list) XFree(existing_list);
+
+    g_localMwmWin = find_mwm_window(dpy);
+    if (g_localMwmWin == None) {
+        g_localMwmWin = XCreateSimpleWindow(dpy, root, -100, -100, 1, 1, 0, 0, 0);
+        if (g_localMwmWin == None) return;
+        Atom mwm_info_atom = XInternAtom(dpy, "_MOTIF_WM_INFO", False);
+        long mwm_info[2] = {2L /* MWM_INFO_STARTUP_CUSTOM */, (long)g_localMwmWin};
+        XChangeProperty(
+            dpy, root, mwm_info_atom, mwm_info_atom, 32, PropModeReplace,
+            (const unsigned char *)mwm_info, 2
+        );
+    }
+
+    static const struct {
+        const char *id;
+        const char *title;
+        int cs_id;
+        const char *bg;
+        const char *fg;
+        const char *backdrop;
+    } defs[4] = {
+        {"ws0", "One",   3, "0x8998aa", "0xffffff", "KnitLight"},
+        {"ws1", "Two",   8, "0x686f82", "0xffffff", "WaterDrops"},
+        {"ws2", "Three", 6, "0x7c8498", "0xffffff", "SkyDark"},
+        {"ws3", "Four",  7, "0x727a8e", "0xffffff", "Paver"},
+    };
+
+    Atom ws_atoms[4];
+    for (int i = 0; i < 4; ++i) {
+        ws_atoms[i] = XInternAtom(dpy, defs[i].id, False);
+        Atom b_atom = XInternAtom(dpy, defs[i].backdrop, False);
+        char info_name[96];
+        snprintf(info_name, sizeof(info_name), "_DT_WORKSPACE_INFO_%s", defs[i].id);
+        Atom info_atom = XInternAtom(dpy, info_name, False);
+
+        char buf[512];
+        int off = snprintf(buf, sizeof(buf), "%s", defs[i].title) + 1;
+        off += snprintf(buf + off, sizeof(buf) - (size_t)off, "%d", defs[i].cs_id) + 1;
+        off += snprintf(buf + off, sizeof(buf) - (size_t)off, "%s", defs[i].bg) + 1;
+        off += snprintf(buf + off, sizeof(buf) - (size_t)off, "%s", defs[i].fg) + 1;
+        off += snprintf(buf + off, sizeof(buf) - (size_t)off, "%lu", (unsigned long)b_atom) + 1;
+        off += snprintf(buf + off, sizeof(buf) - (size_t)off, "0") + 1;
+        off += snprintf(buf + off, sizeof(buf) - (size_t)off, "0") + 1;
+        XChangeProperty(
+            dpy, g_localMwmWin, info_atom, XA_STRING, 8, PropModeReplace,
+            (const unsigned char *)buf, off
+        );
+    }
+
+    Atom list_atom = XInternAtom(dpy, "_DT_WORKSPACE_LIST", False);
     XChangeProperty(
-        dpy, g_mwmWin, g_atomWmRequest, XA_STRING, 8, PropModeAppend,
-        (const unsigned char *)req, (int)strlen(req) + 1
+        dpy, g_localMwmWin, list_atom, XA_ATOM, 32, PropModeReplace,
+        (const unsigned char *)ws_atoms, 4
     );
-    XFlush(dpy);
+
+    Atom cur_ws = ws_atoms[0];
+    Atom a_cur_name = XInternAtom(dpy, "_DT_WORKSPACE_CURRENT_NAME", False);
+    Atom act_t = None;
+    int act_f = 0;
+    unsigned long nitems = 0, rem = 0;
+    unsigned char *wname = nullptr;
+    if (XGetWindowProperty(
+            dpy, root, a_cur_name, 0, 64, False, AnyPropertyType,
+            &act_t, &act_f, &nitems, &rem, &wname
+        ) == Success && wname && nitems > 0) {
+        char wbuf[64];
+        size_t wn = nitems < sizeof(wbuf) - 1 ? (size_t)nitems : sizeof(wbuf) - 1;
+        memcpy(wbuf, wname, wn);
+        wbuf[wn] = '\0';
+        cur_ws = XInternAtom(dpy, wbuf, False);
+        XFree(wname);
+    } else if (wname) {
+        XFree(wname);
+    }
+
+    Atom cur_atom = XInternAtom(dpy, "_DT_WORKSPACE_CURRENT", False);
+    XChangeProperty(
+        dpy, g_localMwmWin, cur_atom, XA_ATOM, 32, PropModeReplace,
+        (const unsigned char *)&cur_ws, 1
+    );
+    XSync(dpy, False);
 }
 
 static Pixel alloc_rgb16(Display *dpy, Colormap cmap, unsigned short r, unsigned short g, unsigned short b) {
@@ -607,6 +713,11 @@ static void register_all_subpanel_contexts(void) {
             ControlData *cd = bd->control_data[j];
             if (cd && cd->subpanel_data && cd->subpanel_data->shell &&
                 XtIsRealized(cd->subpanel_data->shell)) {
+                XClassHint sp_hint = {
+                    .res_name = (char *)"dtwm-subpanel",
+                    .res_class = (char *)"Dtwm",
+                };
+                XSetClassHint(wmGD.display, XtWindow(cd->subpanel_data->shell), &sp_hint);
                 ensure_shell_context(
                     cd->subpanel_data->shell, DtWM_BEHAVIOR_PANEL | DtWM_BEHAVIOR_SUBPANEL
                 );
@@ -1656,6 +1767,7 @@ int main(int argc, char **argv) {
 
     ensure_ttsession_running(dpy, argv[0]);
     bootstrap_color_server_if_needed(dpy, profile);
+    bootstrap_local_wsm_properties_if_needed(dpy);
 
     Widget topShell = XtVaAppCreateShell(
         "dtwm", "Dtwm", applicationShellWidgetClass, dpy,
@@ -1703,6 +1815,16 @@ int main(int argc, char **argv) {
     }
 
     g_topShell = topShell;
+    if (!XtIsRealized(panel.shell)) {
+        XtRealizeWidget(panel.shell);
+    }
+    if (XtWindow(panel.shell) != None) {
+        XClassHint fp_hint = {
+            .res_name = (char *)"dtwm-front-panel",
+            .res_class = (char *)"Dtwm",
+        };
+        XSetClassHint(dpy, XtWindow(panel.shell), &fp_hint);
+    }
     WmPanelistShow(g_fpScreen.wPanelist);
     register_wayland_wsm_tooltalk_handlers(topShell);
     if (!g_ttWsmRegistered) {
@@ -1753,6 +1875,37 @@ int main(int argc, char **argv) {
             }
             if (ev.xproperty.atom == g_atomTrashWin) {
                 watch_trash_window_events(dpy);
+            }
+            Atom a_ws_cur_name = XInternAtom(dpy, "_DT_WORKSPACE_CURRENT_NAME", False);
+            if (ev.xproperty.atom == a_ws_cur_name) {
+                Atom act_t = None;
+                int act_f = 0;
+                unsigned long nitems = 0, rem = 0;
+                unsigned char *wname = nullptr;
+                if (XGetWindowProperty(
+                        dpy, g_fpScreen.rootWindow, a_ws_cur_name, 0, 64, False,
+                        AnyPropertyType, &act_t, &act_f, &nitems, &rem, &wname
+                    ) == Success && wname && nitems > 0) {
+                    char wbuf[64];
+                    size_t wn = nitems < sizeof(wbuf) - 1 ? (size_t)nitems : sizeof(wbuf) - 1;
+                    memcpy(wbuf, wname, wn);
+                    wbuf[wn] = '\0';
+                    SwitchData *sw = find_panel_switch_data();
+                    Atom ws_atom = XInternAtom(dpy, wbuf, False);
+                    if (g_localMwmWin != None && ws_atom != None && g_atomWsCurrent != None) {
+                        XChangeProperty(
+                            dpy, g_localMwmWin, g_atomWsCurrent, XA_ATOM, 32, PropModeReplace,
+                            (const unsigned char *)&ws_atom, 1
+                        );
+                    }
+                    if (sw && panel.shell && ws_atom != None) {
+                        WorkspaceModifyCB(panel.shell, ws_atom, DtWSM_REASON_CURRENT, (XtPointer)sw);
+                        emit_tt_workspace_modified(DefaultScreen(dpy), ws_atom, DtWSM_REASON_CURRENT);
+                    }
+                    XFree(wname);
+                } else if (wname) {
+                    XFree(wname);
+                }
             }
             if (g_ttWsmRegistered &&
                 (ev.xproperty.atom == g_atomSunTtSession || ev.xproperty.atom == g_atomTtSession)) {

@@ -601,10 +601,41 @@ system administration across both `CDE (Wayland)` and `CDE (X11 / XLibre)`:
   (`org.freedesktop.timedate1`), and *Firmware Updates*
   (`org.freedesktop.fwupd`).
 
+## Pure XWayland-free native Motif runtime (`--no-xwayland`, `WP-21` – `WP-24`)
+
+When paired with CK Core Motif ABI 9 (`libXm.so.9` built with `--enable-wayland`),
+`dtwm-wayland` and `dtsession` can run the complete CDE desktop and CK Core
+companion applications **without starting an `Xwayland` server process**:
+
+- **Launch modes:** Pass `--no-xwayland` (`-X` or `DTWM_WAYLAND_NO_XWAYLAND=1`)
+  to `dtwm-wayland` or `dtsession --wayland --no-xwayland`. Default `dtwm-wayland`
+  invocation keeps rootless `Xwayland` enabled alongside native Wayland so legacy
+  third-party X11 applications continue to work unchanged.
+- **Native Motif client runtime (`CK_MOTIF_BACKEND=wayland`):** With `DISPLAY`
+  unset under `--no-xwayland`, `libXm.so.9` connects each Motif process directly
+  to `WAYLAND_DISPLAY` via its in-process X11r11/XRender virtualizer
+  (`$XDG_RUNTIME_DIR/ck-wlx11-<pid>-XXXXXX/S:0`), mapping shells to
+  `xdg_toplevel` (`zxdg_decoration_v1` + `xdg_toplevel_icon_v1`), menus/tooltips
+  to constrained `xdg_popup` surfaces, `CLIPBOARD`/`PRIMARY`/DnD to
+  `wl_data_device` + `zwp_primary_selection_v1`, `XmText`/`XmTextField` IME to
+  `zwp_text_input_v3`, and HiDPI buffers to `wp_fractional_scale_v1` +
+  `wp_viewporter`. Embedded GPU/multimedia viewports (such as `ck-browser` CEF
+  off-screen rendering) attach synchronized `wl_subsurface` viewports through
+  `<Xm/Wayland.h>` (`XmWaylandGetDisplayHandles`, `XmWaylandGetWidgetSurface`).
+- **Native Front Panel docking & session IPC bus:** `dtwm-wayland` docks native
+  `dtwm-panel` (`dtwm-front-panel`) and slide-up subpanels (`dtwm-subpanel`)
+  directly as `DTWM_VIEW_XDG` surfaces and hosts an `0600` UNIX stream bus at
+  `$XDG_RUNTIME_DIR/dtwm-wayland-<WAYLAND_DISPLAY>.ipc` synchronizing
+  `RESOURCE_MANAGER` palettes/appearance profiles, `_DT_WM_REQUEST` workspace and
+  compositor commands, and `_DT_WORKSPACE_CURRENT_NAME` state across `dtsession`,
+  `dtstyle`, `dtwm-panel`, `dtfile`, `dtpad`, `ck-clock`, `ck-coins`, and
+  `ck-browser`.
+
 ## Readiness reporting, Ubuntu LTS APT packaging, and automated qualification
 
-Passing `--status-file PATH` writes `WAYLAND_DISPLAY`, `DISPLAY`, and `PID`
-atomically once both the Wayland socket and rootless `Xwayland` are ready.
+Passing `--status-file PATH` writes `WAYLAND_DISPLAY`, `DISPLAY` (or
+`NO_XWAYLAND=1` when `--no-xwayland` is active), and `PID` atomically once the
+compositor session is ready.
 
 - **Focused Wayland regression suite (`programs/dtwm` and `programs/dtlogin`):**
   `check-dtwm-wayland.py` (`WP-02` bevels, move/resize, grid/snap, `Alt+Tab`,
@@ -666,6 +697,14 @@ atomically once both the Wayland socket and rootless `Xwayland` are ready.
   rendering + rotate/crop + `DtWsmChangeBackdrop` + `-session` restore, `ck-pdf`
   outline/search/clipboard/CUPS print + `-session` restore, `dtpad` tabs/line
   numbers/crash-recovery autosave, and `dtcm` RFC 5545 `.ics` round-trips),
+  `check-dtwm-wayland-wp20.py` (`WP-20` parallel dual Wayland + X11 `Xvfb`
+  verification of `AccessX` Sticky/Slow/Bounce keys, visual bell, cursor-tracking
+  magnifier, and `libXm.so.9` AT-SPI2 D-Bus bridge),
+  `check-dtwm-wayland-wp24-noxwayland.py` (`WP-24` Track 2 pure XWayland-free
+  `dtwm-wayland --no-xwayland` session with zero `Xwayland` processes, docked
+  native `dtwm-panel`, `dtstyle`, `dtfile`, `dtpad`, `ck-clock`, and `ck-coins`
+  mapping `libXm.so.9`, live `.ipc` workspace and `modern_dark` `RESOURCE_MANAGER`
+  broadcasts, plus parallel hybrid Wayland+XWayland verification),
   `check-dtwm-wayland-menus.py` (XWayland Motif pulldown/popup menu focus,
   mid-press `zwlr_virtual_pointer_v1` crash cleanup, `wayvnc` stuck-button
   auto-heal, stationary-click `wl_pointer` focus restoration, and post-modeset

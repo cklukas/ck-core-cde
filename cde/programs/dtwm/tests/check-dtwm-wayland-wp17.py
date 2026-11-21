@@ -956,6 +956,9 @@ def run_lane(
         "Dtfile*smallIconHeight: 24\n",
         encoding="utf-8",
     )
+    built_dtwmrc = comp_bin.parent / "sys.dtwmrc"
+    if built_dtwmrc.is_file():
+        shutil.copyfile(built_dtwmrc, home / ".dt/dtwmrc")
 
     # Create rich directory & file fixture for WP-17 tests
     work_dir = home / "Workspace"
@@ -1228,7 +1231,7 @@ def run_lane(
 
         # 1d) Middle-click (`Button2` without drag) on first folder icon opens 3rd tab!
         send_fm_cmd(x11_helper_bin, env, "op=publish\n")
-        time.sleep(0.12)
+        time.sleep(0.15)
         st_dir = wait_for(
             lambda: s if int((s := read_erg_state(x11_helper_bin, env)).get("first_dir_rx", "0")) > 0 else None,
             timeout=6.0,
@@ -1616,13 +1619,19 @@ def main() -> int:
             lr.mkdir(parents=True, exist_ok=True)
             lr.chmod(0o700)
 
+        free_disp = 110
+        for cand_d in range(110, 190):
+            if not Path(f"/tmp/.X{cand_d}-lock").exists() and not Path(f"/tmp/.X11-unix/X{cand_d}").exists():
+                free_disp = cand_d
+                break
+
         with ThreadPoolExecutor(max_workers=2) as pool:
             fut_wl = pool.submit(
                 run_lane, "wayland", 0, comp_bin, dtwm_x11_bin,
                 dtfile_bin, dtsync_bin, wl_helper_bin, x11_helper_bin, base_tmp,
             )
             fut_x11 = pool.submit(
-                run_lane, "x11", 89, comp_bin, dtwm_x11_bin,
+                run_lane, "x11", free_disp, comp_bin, dtwm_x11_bin,
                 dtfile_bin, dtsync_bin, wl_helper_bin, x11_helper_bin, base_tmp,
             )
             err_wl = err_x11 = None

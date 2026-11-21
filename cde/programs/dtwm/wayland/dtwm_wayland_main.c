@@ -8,15 +8,20 @@
 #include "dtwm_wayland.h"
 
 #include <ctype.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <getopt.h>
 #include <limits.h>
 #include <linux/input-event-codes.h>
 #include <math.h>
+#include <poll.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/un.h>
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
@@ -3866,6 +3871,55 @@ static void xdg_toplevel_map(struct wl_listener *listener, void *data) {
     struct wlr_box geo = view->xdg_toplevel->base->geometry;
     view->client_w = geo.width > 0 ? geo.width : view->xdg_toplevel->base->surface->current.width;
     view->client_h = geo.height > 0 ? geo.height : view->xdg_toplevel->base->surface->current.height;
+
+    const char *app_id = view->xdg_toplevel->app_id ? view->xdg_toplevel->app_id : "";
+    if (!strcmp(app_id, "dtwm-front-panel") || !strcmp(app_id, "FrontPanel")) {
+        view->is_panel = true;
+        view->decorated = true;
+        view->has_title = false;
+        view->has_resize_handles = false;
+        view->has_menu_btn = false;
+        view->has_min_btn = false;
+        view->has_max_btn = false;
+        view->workspace_mask = (1u << DTWM_MAX_WORKSPACES) - 1u;
+        view->server->panel_view = view;
+        if (view->frame_tree && view->server->layer_top_tree) {
+            wlr_scene_node_reparent(&view->frame_tree->node, view->server->layer_top_tree);
+        }
+        dtwm_icons_on_view_map(view);
+        dtwm_update_front_panel(view->server);
+        dtwm_icons_relayout(view->server);
+        dtwm_notify_panel_mapped(view->server);
+        return;
+    }
+    if (!strcmp(app_id, "dtwm-subpanel") ||
+        (view->server->panel_view && view->server->panel_view->xdg_toplevel &&
+         view->xdg_toplevel->parent == view->server->panel_view->xdg_toplevel)) {
+        view->is_subpanel = true;
+        view->subpanel_torn_off = false;
+        view->decorated = true;
+        view->has_title = false;
+        view->has_resize_handles = false;
+        view->has_menu_btn = false;
+        view->has_min_btn = false;
+        view->has_max_btn = false;
+        view->workspace_mask = (1u << DTWM_MAX_WORKSPACES) - 1u;
+        if (view->frame_tree && view->server->layer_top_tree) {
+            wlr_scene_node_reparent(&view->frame_tree->node, view->server->layer_top_tree);
+        }
+        int outer_w = 0, outer_h = 0;
+        dtwm_view_outer_size(view, &outer_w, &outer_h);
+        view->x = view->server->panel_x > 0 ? view->server->panel_x : 120;
+        int py = (view->server->panel_h > 0) ? view->server->panel_y : 640;
+        view->y = py - outer_h;
+        if (view->y < 0) view->y = 0;
+        wlr_scene_node_set_position(&view->frame_tree->node, view->x, view->y);
+        wlr_scene_node_set_enabled(&view->frame_tree->node, true);
+        dtwm_view_update_frame(view);
+        focus_view(view->server, view, view->xdg_toplevel->base->surface);
+        return;
+    }
+
     place_initial_view(view);
     wlr_scene_node_set_enabled(&view->frame_tree->node, dtwm_view_visible_on_current_ws(view));
     dtwm_view_update_frame(view);
@@ -5051,10 +5105,302 @@ static void write_status_file(DtwmServer *server) {
     fprintf(fp, "WAYLAND_DISPLAY=%s\n", server->wayland_socket);
     if (server->xwayland && server->xwayland->display_name) {
         fprintf(fp, "DISPLAY=%s\n", server->xwayland->display_name);
+    } else if (server->no_xwayland) {
+        fprintf(fp, "NO_XWAYLAND=1\n");
     }
     fprintf(fp, "PID=%d\n", (int)getpid());
     fclose(fp);
     rename(tmp_path, server->status_file);
+}
+
+/* --- Native Session Root-Property & WM-Request IPC Bus (--no-xwayland) --- */
+#define DTWM_MAX_IPC_PEERS 32
+#define DTWM_MAX_IPC_PROPS 32
+
+typedef struct {
+    int fd;
+    struct wl_event_source *ev_src;
+    DtwmServer *server;
+    char *rx_buf;
+    size_t rx_len;
+    size_t rx_cap;
+} DtwmIpcPeer;
+
+typedef struct {
+    char name[128];
+    uint8_t *data;
+    size_t len;
+    bool used;
+} DtwmIpcCachedProp;
+
+static DtwmIpcPeer g_ipc_peers[DTWM_MAX_IPC_PEERS];
+static DtwmIpcCachedProp g_ipc_props[DTWM_MAX_IPC_PROPS];
+
+static void ipc_send_all(int fd, const char *buf, size_t len) {
+    size_t sent = 0;
+    while (sent < len) {
+        ssize_t n = send(fd, buf + sent, len - sent, MSG_NOSIGNAL);
+        if (n > 0) {
+            sent += (size_t)n;
+            continue;
+        }
+        if (n < 0 && errno == EINTR) continue;
+        if (n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+            struct pollfd pfd = {.fd = fd, .events = POLLOUT};
+            if (poll(&pfd, 1, 50) > 0) continue;
+        }
+        break;
+    }
+}
+
+static int ipc_hex_nibble(char c) {
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    return -1;
+}
+
+static void send_ipc_frame_fd(int fd, const char *atom_name, const void *data, size_t len) {
+    static const char hex_chars[] = "0123456789abcdef";
+    if (fd < 0 || !atom_name || len > 262144u) return;
+    size_t alen = strlen(atom_name);
+    size_t total_cap = 5 + alen + 1 + len * 2 + 2;
+    char *msg = malloc(total_cap);
+    if (!msg) return;
+    int hn = snprintf(msg, total_cap, "PROP %s ", atom_name);
+    if (hn > 0 && (size_t)hn < total_cap) {
+        const uint8_t *bytes = (const uint8_t *)data;
+        size_t o = (size_t)hn;
+        for (size_t i = 0; i < len && o + 2 < total_cap; ++i) {
+            msg[o++] = hex_chars[bytes[i] >> 4];
+            msg[o++] = hex_chars[bytes[i] & 0x0fu];
+        }
+        msg[o++] = '\n';
+        ipc_send_all(fd, msg, o);
+    }
+    free(msg);
+}
+
+static void cache_ipc_prop(const char *atom_name, const void *data, size_t len) {
+    if (!atom_name || !atom_name[0] || !strcmp(atom_name, "_DT_WM_REQUEST")) return;
+    int slot = -1;
+    for (int i = 0; i < DTWM_MAX_IPC_PROPS; ++i) {
+        if (g_ipc_props[i].used && !strcmp(g_ipc_props[i].name, atom_name)) {
+            slot = i;
+            break;
+        }
+        if (!g_ipc_props[i].used && slot < 0) slot = i;
+    }
+    if (slot < 0) return;
+    uint8_t *nb = len > 0 ? malloc(len) : nullptr;
+    if (len > 0 && !nb) return;
+    if (nb && data) memcpy(nb, data, len);
+    free(g_ipc_props[slot].data);
+    snprintf(g_ipc_props[slot].name, sizeof(g_ipc_props[slot].name), "%s", atom_name);
+    g_ipc_props[slot].data = nb;
+    g_ipc_props[slot].len = len;
+    g_ipc_props[slot].used = true;
+}
+
+void dtwm_native_ipc_publish_prop(DtwmServer *server, const char *atom_name, const void *data, size_t len) {
+    (void)server;
+    cache_ipc_prop(atom_name, data, len);
+    for (int i = 0; i < DTWM_MAX_IPC_PEERS; ++i) {
+        if (g_ipc_peers[i].fd >= 0) {
+            send_ipc_frame_fd(g_ipc_peers[i].fd, atom_name, data, len);
+        }
+    }
+}
+
+static void close_ipc_peer(DtwmIpcPeer *peer) {
+    if (!peer || peer->fd < 0) return;
+    if (peer->ev_src) {
+        wl_event_source_remove(peer->ev_src);
+        peer->ev_src = nullptr;
+    }
+    close(peer->fd);
+    peer->fd = -1;
+    free(peer->rx_buf);
+    peer->rx_buf = nullptr;
+    peer->rx_len = 0;
+    peer->rx_cap = 0;
+}
+
+static int handle_ipc_peer_fd(int fd, uint32_t mask, void *data) {
+    DtwmIpcPeer *peer = data;
+    if (!peer || peer->fd < 0) return 0;
+    if (mask & (WL_EVENT_ERROR | WL_EVENT_HANGUP)) {
+        close_ipc_peer(peer);
+        return 0;
+    }
+    char tmp[8192];
+    for (;;) {
+        ssize_t n = recv(fd, tmp, sizeof(tmp), MSG_DONTWAIT);
+        if (n > 0) {
+            if (peer->rx_len + (size_t)n + 1 > peer->rx_cap) {
+                size_t ncap = peer->rx_cap ? peer->rx_cap * 2 : 65536;
+                while (ncap < peer->rx_len + (size_t)n + 1) ncap *= 2;
+                if (ncap > 1048576u) { close_ipc_peer(peer); return 0; }
+                char *nb = realloc(peer->rx_buf, ncap);
+                if (!nb) { close_ipc_peer(peer); return 0; }
+                peer->rx_buf = nb;
+                peer->rx_cap = ncap;
+            }
+            memcpy(peer->rx_buf + peer->rx_len, tmp, (size_t)n);
+            peer->rx_len += (size_t)n;
+            peer->rx_buf[peer->rx_len] = '\0';
+        } else if (n == 0) {
+            close_ipc_peer(peer);
+            return 0;
+        } else if (errno == EINTR) {
+            continue;
+        } else {
+            break;
+        }
+    }
+
+    if (!peer->rx_buf || peer->rx_len == 0) return 0;
+
+    char *start = peer->rx_buf;
+    char *nl = nullptr;
+    while ((nl = strchr(start, '\n')) != nullptr) {
+        *nl = '\0';
+        if (!strncmp(start, "SET ", 4)) {
+            char *p = start + 4;
+            char *sp = strchr(p, ' ');
+            if (sp) {
+                *sp = '\0';
+                const char *aname = p;
+                const char *hex = sp + 1;
+                size_t hlen = strlen(hex);
+                uint8_t *payload = malloc(hlen / 2 + 1);
+                if (payload) {
+                    size_t dlen = 0;
+                    for (size_t i = 0; i + 1 < hlen; i += 2) {
+                        int hi = ipc_hex_nibble(hex[i]);
+                        int lo = ipc_hex_nibble(hex[i + 1]);
+                        if (hi < 0 || lo < 0) break;
+                        payload[dlen++] = (uint8_t)((hi << 4) | lo);
+                    }
+                    payload[dlen] = 0;
+                    if (!strcmp(aname, "_DT_WM_REQUEST")) {
+                        dtwm_dispatch_wm_request_bytes(peer->server, (const char *)payload, dlen);
+                    } else {
+                        if (!strcmp(aname, "RESOURCE_MANAGER")) {
+                            dtwm_apply_resource_manager_string(peer->server, (const char *)payload, dlen);
+                        }
+                        cache_ipc_prop(aname, payload, dlen);
+                        for (int i = 0; i < DTWM_MAX_IPC_PEERS; ++i) {
+                            if (g_ipc_peers[i].fd >= 0 && &g_ipc_peers[i] != peer) {
+                                send_ipc_frame_fd(g_ipc_peers[i].fd, aname, payload, dlen);
+                            }
+                        }
+                    }
+                    free(payload);
+                }
+            }
+        }
+        start = nl + 1;
+    }
+
+    if (peer->fd >= 0 && peer->rx_buf) {
+        size_t rem = strlen(start);
+        if (rem > 0 && start != peer->rx_buf)
+            memmove(peer->rx_buf, start, rem);
+        peer->rx_len = rem;
+        peer->rx_buf[rem] = '\0';
+    }
+    return 0;
+}
+
+static int handle_native_ipc_listen(int lfd, uint32_t mask, void *data) {
+    (void)mask;
+    DtwmServer *server = data;
+    for (;;) {
+        int cfd = accept(lfd, nullptr, nullptr);
+        if (cfd < 0) break;
+        int fl = fcntl(cfd, F_GETFL, 0);
+        if (fl >= 0) fcntl(cfd, F_SETFL, fl | O_NONBLOCK);
+        fcntl(cfd, F_SETFD, FD_CLOEXEC);
+
+        int slot = -1;
+        for (int i = 0; i < DTWM_MAX_IPC_PEERS; ++i) {
+            if (g_ipc_peers[i].fd < 0) { slot = i; break; }
+        }
+        if (slot < 0) { close(cfd); continue; }
+        g_ipc_peers[slot].fd = cfd;
+        g_ipc_peers[slot].server = server;
+        g_ipc_peers[slot].rx_buf = nullptr;
+        g_ipc_peers[slot].rx_len = 0;
+        g_ipc_peers[slot].rx_cap = 0;
+        g_ipc_peers[slot].ev_src = wl_event_loop_add_fd(
+            wl_display_get_event_loop(server->wl_display),
+            cfd, WL_EVENT_READABLE, handle_ipc_peer_fd, &g_ipc_peers[slot]
+        );
+        for (int p = 0; p < DTWM_MAX_IPC_PROPS; ++p) {
+            if (g_ipc_props[p].used) {
+                send_ipc_frame_fd(cfd, g_ipc_props[p].name, g_ipc_props[p].data, g_ipc_props[p].len);
+            }
+        }
+        ipc_send_all(cfd, "READY\n", 6);
+    }
+    return 0;
+}
+
+static void start_native_ipc_server(DtwmServer *server) {
+    for (int i = 0; i < DTWM_MAX_IPC_PEERS; ++i) g_ipc_peers[i].fd = -1;
+    server->native_ipc_fd = -1;
+    const char *rt = getenv("XDG_RUNTIME_DIR");
+    if (!rt || rt[0] != '/' || !server->wayland_socket) return;
+
+    struct sockaddr_un addr = {0};
+    addr.sun_family = AF_UNIX;
+    int n = snprintf(
+        server->native_ipc_path, sizeof(server->native_ipc_path),
+        "%s/dtwm-wayland-%s.ipc", rt, server->wayland_socket
+    );
+    if (n <= 0 || (size_t)n >= sizeof(addr.sun_path)) {
+        server->native_ipc_path[0] = '\0';
+        return;
+    }
+    unlink(server->native_ipc_path);
+    memcpy(addr.sun_path, server->native_ipc_path, (size_t)n + 1);
+
+    int lfd = socket(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
+    if (lfd < 0) return;
+    if (bind(lfd, (struct sockaddr *)&addr, sizeof(addr)) != 0 || listen(lfd, 16) != 0) {
+        close(lfd);
+        unlink(server->native_ipc_path);
+        server->native_ipc_path[0] = '\0';
+        return;
+    }
+    chmod(server->native_ipc_path, 0600);
+    server->native_ipc_fd = lfd;
+    server->native_ipc_source = wl_event_loop_add_fd(
+        wl_display_get_event_loop(server->wl_display),
+        lfd, WL_EVENT_READABLE, handle_native_ipc_listen, server
+    );
+}
+
+static void stop_native_ipc_server(DtwmServer *server) {
+    for (int i = 0; i < DTWM_MAX_IPC_PEERS; ++i) close_ipc_peer(&g_ipc_peers[i]);
+    for (int p = 0; p < DTWM_MAX_IPC_PROPS; ++p) {
+        free(g_ipc_props[p].data);
+        g_ipc_props[p].data = nullptr;
+        g_ipc_props[p].used = false;
+    }
+    if (server->native_ipc_source) {
+        wl_event_source_remove(server->native_ipc_source);
+        server->native_ipc_source = nullptr;
+    }
+    if (server->native_ipc_fd >= 0) {
+        close(server->native_ipc_fd);
+        server->native_ipc_fd = -1;
+    }
+    if (server->native_ipc_path[0]) {
+        unlink(server->native_ipc_path);
+        server->native_ipc_path[0] = '\0';
+    }
 }
 
 static int handle_status_fallback_timer(void *data) {
@@ -5190,6 +5536,11 @@ int main(int argc, char **argv) {
     bool no_panel = false;
     bool no_open_icons = false;
     bool large_icons = false;
+    bool no_xwayland = false;
+    const char *env_nox = getenv("DTWM_WAYLAND_NO_XWAYLAND");
+    if (env_nox && (!strcmp(env_nox, "1") || !strcasecmp(env_nox, "true"))) {
+        no_xwayland = true;
+    }
 
     int opt_output_dpi[16] = {0};
 
@@ -5204,11 +5555,12 @@ int main(int argc, char **argv) {
         {"no-panel", no_argument, nullptr, 'P'},
         {"no-open-window-icons", no_argument, nullptr, 'I'},
         {"large-icons", no_argument, nullptr, 'L'},
+        {"no-xwayland", no_argument, nullptr, 'X'},
         {"help", no_argument, nullptr, 'h'},
         {nullptr, 0, nullptr, 0},
     };
     int opt;
-    while ((opt = getopt_long(argc, argv, "s:f:w:A:D:SgPILh", long_opts, nullptr)) != -1) {
+    while ((opt = getopt_long(argc, argv, "s:f:w:A:D:SgPILXh", long_opts, nullptr)) != -1) {
         switch (opt) {
         case 's': startup_cmd = optarg; break;
         case 'f': status_file = optarg; break;
@@ -5227,9 +5579,10 @@ int main(int argc, char **argv) {
         case 'P': no_panel = true; break;
         case 'I': no_open_icons = true; break;
         case 'L': large_icons = true; break;
+        case 'X': no_xwayland = true; break;
         case 'h':
             printf(
-                "Usage: %s [--session] [--greeter] [--no-panel] [--no-open-window-icons] "
+                "Usage: %s [--session] [--greeter] [--no-xwayland] [--no-panel] [--no-open-window-icons] "
                 "[--large-icons] [--appearance-profile NAME] [--swallow NAME] "
                 "[--status-file PATH] [--startup CMD]\n",
                 argv[0]
@@ -5243,6 +5596,8 @@ int main(int argc, char **argv) {
     wlr_log_init(WLR_INFO, nullptr);
 
     DtwmServer server = {0};
+    server.no_xwayland = no_xwayland;
+    server.native_ipc_fd = -1;
     memcpy(server.initial_output_dpi, opt_output_dpi, sizeof(opt_output_dpi));
     server.status_file = status_file;
     {
@@ -5458,15 +5813,26 @@ int main(int argc, char **argv) {
     server.start_drag.notify = handle_start_drag;
     wl_signal_add(&server.seat->events.start_drag, &server.start_drag);
 
-    server.xwayland = wlr_xwayland_create(server.wl_display, server.compositor, false);
-    if (server.xwayland) {
-        server.xwayland->data = &server;
-        server.xwayland->user_event_handler = handle_xwayland_xwm_event;
-        server.new_xwayland_surface.notify = handle_new_xwayland_surface;
-        wl_signal_add(&server.xwayland->events.new_surface, &server.new_xwayland_surface);
-        server.xwayland_ready.notify = handle_xwayland_ready;
-        wl_signal_add(&server.xwayland->events.ready, &server.xwayland_ready);
-        setenv("DISPLAY", server.xwayland->display_name, 1);
+    if (!server.no_xwayland) {
+        server.xwayland = wlr_xwayland_create(server.wl_display, server.compositor, false);
+        if (server.xwayland) {
+            server.xwayland->data = &server;
+            server.xwayland->user_event_handler = handle_xwayland_xwm_event;
+            server.new_xwayland_surface.notify = handle_new_xwayland_surface;
+            wl_signal_add(&server.xwayland->events.new_surface, &server.new_xwayland_surface);
+            server.xwayland_ready.notify = handle_xwayland_ready;
+            wl_signal_add(&server.xwayland->events.ready, &server.xwayland_ready);
+            setenv("DISPLAY", server.xwayland->display_name, 1);
+        }
+    } else {
+        unsetenv("DISPLAY");
+        setenv("DTWM_WAYLAND_NO_XWAYLAND", "1", 1);
+        setenv("CK_MOTIF_BACKEND", "wayland", 1);
+    }
+    {
+        const char *wlr_rend = getenv("WLR_RENDERER");
+        bool sw_pix = wlr_rend && strcasecmp(wlr_rend, "pixman") == 0;
+        setenv("DTWM_WAYLAND_RENDERER", sw_pix ? "pixman" : "gpu", 1);
     }
 
     int exit_code = 0;
@@ -5483,14 +5849,30 @@ int main(int argc, char **argv) {
     }
 
     setenv("WAYLAND_DISPLAY", socket, 1);
+    start_native_ipc_server(&server);
+    if (server.num_workspaces > 0 && server.current_workspace < server.num_workspaces) {
+        const char *wsn = server.workspaces[server.current_workspace].id_name;
+        if (wsn[0]) {
+            dtwm_native_ipc_publish_prop(&server, "_DT_WORKSPACE_CURRENT_NAME", wsn, strlen(wsn) + 1);
+        }
+    }
     if (!server.xwayland) {
-        write_status_file(&server);
+        dtwm_spawn_front_panel(&server);
+        if (server.show_front_panel && server.panel_pid > 0 && !server.status_written) {
+            server.status_fallback_timer = wl_event_loop_add_timer(
+                ev_loop, handle_status_fallback_timer, &server
+            );
+            wl_event_source_timer_update(server.status_fallback_timer, 3500);
+        } else {
+            write_status_file(&server);
+        }
     }
     fprintf(
         stderr,
-        "dtwm-wayland: running on WAYLAND_DISPLAY=%s DISPLAY=%s\n",
+        "dtwm-wayland: running on WAYLAND_DISPLAY=%s DISPLAY=%s%s\n",
         socket,
-        server.xwayland ? server.xwayland->display_name : "(none)"
+        server.xwayland ? server.xwayland->display_name : "(none)",
+        server.no_xwayland ? " (--no-xwayland)" : ""
     );
 
     if (startup_cmd) {
@@ -5510,6 +5892,7 @@ cleanup:
     if (server.status_fallback_timer) wl_event_source_remove(server.status_fallback_timer);
     if (server.sigint_source) wl_event_source_remove(server.sigint_source);
     if (server.sigterm_source) wl_event_source_remove(server.sigterm_source);
+    stop_native_ipc_server(&server);
     if (server.xwayland) {
         wl_list_remove(&server.new_xwayland_surface.link);
         wl_list_remove(&server.xwayland_ready.link);

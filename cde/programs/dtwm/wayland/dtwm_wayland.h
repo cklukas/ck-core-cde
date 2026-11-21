@@ -394,6 +394,10 @@ struct DtwmServer {
     DtwmWorkspace workspaces[DTWM_MAX_WORKSPACES];
 
     /* Docked genuine CDE Front Panel (dtwm-panel) & TYPE client swallowing */
+    bool no_xwayland;
+    int native_ipc_fd;
+    char native_ipc_path[512];
+    struct wl_event_source *native_ipc_source;
     bool greeter_mode;
     bool super_tap_pending;
     uint32_t super_tap_press_ms;
@@ -816,5 +820,9 @@ void dtwm_a11y_on_cursor_motion(DtwmServer *server);
 void dtwm_a11y_on_output_destroy(DtwmOutput *output);
 bool dtwm_a11y_render_output_frame(DtwmOutput *output, struct wlr_scene_output *scene_output);
 bool dtwm_server_dispatch_keybinding(DtwmServer *server, uint32_t mods, xkb_keysym_t sym);
+void dtwm_spawn_front_panel(DtwmServer *server);
+void dtwm_apply_resource_manager_string(DtwmServer *server, const char *data, size_t len);
+void dtwm_dispatch_wm_request_bytes(DtwmServer *server, const char *data, size_t len);
+void dtwm_native_ipc_publish_prop(DtwmServer *server, const char *atom_name, const void *data, size_t len);
 
 #endif /* DTWM_WAYLAND_H */
