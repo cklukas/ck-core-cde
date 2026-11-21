@@ -191,14 +191,11 @@ void dtwm_output_mgmt_after_reconfigure(DtwmServer *server) {
 }
 
 void dtwm_output_mgmt_publish_x11(DtwmServer *server) {
-    if (!server || !server->xcb_conn || server->xcb_root == XCB_WINDOW_NONE) return;
-    if (server->atom_wayland_outputs == XCB_ATOM_NONE) {
-        server->atom_wayland_outputs = intern_xcb_atom(server->xcb_conn, "_DT_WAYLAND_OUTPUTS");
-    }
-    if (server->atom_wayland_outputs == XCB_ATOM_NONE) return;
+    if (!server) return;
 
     char buf[4096];
     int pos = 0;
+    buf[0] = '\0';
     DtwmOutput *out;
     wl_list_for_each(out, &server->outputs, link) {
         struct wlr_output *wo = out->wlr_output;
@@ -263,6 +260,16 @@ void dtwm_output_mgmt_publish_x11(DtwmServer *server) {
             pos += n;
         }
     }
+
+    if (pos > 0) {
+        dtwm_native_ipc_publish_prop(server, "_DT_WAYLAND_OUTPUTS", buf, (size_t)pos);
+    }
+
+    if (!server->xcb_conn || server->xcb_root == XCB_WINDOW_NONE) return;
+    if (server->atom_wayland_outputs == XCB_ATOM_NONE) {
+        server->atom_wayland_outputs = intern_xcb_atom(server->xcb_conn, "_DT_WAYLAND_OUTPUTS");
+    }
+    if (server->atom_wayland_outputs == XCB_ATOM_NONE) return;
 
     xcb_change_property(
         server->xcb_conn,

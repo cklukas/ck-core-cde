@@ -1512,6 +1512,8 @@ grabcolorCB(
         y = (Position)event.xbutton.y_root;
         image_ptr = XGetImage (style.display, style.root, x, y, 1, 1, 
 			       AllPlanes, ZPixmap);
+        if (image_ptr == nullptr)
+            return;
         pixel = (Pixel) XGetPixel (image_ptr, 0, 0);
         XDestroyImage (image_ptr);
 

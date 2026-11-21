@@ -834,8 +834,40 @@ static void xcb_write_ws_info(DtwmServer *server, DtwmWorkspace *ws) {
     );
 }
 
-static void xcb_sync_wm_properties(DtwmServer *server) {
-    if (server && server->num_workspaces > 0 && server->current_workspace < server->num_workspaces) {
+void dtwm_workspace_sync_ipc(DtwmServer *server) {
+    if (!server || server->num_workspaces == 0) return;
+
+    char list_buf[512];
+    size_t loff = 0;
+    for (uint32_t i = 0; i < server->num_workspaces; ++i) {
+        DtwmWorkspace *ws = &server->workspaces[i];
+        if (!ws->id_name[0]) continue;
+        size_t idlen = strlen(ws->id_name);
+        if (loff + idlen + 1 < sizeof(list_buf)) {
+            memcpy(list_buf + loff, ws->id_name, idlen + 1);
+            loff += idlen + 1;
+        }
+
+        const char *bname = ws->backdrop_name[0] ? ws->backdrop_name : "NoBackdrop";
+        char info_buf[1024];
+        size_t off = 0;
+        off += (size_t)snprintf(info_buf + off, sizeof(info_buf) - off, "%s", ws->title) + 1;
+        off += (size_t)snprintf(info_buf + off, sizeof(info_buf) - off, "%d", ws->color_set_id) + 1;
+        off += (size_t)snprintf(info_buf + off, sizeof(info_buf) - off, "0x%x", rgba_to_rgb24(ws->colors.bg)) + 1;
+        off += (size_t)snprintf(info_buf + off, sizeof(info_buf) - off, "0x%x", rgba_to_rgb24(ws->colors.fg)) + 1;
+        off += (size_t)snprintf(info_buf + off, sizeof(info_buf) - off, "%s", bname) + 1;
+        off += (size_t)snprintf(info_buf + off, sizeof(info_buf) - off, "%d", ws->image_type) + 1;
+        off += (size_t)snprintf(info_buf + off, sizeof(info_buf) - off, "0") + 1;
+
+        char prop_name[128];
+        snprintf(prop_name, sizeof(prop_name), "_DT_WORKSPACE_INFO_RAW_%s", ws->id_name);
+        dtwm_native_ipc_publish_prop(server, prop_name, info_buf, off);
+    }
+
+    if (loff > 0) {
+        dtwm_native_ipc_publish_prop(server, "_DT_WORKSPACE_LIST_NAMES", list_buf, loff);
+    }
+    if (server->current_workspace < server->num_workspaces) {
         const char *cur_name = server->workspaces[server->current_workspace].id_name;
         if (cur_name[0]) {
             dtwm_native_ipc_publish_prop(
@@ -843,7 +875,11 @@ static void xcb_sync_wm_properties(DtwmServer *server) {
             );
         }
     }
-    if (!server->xcb_conn || server->xcb_wm_win == XCB_WINDOW_NONE) return;
+}
+
+static void xcb_sync_wm_properties(DtwmServer *server) {
+    dtwm_workspace_sync_ipc(server);
+    if (!server || !server->xcb_conn || server->xcb_wm_win == XCB_WINDOW_NONE) return;
 
     xcb_atom_t list[DTWM_MAX_WORKSPACES];
     for (uint32_t i = 0; i < server->num_workspaces; ++i) {

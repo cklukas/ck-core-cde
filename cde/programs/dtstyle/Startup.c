@@ -305,11 +305,18 @@ BuildStartup(
       char 	*pch1;
       char 	*pch2;
 
-      pch1 = (char *)GETMESSAGE(7, 16, "Display-specific session:");
-      pch2 = XtMalloc(strlen (pch1) + 
-		      strlen (XDisplayName (getenv("DISPLAY"))) + 3);
+      const char *wl_act = getenv("CK_MOTIF_WAYLAND_ACTIVE");
+      const char *wl_dpy = getenv("CK_MOTIF_WAYLAND_DISPLAY");
+      if (!wl_dpy || !wl_dpy[0]) wl_dpy = getenv("WAYLAND_DISPLAY");
+      const char *dpy_label =
+          (wl_act && strcmp(wl_act, "1") == 0 && wl_dpy && wl_dpy[0])
+              ? wl_dpy
+              : XDisplayName(getenv("DISPLAY"));
 
-      (void) sprintf(pch2, "%s\n%s", pch1, XDisplayName (getenv("DISPLAY")));
+      pch1 = (char *)GETMESSAGE(7, 16, "Display-specific session:");
+      pch2 = XtMalloc(strlen (pch1) + strlen (dpy_label) + 3);
+
+      (void) sprintf(pch2, "%s\n%s", pch1, dpy_label);
 
       n = 0;
       string = CMPSTR(pch2);

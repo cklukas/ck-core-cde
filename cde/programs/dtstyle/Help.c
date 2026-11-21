@@ -76,9 +76,11 @@ GetHelpDialog(void)
             ((char *)GETMESSAGE(2, 7, "Style Manager - Help"))); n++;
 	pHelp->dialog = DtCreateHelpDialog(style.shell, "helpDlg", 
 					    args, n);
-
-        DtWsmRemoveWorkspaceFunctions(style.display, 
-                XtWindow(XtParent(pHelp->dialog)));
+        XtRealizeWidget(XtParent(pHelp->dialog));
+        if (XtWindow(XtParent(pHelp->dialog)) != None) {
+            DtWsmRemoveWorkspaceFunctions(style.display, 
+                    XtWindow(XtParent(pHelp->dialog)));
+        }
         XtAddCallback(pHelp->dialog, DtNhyperLinkCallback, 
                       HelpHyperlinkCB, nullptr);
         XtAddCallback(pHelp->dialog, DtNcloseCallback, 
@@ -109,8 +111,11 @@ GetHelpDialog(void)
             ((char *)GETMESSAGE(2, 7, "Style Manager - Help"))); n++;
 	pHelp->dialog = DtCreateHelpDialog(style.shell, "helpDlg", 
 					    args, n);
-        DtWsmRemoveWorkspaceFunctions(style.display, 
-                      XtWindow(XtParent(pHelp->dialog)));
+        XtRealizeWidget(XtParent(pHelp->dialog));
+        if (XtWindow(XtParent(pHelp->dialog)) != None) {
+            DtWsmRemoveWorkspaceFunctions(style.display, 
+                          XtWindow(XtParent(pHelp->dialog)));
+        }
         XtAddCallback(pHelp->dialog, DtNhyperLinkCallback, 
                       HelpHyperlinkCB, nullptr);
         XtAddCallback(pHelp->dialog, DtNcloseCallback, 
@@ -159,14 +164,17 @@ Help(
             ((char *)GETMESSAGE(2, 7, "Style Manager - Help"))); n++;
 	helpDialog = DtCreateHelpDialog(style.shell, "helpDlg", args, n);
 
-        DtWsmRemoveWorkspaceFunctions(style.display, 
-                      XtWindow(XtParent(helpDialog)));
         XtAddCallback(helpDialog, DtNhyperLinkCallback, 
                       HelpHyperlinkCB, nullptr);
         XtAddCallback(helpDialog, DtNcloseCallback, 
                       HelpCloseCB, nullptr);
 
         XtManageChild(helpDialog);
+        XtRealizeWidget(XtParent(helpDialog));
+        if (XtWindow(XtParent(helpDialog)) != None) {
+            DtWsmRemoveWorkspaceFunctions(style.display, 
+                          XtWindow(XtParent(helpDialog)));
+        }
     }
     else
     {

@@ -278,25 +278,39 @@ void SelectCurrentBackdrop(int callback)
     Widget list;
     char *backdropName;
     int i;
+    Boolean matched = False;
+
+    list = XtNameToWidget(style.backdropDialog, "*bitmapList");
 
     if ((DtWsmGetCurrentWorkspace (style.display, style.root, &aWS) 
 	 	!= Success) ||
 	(DtWsmGetWorkspaceInfo (style.display, style.root, aWS, &wInfo)
 	 	!= Success))
     {
+      if (backdrops.selected < 0 && backdrops.numBitmaps > 0 && list) {
+	XmListSelectPos(list, 1, callback);
+	XmListSetPos(list, 1);
+	backdrops.selected = 0;
+      }
+      if (backdrops.tiledTG)
+	XmToggleButtonGadgetSetState(backdrops.tiledTG, True, False);
       return;
     }
       
-    list = XtNameToWidget(style.backdropDialog, "*bitmapList");
-
     backdropName = XmGetAtomName(style.display, wInfo->backdropName);
 
     for (i = 0; i < backdrops.numBitmaps; i++) {
-      if (strcmp(backdrops.bitmapNames[i], backdropName) == 0) {
+      if (backdropName && strcmp(backdrops.bitmapNames[i], backdropName) == 0) {
 	XmListSelectPos (list, i + 1, callback);
 	XmListSetPos(list, i + 1);
 	backdrops.selected = i;
+	matched = True;
       }
+    }
+    if (!matched && backdrops.selected < 0 && backdrops.numBitmaps > 0 && list) {
+      XmListSelectPos(list, 1, callback);
+      XmListSetPos(list, 1);
+      backdrops.selected = 0;
     }
 
     switch(wInfo->imageType) {
@@ -1064,22 +1078,22 @@ ButtonCB(
           /* send message to update backdrop */
 
           num = backdrops.selected;
-
-          _DtWsmChangeBackdrop(style.display, style.root, 
-                             backdrops.bitmapNames[num], 
-                             backdrops.bitmaps[num],
-                             imageType);
+          if (num >= 0 && num < backdrops.numBitmaps)
+            _DtWsmChangeBackdrop(style.display, style.root, 
+                               backdrops.bitmapNames[num], 
+                               backdrops.bitmaps[num],
+                               imageType);
           break;
 
       case B_OK_BUTTON:  
           /* send message to update backdrop */
 
           num = backdrops.selected;
-
-          _DtWsmChangeBackdrop(style.display, style.root,
-                             backdrops.bitmapNames[num],
-                             backdrops.bitmaps[num],
-                             imageType);
+          if (num >= 0 && num < backdrops.numBitmaps)
+            _DtWsmChangeBackdrop(style.display, style.root,
+                               backdrops.bitmapNames[num],
+                               backdrops.bitmaps[num],
+                               imageType);
           XtUnmanageChild(w);
           break;
 

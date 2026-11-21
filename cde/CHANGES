@@ -1,4 +1,45 @@
 2026-11-21
+- Audit and fix Style Manager (`dtstyle`) dialogs and native Wayland `xdg_popup`
+  menu activation in XWayland-free (`--no-xwayland`) sessions
+  (`programs/dtstyle/Backdrop.c`, `programs/dtstyle/ColorEdit.c`,
+  `programs/dtstyle/ColorMain.c`, `programs/dtstyle/Dtwm.c`,
+  `programs/dtstyle/FontFaceCatalog.c`, `programs/dtstyle/Help.c`,
+  `programs/dtstyle/Startup.c`, `programs/dtwm/wayland/cde_output_mgmt.c`,
+  `programs/dtwm/wayland/cde_workspace.c`,
+  `programs/dtwm/wayland/dtwm_wayland.h`,
+  `programs/dtwm/wayland/dtwm_wayland_main.c`):
+  - Bump pinned CK Core Motif ABI 9 to `40e1f4115c13d99de2a26c444c5b303a2ba6991a`
+    (`.ckgit/motif-revision`, `.ckgit/ci.yml`) for X11-compliant
+    `ChangeWindowAttributes` armed menu label preservation, sub-millisecond
+    `ButtonPress`/`ButtonRelease` menu activation, `RANDR` output property
+    replies, expanded core XLFD catalog, and `.ipc` workspace/session bridges.
+  - Preserve open `xdg_popup` menus belonging to the clicked Wayland client in
+    `dtwm-wayland`'s `cursor_button` handler instead of destroying `xdg_popup`
+    surfaces before forwarding `BTN_LEFT`, while still dismissing popups of other
+    clients and on window-frame or desktop clicks.
+  - Publish `_DT_WAYLAND_OUTPUTS` unconditionally to the native `.ipc` bus in
+    `cde_output_mgmt.c` even when `Xwayland` (`server->xcb_conn`) is absent so
+    **Style Manager → Monitors** opens immediately with live Wayland output
+    geometry, scale, and identification badges instead of falling back to XRandR.
+  - Publish `_DT_WORKSPACE_LIST_NAMES`, `_DT_WORKSPACE_CURRENT_NAME`, and
+    `_DT_WORKSPACE_INFO_RAW_<ws>` over `.ipc` in `cde_workspace.c` (and raise
+    `DTWM_MAX_IPC_PROPS` to `64`) so **Style Manager → Backdrop** populates and
+    applies workspace backdrops live without `Xwayland`, with defensive bounds and
+    default selection guards in `Backdrop.c`.
+  - Force `CK_MOTIF_BACKEND=x11` in `dtstyle --preview-helper` (`ColorMain.c`) so
+    the child preview process connects to parent `dtstyle`'s local X11 socket and
+    embeds live interactive Motif widgets inside **Style Manager → Color & Theme**
+    rather than rendering a blank host frame, and guard `XGetImage` null returns
+    in `ColorEdit.c`.
+  - Fix `FontFaceCatalogLoad` (`FontFaceCatalog.c`) clearing `desc` on the first
+    XLFD of each face variant before extracting charset and point sizes, and
+    format charset labels as `registry-encoding` (`iso8859-1`, `iso10646-1`) so
+    **Style Manager → Font** populates all four columns cleanly.
+  - Detect native Wayland sessions via `DtstyleWaylandActive()` in **Style Manager
+    → Window** (`Dtwm.c`), display the Wayland socket name instead of the private
+    `ck-wlx11-*` transport path in **Style Manager → Startup** (`Startup.c`), and
+    realize `DtHelp` dialog shells before `DtWsmRemoveWorkspaceFunctions` in
+    `Help.c`.
 - Eliminate interactive window resize accumulation and backward frame rubber-banding
   in `dtwm-wayland` (`programs/dtwm/wayland/dtwm_wayland.h`,
   `programs/dtwm/wayland/dtwm_wayland_main.c`):

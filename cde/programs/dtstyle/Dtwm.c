@@ -344,6 +344,8 @@ is_wayland_dtwm_session(void)
     unsigned long nitems = 0, bytes_after = 0;
     unsigned char *prop = nullptr;
 
+    if (DtstyleWaylandActive())
+        return True;
     if (!style.display || style.root == None)
         return False;
     wl_atom = XInternAtom(style.display, "_DT_WAYLAND_OUTPUTS", True);

@@ -630,9 +630,13 @@ companion applications **without starting an `Xwayland` server process**:
   directly as `DTWM_VIEW_XDG` surfaces and hosts an `0600` UNIX stream bus at
   `$XDG_RUNTIME_DIR/dtwm-wayland-<WAYLAND_DISPLAY>.ipc` synchronizing
   `RESOURCE_MANAGER` palettes/appearance profiles, `_DT_WM_REQUEST` workspace and
-  compositor commands, and `_DT_WORKSPACE_CURRENT_NAME` state across `dtsession`,
-  `dtstyle`, `dtwm-panel`, `dtfile`, `dtpad`, `ck-clock`, `ck-coins`, and
-  `ck-browser`.
+  compositor commands, `_DT_WAYLAND_OUTPUTS` monitor topology,
+  `_DT_WORKSPACE_LIST_NAMES` / `_DT_WORKSPACE_CURRENT_NAME` /
+  `_DT_WORKSPACE_INFO_RAW_<ws>` workspace backdrop state, and `_DT_SM_*` Session
+  Manager state across `dtsession`, `dtstyle` (including all 12 Style Manager
+  dialogs, live embedded `Color & Theme` widget preview, `Backdrop`, `Font`,
+  `Monitors`, `Window`, `Startup`, and `DtHelp`), `dtwm-panel`, `dtfile`, `dtpad`,
+  `ck-clock`, `ck-coins`, and `ck-browser`.
 
 ## Readiness reporting, Ubuntu LTS APT packaging, and automated qualification
 

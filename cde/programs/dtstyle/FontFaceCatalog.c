@@ -224,7 +224,10 @@ add_charset(
     entry->sizeCapacity = 0;
 
     char label[64];
-    if (entry->encoding && *entry->encoding)
+    if (entry->registry && *entry->registry && strcmp(entry->registry, "*") != 0 &&
+        entry->encoding && *entry->encoding)
+        snprintf(label, sizeof(label), "%s-%s", entry->registry, entry->encoding);
+    else if (entry->encoding && *entry->encoding)
         snprintf(label, sizeof(label), "%s", entry->encoding);
     else
         snprintf(label, sizeof(label), "%s/%s", entry->registry, entry->encoding);
@@ -582,19 +585,20 @@ FontFaceCatalogLoad(Display *display)
             }
         }
 
-        const char *registry = desc && desc->registry ? desc->registry : "*";
-        const char *encoding = desc && desc->encoding ? desc->encoding : "*";
+        const FontDescriptor *eff_desc = desc ? desc : variant->base;
+        const char *registry = eff_desc && eff_desc->registry ? eff_desc->registry : "*";
+        const char *encoding = eff_desc && eff_desc->encoding ? eff_desc->encoding : "*";
         VariantCharsetEntry *charset =
             find_charset(variant, registry, encoding);
         if (!charset)
             charset = add_charset(variant, registry, encoding, font_names[i]);
 
-        if (desc && charset) {
-            if (desc->scalable) {
+        if (eff_desc && charset) {
+            if (eff_desc->scalable) {
                 XtFree(charset->raw);
                 charset->raw = XtNewString(font_names[i]);
             } else {
-                int size = desc->pixelSize > 0 ? desc->pixelSize : desc->pointSize;
+                int size = eff_desc->pixelSize > 0 ? eff_desc->pixelSize : eff_desc->pointSize;
                 variant_add_size(charset, size, font_names[i]);
             }
         }

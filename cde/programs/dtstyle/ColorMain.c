@@ -3446,6 +3446,10 @@ SyncEmbeddedPreviewWindow(Widget canvas, int cx, int cy, int cw, int ch)
         snprintf(xid_buf, sizeof(xid_buf), "0x%lx", (unsigned long)g_previewHostWin);
         pid_t pid = fork();
         if (pid == 0) {
+            /* Connect as an X11 client to parent dtstyle's display (including on
+             * native Wayland where DISPLAY points to parent's ck-wlx11 socket)
+             * so XReparentWindow embeds real Motif preview widgets in-window. */
+            setenv("CK_MOTIF_BACKEND", "x11", 1);
             execl("/proc/self/exe", "dtstyle", "--preview-helper", xid_buf, (char *)nullptr);
             execl(CDE_INSTALLATION_TOP "/bin/dtstyle", "dtstyle", "--preview-helper", xid_buf, (char *)nullptr);
             execlp("dtstyle", "dtstyle", "--preview-helper", xid_buf, (char *)nullptr);

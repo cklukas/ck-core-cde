@@ -1574,6 +1574,24 @@ static bool view_is_open_xwayland_popup(const DtwmServer *server, const DtwmView
     return wlr_output_layout_intersects(server->output_layout, nullptr, &vbox);
 }
 
+static bool surface_is_open_xdg_popup(
+    const DtwmServer *server, const struct wlr_surface *surface
+) {
+    if (!server || !surface) {
+        return false;
+    }
+    const DtwmPopup *popup;
+    wl_list_for_each(popup, &server->popups, link) {
+        if (popup->xdg_popup && popup->xdg_popup->base &&
+            popup->xdg_popup->base->surface == surface) {
+            return true;
+        }
+    }
+    struct wlr_xdg_surface *xdg =
+        wlr_xdg_surface_try_from_wlr_surface((struct wlr_surface *)surface);
+    return xdg && xdg->role == WLR_XDG_SURFACE_ROLE_POPUP;
+}
+
 static bool has_open_client_popup(const DtwmServer *server) {
     if (!server) return false;
     if (!wl_list_empty(&server->popups)) {
@@ -1588,14 +1606,20 @@ static bool has_open_client_popup(const DtwmServer *server) {
     return false;
 }
 
-static void dismiss_open_client_popups(DtwmServer *server, uint32_t t_ms) {
+static void dismiss_open_client_popups_except_client(
+    DtwmServer *server, uint32_t t_ms, const struct wl_client *keep_client
+) {
     if (!server) {
         return;
     }
-    /* Dismiss any open native Wayland xdg_popups */
+    /* Dismiss open native Wayland xdg_popups belonging to other clients */
     DtwmPopup *popup, *ptmp;
     wl_list_for_each_safe(popup, ptmp, &server->popups, link) {
         if (popup->xdg_popup) {
+            if (keep_client && popup->xdg_popup->base && popup->xdg_popup->base->resource &&
+                wl_resource_get_client(popup->xdg_popup->base->resource) == keep_client) {
+                continue;
+            }
             wlr_xdg_popup_destroy(popup->xdg_popup);
         }
     }
@@ -1674,6 +1698,10 @@ static void dismiss_open_client_popups(DtwmServer *server, uint32_t t_ms) {
     wlr_seat_pointer_notify_frame(server->seat);
     wlr_seat_pointer_notify_clear_focus(server->seat);
     wlr_seat_pointer_notify_frame(server->seat);
+}
+
+static void dismiss_open_client_popups(DtwmServer *server, uint32_t t_ms) {
+    dismiss_open_client_popups_except_client(server, t_ms, nullptr);
 }
 
 static void begin_interactive(DtwmView *view, DtwmCursorMode mode, uint32_t edges) {
@@ -2838,20 +2866,30 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
         return;
     }
 
+    const bool clicked_xdg_popup = surface_is_open_xdg_popup(server, surface);
+
     if (view && !(view->kind == DTWM_VIEW_XWAYLAND && view->xwayland_surface &&
                   view->xwayland_surface->override_redirect)) {
-        if (part != DTWM_PART_CLIENT || view->kind == DTWM_VIEW_XDG) {
+        if (part != DTWM_PART_CLIENT) {
             dismiss_open_client_popups(server, t_ms);
-            if (part == DTWM_PART_CLIENT && surface) {
+        } else if (view->kind == DTWM_VIEW_XDG) {
+            const struct wl_client *keep_cli =
+                (surface && surface->resource) ? wl_resource_get_client(surface->resource) : nullptr;
+            dismiss_open_client_popups_except_client(server, t_ms, keep_cli);
+            if (surface) {
                 wlr_seat_pointer_notify_enter(server->seat, surface, sx, sy);
             }
         }
-        focus_view_ex(
-            server,
-            view,
-            surface,
-            (part == DTWM_PART_CLIENT) ? server->focus_auto_raise : true
-        );
+        if (!clicked_xdg_popup) {
+            focus_view_ex(
+                server,
+                view,
+                surface,
+                (part == DTWM_PART_CLIENT) ? server->focus_auto_raise : true
+            );
+        } else if (server->focused_view != view) {
+            focus_view_ex(server, view, view_wlr_surface(view), false);
+        }
 
         if (view->is_subpanel && !view->subpanel_torn_off && btn == BTN_LEFT) {
             if (part != DTWM_PART_CLIENT) {
@@ -5280,7 +5318,7 @@ static void ensure_wayland_ttsession_env(void) {
 
 /* --- Native Session Root-Property & WM-Request IPC Bus (--no-xwayland) --- */
 #define DTWM_MAX_IPC_PEERS 32
-#define DTWM_MAX_IPC_PROPS 32
+#define DTWM_MAX_IPC_PROPS 64
 
 typedef struct {
     int fd;
@@ -6028,12 +6066,8 @@ int main(int argc, char **argv) {
             dtwm_native_ipc_publish_prop(&server, "TT_SESSION", tts, strlen(tts));
         }
     }
-    if (server.num_workspaces > 0 && server.current_workspace < server.num_workspaces) {
-        const char *wsn = server.workspaces[server.current_workspace].id_name;
-        if (wsn[0]) {
-            dtwm_native_ipc_publish_prop(&server, "_DT_WORKSPACE_CURRENT_NAME", wsn, strlen(wsn) + 1);
-        }
-    }
+    dtwm_workspace_sync_ipc(&server);
+    dtwm_output_mgmt_publish_x11(&server);
     if (!server.xwayland) {
         dtwm_spawn_front_panel(&server);
         if (server.show_front_panel && server.panel_pid > 0 && !server.status_written) {

@@ -828,5 +828,6 @@ void dtwm_spawn_front_panel(DtwmServer *server);
 void dtwm_apply_resource_manager_string(DtwmServer *server, const char *data, size_t len);
 void dtwm_dispatch_wm_request_bytes(DtwmServer *server, const char *data, size_t len);
 void dtwm_native_ipc_publish_prop(DtwmServer *server, const char *atom_name, const void *data, size_t len);
+void dtwm_workspace_sync_ipc(DtwmServer *server);
 
 #endif /* DTWM_WAYLAND_H */
