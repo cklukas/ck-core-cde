@@ -1509,5 +1509,24 @@ CycleSaver(XtPointer	ptr,
                             CycleSaver, nullptr);
 }
 
+void
+SmWaylandHandleIdleResumed(void)
+{
+    if (!SmWaylandSessionIsLocked() &&
+        (smGD.numSavedScreens <= 0 || smDD.coverDialog[0] == nullptr) &&
+        smDD.lockDialog == nullptr) {
+        return;
+    }
+    if (smGD.lockedState == LOCKED) {
+        if (lockDlgVisible == False) {
+            PutUpLogin(True, True);
+        } else {
+            PutUpLogin(False, True);
+        }
+    } else {
+        UnlockDisplay(True, True);
+    }
+}
+
 
 

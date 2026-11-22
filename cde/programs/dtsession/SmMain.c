@@ -408,7 +408,14 @@ main (int argc, char **argv)
     InitSMGlobals();
     if (SmWaylandActive())
     {
-	int idle_sec = (smSaverRes.saverTimeout > 0) ? smSaverRes.saverTimeout : smSaverRes.lockTimeout;
+	int idle_sec = 0;
+	if (smSaverRes.saverTimeout > 0 && smSaverRes.lockTimeout > 0)
+	    idle_sec = (smSaverRes.lockTimeout < smSaverRes.saverTimeout)
+	        ? smSaverRes.lockTimeout : smSaverRes.saverTimeout;
+	else if (smSaverRes.saverTimeout > 0)
+	    idle_sec = smSaverRes.saverTimeout;
+	else if (smSaverRes.lockTimeout > 0)
+	    idle_sec = smSaverRes.lockTimeout;
 	SmWaylandUpdateIdleTimeout(idle_sec);
     }
 

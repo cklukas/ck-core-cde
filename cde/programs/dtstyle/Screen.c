@@ -1684,6 +1684,8 @@ _DtmapCB_screenDialog(
   
   XGetScreenSaver(style.display, &screen.xTimeout, &screen.interval, 
 		  &screen.blanking, &screen.exposures);
+  if (getenv("CK_MOTIF_WAYLAND_ACTIVE") != nullptr)
+    screen.xTimeout = screen.newTimeout;
   
   screen.new_blanking = DontPreferBlanking;
 
@@ -1885,6 +1887,8 @@ no_svr_ext_DtmapCB_screenDialog(
   
   XGetScreenSaver(style.display, &screen.xTimeout, &screen.interval, 
 		  &screen.blanking, &screen.exposures);
+  if (getenv("CK_MOTIF_WAYLAND_ACTIVE") != nullptr)
+    screen.xTimeout = screen.newTimeout;
   
   screen.new_blanking = PreferBlanking;
 

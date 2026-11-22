@@ -94,10 +94,29 @@ void dtwm_lock_focus_surface(DtwmServer *server, struct wlr_surface *surf) {
 static void focus_best_lock_surface(DtwmServer *server) {
     if (!server || !server->session_locked) return;
 
-    /* Prefer dtsession's genuine Motif PAM lock dialog if mapped */
+    /* Prefer dtsession's genuine Motif PAM lock dialog / cover shell if mapped */
     DtwmView *v;
     wl_list_for_each(v, &server->views, link) {
-        if (v->mapped && v->is_lock_dialog && v->kind == DTWM_VIEW_XWAYLAND &&
+        if (!v->mapped || !v->is_lock_dialog) {
+            continue;
+        }
+        if (v->kind == DTWM_VIEW_XDG && v->xdg_toplevel && v->xdg_toplevel->base->surface) {
+            const char *t = v->xdg_toplevel->title ? v->xdg_toplevel->title : "";
+            if (!strcmp(t, "lockDialog_popup")) {
+                dtwm_lock_focus_surface(server, v->xdg_toplevel->base->surface);
+                return;
+            }
+        }
+    }
+    wl_list_for_each(v, &server->views, link) {
+        if (!v->mapped || !v->is_lock_dialog) {
+            continue;
+        }
+        if (v->kind == DTWM_VIEW_XDG && v->xdg_toplevel && v->xdg_toplevel->base->surface) {
+            dtwm_lock_focus_surface(server, v->xdg_toplevel->base->surface);
+            return;
+        }
+        if (v->kind == DTWM_VIEW_XWAYLAND &&
             v->xwayland_surface && v->xwayland_surface->surface) {
             dtwm_lock_focus_surface(server, v->xwayland_surface->surface);
             return;
@@ -497,8 +516,7 @@ void dtwm_hw_apply_keyboard_defaults(DtwmServer *server, struct wlr_keyboard *wl
 }
 
 void dtwm_hw_publish_state(DtwmServer *server) {
-    if (!server || !server->xcb_conn || server->xcb_root == XCB_WINDOW_NONE ||
-        server->atom_wayland_input_state == XCB_ATOM_NONE) {
+    if (!server) {
         return;
     }
     char buf[640];
@@ -525,11 +543,15 @@ void dtwm_hw_publish_state(DtwmServer *server) {
         server->lock_timeout_sec
     );
     if (n > 0) {
-        xcb_change_property(
-            server->xcb_conn, XCB_PROP_MODE_REPLACE, server->xcb_root,
-            server->atom_wayland_input_state, XCB_ATOM_STRING, 8, (uint32_t)n, buf
-        );
-        xcb_flush(server->xcb_conn);
+        dtwm_native_ipc_publish_prop(server, "_DT_WAYLAND_INPUT_STATE", buf, (size_t)n);
+        if (server->xcb_conn && server->xcb_root != XCB_WINDOW_NONE &&
+            server->atom_wayland_input_state != XCB_ATOM_NONE) {
+            xcb_change_property(
+                server->xcb_conn, XCB_PROP_MODE_REPLACE, server->xcb_root,
+                server->atom_wayland_input_state, XCB_ATOM_STRING, 8, (uint32_t)n, buf
+            );
+            xcb_flush(server->xcb_conn);
+        }
     }
 }
 

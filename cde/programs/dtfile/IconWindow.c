@@ -216,6 +216,9 @@ FileWindowResizeTimerCB(
    file_mgr_data->last_resize_w = cur_w;
    file_mgr_data->last_resize_h = cur_h;
 
+   if (TryFastResizeFileWindow(file_mgr_rec, file_mgr_data))
+      return;
+
    LayoutFileIcons (file_mgr_rec, file_mgr_data, False, False);
    if (file_mgr_rec->file_window && XtIsRealized(file_mgr_rec->file_window))
    {
@@ -269,6 +272,36 @@ FileWindowResizeCallback(
          if (cevent->width == file_mgr_data->last_resize_w &&
              cevent->height == file_mgr_data->last_resize_h)
          {
+            return;
+         }
+
+         if (TryFastResizeFileWindow(file_mgr_rec, file_mgr_data))
+         {
+            if (file_mgr_data->resize_timer_id != 0)
+            {
+               XtRemoveTimeOut(file_mgr_data->resize_timer_id);
+               file_mgr_data->resize_timer_id = 0;
+            }
+            file_mgr_data->last_resize_w = (Dimension)cevent->width;
+            file_mgr_data->last_resize_h = (Dimension)cevent->height;
+            return;
+         }
+
+         if (file_mgr_data->last_layout_total <= 250)
+         {
+            if (file_mgr_data->resize_timer_id != 0)
+            {
+               XtRemoveTimeOut(file_mgr_data->resize_timer_id);
+               file_mgr_data->resize_timer_id = 0;
+            }
+            file_mgr_data->last_resize_w = (Dimension)cevent->width;
+            file_mgr_data->last_resize_h = (Dimension)cevent->height;
+            LayoutFileIcons(file_mgr_rec, file_mgr_data, False, False);
+            if (file_mgr_rec->file_window && XtIsRealized(file_mgr_rec->file_window))
+            {
+               XClearArea(XtDisplay(file_mgr_rec->file_window),
+                          XtWindow(file_mgr_rec->file_window), 0, 0, 0, 0, True);
+            }
             return;
          }
 

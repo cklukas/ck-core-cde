@@ -78,6 +78,7 @@
 
 extern void LockDisplay( Boolean locknow ) ;
 extern Boolean LockIsAvailable( void ) ;
+extern void SmWaylandHandleIdleResumed( void ) ;
 extern void CreateLockCursor( void ) ;
 
 

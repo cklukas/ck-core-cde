@@ -17,6 +17,7 @@ typedef struct {
     cairo_surface_t *surface;
     void *data;
     size_t stride;
+    uint32_t drm_format;
 } DtwmCairoBuffer;
 
 static void cairo_buf_destroy(struct wlr_buffer *wlr_buffer) {
@@ -33,7 +34,7 @@ static bool cairo_buf_begin_data_ptr_access(
     (void)flags;
     DtwmCairoBuffer *buf = wl_container_of(wlr_buffer, buf, base);
     *data = buf->data;
-    *format = DRM_FORMAT_ARGB8888;
+    *format = buf->drm_format;
     *stride = buf->stride;
     return true;
 }
@@ -48,7 +49,9 @@ static const struct wlr_buffer_impl cairo_buf_impl = {
     .end_data_ptr_access = cairo_buf_end_data_ptr_access,
 };
 
-static DtwmCairoBuffer *dtwm_cairo_buffer_create(int width, int height, cairo_t **out_cr) {
+static DtwmCairoBuffer *dtwm_cairo_buffer_create_fmt(
+    int width, int height, bool opaque, cairo_t **out_cr
+) {
     if (width <= 0 || height <= 0) {
         return nullptr;
     }
@@ -56,7 +59,9 @@ static DtwmCairoBuffer *dtwm_cairo_buffer_create(int width, int height, cairo_t 
     if (!buf) {
         return nullptr;
     }
-    buf->surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
+    buf->surface = cairo_image_surface_create(
+        opaque ? CAIRO_FORMAT_RGB24 : CAIRO_FORMAT_ARGB32, width, height
+    );
     if (cairo_surface_status(buf->surface) != CAIRO_STATUS_SUCCESS) {
         cairo_surface_destroy(buf->surface);
         free(buf);
@@ -64,9 +69,14 @@ static DtwmCairoBuffer *dtwm_cairo_buffer_create(int width, int height, cairo_t 
     }
     buf->data = cairo_image_surface_get_data(buf->surface);
     buf->stride = (size_t)cairo_image_surface_get_stride(buf->surface);
+    buf->drm_format = opaque ? DRM_FORMAT_XRGB8888 : DRM_FORMAT_ARGB8888;
     wlr_buffer_init(&buf->base, &cairo_buf_impl, width, height);
     *out_cr = cairo_create(buf->surface);
     return buf;
+}
+
+static DtwmCairoBuffer *dtwm_cairo_buffer_create(int width, int height, cairo_t **out_cr) {
+    return dtwm_cairo_buffer_create_fmt(width, height, false, out_cr);
 }
 
 struct wlr_buffer *dtwm_cairo_buffer_begin(
@@ -318,6 +328,25 @@ const char *dtwm_view_title(const DtwmView *view) {
     return (title && title[0]) ? title : "Untitled";
 }
 
+static PangoFontDescription *get_cached_font_desc(const char *font_spec) {
+    static PangoFontDescription *desc_serif_10 = nullptr;
+    static PangoFontDescription *desc_serif_bold_10 = nullptr;
+    static PangoFontDescription *desc_sans_bold_95 = nullptr;
+    if (!strcmp(font_spec, "Serif 10")) {
+        if (!desc_serif_10) desc_serif_10 = pango_font_description_from_string("Serif 10");
+        return desc_serif_10;
+    }
+    if (!strcmp(font_spec, "Serif Bold 10")) {
+        if (!desc_serif_bold_10) desc_serif_bold_10 = pango_font_description_from_string("Serif Bold 10");
+        return desc_serif_bold_10;
+    }
+    if (!strcmp(font_spec, "Sans Bold 9.5")) {
+        if (!desc_sans_bold_95) desc_sans_bold_95 = pango_font_description_from_string("Sans Bold 9.5");
+        return desc_sans_bold_95;
+    }
+    return nullptr;
+}
+
 static void draw_pango_label_with_font(
     cairo_t *cr,
     const char *font_spec,
@@ -333,8 +362,9 @@ static void draw_pango_label_with_font(
         return;
     }
     PangoLayout *layout = pango_cairo_create_layout(cr);
-    PangoFontDescription *desc = pango_font_description_from_string(font_spec);
-    pango_layout_set_font_description(layout, desc);
+    PangoFontDescription *cached = get_cached_font_desc(font_spec);
+    PangoFontDescription *owned = cached ? nullptr : pango_font_description_from_string(font_spec);
+    pango_layout_set_font_description(layout, cached ? cached : owned);
     pango_layout_set_text(layout, text ? text : "", -1);
     pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
     pango_layout_set_width(layout, (int)((w - 8.0) * PANGO_SCALE));
@@ -351,7 +381,9 @@ static void draw_pango_label_with_font(
     cairo_move_to(cr, floor(tx), floor(ty));
     pango_cairo_show_layout(cr, layout);
 
-    pango_font_description_free(desc);
+    if (owned) {
+        pango_font_description_free(owned);
+    }
     g_object_unref(layout);
 }
 
@@ -369,53 +401,43 @@ void dtwm_draw_label(
     draw_pango_label(cr, text, x, y, w, h, fg, centered, bold);
 }
 
-void dtwm_view_update_frame(DtwmView *view) {
-    if (!view || !view->frame_buf) {
+static void render_frame_strip(
+    const DtwmView *view,
+    struct wlr_scene_buffer *sbuf,
+    int ox,
+    int oy,
+    int rw,
+    int rh,
+    int outer_w,
+    int outer_h,
+    int left,
+    const DtwmColorSet *cs,
+    bool is_modern,
+    bool is_hc,
+    bool include_title
+) {
+    if (!sbuf) {
         return;
     }
-    if (!view->decorated || view->client_w <= 0 || view->client_h <= 0) {
-        wlr_scene_buffer_set_buffer(view->frame_buf, nullptr);
-        wlr_scene_node_set_position(&view->content_tree->node, 0, 0);
+    if (rw <= 0 || rh <= 0) {
+        wlr_scene_buffer_set_buffer(sbuf, nullptr);
         return;
     }
-
-    int left, top, right, bottom;
-    dtwm_view_insets(view, &left, &top, &right, &bottom);
-    wlr_scene_node_set_position(&view->content_tree->node, left, top);
-
-    int outer_w = view->client_w + left + right;
-    int outer_h = view->client_h + top + bottom;
 
     cairo_t *cr = nullptr;
-    DtwmCairoBuffer *buf = dtwm_cairo_buffer_create(outer_w, outer_h, &cr);
+    DtwmCairoBuffer *buf = dtwm_cairo_buffer_create_fmt(rw, rh, true, &cr);
     if (!buf) {
         return;
     }
 
-    static const DtwmColorSet classic_panel_border = {
-        .bg = {0.929, 0.659, 0.439, 1.0},            /* Default.dp #EDA870 */
-        .fg = {1.000, 1.000, 1.000, 1.0},
-        .top_shadow = {0.976, 0.843, 0.725, 1.0},
-        .bottom_shadow = {0.490, 0.345, 0.227, 1.0},
-    };
-    const DtwmColorSet *cs = view->active ? &view->server->palette.active : &view->server->palette.inactive;
-    if (view->is_panel || (view->is_subpanel && !view->subpanel_torn_off)) {
-        cs = (view->server->palette.profile == DTWM_PROFILE_CLASSIC)
-                 ? &classic_panel_border
-                 : &view->server->palette.inactive;
-    }
+    cairo_translate(cr, -ox, -oy);
 
-    bool is_modern = (view->server->palette.profile == DTWM_PROFILE_MODERN_LIGHT ||
-                      view->server->palette.profile == DTWM_PROFILE_MODERN_DARK);
-    bool is_hc = (view->server->palette.profile == DTWM_PROFILE_HIGH_CONTRAST);
-
-    /* 1. Fill frame background */
+    /* 1. Fill strip background */
     set_rgba(cr, cs->bg);
-    cairo_rectangle(cr, 0, 0, outer_w, outer_h);
+    cairo_rectangle(cr, ox, oy, rw, rh);
     cairo_fill(cr);
 
     if (is_modern) {
-        /* Modern Motif flat 1px outer & inner frame borders (matches mwm WP-48) */
         set_rgba(cr, cs->bottom_shadow);
         cairo_set_line_width(cr, 1.0);
         cairo_rectangle(cr, 0.5, 0.5, outer_w - 1.0, outer_h - 1.0);
@@ -458,8 +480,8 @@ void dtwm_view_update_frame(DtwmView *view) {
         }
     }
 
-    /* 5. Titlebar and MWM buttons */
-    if (view->has_title) {
+    /* 5. Titlebar and MWM buttons (top strip only) */
+    if (include_title && view->has_title) {
         double tx = DTWM_BORDER_WIDTH;
         double ty = DTWM_BORDER_WIDTH;
         double tw = view->client_w;
@@ -469,7 +491,6 @@ void dtwm_view_update_frame(DtwmView *view) {
         double title_x = tx;
         double title_w = tw;
 
-        /* Left Window Menu Button [ - ] */
         if (view->has_menu_btn && title_w >= btn_w * 2) {
             if (is_modern) {
                 set_rgba(cr, cs->bottom_shadow);
@@ -491,7 +512,6 @@ void dtwm_view_update_frame(DtwmView *view) {
             title_w -= btn_w;
         }
 
-        /* Right Maximize Button [ □ ] */
         double right_edge = tx + tw;
         if (view->has_max_btn && title_w >= btn_w * 2) {
             right_edge -= btn_w;
@@ -522,7 +542,6 @@ void dtwm_view_update_frame(DtwmView *view) {
             }
         }
 
-        /* Minimize Button [ . / _ ] */
         if (view->has_min_btn && title_w >= btn_w * 1.5) {
             right_edge -= btn_w;
             title_w -= btn_w;
@@ -544,7 +563,6 @@ void dtwm_view_update_frame(DtwmView *view) {
             }
         }
 
-        /* Titlebar slab + centered window title */
         if (title_w > 4.0) {
             if (is_modern) {
                 set_rgba(cr, cs->bottom_shadow);
@@ -561,18 +579,89 @@ void dtwm_view_update_frame(DtwmView *view) {
         }
     }
 
-    /* 6. Cut out transparent client area so client surface shows cleanly underneath/within */
-    cairo_save(cr);
-    cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
-    cairo_rectangle(cr, left, top, view->client_w, view->client_h);
-    cairo_fill(cr);
-    cairo_restore(cr);
-
     cairo_surface_flush(buf->surface);
     cairo_destroy(cr);
 
-    wlr_scene_buffer_set_buffer(view->frame_buf, &buf->base);
+    wlr_scene_node_set_position(&sbuf->node, ox, oy);
+    wlr_scene_buffer_set_buffer(sbuf, &buf->base);
     wlr_buffer_drop(&buf->base);
+}
+
+void dtwm_view_update_frame(DtwmView *view) {
+    if (!view || !view->frame_tree) {
+        return;
+    }
+    if (!view->decorated || view->client_w <= 0 || view->client_h <= 0) {
+        if (view->frame_top_buf) wlr_scene_buffer_set_buffer(view->frame_top_buf, nullptr);
+        if (view->frame_bottom_buf) wlr_scene_buffer_set_buffer(view->frame_bottom_buf, nullptr);
+        if (view->frame_left_buf) wlr_scene_buffer_set_buffer(view->frame_left_buf, nullptr);
+        if (view->frame_right_buf) wlr_scene_buffer_set_buffer(view->frame_right_buf, nullptr);
+        if (view->client_bg_rect) wlr_scene_node_set_enabled(&view->client_bg_rect->node, false);
+        if (view->content_tree) {
+            wlr_scene_node_set_position(&view->content_tree->node, 0, 0);
+            wlr_scene_subsurface_tree_set_clip(&view->content_tree->node, nullptr);
+        }
+        if (view->popup_anchor_tree) {
+            wlr_scene_node_set_position(&view->popup_anchor_tree->node, 0, 0);
+        }
+        return;
+    }
+
+    int left, top, right, bottom;
+    dtwm_view_insets(view, &left, &top, &right, &bottom);
+    if (view->content_tree) {
+        wlr_scene_node_set_position(&view->content_tree->node, left, top);
+        struct wlr_box clip = { .x = 0, .y = 0, .width = view->client_w, .height = view->client_h };
+        wlr_scene_subsurface_tree_set_clip(&view->content_tree->node, &clip);
+    }
+    if (view->popup_anchor_tree) {
+        wlr_scene_node_set_position(&view->popup_anchor_tree->node, left, top);
+    }
+    if (view->client_bg_rect) {
+        const DtwmRgba *wbg = &view->server->palette.window_bg.bg;
+        float bg_col[4] = { (float)wbg->r, (float)wbg->g, (float)wbg->b, 1.0f };
+        wlr_scene_rect_set_color(view->client_bg_rect, bg_col);
+        wlr_scene_rect_set_size(view->client_bg_rect, view->client_w, view->client_h);
+        wlr_scene_node_set_position(&view->client_bg_rect->node, left, top);
+        wlr_scene_node_set_enabled(&view->client_bg_rect->node, true);
+    }
+
+    int outer_w = view->client_w + left + right;
+    int outer_h = view->client_h + top + bottom;
+
+    static const DtwmColorSet classic_panel_border = {
+        .bg = {0.929, 0.659, 0.439, 1.0},            /* Default.dp #EDA870 */
+        .fg = {1.000, 1.000, 1.000, 1.0},
+        .top_shadow = {0.976, 0.843, 0.725, 1.0},
+        .bottom_shadow = {0.490, 0.345, 0.227, 1.0},
+    };
+    const DtwmColorSet *cs = view->active ? &view->server->palette.active : &view->server->palette.inactive;
+    if (view->is_panel || (view->is_subpanel && !view->subpanel_torn_off)) {
+        cs = (view->server->palette.profile == DTWM_PROFILE_CLASSIC)
+                 ? &classic_panel_border
+                 : &view->server->palette.inactive;
+    }
+
+    bool is_modern = (view->server->palette.profile == DTWM_PROFILE_MODERN_LIGHT ||
+                      view->server->palette.profile == DTWM_PROFILE_MODERN_DARK);
+    bool is_hc = (view->server->palette.profile == DTWM_PROFILE_HIGH_CONTRAST);
+
+    render_frame_strip(
+        view, view->frame_top_buf, 0, 0, outer_w, top,
+        outer_w, outer_h, left, cs, is_modern, is_hc, true
+    );
+    render_frame_strip(
+        view, view->frame_bottom_buf, 0, top + view->client_h, outer_w, bottom,
+        outer_w, outer_h, left, cs, is_modern, is_hc, false
+    );
+    render_frame_strip(
+        view, view->frame_left_buf, 0, top, left, view->client_h,
+        outer_w, outer_h, left, cs, is_modern, is_hc, false
+    );
+    render_frame_strip(
+        view, view->frame_right_buf, left + view->client_w, top, right, view->client_h,
+        outer_w, outer_h, left, cs, is_modern, is_hc, false
+    );
 }
 
 DtwmFramePart dtwm_frame_hit_test(const DtwmView *view, int lx, int ly) {

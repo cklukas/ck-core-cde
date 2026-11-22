@@ -8038,6 +8038,9 @@ LayoutFileIcons(
    if (file_mgr_data->busy_status != not_busy)
       return;
 
+   file_mgr_data->last_layout_cols = 0;
+   file_mgr_data->last_layout_total = 0;
+
    DPRINTF(("LayoutFileIcons(\"%s\", u_s_p %c, t_o_h %c) ...\n",
             file_mgr_data->current_directory,
             update_scrolling_position? 'T': 'F',
@@ -8326,6 +8329,9 @@ LayoutFileIcons(
               column_count, row_count,
               scrolled_window_width));
 
+     file_mgr_data->last_layout_cols = column_count;
+     file_mgr_data->last_layout_total = total_icon_count;
+
      /* assign positions to all icons */
      y = MARGIN;
      file_window_width = (Dimension)
@@ -8570,6 +8576,157 @@ layout_done:
 #endif
 
    DPRINTF(("... done\n"));
+}
+
+Boolean
+TryFastResizeFileWindow(
+        FileMgrRec *file_mgr_rec,
+        FileMgrData *file_mgr_data )
+{
+   IconLayoutData *layout_data;
+   FileViewData **order_list;
+   int order_count, total_icon_count, i;
+   Dimension scrolled_window_width, scrolled_window_height;
+   Dimension vert_scrollbar_width, horiz_scrollbar_height;
+   Dimension grid_width, grid_height;
+   Dimension file_window_width, file_window_height;
+   int column_count, row_count, tmp;
+   Boolean vsb_vis, want_hsb;
+   Arg args[4];
+
+   if (file_mgr_rec == nullptr || file_mgr_data == nullptr ||
+       file_mgr_rec->file_window == nullptr ||
+       file_mgr_rec->scroll_window == nullptr ||
+       file_mgr_rec->vertical_scroll_bar == nullptr ||
+       file_mgr_rec->horizontal_scroll_bar == nullptr ||
+       file_mgr_data->busy_status != not_busy ||
+       file_mgr_data->layout_data == nullptr ||
+       PositioningEnabledInView(file_mgr_data) ||
+       file_mgr_data->show_type != SINGLE_DIRECTORY ||
+       file_mgr_data->view == BY_ATTRIBUTES ||
+       file_mgr_data->scrollToThisFile != nullptr ||
+       file_mgr_data->grid_width == 0 ||
+       file_mgr_data->grid_height == 0 ||
+       file_mgr_data->last_layout_cols <= 0)
+   {
+      return False;
+   }
+
+   layout_data = (IconLayoutData *)file_mgr_data->layout_data;
+   if (layout_data->work_id != 0)
+      return False;
+
+   order_list = layout_data->order_list;
+   order_count = layout_data->order_count;
+   total_icon_count = 0;
+   for (i = 0; i < order_count; i++)
+   {
+      if (order_list[i]->need_update)
+         return False;
+      if (order_list[i]->displayed)
+         total_icon_count++;
+   }
+   if (total_icon_count != file_mgr_data->last_layout_total)
+      return False;
+
+   scrolled_window_width = file_mgr_rec->scroll_window->core.width;
+   scrolled_window_height = file_mgr_rec->scroll_window->core.height;
+   vert_scrollbar_width = file_mgr_rec->vertical_scroll_bar->core.width;
+   horiz_scrollbar_height = file_mgr_rec->horizontal_scroll_bar->core.height;
+   grid_width = file_mgr_data->grid_width;
+   grid_height = file_mgr_data->grid_height;
+
+   column_count = ((int)scrolled_window_width - 4 - 2*MARGIN + XSPACING) /
+                  ((int)grid_width + XSPACING);
+   if (column_count <= 0)
+      column_count = 1;
+
+   row_count = (total_icon_count + column_count - 1) / column_count;
+   tmp = 2*MARGIN - YSPACING(file_mgr_data) +
+         row_count * ((int)grid_height + YSPACING(file_mgr_data));
+
+   if (tmp >= (int)scrolled_window_height - 2*MARGIN)
+   {
+      column_count = ((int)scrolled_window_width - 4 - 2*MARGIN + XSPACING -
+                      (int)vert_scrollbar_width) /
+                     ((int)grid_width + XSPACING);
+      if (column_count <= 0)
+         column_count = 1;
+      row_count = (total_icon_count + column_count - 1) / column_count;
+      tmp = 2*MARGIN - YSPACING(file_mgr_data) +
+            row_count * ((int)grid_height + YSPACING(file_mgr_data));
+   }
+
+   if (tmp > MAXWINSIZE)
+      return False;
+
+   if (column_count != file_mgr_data->last_layout_cols)
+      return False;
+
+   file_window_width = (Dimension)
+      (2*MARGIN - XSPACING + column_count * ((int)grid_width + XSPACING));
+   file_window_height = (Dimension)(tmp > 0 ? tmp : 1);
+
+   /* If vertical scrollbar visibility is crossing its threshold, let full layout
+    * manage both scrollbars cleanly; otherwise adjust file_window directly. */
+   vsb_vis = VerticalScrollbarIsVisible(file_mgr_rec->vertical_scroll_bar,
+                                        file_mgr_rec->scroll_window);
+   if ((file_window_height > (Dimension)(scrolled_window_height > 4 ? scrolled_window_height - 4 : 1)) !=
+       (vsb_vis ? True : False))
+   {
+      return False;
+   }
+
+   if (vsb_vis)
+   {
+      int avail_w = (int)scrolled_window_width - 4 - (int)vert_scrollbar_width;
+      if (avail_w < 1) avail_w = 1;
+      want_hsb = ((int)file_window_width >= avail_w) ? True : False;
+      if ((int)file_window_width <= avail_w)
+         file_window_width = (Dimension)avail_w;
+   }
+   else
+   {
+      int avail_w = (int)scrolled_window_width - 4;
+      if (avail_w < 1) avail_w = 1;
+      want_hsb = ((int)file_window_width >= avail_w) ? True : False;
+      if ((int)file_window_width < avail_w)
+         file_window_width = (Dimension)avail_w;
+   }
+
+   if (want_hsb != (XtIsManaged(file_mgr_rec->horizontal_scroll_bar) ? True : False))
+      return False;
+
+   if (HorizontalScrollbarIsVisible(file_mgr_rec->horizontal_scroll_bar,
+                                    file_mgr_rec->scroll_window))
+   {
+      Dimension sb_ht = 0, sw_st = 0, sp = 0;
+      int pad, avail_h;
+      XtSetArg(args[0], XmNhighlightThickness, &sb_ht);
+      XtGetValues((Widget)file_mgr_rec->horizontal_scroll_bar, args, 1);
+      XtSetArg(args[0], XmNshadowThickness, &sw_st);
+      XtSetArg(args[1], XmNspacing, &sp);
+      XtGetValues((Widget)file_mgr_rec->scroll_window, args, 2);
+      pad = (int)(((sb_ht + sw_st) * 2) + sp);
+      avail_h = (int)scrolled_window_height - ((int)horiz_scrollbar_height + pad);
+      if (avail_h > 0 && (int)file_window_height < avail_h)
+         file_window_height = (Dimension)avail_h;
+   }
+   else
+   {
+      int avail_h = (int)scrolled_window_height - 4;
+      if (avail_h > 0 && (int)file_window_height < avail_h)
+         file_window_height = (Dimension)avail_h;
+   }
+
+   if (file_mgr_rec->file_window->core.width != file_window_width ||
+       file_mgr_rec->file_window->core.height != file_window_height)
+   {
+      XtSetArg(args[0], XmNwidth, file_window_width);
+      XtSetArg(args[1], XmNheight, file_window_height);
+      XtSetValues((Widget)file_mgr_rec->file_window, args, 2);
+   }
+   return True;
 }
 
 

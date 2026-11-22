@@ -1,4 +1,50 @@
 2026-11-22
+- Synchronize Wayland interactive window resize, eliminate `dtfile` resize
+  stalls and status-bar bevel artifacts, and fix native Wayland screen-saver and
+  session-lock state & unlock dialog routing (`programs/dtwm/wayland/dtwm_wayland.h`,
+  `programs/dtwm/wayland/cde_bevel.c`,
+  `programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `programs/dtwm/wayland/cde_session_lock.c`,
+  `programs/dtwm/tests/check-dtwm-wayland-wp06.py`,
+  `programs/dtfile/FileMgr.h`, `programs/dtfile/Main.h`,
+  `programs/dtfile/FileMgr.c`, `programs/dtfile/File.c`,
+  `programs/dtfile/IconWindow.c`, `programs/dtfile/BrowserErgonomics.c`,
+  `programs/dtsession/SmLock.h`, `programs/dtsession/SmLock.c`,
+  `programs/dtsession/SmWayland.c`, `programs/dtsession/SmRestore.c`,
+  `programs/dtsession/SmMain.c`, `programs/dtsession/SmCommun.c`,
+  `programs/dtstyle/Screen.c`, `.ckgit/motif-revision`, `.ckgit/ci.yml`,
+  `docs/improvements/wayland.md`):
+  - Bump pinned CK Core Motif ABI 9 to `7154d2204ef741517e04122e177f1621d791839f`
+    for synchronized `xdg_surface.ack_configure` / `XtAppAddWorkProc` resize
+    commits, coalesced `Expose` delivery, persistent `wl_shm_pool` 4-slot buffer
+    reuse with `wp_viewport_set_destination` 1x logical presentation, lower-Z
+    sibling uncover repaint/exposure on `ConfigureWindow` and `UnmapWindow`,
+    deduplicated top-level metadata/decoration IPC, and `pthread_atfork` Wayland
+    FD cleanup across daemonized children (`ttsession`).
+  - Replace full-window `ARGB8888` frame buffers in `dtwm-wayland` with a
+    palette-matched `client_bg_rect`, clipped `content_tree`, four opaque
+    `DRM_FORMAT_XRGB8888` bevel border strips (`frame_{top,bottom,left,right}_buf`),
+    and an unclipped `popup_anchor_tree`, deferring interactive `xdg_toplevel`
+    frame geometry updates until `xdg_toplevel_commit` (anchoring left/top edges
+    during left/top border drags) so frame borders and client contents resize in
+    lockstep without overhang or white flashes.
+  - Replace blocking `poll(..., 50)` writes in `dtwm-wayland`'s native X11
+    property IPC server with nonblocking per-peer `WL_EVENT_WRITABLE` ring
+    queues (`512 KB` stalled-peer cutoff) so non-draining peers can never freeze
+    the Wayland compositor main loop during property broadcasts.
+  - Debounce `ConfigureNotify` ergonomics geometry broadcasts (`120 ms` timer) in
+    `dtfile`, fast-path width/height resizes whose icon column count is
+    unchanged (`TryFastResizeFileWindow`), reflow small directories (`<= 250`
+    items) synchronously when crossing column boundaries, and guard
+    `ShelfEnforceSizeEH` `XClearArea` calls against unchanged widths.
+  - Publish `_DT_WAYLAND_INPUT_STATE` over native Wayland IPC as well as
+    XWayland, read `style.smState` / `_DT_WAYLAND_INPUT_STATE` instead of
+    per-process virtual `XGetScreenSaver` in `Style Manager - Screen` on Wayland,
+    re-merge `RESOURCE_MANAGER` into `XtDatabase` after `RestorePreferences` in
+    `dtsession`, wake unlocked screen blankers or surface the unlock prompt on
+    `ext_idle_notification_v1.resumed`, and route native `DTWM_VIEW_XDG`
+    `coverDialog` / `lockDialog_popup` windows into `lock_dialog_tree` with
+    immediate keyboard focus above `ext_session_lock_surface_v1`.
 - Fix Wayland UI audit defects across `dtstyle`, `dtwm-wayland`, `dthelpgen`,
   `Xsession.wayland`, and pinned CK Core Motif (`programs/dtstyle/Mouse.c`,
   `programs/dtwm/wayland/cde_output_mgmt.c`,

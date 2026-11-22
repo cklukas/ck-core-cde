@@ -984,6 +984,12 @@ RestorePreferences(
       */
       data[size] = '\0';
       _DtAddResString(smGD.display, data, _DT_ATR_PREFS);
+      XrmDatabase prefDb = XrmGetStringDatabase(data);
+      if (prefDb != nullptr)
+      {
+        XrmDatabase dispDb = XtDatabase(smGD.display);
+        XrmCombineDatabase(prefDb, &dispDb, True);
+      }
     }
     fclose(fp);
     SM_FREE(data);
@@ -1208,11 +1214,15 @@ RestoreSettings( void )
         screenSaverVals.smPreferBlank = smSettings.preferBlank;
         screenSaverVals.smAllowExp = smSettings.allowExp;
 
-        /* Notify X of the new screen saver values */
+        /* Notify X (and Wayland ext-idle-notify-v1) of the new screen saver values */
         XSetScreenSaver(smGD.display, screenSaverVals.smTimeout,
                         screenSaverVals.smInterval,
                         screenSaverVals.smPreferBlank,
                         screenSaverVals.smAllowExp);
+        if (SmWaylandActive())
+        {
+            SmWaylandUpdateIdleTimeout(screenSaverVals.smTimeout);
+        }
 
         /* 
 	 * If using timeout or interval values that were

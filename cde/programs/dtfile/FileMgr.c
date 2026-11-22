@@ -1309,10 +1309,11 @@ ShelfEnforceSizeEH(
 
    cev = (XConfigureEvent *)event;
    if ((Dimension)cev->height != target_h)
+   {
       XtResizeWidget(w, (Dimension)cev->width, target_h, 0);
-
-   if (XtIsRealized(w) && XtName(w) && strcmp(XtName(w), "shelf_row") == 0)
-      XClearArea(XtDisplay(w), XtWindow(w), 0, 0, 0, 0, True);
+      if (XtIsRealized(w) && XtName(w) && strcmp(XtName(w), "shelf_row") == 0)
+         XClearArea(XtDisplay(w), XtWindow(w), 0, 0, 0, 0, True);
+   }
 }
 
 
@@ -2163,6 +2164,8 @@ GetDefaultValues( void )
    file_mgr_data->resize_timer_id = 0;
    file_mgr_data->last_resize_w = 0;
    file_mgr_data->last_resize_h = 0;
+   file_mgr_data->last_layout_cols = 0;
+   file_mgr_data->last_layout_total = 0;
 
    file_mgr_data->show_type = SINGLE_DIRECTORY;
    file_mgr_data->tree_files = TREE_FILES_NEVER;
@@ -2448,6 +2451,8 @@ GetResourceValues(
    file_mgr_data->resize_timer_id = 0;
    file_mgr_data->last_resize_w = 0;
    file_mgr_data->last_resize_h = 0;
+   file_mgr_data->last_layout_cols = 0;
+   file_mgr_data->last_layout_total = 0;
    file_mgr_data->show_shelf = True;
    file_mgr_data->show_iconic_path = True;
    file_mgr_data->show_current_dir = True;

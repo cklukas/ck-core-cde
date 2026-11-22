@@ -136,6 +136,7 @@ typedef struct DtfileWindowErg {
     int hit_count;
     int hit_cap;
     XtIntervalId search_timer;
+    XtIntervalId publish_timer;
 #if DTFILE_SYNC_FEATURE_ENABLED
     ckfes_job *search_job;
 #endif
@@ -1281,6 +1282,11 @@ DtfileSearchStartCustom(
     (void)after_date_str; (void)before_date_str; (void)recursive; (void)case_sensitive;
     return False;
 #else
+    if (erg->publish_timer != 0)
+    {
+        XtRemoveTimeOut(erg->publish_timer);
+        erg->publish_timer = 0;
+    }
     DtfileSearchCancelActive(fmd);
     clear_search_hits(erg);
 
@@ -1434,6 +1440,11 @@ DtfileSearchCloseBar(FileMgrData *fmd)
     if (!erg || !fmd)
         return;
 
+    if (erg->publish_timer != 0)
+    {
+        XtRemoveTimeOut(erg->publish_timer);
+        erg->publish_timer = 0;
+    }
     DtfileSearchCancelActive(fmd);
     erg->search_bar_open = False;
     set_work_area_mode(erg, False);
@@ -2013,15 +2024,43 @@ FileWindowButtonHandler(Widget w, XtPointer client_data, XEvent *event, Boolean 
 }
 
 static void
+ErgonomicsDeferredPublishCB(XtPointer client_data, XtIntervalId *id)
+{
+    (void)id;
+    DtfileWindowErg *erg = (DtfileWindowErg *)client_data;
+    if (!erg)
+        return;
+    erg->publish_timer = 0;
+    if (erg->fmd)
+        DtfileErgonomicsPublishState(erg->fmd);
+}
+
+static void
 ShellStructureHandler(Widget w, XtPointer client_data, XEvent *event, Boolean *cont)
 {
-    (void)w;
     (void)cont;
     if (event->type != MapNotify && event->type != ConfigureNotify)
         return;
     DtfileWindowErg *erg = (DtfileWindowErg *)client_data;
-    if (erg && erg->fmd)
+    if (!erg || !erg->fmd)
+        return;
+    if (event->type == MapNotify)
+    {
+        if (erg->publish_timer != 0)
+        {
+            XtRemoveTimeOut(erg->publish_timer);
+            erg->publish_timer = 0;
+        }
         DtfileErgonomicsPublishState(erg->fmd);
+        return;
+    }
+    /* Debounce ConfigureNotify so interactive window moves/resizes do not
+     * broadcast _DT_FILEMGR_ERGONOMICS_STATE or block on XTranslateCoordinates
+     * on every pointer step. */
+    if (erg->publish_timer != 0)
+        XtRemoveTimeOut(erg->publish_timer);
+    erg->publish_timer = XtAppAddTimeOut(
+        XtWidgetToApplicationContext(w), 120, ErgonomicsDeferredPublishCB, (XtPointer)erg);
 }
 
 /* --- UI Construction --- */
@@ -2498,6 +2537,11 @@ DtfileErgonomicsBindView(FileMgrRec *rec, FileMgrData *fmd)
     if (!erg || erg->is_trash_view || !fmd)
         return;
 
+    if (erg->publish_timer != 0)
+    {
+        XtRemoveTimeOut(erg->publish_timer);
+        erg->publish_timer = 0;
+    }
     DtfileSearchCancelActive(fmd);
     clear_search_hits(erg);
     for (int i = 0; i < erg->tab_count; ++i)
@@ -2524,6 +2568,11 @@ DtfileErgonomicsUnbindView(FileMgrRec *rec, FileMgrData *fmd)
     if (!erg)
         return;
 
+    if (erg->publish_timer != 0)
+    {
+        XtRemoveTimeOut(erg->publish_timer);
+        erg->publish_timer = 0;
+    }
     DtfileSearchCancelActive(fmd);
     clear_search_hits(erg);
     XtFree(erg->search_root_dir);
@@ -2682,6 +2731,11 @@ root_cmd_poll_cb(XtPointer client_data, XtIntervalId *id)
                 }
                 else if (strcmp(op, "search_cancel") == 0)
                 {
+                    if (erg->publish_timer != 0)
+                    {
+                        XtRemoveTimeOut(erg->publish_timer);
+                        erg->publish_timer = 0;
+                    }
                     DtfileSearchCancelActive(fmd);
                 }
                 else if (strcmp(op, "search_reveal") == 0)

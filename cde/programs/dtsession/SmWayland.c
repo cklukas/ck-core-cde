@@ -202,6 +202,7 @@ static void idle_handle_idled(void *data, struct ext_idle_notification_v1 *notif
 static void idle_handle_resumed(void *data, struct ext_idle_notification_v1 *notif) {
     (void)data;
     (void)notif;
+    SmWaylandHandleIdleResumed();
 }
 
 static const struct ext_idle_notification_v1_listener g_idle_listener = {

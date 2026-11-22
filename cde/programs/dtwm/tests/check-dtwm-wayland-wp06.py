@@ -504,7 +504,7 @@ def main() -> int:
 
             hw_st = wait_x11_state(
                 x11_bin, c_env,
-                "locked=0;accel=0.50;thresh=5;left_handed=1;repeat=1:350:40;xkb=us;bell=75:660:120;saver=300:900",
+                "locked=0;accel=0.50;thresh=5;left_handed=1;tp=1:0:1:1:0;repeat=1:350:40;xkb=us;bell=75:660:120;saver=300:900",
             )
 
             # 3. Start ext-idle-notify-v1 (300ms) -> auto-acquires ext-session-lock-v1

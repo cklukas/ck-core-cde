@@ -28,6 +28,12 @@ framing or interaction rules.
   left MWM Window Menu button (`Restore`, `Move`, `Size`, `Minimize`, `Maximize`,
   `Lower`, `Close`), centered embossed title bar, and Minimize/Maximize buttons
   frame both Wayland and XWayland windows identically;
+- Server-side frames compose a palette-matched `client_bg_rect`, a client-clipped
+  `content_tree`, four tight opaque `DRM_FORMAT_XRGB8888` bevel border strips
+  (`frame_top_buf`, `frame_bottom_buf`, `frame_left_buf`, `frame_right_buf`), and
+  an unclipped `popup_anchor_tree` above the borders so popup menus extend freely
+  outside the window while eliminating full-window `ARGB8888` shadow buffers and
+  client interior overhang;
 - XWayland client coordinates are offset by the frame's left and top insets so
   override-redirect Motif popup menus and dropdowns align directly beneath their
   parent menu bars.
@@ -68,14 +74,17 @@ framing or interaction rules.
   during menu-bar press-drag-release keeps Wayland pointer focus on the grabbed
   client surface across pulldown items until release;
 - Interactive window resizing suppresses no-op configures, enforces 1-in-flight
-  latest-wins `wlr_xdg_toplevel_set_size` serial tracking (`pending_resize_serial`)
-  so older in-flight buffer commits never snap the outer CDE bevel frame backward
-  while preserving idle client-driven self-resizes, and pairs with CK Core Motif
-  `VendorShell` `ConfigureNotify` queue compression, Wayland `xdg_surface.configure`
-  coalescing, and `dtfile` 16 ms icon-relayout coalescing so resizing settles
-  immediately at the latest geometry without backlog or rubber-banding, while
-  `DtHelp` display and TOC canvases support mouse-wheel scrolling
-  (`Button4`/`Button5` and horizontal `Shift+Wheel` / `Button6`/`Button7`);
+  latest-wins `wlr_xdg_toplevel_set_size` serial tracking (`pending_resize_serial`),
+  sets `wlr_xdg_toplevel_set_resizing`, and defers outer frame geometry updates
+  until `xdg_toplevel_commit` (anchoring right/bottom edges when dragging left or
+  top borders) so frame bevels and client contents resize in lockstep without
+  interior overhang or blank flashes. Paired with CK Core Motif's `XtAppAddWorkProc`
+  synchronized `xdg_surface.ack_configure` commits, persistent 4-slot `wl_shm_pool`
+  buffer reuse, nonblocking `WL_EVENT_WRITABLE` compositor property IPC, and
+  `dtfile`'s `TryFastResizeFileWindow` + debounced ergonomics broadcasts, both
+  `dthelpview` and `dtfile` sustain 60 Hz interactive resizing with live icon
+  column reflow, while `DtHelp` display and TOC canvases support mouse-wheel
+  scrolling (`Button4`/`Button5` and horizontal `Shift+Wheel` / `Button6`/`Button7`);
 - Holding `Shift` during pointer move or resize aligns geometry to the 16-pixel
   desktop grid;
 - Dragging toward output edges or corners previews half-screen and quadrant snap
@@ -258,17 +267,22 @@ lock, and Style Manager controls natively with Wayland:
   scene trees while locked so `zwlr_screencopy_manager_v1` and keyboard/pointer
   shortcuts cannot leak a single pixel or event to underlying windows, covering
   hotplugged monitors on their first frame, keeping all outputs locked and
-  black if a lock client crashes without `unlock_and_destroy()`, and hosting
-  `dtsession`'s genuine Motif padlock PAM dialog (`SmLock.c` + `SmPam.c`,
-  verified by `_DT_SM_WINDOW_INFO` client-ID ownership) in `lock_dialog_tree`;
+  black if a lock client crashes without `unlock_and_destroy()`, waking an
+  unlocked screen blanker or surfacing the password prompt on
+  `ext_idle_notification_v1.resumed`, and hosting `dtsession`'s genuine Motif
+  padlock PAM dialog (`SmLock.c` + `SmPam.c`, supporting both native
+  `DTWM_VIEW_XDG` `coverDialog` / `lockDialog_popup` views and XWayland views)
+  with immediate keyboard focus in `lock_dialog_tree`;
 - **`dtstyle` Wayland hardware and input IPC:** When `WAYLAND_DISPLAY` is set,
-  `dtstyle` (`Protocol.c`) forwards Mouse acceleration/threshold and
+  `dtstyle` (`Protocol.c`, `Screen.c`) reads `dtsession`'s active Screen
+  Saver/Lock state (`style.smState` and `_DT_WAYLAND_INPUT_STATE`) instead of
+  virtual X11 `XGetScreenSaver` and forwards Mouse acceleration/threshold and
   left-handedness (`f.set_pointer_accel`, `f.set_left_handed`), Keyboard
   auto-repeat and XKB layout (`f.set_key_repeat`, `f.set_xkb_layout`), Audio
   bell parameters (`f.set_bell`), and Screen blanker/lock timeouts
   (`f.set_saver_timeout`) to `dtwm-wayland`, which applies `libinput` and
-  `wlr_keyboard` settings live and publishes `_DT_WAYLAND_INPUT_STATE` on the
-  XWayland root window.
+  `wlr_keyboard` settings live and publishes `_DT_WAYLAND_INPUT_STATE` over both
+  native Wayland IPC and the XWayland root window.
 
 ## Wayland-capable `dtlogin` display manager (`WP-07`)
 

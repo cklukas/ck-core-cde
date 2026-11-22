@@ -793,6 +793,9 @@ extern void LayoutFileIcons(
                         FileMgrData *file_mgr_data,
                         Boolean update_scrolling_position,
                         Boolean turn_off_hourglass) ;
+extern Boolean TryFastResizeFileWindow(
+                        FileMgrRec *file_mgr_rec,
+                        FileMgrData *file_mgr_data) ;
 extern Pixmap GetTreebtnPixmap(
                         FileMgrData *file_mgr_data,
                         FileViewData *file_view_data);

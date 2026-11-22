@@ -186,12 +186,19 @@ struct DtwmView {
 
     /* Scene nodes:
      * frame_tree sits at (x, y) in workspace coordinates.
-     * frame_buf renders the server-side CDE 3D bevel border & titlebar.
-     * content_tree sits at (left_inset, top_inset) inside frame_tree.
+     * client_bg_rect fills the client box behind content_tree.
+     * content_tree sits at (left_inset, top_inset) clipped to client_w × client_h.
+     * frame_{top,bottom,left,right}_buf render 4 tight opaque XRGB8888 bevel strips.
+     * popup_anchor_tree sits unclipped above the frame strips for xdg_popup children.
      */
     struct wlr_scene_tree *frame_tree;
-    struct wlr_scene_buffer *frame_buf;
+    struct wlr_scene_rect *client_bg_rect;
     struct wlr_scene_tree *content_tree;
+    struct wlr_scene_buffer *frame_top_buf;
+    struct wlr_scene_buffer *frame_bottom_buf;
+    struct wlr_scene_buffer *frame_left_buf;
+    struct wlr_scene_buffer *frame_right_buf;
+    struct wlr_scene_tree *popup_anchor_tree;
 
     int x, y;
     int client_w, client_h;
@@ -205,6 +212,9 @@ struct DtwmView {
     bool resize_inflight;
     bool has_queued_resize;
     int queued_x, queued_y, queued_w, queued_h;
+    uint32_t active_resize_edges;
+    int resize_anchor_right;
+    int resize_anchor_bottom;
     uint32_t resize_sent_ms;
     uint32_t pending_resize_serial;
 

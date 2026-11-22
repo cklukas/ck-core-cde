@@ -251,6 +251,24 @@ static void view_apply_geometry(DtwmView *view, int x, int y, int client_w, int 
     }
 }
 
+static void view_send_xdg_interactive_resize(DtwmView *view, int client_w, int client_h) {
+    int min_w = 64, min_h = 48, max_w = 0, max_h = 0;
+    view_size_limits(view, &min_w, &min_h, &max_w, &max_h);
+    if (client_w < min_w) client_w = min_w;
+    if (client_h < min_h) client_h = min_h;
+    if (!view || !view->maximized) {
+        if (max_w > 0 && client_w > max_w) client_w = max_w;
+        if (max_h > 0 && client_h > max_h) client_h = max_h;
+    }
+    if (client_w == view->client_w && client_h == view->client_h &&
+        view->pending_resize_serial == 0) {
+        view->resize_inflight = false;
+        return;
+    }
+    view->pending_resize_serial =
+        wlr_xdg_toplevel_set_size(view->xdg_toplevel, client_w, client_h);
+}
+
 static void view_dispatch_queued_resize(DtwmView *view, bool keep_inflight) {
     if (!view || !view->has_queued_resize) {
         return;
@@ -260,7 +278,8 @@ static void view_dispatch_queued_resize(DtwmView *view, bool keep_inflight) {
     int qw = view->queued_w;
     int qh = view->queued_h;
     view->has_queued_resize = false;
-    if (qx == view->x && qy == view->y && qw == view->client_w && qh == view->client_h) {
+    if (qx == view->x && qy == view->y && qw == view->client_w && qh == view->client_h &&
+        view->pending_resize_serial == 0) {
         view->resize_inflight = false;
         return;
     }
@@ -268,7 +287,12 @@ static void view_dispatch_queued_resize(DtwmView *view, bool keep_inflight) {
     if (keep_inflight) {
         view->resize_sent_ms = dtwm_now_msec();
     }
-    view_apply_geometry(view, qx, qy, qw, qh);
+    if (view->kind == DTWM_VIEW_XDG && view->mapped && view->xdg_toplevel &&
+        view->active_resize_edges != 0) {
+        view_send_xdg_interactive_resize(view, qw, qh);
+    } else {
+        view_apply_geometry(view, qx, qy, qw, qh);
+    }
 }
 
 static int handle_resize_flush_timer(void *data) {
@@ -1705,6 +1729,41 @@ static void dismiss_open_client_popups(DtwmServer *server, uint32_t t_ms) {
     dismiss_open_client_popups_except_client(server, t_ms, nullptr);
 }
 
+static void view_init_frame_scene_nodes(
+    DtwmView *view,
+    struct wlr_scene_tree *parent_tree,
+    struct wlr_xdg_surface *xdg_base,
+    struct wlr_surface *xw_surf
+) {
+    view->frame_tree = wlr_scene_tree_create(parent_tree);
+    view->frame_tree->node.data = view;
+
+    const DtwmRgba *wbg = &view->server->palette.window_bg.bg;
+    float bg_col[4] = { (float)wbg->r, (float)wbg->g, (float)wbg->b, 1.0f };
+    view->client_bg_rect = wlr_scene_rect_create(view->frame_tree, 1, 1, bg_col);
+    wlr_scene_node_set_enabled(&view->client_bg_rect->node, false);
+
+    if (xdg_base) {
+        view->content_tree = wlr_scene_xdg_surface_create(view->frame_tree, xdg_base);
+    } else if (xw_surf) {
+        view->content_tree = wlr_scene_subsurface_tree_create(view->frame_tree, xw_surf);
+    }
+    if (view->content_tree) {
+        view->content_tree->node.data = view;
+    }
+
+    view->frame_top_buf = wlr_scene_buffer_create(view->frame_tree, nullptr);
+    view->frame_bottom_buf = wlr_scene_buffer_create(view->frame_tree, nullptr);
+    view->frame_left_buf = wlr_scene_buffer_create(view->frame_tree, nullptr);
+    view->frame_right_buf = wlr_scene_buffer_create(view->frame_tree, nullptr);
+
+    view->popup_anchor_tree = wlr_scene_tree_create(view->frame_tree);
+    view->popup_anchor_tree->node.data = view;
+    if (xdg_base) {
+        xdg_base->data = view->popup_anchor_tree;
+    }
+}
+
 static void begin_interactive(DtwmView *view, DtwmCursorMode mode, uint32_t edges) {
     DtwmServer *server = view->server;
     dtwm_anim_cancel_for_view(server, view);
@@ -1714,6 +1773,13 @@ static void begin_interactive(DtwmView *view, DtwmCursorMode mode, uint32_t edge
     view->tile_state = 0;
     view->resize_inflight = false;
     view->has_queued_resize = false;
+    view->resize_anchor_right = view->x + view->client_w;
+    view->resize_anchor_bottom = view->y + view->client_h;
+    view->active_resize_edges = (mode == DTWM_CURSOR_RESIZE) ? edges : 0;
+    if (mode == DTWM_CURSOR_RESIZE && view->kind == DTWM_VIEW_XDG &&
+        view->xdg_toplevel && view->xdg_toplevel->base->initialized) {
+        wlr_xdg_toplevel_set_resizing(view->xdg_toplevel, true);
+    }
     server->grabbed_view = view;
     server->cursor_mode = mode;
     server->grab_x = server->cursor->x;
@@ -2294,12 +2360,17 @@ static DtwmView *desktop_view_at(
             }
             return nullptr;
         }
-        /* Could be a view's server-side CDE bevel frame_buf! */
+        /* Could be one of a view's server-side CDE bevel strip buffers! */
         if (node->parent && node->parent->node.data) {
             DtwmView *v = node->parent->node.data;
             *out_part = dtwm_frame_hit_test(v, (int)(lx - v->x), (int)(ly - v->y));
             return v;
         }
+    } else if (node && node->type == WLR_SCENE_NODE_RECT &&
+               node->parent && node->parent->node.data) {
+        DtwmView *v = node->parent->node.data;
+        *out_part = DTWM_PART_CLIENT;
+        return v;
     }
     return nullptr;
 }
@@ -2456,7 +2527,11 @@ static void process_cursor_resize(DtwmServer *server) {
     v->resize_inflight = true;
     v->has_queued_resize = false;
     v->resize_sent_ms = now_ms;
-    view_apply_geometry(v, new_x, new_y, new_w, new_h);
+    if (v->kind == DTWM_VIEW_XDG && v->mapped && v->xdg_toplevel) {
+        view_send_xdg_interactive_resize(v, new_w, new_h);
+    } else {
+        view_apply_geometry(v, new_x, new_y, new_w, new_h);
+    }
 }
 
 static const char *cursor_name_for_part(DtwmFramePart part) {
@@ -2779,17 +2854,27 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
             }
         } else if (server->cursor_mode == DTWM_CURSOR_RESIZE && server->grabbed_view) {
             DtwmView *rv = server->grabbed_view;
+            if (rv->kind == DTWM_VIEW_XDG && rv->xdg_toplevel &&
+                rv->xdg_toplevel->base->initialized) {
+                wlr_xdg_toplevel_set_resizing(rv->xdg_toplevel, false);
+            }
             if (had_wireframe) {
                 rv->resize_inflight = true;
                 rv->has_queued_resize = false;
                 rv->resize_sent_ms = dtwm_now_msec();
-                view_apply_geometry(rv, pending.x, pending.y, pending.width, pending.height);
+                if (rv->kind == DTWM_VIEW_XDG && rv->mapped && rv->xdg_toplevel) {
+                    view_send_xdg_interactive_resize(rv, pending.width, pending.height);
+                } else {
+                    view_apply_geometry(rv, pending.x, pending.y, pending.width, pending.height);
+                }
             } else if (!rv->resize_inflight && rv->has_queued_resize) {
                 view_dispatch_queued_resize(rv, true);
+            } else if (!rv->resize_inflight && !rv->has_queued_resize) {
+                rv->active_resize_edges = 0;
             }
-            /* If rv->resize_inflight is true, leave rv->has_queued_resize set so
-             * xdg_toplevel_commit dispatches the single final size once the
-             * in-flight frame commits without snapping the frame backward. */
+            /* If rv->resize_inflight is true, leave rv->has_queued_resize and
+             * rv->active_resize_edges set so xdg_toplevel_commit anchors and
+             * dispatches the single final size once the in-flight frame commits. */
         }
         if (server->cursor_mode != DTWM_CURSOR_PASSTHROUGH) {
             server->cursor_mode = DTWM_CURSOR_PASSTHROUGH;
@@ -3452,6 +3537,15 @@ static bool handle_compositor_keybinding(DtwmServer *server, uint32_t mods, xkb_
             bool was_opaque = server->move_opaque || (gv && gv->is_panel);
             hide_wireframe_outline(server);
             update_snap_preview(server, DTWM_SNAP_NONE, nullptr);
+            if (gv) {
+                gv->active_resize_edges = 0;
+                gv->resize_inflight = false;
+                gv->has_queued_resize = false;
+                if (gv->kind == DTWM_VIEW_XDG && gv->xdg_toplevel &&
+                    gv->xdg_toplevel->base->initialized) {
+                    wlr_xdg_toplevel_set_resizing(gv->xdg_toplevel, false);
+                }
+            }
             if (gv && was_opaque) {
                 view_apply_geometry(
                     gv,
@@ -4009,6 +4103,41 @@ static void xdg_toplevel_map(struct wl_listener *listener, void *data) {
     view->client_h = geo.height > 0 ? geo.height : view->xdg_toplevel->base->surface->current.height;
 
     const char *app_id = view->xdg_toplevel->app_id ? view->xdg_toplevel->app_id : "";
+    const char *title = view->xdg_toplevel->title ? view->xdg_toplevel->title : "";
+    if (!strcmp(app_id, "coverDialog") || !strcmp(title, "coverDialog") ||
+        !strcmp(app_id, "lockDialog_popup") || !strcmp(title, "lockDialog_popup")) {
+        view->is_lock_dialog = true;
+        view->decorated = false;
+        view->has_title = false;
+        view->has_resize_handles = false;
+        view->has_menu_btn = false;
+        view->has_min_btn = false;
+        view->has_max_btn = false;
+        view->workspace_mask = (1u << DTWM_MAX_WORKSPACES) - 1u;
+        struct wlr_box obox = {0};
+        wlr_output_layout_get_box(view->server->output_layout, nullptr, &obox);
+        bool is_cover = (!strcmp(app_id, "coverDialog") || !strcmp(title, "coverDialog"));
+        if (is_cover && obox.width > 0 && obox.height > 0) {
+            view->x = obox.x;
+            view->y = obox.y;
+            view->client_w = obox.width;
+            view->client_h = obox.height;
+            wlr_xdg_toplevel_set_size(view->xdg_toplevel, obox.width, obox.height);
+        } else if (obox.width > 0 && obox.height > 0) {
+            view->x = obox.x + (obox.width - view->client_w) / 2;
+            view->y = obox.y + (obox.height - view->client_h) / 2;
+        }
+        if (view->frame_tree && view->server->lock_dialog_tree) {
+            wlr_scene_node_reparent(&view->frame_tree->node, view->server->lock_dialog_tree);
+            wlr_scene_node_set_position(&view->frame_tree->node, view->x, view->y);
+            wlr_scene_node_set_enabled(&view->frame_tree->node, true);
+        }
+        dtwm_view_update_frame(view);
+        if (view->server->session_locked) {
+            dtwm_lock_focus_surface(view->server, view->xdg_toplevel->base->surface);
+        }
+        return;
+    }
     if (!strcmp(app_id, "dtwm-front-panel") || !strcmp(app_id, "FrontPanel")) {
         view->is_panel = true;
         view->decorated = true;
@@ -4112,6 +4241,7 @@ static void xdg_toplevel_unmap(struct wl_listener *listener, void *data) {
     view->pending_pos_set = false;
     view->resize_inflight = false;
     view->has_queued_resize = false;
+    view->active_resize_edges = 0;
     view->pending_resize_serial = 0;
     wlr_scene_node_set_enabled(&view->frame_tree->node, false);
     dtwm_foreign_toplevel_destroy(view);
@@ -4140,6 +4270,36 @@ static void xdg_toplevel_commit(struct wl_listener *listener, void *data) {
         bool serial_settled =
             (view->pending_resize_serial == 0 || acked >= view->pending_resize_serial);
 
+        /* Adopt newly committed client dimensions synchronously with the buffer
+         * commit so the CDE bevel frame and surface clip always match the
+         * visible client buffer without overhang or gaps. */
+        struct wlr_box geo = view->xdg_toplevel->base->geometry;
+        int nw = geo.width > 0 ? geo.width : view->xdg_toplevel->base->surface->current.width;
+        int nh = geo.height > 0 ? geo.height : view->xdg_toplevel->base->surface->current.height;
+        if (!view->is_lock_dialog && nw > 0 && nh > 0 &&
+            (nw != view->client_w || nh != view->client_h) &&
+            (active_resize || view->active_resize_edges != 0 || serial_settled)) {
+            int nx = view->x;
+            int ny = view->y;
+            if (view->active_resize_edges & WLR_EDGE_LEFT) {
+                nx = view->resize_anchor_right - nw;
+            }
+            if (view->active_resize_edges & WLR_EDGE_TOP) {
+                ny = view->resize_anchor_bottom - nh;
+            }
+            view->x = nx;
+            view->y = ny;
+            view->client_w = nw;
+            view->client_h = nh;
+            if (view->frame_tree) {
+                wlr_scene_node_set_position(&view->frame_tree->node, view->x, view->y);
+            }
+            dtwm_view_update_frame(view);
+            if (view == view->server->focused_view) {
+                dtwm_publish_active_window_box(view->server);
+            }
+        }
+
         if (serial_settled && view->pending_resize_serial != 0) {
             view->pending_resize_serial = 0;
         }
@@ -4147,24 +4307,12 @@ static void xdg_toplevel_commit(struct wl_listener *listener, void *data) {
             view->resize_inflight = false;
             if (view->has_queued_resize) {
                 view_dispatch_queued_resize(view, true);
+            } else if (!active_resize) {
+                view->active_resize_edges = 0;
             }
-        }
-
-        /* Only adopt spontaneous client-initiated size changes when no
-         * compositor-driven resize is active, queued, or awaiting ack. */
-        if (!active_resize && !view->resize_inflight && !view->has_queued_resize &&
-            view->pending_resize_serial == 0) {
-            struct wlr_box geo = view->xdg_toplevel->base->geometry;
-            int nw = geo.width > 0 ? geo.width : view->xdg_toplevel->base->surface->current.width;
-            int nh = geo.height > 0 ? geo.height : view->xdg_toplevel->base->surface->current.height;
-            if (nw > 0 && nh > 0 && (nw != view->client_w || nh != view->client_h)) {
-                view->client_w = nw;
-                view->client_h = nh;
-                dtwm_view_update_frame(view);
-                if (view == view->server->focused_view) {
-                    dtwm_publish_active_window_box(view->server);
-                }
-            }
+        } else if (!active_resize && !view->resize_inflight && !view->has_queued_resize &&
+                   serial_settled) {
+            view->active_resize_edges = 0;
         }
     }
 }
@@ -4272,15 +4420,8 @@ static void handle_new_xdg_toplevel(struct wl_listener *listener, void *data) {
     view->has_max_btn = true;
     view->workspace_mask = 1u << server->current_workspace;
 
-    view->frame_tree = wlr_scene_tree_create(server->workspace_tree);
-    view->frame_tree->node.data = view;
+    view_init_frame_scene_nodes(view, server->workspace_tree, toplevel->base, nullptr);
     wlr_scene_node_set_enabled(&view->frame_tree->node, false);
-
-    view->frame_buf = wlr_scene_buffer_create(view->frame_tree, nullptr);
-
-    view->content_tree = wlr_scene_xdg_surface_create(view->frame_tree, toplevel->base);
-    view->content_tree->node.data = view;
-    toplevel->base->data = view->content_tree;
 
     struct wlr_surface *surf = toplevel->base->surface;
     view->map.notify = xdg_toplevel_map;
@@ -4697,11 +4838,7 @@ static void xwayland_map(struct wl_listener *listener, void *data) {
         view->has_max_btn = false;
         view->workspace_mask = (1u << DTWM_MAX_WORKSPACES) - 1u;
 
-        view->frame_tree = wlr_scene_tree_create(view->server->layer_top_tree);
-        view->frame_tree->node.data = view;
-        view->frame_buf = wlr_scene_buffer_create(view->frame_tree, nullptr);
-        view->content_tree = wlr_scene_subsurface_tree_create(view->frame_tree, xs->surface);
-        view->content_tree->node.data = view;
+        view_init_frame_scene_nodes(view, view->server->layer_top_tree, nullptr, xs->surface);
 
         int outer_w = 0, outer_h = 0;
         dtwm_view_outer_size(view, &outer_w, &outer_h);
@@ -4729,11 +4866,7 @@ static void xwayland_map(struct wl_listener *listener, void *data) {
         view->workspace_mask = (1u << DTWM_MAX_WORKSPACES) - 1u;
         view->server->panel_view = view;
 
-        view->frame_tree = wlr_scene_tree_create(view->server->layer_top_tree);
-        view->frame_tree->node.data = view;
-        view->frame_buf = wlr_scene_buffer_create(view->frame_tree, nullptr);
-        view->content_tree = wlr_scene_subsurface_tree_create(view->frame_tree, xs->surface);
-        view->content_tree->node.data = view;
+        view_init_frame_scene_nodes(view, view->server->layer_top_tree, nullptr, xs->surface);
 
         dtwm_workspaces_on_xwayland_view_map(view);
         dtwm_icons_on_view_map(view);
@@ -4747,11 +4880,7 @@ static void xwayland_map(struct wl_listener *listener, void *data) {
         return;
     }
 
-    view->frame_tree = wlr_scene_tree_create(view->server->workspace_tree);
-    view->frame_tree->node.data = view;
-    view->frame_buf = wlr_scene_buffer_create(view->frame_tree, nullptr);
-    view->content_tree = wlr_scene_subsurface_tree_create(view->frame_tree, xs->surface);
-    view->content_tree->node.data = view;
+    view_init_frame_scene_nodes(view, view->server->workspace_tree, nullptr, xs->surface);
 
     if (view->server->greeter_mode) {
         struct wlr_box obox = {0};
@@ -4848,8 +4977,13 @@ static void xwayland_unmap(struct wl_listener *listener, void *data) {
     if (view->frame_tree) {
         wlr_scene_node_destroy(&view->frame_tree->node);
         view->frame_tree = nullptr;
+        view->client_bg_rect = nullptr;
         view->content_tree = nullptr;
-        view->frame_buf = nullptr;
+        view->frame_top_buf = nullptr;
+        view->frame_bottom_buf = nullptr;
+        view->frame_left_buf = nullptr;
+        view->frame_right_buf = nullptr;
+        view->popup_anchor_tree = nullptr;
     }
     if (view->server->pointer_buttons_down == 0 && view->server->seat->drag == nullptr) {
         dtwm_recheck_cursor_focus(view->server);
@@ -5401,6 +5535,9 @@ typedef struct {
     char *rx_buf;
     size_t rx_len;
     size_t rx_cap;
+    char *tx_buf;
+    size_t tx_len;
+    size_t tx_cap;
 } DtwmIpcPeer;
 
 typedef struct {
@@ -5413,20 +5550,47 @@ typedef struct {
 static DtwmIpcPeer g_ipc_peers[DTWM_MAX_IPC_PEERS];
 static DtwmIpcCachedProp g_ipc_props[DTWM_MAX_IPC_PROPS];
 
-static void ipc_send_all(int fd, const char *buf, size_t len) {
+static void close_ipc_peer(DtwmIpcPeer *peer);
+
+static void peer_queue_send(DtwmIpcPeer *peer, const char *buf, size_t len) {
+    if (!peer || peer->fd < 0 || !buf || len == 0) return;
     size_t sent = 0;
-    while (sent < len) {
-        ssize_t n = send(fd, buf + sent, len - sent, MSG_NOSIGNAL);
-        if (n > 0) {
-            sent += (size_t)n;
-            continue;
+    if (peer->tx_len == 0) {
+        while (sent < len) {
+            ssize_t n = send(peer->fd, buf + sent, len - sent, MSG_DONTWAIT | MSG_NOSIGNAL);
+            if (n > 0) {
+                sent += (size_t)n;
+                continue;
+            }
+            if (n < 0 && errno == EINTR) continue;
+            if (n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) break;
+            close_ipc_peer(peer);
+            return;
         }
-        if (n < 0 && errno == EINTR) continue;
-        if (n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
-            struct pollfd pfd = {.fd = fd, .events = POLLOUT};
-            if (poll(&pfd, 1, 50) > 0) continue;
+    }
+    if (sent == len) return;
+
+    size_t rem = len - sent;
+    if (peer->tx_len + rem > 524288u) {
+        /* Drop unresponsive/non-draining peer instead of stalling compositor */
+        close_ipc_peer(peer);
+        return;
+    }
+    if (peer->tx_len + rem > peer->tx_cap) {
+        size_t ncap = peer->tx_cap ? peer->tx_cap * 2 : 16384u;
+        while (ncap < peer->tx_len + rem) ncap *= 2;
+        char *nb = realloc(peer->tx_buf, ncap);
+        if (!nb) {
+            close_ipc_peer(peer);
+            return;
         }
-        break;
+        peer->tx_buf = nb;
+        peer->tx_cap = ncap;
+    }
+    memcpy(peer->tx_buf + peer->tx_len, buf + sent, rem);
+    peer->tx_len += rem;
+    if (peer->ev_src) {
+        wl_event_source_fd_update(peer->ev_src, WL_EVENT_READABLE | WL_EVENT_WRITABLE);
     }
 }
 
@@ -5437,9 +5601,9 @@ static int ipc_hex_nibble(char c) {
     return -1;
 }
 
-static void send_ipc_frame_fd(int fd, const char *atom_name, const void *data, size_t len) {
+static void send_ipc_frame_peer(DtwmIpcPeer *peer, const char *atom_name, const void *data, size_t len) {
     static const char hex_chars[] = "0123456789abcdef";
-    if (fd < 0 || !atom_name || len > 262144u) return;
+    if (!peer || peer->fd < 0 || !atom_name || len > 262144u) return;
     size_t alen = strlen(atom_name);
     size_t total_cap = 5 + alen + 1 + len * 2 + 2;
     char *msg = malloc(total_cap);
@@ -5453,7 +5617,7 @@ static void send_ipc_frame_fd(int fd, const char *atom_name, const void *data, s
             msg[o++] = hex_chars[bytes[i] & 0x0fu];
         }
         msg[o++] = '\n';
-        ipc_send_all(fd, msg, o);
+        peer_queue_send(peer, msg, o);
     }
     free(msg);
 }
@@ -5484,7 +5648,7 @@ void dtwm_native_ipc_publish_prop(DtwmServer *server, const char *atom_name, con
     cache_ipc_prop(atom_name, data, len);
     for (int i = 0; i < DTWM_MAX_IPC_PEERS; ++i) {
         if (g_ipc_peers[i].fd >= 0) {
-            send_ipc_frame_fd(g_ipc_peers[i].fd, atom_name, data, len);
+            send_ipc_frame_peer(&g_ipc_peers[i], atom_name, data, len);
         }
     }
 }
@@ -5501,6 +5665,10 @@ static void close_ipc_peer(DtwmIpcPeer *peer) {
     peer->rx_buf = nullptr;
     peer->rx_len = 0;
     peer->rx_cap = 0;
+    free(peer->tx_buf);
+    peer->tx_buf = nullptr;
+    peer->tx_len = 0;
+    peer->tx_cap = 0;
 }
 
 static int handle_ipc_peer_fd(int fd, uint32_t mask, void *data) {
@@ -5508,6 +5676,32 @@ static int handle_ipc_peer_fd(int fd, uint32_t mask, void *data) {
     if (!peer || peer->fd < 0) return 0;
     if (mask & (WL_EVENT_ERROR | WL_EVENT_HANGUP)) {
         close_ipc_peer(peer);
+        return 0;
+    }
+    if ((mask & WL_EVENT_WRITABLE) && peer->tx_len > 0) {
+        size_t sent = 0;
+        while (sent < peer->tx_len) {
+            ssize_t n = send(fd, peer->tx_buf + sent, peer->tx_len - sent, MSG_DONTWAIT | MSG_NOSIGNAL);
+            if (n > 0) {
+                sent += (size_t)n;
+                continue;
+            }
+            if (n < 0 && errno == EINTR) continue;
+            if (n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) break;
+            close_ipc_peer(peer);
+            return 0;
+        }
+        if (sent > 0) {
+            if (sent < peer->tx_len) {
+                memmove(peer->tx_buf, peer->tx_buf + sent, peer->tx_len - sent);
+            }
+            peer->tx_len -= sent;
+        }
+        if (peer->tx_len == 0 && peer->ev_src) {
+            wl_event_source_fd_update(peer->ev_src, WL_EVENT_READABLE);
+        }
+    }
+    if (!(mask & WL_EVENT_READABLE)) {
         return 0;
     }
     char tmp[8192];
@@ -5569,7 +5763,7 @@ static int handle_ipc_peer_fd(int fd, uint32_t mask, void *data) {
                         cache_ipc_prop(aname, payload, dlen);
                         for (int i = 0; i < DTWM_MAX_IPC_PEERS; ++i) {
                             if (g_ipc_peers[i].fd >= 0 && &g_ipc_peers[i] != peer) {
-                                send_ipc_frame_fd(g_ipc_peers[i].fd, aname, payload, dlen);
+                                send_ipc_frame_peer(&g_ipc_peers[i], aname, payload, dlen);
                             }
                         }
                     }
@@ -5610,16 +5804,21 @@ static int handle_native_ipc_listen(int lfd, uint32_t mask, void *data) {
         g_ipc_peers[slot].rx_buf = nullptr;
         g_ipc_peers[slot].rx_len = 0;
         g_ipc_peers[slot].rx_cap = 0;
+        g_ipc_peers[slot].tx_buf = nullptr;
+        g_ipc_peers[slot].tx_len = 0;
+        g_ipc_peers[slot].tx_cap = 0;
         g_ipc_peers[slot].ev_src = wl_event_loop_add_fd(
             wl_display_get_event_loop(server->wl_display),
             cfd, WL_EVENT_READABLE, handle_ipc_peer_fd, &g_ipc_peers[slot]
         );
         for (int p = 0; p < DTWM_MAX_IPC_PROPS; ++p) {
-            if (g_ipc_props[p].used) {
-                send_ipc_frame_fd(cfd, g_ipc_props[p].name, g_ipc_props[p].data, g_ipc_props[p].len);
+            if (g_ipc_props[p].used && g_ipc_peers[slot].fd >= 0) {
+                send_ipc_frame_peer(&g_ipc_peers[slot], g_ipc_props[p].name, g_ipc_props[p].data, g_ipc_props[p].len);
             }
         }
-        ipc_send_all(cfd, "READY\n", 6);
+        if (g_ipc_peers[slot].fd >= 0) {
+            peer_queue_send(&g_ipc_peers[slot], "READY\n", 6);
+        }
     }
     return 0;
 }
@@ -6143,6 +6342,7 @@ int main(int argc, char **argv) {
     }
     dtwm_workspace_sync_ipc(&server);
     dtwm_output_mgmt_publish_x11(&server);
+    dtwm_hw_publish_state(&server);
     if (!server.xwayland) {
         dtwm_spawn_front_panel(&server);
         if (server.show_front_panel && server.panel_pid > 0 && !server.status_written) {

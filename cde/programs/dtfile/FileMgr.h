@@ -283,6 +283,8 @@ typedef struct
    XtIntervalId resize_timer_id;
    Dimension last_resize_w;
    Dimension last_resize_h;
+   int last_layout_cols;
+   int last_layout_total;
 
    Boolean       cd_inited;
    XFontStruct * cd_font;
