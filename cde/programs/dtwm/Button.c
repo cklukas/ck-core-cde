@@ -271,11 +271,12 @@ Initialize(
        strcpy (B_ImageName (new_g), str);
 
        B_Pixmap (new_g) =
-		   XmGetPixmap (XtScreen (new_g), B_ImageName (new_g),
+		   XmGetScaledPixmap ((Widget) mw, B_ImageName (new_g),
 				   M_BottomShadowColor (mw),
-				   M_TopShadowColor (mw));
+				   M_TopShadowColor (mw),
+				   DefaultDepthOfScreen (XtScreen (new_g)), 0.0);
        B_Mask (new_g) =
-		   _DtGetMask (XtScreen (new_g), B_ImageName (new_g));
+		   XmeGetScaledMask (XtScreen (new_g), (Widget) mw, B_ImageName (new_g), 0.0);
 
        if (B_Pixmap (new_g) != XmUNSPECIFIED_PIXMAP)
        {
@@ -533,11 +534,12 @@ SetValues(
       strcpy (B_ImageName (new_g), str);
 
       B_Pixmap (new_g) =
-         XmGetPixmap (XtScreen (new_g), B_ImageName (new_g),
+         XmGetScaledPixmap ((Widget) mw, B_ImageName (new_g),
                       M_BottomShadowColor (mw),
-                      M_TopShadowColor (mw));
+                      M_TopShadowColor (mw),
+                      DefaultDepthOfScreen (XtScreen (new_g)), 0.0);
       B_Mask (new_g) =
-         _DtGetMask (XtScreen (new_g), B_ImageName (new_g));
+         XmeGetScaledMask (XtScreen (new_g), (Widget) mw, B_ImageName (new_g), 0.0);
 
       if (B_Pixmap (new_g) != XmUNSPECIFIED_PIXMAP)
       {
@@ -833,12 +835,13 @@ VisualChange(
 	     if (B_Pixmap(bg) != XmUNSPECIFIED_PIXMAP)
 		XmDestroyPixmap (XtScreen(w), B_Pixmap (bg));
 
-	     B_Pixmap (bg) = XmGetPixmap (XtScreen (bg), B_ImageName (bg),
+	     B_Pixmap (bg) = XmGetScaledPixmap ((Widget) new_m, B_ImageName (bg),
 					 M_TopShadowColor (new_m),
-					 M_BottomShadowColor (new_m));
+					 M_BottomShadowColor (new_m),
+					 DefaultDepthOfScreen (XtScreen (bg)), 0.0);
 
 	     if (B_Pixmap (bg) != XmUNSPECIFIED_PIXMAP)
-	       B_Mask(bg) = (Pixmap)_DtGetMask(XtScreen(bg), B_ImageName(bg));
+	       B_Mask(bg) = XmeGetScaledMask(XtScreen(bg), (Widget) new_m, B_ImageName(bg), 0.0);
 
 	     return (True);
        }

@@ -33,6 +33,7 @@
 #include <Dt/Wsm.h>
 #include <Dt/WsmM.h>
 #include <Dt/WsmP.h>
+#include <math.h>
 #include <Tt/tttk.h>
 
 #include <Xm/AtomMgr.h>
@@ -1893,6 +1894,13 @@ static int ignore_x_err(Display *dpy, XErrorEvent *ev) {
 }
 
 int main(int argc, char **argv) {
+    char *saved_argv[32] = {0};
+    int saved_argc = argc < 31 ? argc : 31;
+    for (int i = 0; i < saved_argc; ++i) {
+        saved_argv[i] = strdup(argv[i]);
+    }
+    saved_argv[saved_argc] = nullptr;
+
     unsigned char profile = XmAPPEARANCE_CLASSIC;
     for (int i = 1; i < argc; ++i) {
         if (strcmp(argv[i], "--appearance-profile") == 0 && i + 1 < argc) {
@@ -1950,6 +1958,12 @@ int main(int argc, char **argv) {
     wmGD.useFrontPanel = True;
     wmGD.appearanceProfile = profile;
     wmGD.dpiScale = 1.0;
+    {
+        double init_scale = 1.0;
+        if (XmGetWidgetScale(topShell, &init_scale) && init_scale > 0.25) {
+            wmGD.dpiScale = init_scale;
+        }
+    }
     wmGD.windowContextType = XUniqueContext();
 
     g_fpScreen.wPanelist = WmPanelistAllocate(topShell, (XtPointer)&wmGD, (XtPointer)&g_fpScreen);
@@ -2026,6 +2040,46 @@ int main(int argc, char **argv) {
             }
             if (ev.xproperty.atom == g_atomTrashWin) {
                 watch_trash_window_events(dpy);
+            }
+            Atom a_wl_outputs = XInternAtom(dpy, "_DT_WAYLAND_OUTPUTS", False);
+            if (ev.xproperty.atom == a_wl_outputs) {
+                Atom act_t = None;
+                int act_f = 0;
+                unsigned long nitems = 0, rem = 0;
+                unsigned char *odata = nullptr;
+                if (XGetWindowProperty(
+                        dpy, g_fpScreen.rootWindow, a_wl_outputs, 0, 1024, False,
+                        AnyPropertyType, &act_t, &act_f, &nitems, &rem, &odata
+                    ) == Success && odata && nitems > 0) {
+                    char obuf[1024];
+                    size_t on = nitems < sizeof(obuf) - 1 ? (size_t)nitems : sizeof(obuf) - 1;
+                    memcpy(obuf, odata, on);
+                    obuf[on] = '\0';
+                    XFree(odata);
+                    int primary_dpi = 0;
+                    char *savep = nullptr;
+                    for (char *ln = strtok_r(obuf, "\r\n", &savep); ln;
+                         ln = strtok_r(nullptr, "\r\n", &savep)) {
+                        int idx = 0, en = 0, ox = 0, oy = 0, ow = 0, oh = 0, rot = 0, dpi = 96;
+                        char nm[64] = {0};
+                        if (sscanf(ln, "%d|%63[^|]|%d|%d|%d|%d|%d|%d|%d|",
+                                   &idx, nm, &en, &ox, &oy, &ow, &oh, &rot, &dpi) >= 9 &&
+                            en != 0 && dpi >= 48 && dpi <= 480) {
+                            primary_dpi = dpi;
+                            break;
+                        }
+                    }
+                    if (primary_dpi > 0) {
+                        double new_scale = (double)primary_dpi / 96.0;
+                        if (fabs(new_scale - wmGD.dpiScale) > 0.02) {
+                            XCloseDisplay(dpy);
+                            execv("/proc/self/exe", saved_argv);
+                            execvp(saved_argv[0], saved_argv);
+                        }
+                    }
+                } else if (odata) {
+                    XFree(odata);
+                }
             }
             Atom a_ws_cur_name = XInternAtom(dpy, "_DT_WORKSPACE_CURRENT_NAME", False);
             if (ev.xproperty.atom == a_ws_cur_name) {

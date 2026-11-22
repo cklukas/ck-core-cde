@@ -23,6 +23,7 @@
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_cursor.h>
+#include <wlr/types/wlr_cursor_shape_v1.h>
 #include <wlr/types/wlr_data_control_v1.h>
 #include <wlr/types/wlr_data_device.h>
 #include <wlr/types/wlr_fractional_scale_v1.h>
@@ -69,6 +70,26 @@
 #define DTWM_PANEL_WIDTH 840
 #define DTWM_PANEL_HEIGHT 74
 #define DTWM_PANEL_STRUT 76
+#define DTWM_MAX_NATIVE_DPI_PIDS 256
+
+typedef struct {
+    int dpi;
+    double scale;
+    int border_w;
+    int panel_border_w;
+    int title_h;
+    int corner_len;
+    int outer_bevel;
+    int inner_bevel;
+    int menu_w;
+    int root_menu_w;
+    int menu_item_h;
+    int root_header_h;
+    int menu_pad;
+    int menu_sep_h;
+    int grid_sz;
+    int snap_thresh;
+} DtwmMetrics;
 
 typedef struct {
     double r, g, b, a;
@@ -228,6 +249,8 @@ struct DtwmView {
     bool is_desktop_pin;    /* dtfile Desktop.c pinned workspace object */
     bool is_swallowed;      /* Front Panel TYPE client swallowed window */
     bool is_lock_dialog;    /* dtsession PAM lock dialog / cover shell */
+    bool is_native_dpi;     /* CK Core Motif / CDE client rendering 1:1 physical pixels */
+    double external_client_scale; /* Scale S = dpi/96 for external non-Motif Wayland clients */
     uint32_t workspace_mask;
 
     /* Desktop icon state (open-window icon + minimized icon + live pixmap) */
@@ -485,6 +508,11 @@ struct DtwmServer {
     xcb_atom_t atom_randr_dpi_opt_in;
     xcb_atom_t atom_dpi;
     int initial_output_dpi[16];
+    char cli_output_dpi_names[16][64];
+    int cli_output_dpi_vals[16];
+    int cli_output_dpi_count;
+    pid_t native_dpi_pids[DTWM_MAX_NATIVE_DPI_PIDS];
+    size_t native_dpi_pid_count;
     uint32_t next_output_idx;
     struct wlr_scene_tree *drag_icon_tree;
     struct wl_listener drag_destroy;
@@ -601,7 +629,9 @@ struct DtwmServer {
     struct wl_listener backend_destroy;
     struct wl_listener new_virtual_pointer;
     struct wl_listener new_virtual_keyboard;
+    struct wlr_cursor_shape_manager_v1 *cursor_shape_mgr;
     struct wl_listener request_cursor;
+    struct wl_listener request_cursor_shape;
     struct wl_listener request_set_selection;
     struct wl_listener request_set_primary_selection;
     struct wl_listener request_start_drag;
@@ -623,10 +653,15 @@ struct DtwmServer {
 };
 
 /* cde_bevel.c */
+int dtwm_primary_output_dpi(const DtwmServer *server);
+int dtwm_output_dpi_at(const DtwmServer *server, double lx, double ly);
+DtwmMetrics dtwm_metrics_for_dpi(int dpi);
+DtwmMetrics dtwm_metrics_for_view(const DtwmView *view);
 struct wlr_buffer *dtwm_cairo_buffer_begin(int width, int height, cairo_t **out_cr, cairo_surface_t **out_surf);
 void dtwm_cairo_buffer_finish(cairo_t *cr, cairo_surface_t *surf);
 void dtwm_draw_bevel(cairo_t *cr, double x, double y, double w, double h, double t, DtwmRgba tl_col, DtwmRgba br_col);
 void dtwm_draw_label(cairo_t *cr, const char *text, double x, double y, double w, double h, DtwmRgba fg, bool centered, bool bold);
+void dtwm_draw_label_dpi(cairo_t *cr, int dpi, const char *text, double x, double y, double w, double h, DtwmRgba fg, bool centered, bool bold);
 void dtwm_palette_init_default(DtwmPalette *pal);
 DtwmAppearanceProfile dtwm_parse_appearance_profile(const char *name);
 void dtwm_palette_init_profile(DtwmPalette *pal, DtwmAppearanceProfile profile);
@@ -638,16 +673,17 @@ void dtwm_view_update_frame(DtwmView *view);
 DtwmFramePart dtwm_frame_hit_test(const DtwmView *view, int local_x, int local_y);
 uint32_t dtwm_part_to_wlr_edges(DtwmFramePart part);
 
-struct wlr_buffer *dtwm_render_window_menu(const DtwmPalette *pal, const DtwmView *view, int hover_idx, int *out_w, int *out_h);
+struct wlr_buffer *dtwm_render_window_menu(const DtwmPalette *pal, const DtwmView *view, int hover_idx, int dpi, int *out_w, int *out_h);
 struct wlr_buffer *dtwm_render_root_menu(
     const DtwmPalette *pal,
     bool panel_minimized,
     bool has_panel,
     int hover_idx,
+    int dpi,
     int *out_w,
     int *out_h
 );
-int dtwm_root_menu_item_at(int rx, int ry, int menu_w, int menu_h);
+int dtwm_root_menu_item_at(int rx, int ry, int menu_w, int menu_h, int dpi);
 struct wlr_buffer *dtwm_render_snap_preview(const DtwmPalette *pal, int w, int h);
 struct wlr_buffer *dtwm_render_wireframe_outline(int w, int h);
 struct wlr_buffer *dtwm_render_palette_wireframe_outline(
@@ -669,6 +705,7 @@ struct wlr_buffer *dtwm_render_osd_gauge(
     int level,
     bool muted,
     const char *label,
+    int dpi,
     int *out_w,
     int *out_h
 );
@@ -803,6 +840,8 @@ void dtwm_power_display_on_xwayland_ready(DtwmServer *server);
 void dtwm_power_display_on_new_output(DtwmServer *server, DtwmOutput *output);
 void dtwm_power_display_on_output_destroy(DtwmServer *server, DtwmOutput *output);
 void dtwm_power_display_sync_outputs(DtwmServer *server);
+void dtwm_power_display_record_dpi(DtwmServer *server, const char *name, int dpi);
+int dtwm_power_display_lookup_dpi(const DtwmServer *server, const char *name);
 void dtwm_power_display_on_new_input(DtwmServer *server, struct wlr_input_device *dev);
 void dtwm_power_display_notify_activity(DtwmServer *server);
 bool dtwm_power_display_handle_wm_request(DtwmServer *server, const char *cmd);
@@ -844,6 +883,9 @@ void dtwm_spawn_front_panel(DtwmServer *server);
 void dtwm_apply_resource_manager_string(DtwmServer *server, const char *data, size_t len);
 void dtwm_dispatch_wm_request_bytes(DtwmServer *server, const char *data, size_t len);
 void dtwm_native_ipc_publish_prop(DtwmServer *server, const char *atom_name, const void *data, size_t len);
+void dtwm_sync_resource_manager_dpi(DtwmServer *server);
+void dtwm_sync_external_view_scene(DtwmView *view);
+void dtwm_sync_all_external_client_scales(DtwmServer *server);
 void dtwm_workspace_sync_ipc(DtwmServer *server);
 
 #endif /* DTWM_WAYLAND_H */

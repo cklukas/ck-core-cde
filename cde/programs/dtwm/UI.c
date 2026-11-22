@@ -65,7 +65,11 @@
 #include <X11/keysymdef.h>
 
 #include <langinfo.h>
+#include <math.h>
 #include <stdint.h>
+
+#define FP_DPI_DIM(px) \
+   ((Dimension)((wmGD.dpiScale > 0.25) ? lround((double)(px) * wmGD.dpiScale) : (px)))
 
 #include "WmHelp.h"
 
@@ -337,11 +341,11 @@ FrontPanelCreate (Widget toplevel)
          XtSetArg (al[ac], XmNleftAttachment, XmATTACH_FORM);  ac++;
          XtSetArg (al[ac], XmNleftOffset, 1);  ac++;
          if (panel.resolution == HIGH || panel.resolution == MEDIUM) {
-            XtSetArg (al[ac], XmNwidth, 21);  ac++;
-            XtSetArg (al[ac], XmNheight, 15);  ac++;
+            XtSetArg (al[ac], XmNwidth, FP_DPI_DIM(21));  ac++;
+            XtSetArg (al[ac], XmNheight, FP_DPI_DIM(15));  ac++;
          } else {
-            XtSetArg (al[ac], XmNwidth, 17);  ac++;
-            XtSetArg (al[ac], XmNheight, 13);  ac++;
+            XtSetArg (al[ac], XmNwidth, FP_DPI_DIM(17));  ac++;
+            XtSetArg (al[ac], XmNheight, FP_DPI_DIM(13));  ac++;
          }
          XtSetValues (panel.menu, al, ac);
 
@@ -353,9 +357,9 @@ FrontPanelCreate (Widget toplevel)
          XtSetArg (al[ac], XmNbottomAttachment, XmATTACH_FORM);  ac++;
          XtSetArg (al[ac], XmNbottomOffset, 1);  ac++;
          if (panel.resolution == HIGH || panel.resolution == MEDIUM) {
-            XtSetArg (al[ac], XmNwidth, 20);  ac++;
+            XtSetArg (al[ac], XmNwidth, FP_DPI_DIM(20));  ac++;
          } else {
-            XtSetArg (al[ac], XmNwidth, 16);  ac++;
+            XtSetArg (al[ac], XmNwidth, FP_DPI_DIM(16));  ac++;
          }
          XtSetValues (panel.left_handle, al, ac);
       }
@@ -371,9 +375,9 @@ FrontPanelCreate (Widget toplevel)
          XtSetArg (al[ac], XmNbottomAttachment, XmATTACH_FORM);  ac++;
          XtSetArg (al[ac], XmNbottomOffset, 1);  ac++;
          if (panel.resolution == HIGH || panel.resolution == MEDIUM) {
-            XtSetArg (al[ac], XmNwidth, 20);  ac++;
+            XtSetArg (al[ac], XmNwidth, FP_DPI_DIM(20));  ac++;
          } else {
-            XtSetArg (al[ac], XmNwidth, 16);  ac++;
+            XtSetArg (al[ac], XmNwidth, FP_DPI_DIM(16));  ac++;
          }
          XtSetValues (panel.left_handle, al, ac);
       }
@@ -394,11 +398,11 @@ FrontPanelCreate (Widget toplevel)
          XtSetArg (al[ac], XmNrightAttachment, XmATTACH_FORM);  ac++;
          XtSetArg (al[ac], XmNrightOffset, 1);  ac++;
          if (panel.resolution == HIGH || panel.resolution == MEDIUM) {
-            XtSetArg (al[ac], XmNwidth, 21);  ac++;
-            XtSetArg (al[ac], XmNheight, 15);  ac++;
+            XtSetArg (al[ac], XmNwidth, FP_DPI_DIM(21));  ac++;
+            XtSetArg (al[ac], XmNheight, FP_DPI_DIM(15));  ac++;
          } else {
-            XtSetArg (al[ac], XmNwidth, 17);  ac++;
-            XtSetArg (al[ac], XmNheight, 13);  ac++;
+            XtSetArg (al[ac], XmNwidth, FP_DPI_DIM(17));  ac++;
+            XtSetArg (al[ac], XmNheight, FP_DPI_DIM(13));  ac++;
          }
          XtSetValues (panel.iconify, al, ac);
 
@@ -410,9 +414,9 @@ FrontPanelCreate (Widget toplevel)
          XtSetArg (al[ac], XmNbottomAttachment, XmATTACH_FORM);  ac++;
          XtSetArg (al[ac], XmNbottomOffset, 1);  ac++;
          if (panel.resolution == HIGH || panel.resolution == MEDIUM) {
-            XtSetArg (al[ac], XmNwidth, 20);  ac++;
+            XtSetArg (al[ac], XmNwidth, FP_DPI_DIM(20));  ac++;
          } else {
-            XtSetArg (al[ac], XmNwidth, 16);  ac++;
+            XtSetArg (al[ac], XmNwidth, FP_DPI_DIM(16));  ac++;
          }
          XtSetValues (panel.right_handle, al, ac);
       }
@@ -428,9 +432,9 @@ FrontPanelCreate (Widget toplevel)
          XtSetArg (al[ac], XmNbottomAttachment, XmATTACH_FORM);  ac++;
          XtSetArg (al[ac], XmNbottomOffset, 1);  ac++;
          if (panel.resolution == HIGH || panel.resolution == MEDIUM) {
-            XtSetArg (al[ac], XmNwidth, 20);  ac++;
+            XtSetArg (al[ac], XmNwidth, FP_DPI_DIM(20));  ac++;
          } else {
-            XtSetArg (al[ac], XmNwidth, 16);  ac++;
+            XtSetArg (al[ac], XmNwidth, FP_DPI_DIM(16));  ac++;
          }
          XtSetValues (panel.right_handle, al, ac);
       }
@@ -725,26 +729,31 @@ PanelControlCreate (Widget parent,
       bg = WhitePixelOfScreen (XtScreen (panel.form));
    }
 
-   pixmap = XmGetPixmap (XtScreen (parent), image_name, fg, bg);
+   pixmap = XmGetScaledPixmap (
+      parent, image_name, fg, bg, DefaultDepthOfScreen (XtScreen (parent)), 0.0);
 
    if (strcmp (control_name, "minimize") == 0)
    {
       minimize_normal_pixmap = pixmap;
       minimize_selected_pixmap = 
-         XmGetPixmap (XtScreen (parent), minimize_selected_image, fg, bg);
+         XmGetScaledPixmap (
+            parent, minimize_selected_image, fg, bg,
+            DefaultDepthOfScreen (XtScreen (parent)), 0.0);
    }
    else if (strcmp (control_name, "menu") == 0)
    {
       menu_normal_pixmap = pixmap;
       menu_selected_pixmap = 
-         XmGetPixmap (XtScreen (parent), menu_selected_image, fg, bg);
+         XmGetScaledPixmap (
+            parent, menu_selected_image, fg, bg,
+            DefaultDepthOfScreen (XtScreen (parent)), 0.0);
    }
 
 
    ac = 0;
    XtSetArg (al[ac], XmNforeground, fg);		ac++;
    XtSetArg (al[ac], XmNbackground, bg);		ac++;
-   XtSetArg (al[ac], XmNwidth, 11);			ac++;
+   XtSetArg (al[ac], XmNwidth, FP_DPI_DIM(11));		ac++;
    XtSetArg (al[ac], XmNshadowThickness, 0);		ac++;
    XtSetArg (al[ac], XmNborderWidth, 0);		ac++;
    XtSetArg (al[ac], XmNbackgroundPixmap, pixmap);	ac++;
@@ -2412,14 +2421,14 @@ SwitchButtonCreate (SwitchData * switch_data,
 			&ignore_width,&switch_height);
 	XmStringFree(label_string);
 	if (panel.resolution == HIGH || panel.resolution == MEDIUM) {
-		switch_height += 14;
-		if (switch_height < SWITCH_HIGH_BUTTON_HEIGHT) {
-			switch_height = SWITCH_HIGH_BUTTON_HEIGHT;
+		switch_height += FP_DPI_DIM(14);
+		if (switch_height < FP_DPI_DIM(SWITCH_HIGH_BUTTON_HEIGHT)) {
+			switch_height = FP_DPI_DIM(SWITCH_HIGH_BUTTON_HEIGHT);
 		}
 	} else {
-		switch_height += 8;
-		if (switch_height < SWITCH_LOW_BUTTON_HEIGHT) {
-			switch_height = SWITCH_LOW_BUTTON_HEIGHT;
+		switch_height += FP_DPI_DIM(8);
+		if (switch_height < FP_DPI_DIM(SWITCH_LOW_BUTTON_HEIGHT)) {
+			switch_height = FP_DPI_DIM(SWITCH_LOW_BUTTON_HEIGHT);
 		}
 	}
    }
@@ -2434,14 +2443,14 @@ SwitchButtonCreate (SwitchData * switch_data,
    if (panel.resolution == HIGH || panel.resolution == MEDIUM)
    {
       XtSetArg (al[ac], XmNwidth, switch_button_width);		ac++;
-      XtSetArg (al[ac], XmNshadowThickness, 3);			ac++;
-      XtSetArg (al[ac], XmNmarginWidth, 4);			ac++;
+      XtSetArg (al[ac], XmNshadowThickness, FP_DPI_DIM(3));	ac++;
+      XtSetArg (al[ac], XmNmarginWidth, FP_DPI_DIM(4));		ac++;
    }
    else
    {
       XtSetArg (al[ac], XmNwidth, switch_button_width);		ac++;
-      XtSetArg (al[ac], XmNshadowThickness, 2);			ac++;
-      XtSetArg (al[ac], XmNmarginWidth, 2);			ac++;
+      XtSetArg (al[ac], XmNshadowThickness, FP_DPI_DIM(2));	ac++;
+      XtSetArg (al[ac], XmNmarginWidth, FP_DPI_DIM(2));		ac++;
    }
 
    XtSetArg (al[ac], XmNheight, switch_height);  ac++;

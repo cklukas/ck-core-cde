@@ -146,6 +146,7 @@
  ****************************************************************************
  ************************************<+>*************************************/
 
+#include <math.h>
 #include <string.h>
 #include <stdint.h>
 #include <locale.h>
@@ -367,18 +368,44 @@ static Cursor loc_cursor1 = None;
 static Cursor loc_cursor2 = None;
 #define DBLCLICK_DRAG_THRESHOLD 20
 
-/* layout constants (@@@ could be made resources) */
-#define MARGIN          5
-#define XSPACING        5
+/* layout constants (scaled to active widget DPI) */
+static double
+FileMgrDpiScale(
+        const FileMgrData *fmd )
+{
+   double scale = 1.0;
+
+   if (fmd && fmd->file_mgr_rec)
+   {
+      const FileMgrRec *fmr = (const FileMgrRec *)fmd->file_mgr_rec;
+      Widget ref_w = fmr->file_window ? fmr->file_window : fmr->shell;
+      if (ref_w && XmGetWidgetScale(ref_w, &scale) && scale > 0.25)
+         return scale;
+   }
+   return 1.0;
+}
+
+static int
+FileMgrDpiPx(
+        const FileMgrData *fmd,
+        int base_px )
+{
+   double s = FileMgrDpiScale(fmd);
+   int px = (int)lround((double)base_px * s);
+   return (px > 0) ? px : base_px;
+}
+
+#define MARGIN          FileMgrDpiPx(file_mgr_data, 5)
+#define XSPACING        FileMgrDpiPx(file_mgr_data, 5)
 #define YSPACING(fmd)                                                              \
   ((fmd)->layout_data?                                                           \
     (((IconLayoutData *)(fmd)->layout_data)->spacing > 0 ?                         \
        ((IconLayoutData *)(fmd)->layout_data)->spacing :                           \
-       ((XSPACING > ((IconLayoutData *)(fmd)->layout_data)->highlight) ?           \
-          (XSPACING - ((IconLayoutData *)(fmd)->layout_data)->highlight) : 0)) :    \
+       ((FileMgrDpiPx((fmd), 5) > ((IconLayoutData *)(fmd)->layout_data)->highlight) ? \
+          (FileMgrDpiPx((fmd), 5) - ((IconLayoutData *)(fmd)->layout_data)->highlight) : 0)) : \
     0)
-#define TreeSep         5
-#define TreeOffset      15
+#define TreeSep         FileMgrDpiPx(file_mgr_data, 5)
+#define TreeOffset      FileMgrDpiPx(file_mgr_data, 15)
 #define TreeOneWd(sz)     (TreeOffset + TreeBtnWd[sz]/2)
 #define TreeLX(level,sz)  (TreeBtnWd[sz]/2 + ((level) - 1)*TreeOneWd(sz))
 #define TreeWd(level,sz)  \
@@ -6760,29 +6787,32 @@ GetIconLayoutParms(
    Dimension gadgetWidth;
 
    /* determine pixmap size */
-   if (file_mgr_data->view == BY_NAME)
    {
-      /* no pixmap */
-      ld->pixmap_width = 0;
-      ld->pixmap_height = 0;
-   }
-   else if (file_mgr_data->view == BY_NAME_AND_ICON)
-   {
-      /* large pixmap */
-      ld->pixmap_width = largeIconWidth;
-      ld->pixmap_height = largeIconHeight;
-   }
-   else if (file_mgr_data->view == BY_NAME_AND_EXTRA_LARGE_ICON)
-   {
-      /* extra large pixmap */
-      ld->pixmap_width = extraLargeIconWidth;
-      ld->pixmap_height = extraLargeIconHeight;
-   }
-   else
-   {
-      /* small pixmap */
-      ld->pixmap_width = smallIconWidth;
-      ld->pixmap_height = smallIconHeight;
+      double dpi_s = FileMgrDpiScale(file_mgr_data);
+      if (file_mgr_data->view == BY_NAME)
+      {
+         /* no pixmap */
+         ld->pixmap_width = 0;
+         ld->pixmap_height = 0;
+      }
+      else if (file_mgr_data->view == BY_NAME_AND_ICON)
+      {
+         /* large pixmap */
+         ld->pixmap_width = (Dimension)lround((double)largeIconWidth * dpi_s);
+         ld->pixmap_height = (Dimension)lround((double)largeIconHeight * dpi_s);
+      }
+      else if (file_mgr_data->view == BY_NAME_AND_EXTRA_LARGE_ICON)
+      {
+         /* extra large pixmap */
+         ld->pixmap_width = (Dimension)lround((double)extraLargeIconWidth * dpi_s);
+         ld->pixmap_height = (Dimension)lround((double)extraLargeIconHeight * dpi_s);
+      }
+      else
+      {
+         /* small pixmap */
+         ld->pixmap_width = (Dimension)lround((double)smallIconWidth * dpi_s);
+         ld->pixmap_height = (Dimension)lround((double)smallIconHeight * dpi_s);
+      }
    }
 
    /* find the icon gadget for "." */
@@ -8615,6 +8645,30 @@ TryFastResizeFileWindow(
    layout_data = (IconLayoutData *)file_mgr_data->layout_data;
    if (layout_data->work_id != 0)
       return False;
+
+   if (file_mgr_data->view != BY_NAME)
+   {
+      double dpi_s = FileMgrDpiScale(file_mgr_data);
+      Dimension want_pw = (Dimension)lround(
+         (double)((file_mgr_data->view == BY_NAME_AND_ICON)
+                     ? largeIconWidth
+                     : (file_mgr_data->view == BY_NAME_AND_EXTRA_LARGE_ICON)
+                          ? extraLargeIconWidth
+                          : smallIconWidth) * dpi_s);
+      if (want_pw != layout_data->pixmap_width)
+      {
+         order_list = layout_data->order_list;
+         order_count = layout_data->order_count;
+         for (i = 0; i < order_count; i++)
+            order_list[i]->need_update = True;
+         if (layout_data->dup_icon_widget)
+         {
+            XtDestroyWidget(layout_data->dup_icon_widget);
+            layout_data->dup_icon_widget = nullptr;
+         }
+         return False;
+      }
+   }
 
    order_list = layout_data->order_list;
    order_count = layout_data->order_count;

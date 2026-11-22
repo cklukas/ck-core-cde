@@ -46,6 +46,7 @@
 **	Include Files
 */
 
+#include <math.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -1707,6 +1708,48 @@ GetParentBackgroundGC(
 }
 
 
+static double
+IconDpiScale(
+        DtIconGadget g )
+{
+	Widget ref_w = XtIsWidget((Widget)g) ? (Widget)g : XtParent((Widget)g);
+	double scale = 1.0;
+
+	if (ref_w && XmGetWidgetScale(ref_w, &scale) && scale > 0.25)
+		return scale;
+	return 1.0;
+}
+
+static Pixmap
+LoadIconPixmapForGadget(
+        DtIconGadget g,
+        String name,
+        Pixel fg,
+        Pixel bg )
+{
+	Widget ref_w = XtIsWidget((Widget)g) ? (Widget)g : XtParent((Widget)g);
+	Screen *s = XtScreen((Widget)g);
+
+	if (!s || !name)
+		return XmUNSPECIFIED_PIXMAP;
+	if (ref_w)
+		return XmGetScaledPixmap(ref_w, name, fg, bg, DefaultDepthOfScreen(s), 0.0);
+	return XmGetPixmap(s, name, fg, bg);
+}
+
+static Pixmap
+LoadIconMaskForGadget(
+        DtIconGadget g,
+        String name )
+{
+	Widget ref_w = XtIsWidget((Widget)g) ? (Widget)g : XtParent((Widget)g);
+	Screen *s = XtScreen((Widget)g);
+
+	if (!s || !name)
+		return XmUNSPECIFIED_PIXMAP;
+	return XmeGetScaledMask(s, ref_w, name, 0.0);
+}
+
 /*-------------------------------------------------------------
 **	Initialize
 **		Initialize a new gadget instance.
@@ -1779,15 +1822,14 @@ Initialize(
 /*	Try to get pixmap from image name.
 */
 			G_Pixmap (new) = 
-				XmGetPixmap (XtScreen (new), G_ImageName (new),
+				LoadIconPixmapForGadget (new, G_ImageName (new),
 					G_PixmapForeground (new),
 					G_PixmapBackground (new));
 			if (G_Pixmap (new) != XmUNSPECIFIED_PIXMAP) 
 			  {
 			      name = G_ImageName (new);
 			      G_Mask (new) = 
-				_DtGetMask(XtScreen (new), G_ImageName
-					   (new));
+				LoadIconMaskForGadget (new, G_ImageName (new));
 			  }
 			else
 			{
@@ -2025,6 +2067,40 @@ static void
 Resize(
         Widget w )
 {
+	DtIconGadget g = (DtIconGadget) w;
+
+	if (G_ImageName (g) != nullptr && G_MaxPixmapWidth (g) == 0 && G_MaxPixmapHeight (g) == 0)
+	{
+		Pixmap new_pm = LoadIconPixmapForGadget (
+			g, G_ImageName (g), G_PixmapForeground (g), G_PixmapBackground (g));
+		if (new_pm != XmUNSPECIFIED_PIXMAP && new_pm != None)
+		{
+			if (new_pm == G_Pixmap (g))
+			{
+				XmDestroyPixmap (XtScreen (g), new_pm);
+			}
+			else
+			{
+				Window root;
+				int int_x = 0, int_y = 0;
+				unsigned int int_w = 0, int_h = 0, int_bw = 0, depth = 0;
+				UpdateGCsProc update_gcs;
+
+				ReleasePixmapAndMask (XtScreen (g), G_Pixmap (g), G_Mask (g));
+				G_Pixmap (g) = new_pm;
+				G_Mask (g) = LoadIconMaskForGadget (g, G_ImageName (g));
+				XGetGeometry (XtDisplay (g), G_Pixmap (g),
+				              &root, &int_x, &int_y, &int_w, &int_h, &int_bw, &depth);
+				MaybeScaleLoadedPixmap (g, &int_w, &int_h, depth);
+				G_PixmapWidth (g) = Limit ((Dimension) int_w, G_MaxPixmapWidth (g));
+				G_PixmapHeight (g) = Limit ((Dimension) int_h, G_MaxPixmapHeight (g));
+				_DtProcessLock();
+				update_gcs = C_UpdateGCs(XtClass(g));
+				_DtProcessUnlock();
+				(*update_gcs) (g);
+			}
+		}
+	}
 }
 
 
@@ -2252,13 +2328,13 @@ SetValues(
 			draw_pixmap = True;
 			ReleasePixmapAndMask(XtScreen(new), G_Pixmap(current), G_Mask(current));
 			G_Pixmap (new) = 
-				XmGetPixmap (XtScreen (new), G_ImageName (new),
+				LoadIconPixmapForGadget (new, G_ImageName (new),
 					G_PixmapForeground (new),
 					G_PixmapBackground (new));
 			if (G_Pixmap(new) != XmUNSPECIFIED_PIXMAP) 
 			{
 			  G_Mask (new) =
-			    _DtGetMask(XtScreen (new), G_ImageName (new));
+			    LoadIconMaskForGadget (new, G_ImageName (new));
 			  XGetGeometry (XtDisplay (new), G_Pixmap (new),
 			                &root, &int_x, &int_y, &int_w, &int_h,
 			                &int_bw, &depth);
@@ -2282,13 +2358,13 @@ SetValues(
 		      ReleasePixmapAndMask(XtScreen(new), G_Pixmap(current), G_Mask(current));
 		  }
 		G_Pixmap (new) = 
-			XmGetPixmap (XtScreen (new), G_ImageName (new),
+			LoadIconPixmapForGadget (new, G_ImageName (new),
 				G_PixmapForeground (new),
 				G_PixmapBackground (new));
 
 		if (G_Pixmap (new) != XmUNSPECIFIED_PIXMAP)
 		{
-    		    G_Mask(new) = (Pixmap)_DtGetMask(XtScreen(new), G_ImageName(new));
+    		    G_Mask(new) = LoadIconMaskForGadget(new, G_ImageName(new));
 		    XGetGeometry (XtDisplay (new), G_Pixmap (new),
 				  &root, &int_x, &int_y, &int_w, &int_h,
 				  &int_bw, &depth);
@@ -2397,6 +2473,20 @@ SetValues(
         if( ( G_MaxPixmapWidth(new) != G_MaxPixmapWidth(current)) ||
              (G_MaxPixmapHeight(new) != G_MaxPixmapHeight(current)) )
         {
+                if (G_ImageName (new) != nullptr && !new_image_name)
+                {
+                        ReleasePixmapAndMask(XtScreen(new), G_Pixmap(new), G_Mask(new));
+                        G_Pixmap (new) = LoadIconPixmapForGadget (
+                                new, G_ImageName (new),
+                                G_PixmapForeground (new), G_PixmapBackground (new));
+                        if (G_Pixmap (new) != XmUNSPECIFIED_PIXMAP)
+                                G_Mask (new) = LoadIconMaskForGadget (new, G_ImageName (new));
+                        else
+                        {
+                                G_Pixmap (new) = None;
+                                G_Mask (new) = None;
+                        }
+                }
                 if (G_Pixmap (new))
                 {
                         XGetGeometry (XtDisplay (new), G_Pixmap (new), &root,
@@ -2911,11 +3001,11 @@ VisualChange(
 		G_Pixmap(g) = XmUNSPECIFIED_PIXMAP;
 		G_Mask(g) = XmUNSPECIFIED_PIXMAP;
 		G_Pixmap (g) = 
-		  XmGetPixmap (XtScreen (g), G_ImageName (g),
+		  LoadIconPixmapForGadget (g, G_ImageName (g),
 			       G_PixmapForeground (g),
 			       G_PixmapBackground (g));
 		if (G_Pixmap (g) != XmUNSPECIFIED_PIXMAP)
-		  G_Mask(g) = (Pixmap)_DtGetMask(XtScreen(g), G_ImageName(g));
+		  G_Mask(g) = LoadIconMaskForGadget(g, G_ImageName(g));
 	    }
 	  return (True);
       }
@@ -3777,9 +3867,8 @@ LoadPixmap(
 
 {
    unsigned int int_h, int_w;
-   Screen *s = XtScreen(new);
-   Pixmap pm = XmGetPixmap(s, pixmap, G_PixmapForeground(new),
-                           G_PixmapBackground(new));
+   Pixmap pm = LoadIconPixmapForGadget(new, pixmap, G_PixmapForeground(new),
+                                       G_PixmapBackground(new));
    Pixmap mask;
    Window root;
    int int_x, int_y;
@@ -3789,7 +3878,7 @@ LoadPixmap(
    if (pm == XmUNSPECIFIED_PIXMAP)
       return(True);
 
-   mask = XmeGetMask(s, pixmap);
+   mask = LoadIconMaskForGadget(new, pixmap);
 
    G_Pixmap(new) = pm;
    G_Mask(new) = mask;
@@ -3965,11 +4054,16 @@ MaybeScaleLoadedPixmap(
 	if (!s)
 		return;
 
-	/* Only upscale small UI icons (dtfile extra-large uses 48x48). */
-	if (G_MaxPixmapWidth(g) < 48 || G_MaxPixmapHeight(g) < 48)
-		return;
-	if (G_MaxPixmapWidth(g) > 64 || G_MaxPixmapHeight(g) > 64)
-		return;
+	/* Only upscale small UI icons (dtfile extra-large uses 48x48 * dpiScale). */
+	{
+		double dpi_s = IconDpiScale(g);
+		Dimension min_xl = (Dimension)lround(48.0 * dpi_s);
+		Dimension max_xl = (Dimension)lround(64.0 * dpi_s);
+		if (G_MaxPixmapWidth(g) < min_xl || G_MaxPixmapHeight(g) < min_xl)
+			return;
+		if (G_MaxPixmapWidth(g) > max_xl || G_MaxPixmapHeight(g) > max_xl)
+			return;
+	}
 
 	if (*pix_w == 0 || *pix_h == 0)
 		return;

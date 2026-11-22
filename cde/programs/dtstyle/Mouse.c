@@ -64,6 +64,7 @@
 #include <Xm/ToggleBG.h>
 #include <Xm/VendorSEP.h>
 #include <X11/Xutil.h>
+#include <math.h>
 #include <stdint.h>
 #include <time.h>
 
@@ -1306,6 +1307,20 @@ PackComponent(unsigned char component, unsigned long mask, int shift, int bits)
 
 #define CURSOR_PREVIEW_SLOT_SIZE 72
 
+static int
+GetCursorPreviewSlotSize(Widget ref)
+{
+    double scale = 1.0;
+    Widget w = ref ? ref : style.mouseDialog;
+    if (w && XmGetWidgetScale(w, &scale) && scale > 0.25)
+    {
+	int sz = (int)lround((double)CURSOR_PREVIEW_SLOT_SIZE * scale);
+	if (sz >= CURSOR_PREVIEW_SLOT_SIZE)
+	    return sz;
+    }
+    return CURSOR_PREVIEW_SLOT_SIZE;
+}
+
 #ifdef HAVE_XCURSOR
 static void
 ComputeXcursorImageVisibleBounds(const XcursorImage *img,
@@ -1894,7 +1909,7 @@ CursorPreviewAnimTimerCB(XtPointer client_data, XtIntervalId *id)
 	return;
 
     Boolean anyAnimated = False;
-    int previewSz = CURSOR_PREVIEW_SLOT_SIZE;
+    int previewSz = GetCursorPreviewSlotSize(style.mouseDialog);
     for (int i = 0; i < CURSOR_PREVIEW_COUNT; i++)
     {
 	XcursorImages *imgs = mouse.cursorPreviewAnim[i];
@@ -2014,11 +2029,12 @@ UpdateCursorPreview(void)
 		mouse.cursorPreviewAnim[i],
 		&mouse.cursorPreviewCropX[i], &mouse.cursorPreviewCropY[i],
 		&mouse.cursorPreviewCropW[i], &mouse.cursorPreviewCropH[i]);
+	    int previewSz = GetCursorPreviewSlotSize(mouse.cursorPreviewArea[i]);
 	    mouse.cursorPreviewPixmaps[i] = CreateCursorPreviewPixmapFromImageCrop(
 		mouse.cursorPreviewAnim[i]->images[0],
 		mouse.cursorPreviewCropX[i], mouse.cursorPreviewCropY[i],
 		mouse.cursorPreviewCropW[i], mouse.cursorPreviewCropH[i],
-		CURSOR_PREVIEW_SLOT_SIZE, CURSOR_PREVIEW_SLOT_SIZE,
+		previewSz, previewSz,
 		&mouse.cursorPreviewPixmapW[i],
 		&mouse.cursorPreviewPixmapH[i]);
 	    if (mouse.cursorPreviewAnim[i]->nimage > 1)
@@ -2602,7 +2618,7 @@ build_mouseDialog( Widget shell )
     XtManageChild(mouse.cursorPreviewGrid);
 
     {
-	int previewSize = CURSOR_PREVIEW_SLOT_SIZE;
+	int previewSize = GetCursorPreviewSlotSize(mouse.cursorPreviewGrid);
 
 	for (i = 0; i < CURSOR_PREVIEW_COUNT; i++)
 	{

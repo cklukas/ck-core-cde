@@ -74,6 +74,7 @@
 #include <Xm/LabelG.h>
 #include <Xm/PushBG.h>
 #include <Xm/DragDrop.h>
+#include <math.h>
 #include <string.h>
 #include <stdarg.h>
 #include <sys/stat.h>
@@ -198,7 +199,18 @@ static void IconicPathDebug(const char *fmt, ...) ;
 #define MIN_WD(ip)     ((ICON_SIZE(ip) == 2)? (ip)->iconic_path.extra_large_min_width: \
                         (ICON_SIZE(ip) == 1)? (ip)->iconic_path.large_min_width: \
                                              (ip)->iconic_path.small_min_width)
-#define ICON_HT(ip)    ((ICON_SIZE(ip) == 2)? 48: (ICON_SIZE(ip) == 1)? 32: 16)
+static Dimension
+IconicPathIconHt(
+        DtIconicPathWidget ip )
+{
+   int base_ht = (ICON_SIZE(ip) == 2) ? 48 : ((ICON_SIZE(ip) == 1) ? 32 : 16);
+   double scale = 1.0;
+   if (ip && XmGetWidgetScale((Widget)ip, &scale) && scale > 0.25)
+      return (Dimension)lround((double)base_ht * scale);
+   return (Dimension)base_ht;
+}
+
+#define ICON_HT(ip)    IconicPathIconHt(ip)
 #define ICON_DTSIZE(ip) ((ICON_SIZE(ip) == 2)? EXTRA_LARGE: \
                          (ICON_SIZE(ip) == 1)? LARGE: SMALL)
 

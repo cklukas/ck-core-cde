@@ -31,11 +31,12 @@ framing or interaction rules.
 - Server-side frames compose a palette-matched `client_bg_rect`, a client-clipped
   `content_tree`, four tight opaque `DRM_FORMAT_XRGB8888` bevel border strips
   (`frame_top_buf`, `frame_bottom_buf`, `frame_left_buf`, `frame_right_buf`)
-  rendered at native HiDPI output scale (`ceil(max_output_scale)`) with
-  `WLR_SCALE_FILTER_NEAREST` on integer-scaled displays, and an unclipped
-  `popup_anchor_tree` above the borders so popup menus extend freely outside the
-  window while keeping crisp HiDPI titlebar text and eliminating strip seams,
-  full-window `ARGB8888` shadow buffers, and client interior overhang;
+  rendered directly in `1:1` integer physical pixels (`DtwmMetrics`, with Pango
+  context resolution set to the output's target `DPI` and
+  `WLR_SCALE_FILTER_NEAREST`), and an unclipped `popup_anchor_tree` above the
+  borders so popup menus extend freely outside the window while keeping hinted
+  Retina titlebar text and eliminating strip seams, full-window `ARGB8888`
+  shadow buffers, and client interior overhang;
 - XWayland client coordinates are offset by the frame's left and top insets so
   override-redirect Motif popup menus and dropdowns align directly beneath their
   parent menu bars.
@@ -223,14 +224,26 @@ across native Wayland and XWayland clients simultaneously:
   captures active native Wayland windows, interactive drag-rectangle regions
   (`--region` / `Shift+Print`), and stitched multi-output desktops and copies
   `image/png` directly onto the desktop clipboard;
-- **Per-output XLibre RandR `DPI` and `wp_fractional_scale_v1`:**
-  `dtwm-wayland` opts rootless `Xwayland` into CK Core Motif's per-output RandR
-  observer via `_MOTIF_RANDR_OUTPUT_DPI` (`CARDINAL = 1`) and publishes each
-  output's `DPI` (`INTEGER`, format 32, configurable at startup with
-  `--output-dpi INDEX=DPI` or live via `_DT_WM_REQUEST`
-  `f.set_output_dpi INDEX DPI`) alongside `wp_fractional_scale_v1` for native
-  Wayland clients, triggering crisp live Motif shell reflow when windows move
-  across mixed-DPI monitors (`96`, `144`, `192`, ...);
+- **Hybrid `1:1` physical Retina DPI for CDE/Motif + per-surface Wayland scaling for external clients:**
+  `dtwm-wayland` keeps `wlr_output` and `wlr_scene` at `1.0` (`1:1` integer
+  physical pixels, e.g. `3840×2400`) while tracking per-output `DPI` (`96`,
+  `120`, `144`, `168`, `192`, ..., persisted as `dpi.<output>` in
+  `~/.dt/display_ergonomics.conf` and configurable at startup via
+  `--output-dpi NAME_OR_IDX=DPI` or `DTWM_WAYLAND_OUTPUT_DPI`, and live via
+  **Style Manager → Monitors** `f.set_output_layout` or `wlr-randr --scale`).
+  CK Core Motif and CDE clients negotiate `CLIENT_CAP native_dpi` over the
+  compositor IPC channel, receive per-output physical CRTCs + `"DPI"` via
+  virtual `RANDR` 1.5 and `Xft.dpi` in `RESOURCE_MANAGER`, scale icons and 1-bit
+  masks via `XmGetScaledPixmap` + `XmeGetScaledMask`, and commit `1:1` physical
+  `wl_shm` buffers with zero `wp_viewport` resampling—remaining pixel-exact at
+  both integer (`200%` / `192 DPI`) and fractional (`125%` / `120 DPI`, `150%` /
+  `144 DPI`) scales and odd window widths. Simultaneously, external non-Motif
+  Wayland clients (`foot`, GTK4, Qt6, Firefox, Electron) receive per-surface
+  `wp_fractional_scale_v1` (`S = dpi / 96.0`), `wl_compositor` v6
+  `wl_surface.preferred_buffer_scale` (`ceil(S)`), `wp_cursor_shape_manager_v1`,
+  and transparent logical-to-physical translation for `xdg_toplevel` configures,
+  `xdg_popup` constraints, subsurfaces, and `wl_pointer` hit-testing; rootless
+  `Xwayland` outputs continue to publish `_MOTIF_RANDR_OUTPUT_DPI` and `"DPI"`;
 - **XWayland Motif menu focus, virtual-pointer button recovery, and post-modeset
   `Screen` bounds (`dtwm_wayland_main.c`, `cde_xdnd_bridge.c`, `DtUtil.c`):**
   `dtwm-wayland` tracks per-device and bitmask pointer button state across
@@ -750,6 +763,10 @@ compositor session is ready.
   native `dtwm-panel`, `dtstyle`, `dtfile`, `dtpad`, `ck-clock`, and `ck-coins`
   mapping `libXm.so.9`, live `.ipc` workspace and `modern_dark` `RESOURCE_MANAGER`
   broadcasts, plus parallel hybrid Wayland+XWayland verification),
+  `check-dtwm-wayland-hidpi.py` (hybrid `1:1` physical Motif + per-surface
+  external Wayland `wp_fractional_scale_v1` / `preferred_buffer_scale` HiDPI at
+  `192`, `144` fractional, and `96` DPI with odd-width `501×301` client buffers
+  and 4-quadrant pointer coordinate verification),
   `check-dtwm-wayland-menus.py` (XWayland Motif pulldown/popup menu focus,
   mid-press `zwlr_virtual_pointer_v1` crash cleanup, `wayvnc` stuck-button
   auto-heal, stationary-click `wl_pointer` focus restoration, and post-modeset

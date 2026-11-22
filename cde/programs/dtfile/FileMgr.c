@@ -101,6 +101,7 @@
  ****************************************************************************
  ************************************<+>*************************************/
 
+#include <math.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <pwd.h>
@@ -1727,8 +1728,16 @@ Create(
    if (showFilesystem && !TrashView)
    {
       /* Create the shelf container (placeholder, no contents yet) */
-      (void)ShelfGetIconSize(file_mgr_data, &shelf_icon_px);
-      shelf_height = (Dimension)(shelf_icon_px + 32);
+      {
+         double sh_s = 1.0;
+         if (file_mgr_rec->shell && XmGetWidgetScale(file_mgr_rec->shell, &sh_s) && sh_s > 0.25)
+         {
+         }
+         else
+            sh_s = 1.0;
+         (void)ShelfGetIconSize(file_mgr_data, &shelf_icon_px);
+         shelf_height = (Dimension)(shelf_icon_px + (int)lround(32.0 * sh_s));
+      }
       n = 0;
       XtSetArg (args[n], XmNshadowThickness, 0);                 n++;
       XtSetArg (args[n], XmNmarginWidth, 0);                     n++;
@@ -6146,6 +6155,14 @@ ShelfGetIconSize(
             icon_px = 16;
             break;
       }
+      if (file_mgr_data->file_mgr_rec)
+      {
+         const FileMgrRec *fmr = (const FileMgrRec *)file_mgr_data->file_mgr_rec;
+         Widget ref_w = fmr->shelf_frame ? fmr->shelf_frame : fmr->shell;
+         double dpi_s = 1.0;
+         if (ref_w && XmGetWidgetScale(ref_w, &dpi_s) && dpi_s > 0.25)
+            icon_px = (int)lround((double)icon_px * dpi_s);
+      }
    }
 
    if (icon_px_out)
@@ -6430,9 +6447,16 @@ ShelfRebuild(
    if (font_height <= 0)
       font_height = 14;
 
-   slot_height = (Dimension)(shelf_icon_px + font_height + 16);
-   if (slot_height < (Dimension)(shelf_icon_px + 24))
-      slot_height = (Dimension)(shelf_icon_px + 24);
+   {
+      double sh_s = 1.0;
+      if (!XmGetWidgetScale(row, &sh_s) || sh_s <= 0.25)
+         sh_s = 1.0;
+      int pad16 = (int)lround(16.0 * sh_s);
+      int pad24 = (int)lround(24.0 * sh_s);
+      slot_height = (Dimension)(shelf_icon_px + font_height + pad16);
+      if (slot_height < (Dimension)(shelf_icon_px + pad24))
+         slot_height = (Dimension)(shelf_icon_px + pad24);
+   }
    desired_row_height = (Dimension)(slot_height + 2 * shelf_slot_margin_h);
    file_mgr_rec->shelf_row_height = desired_row_height;
    file_mgr_rec->shelf_icon_px = shelf_icon_px;

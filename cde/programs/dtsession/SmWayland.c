@@ -442,16 +442,27 @@ static void spawn_compositor_if_needed(char **orig_argv) {
         comp_bin = CDE_INSTALLATION_TOP "/bin/dtwm-wayland";
     }
 
+    const char *out_dpi_env = getenv("DTWM_WAYLAND_OUTPUT_DPI");
+
     pid_t pid = fork();
     if (pid == 0) {
         sigset_t empty;
         sigemptyset(&empty);
         sigprocmask(SIG_SETMASK, &empty, nullptr);
+        const char *argv_exec[12];
+        int ac = 0;
+        argv_exec[ac++] = "dtwm-wayland";
         if (g_smwl.no_xwayland) {
-            execl(comp_bin, "dtwm-wayland", "--no-xwayland", "--status-file", g_smwl.status_path, (char *)nullptr);
-        } else {
-            execl(comp_bin, "dtwm-wayland", "--status-file", g_smwl.status_path, (char *)nullptr);
+            argv_exec[ac++] = "--no-xwayland";
         }
+        if (out_dpi_env && *out_dpi_env) {
+            argv_exec[ac++] = "--output-dpi";
+            argv_exec[ac++] = out_dpi_env;
+        }
+        argv_exec[ac++] = "--status-file";
+        argv_exec[ac++] = g_smwl.status_path;
+        argv_exec[ac] = nullptr;
+        execv(comp_bin, (char *const *)argv_exec);
         _exit(127);
     }
     if (pid < 0) return;

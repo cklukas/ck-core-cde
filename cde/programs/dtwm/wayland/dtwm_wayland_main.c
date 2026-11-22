@@ -33,6 +33,7 @@
 typedef struct {
     struct wl_list link;
     DtwmServer *server;
+    DtwmView *owner_view;
     struct wlr_xdg_popup *xdg_popup;
     struct wlr_scene_tree *scene_tree;
     struct wl_listener commit;
@@ -110,12 +111,230 @@ static uint32_t dtwm_now_msec(void) {
     return ms ? ms : 1u;
 }
 
-static int align_to_grid(int v) {
-    int rem = v % DTWM_GRID_SIZE;
+static int align_to_grid(int v, int grid_sz) {
+    if (grid_sz < 2) grid_sz = DTWM_GRID_SIZE;
+    int rem = v % grid_sz;
     if (rem < 0) {
-        rem += DTWM_GRID_SIZE;
+        rem += grid_sz;
     }
-    return (rem >= DTWM_GRID_SIZE / 2) ? (v + (DTWM_GRID_SIZE - rem)) : (v - rem);
+    return (rem >= grid_sz / 2) ? (v + (grid_sz - rem)) : (v - rem);
+}
+
+static bool wl_client_is_native_dpi(const DtwmServer *server, struct wl_client *client) {
+    if (!server || !client) return false;
+    pid_t pid = 0;
+    wl_client_get_credentials(client, &pid, nullptr, nullptr);
+    if (pid <= 0) return false;
+    for (size_t i = 0; i < server->native_dpi_pid_count; ++i) {
+        if (server->native_dpi_pids[i] == pid) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static double external_view_target_scale(const DtwmView *view) {
+    if (!view || !view->server || view->kind != DTWM_VIEW_XDG || view->is_native_dpi) {
+        return 1.0;
+    }
+    double rx = view->mapped ? ((double)view->x + (double)view->client_w * 0.5)
+                             : (view->server->cursor ? view->server->cursor->x : 0.0);
+    double ry = view->mapped ? ((double)view->y + (double)view->client_h * 0.5)
+                             : (view->server->cursor ? view->server->cursor->y : 0.0);
+    int dpi = dtwm_output_dpi_at(view->server, rx, ry);
+    double s = (double)(dpi > 0 ? dpi : 96) / 96.0;
+    if (s < 0.5) s = 0.5;
+    if (s > 4.0) s = 4.0;
+    return s;
+}
+
+static void notify_one_surface_scale_iter(
+    struct wlr_surface *surface, int sx, int sy, void *data
+) {
+    (void)sx;
+    (void)sy;
+    const double *sp = data;
+    if (!surface || !sp) return;
+    double s = *sp;
+    wlr_fractional_scale_v1_notify_scale(surface, s);
+    int bscale = (int)ceil(s - 1e-4);
+    if (bscale < 1) bscale = 1;
+    wlr_surface_set_preferred_buffer_scale(surface, bscale);
+}
+
+static void notify_surface_tree_scale(struct wlr_surface *root_surf, double scale) {
+    if (!root_surf) return;
+    wlr_surface_for_each_surface(root_surf, notify_one_surface_scale_iter, &scale);
+}
+
+static wlr_scene_buffer_point_accepts_input_func_t g_orig_scene_surface_accepts_input = nullptr;
+
+static bool external_surface_point_accepts_input(
+    struct wlr_scene_buffer *sbuf, double *sx, double *sy
+) {
+    if (!sbuf || !sx || !sy) return false;
+    struct wlr_scene_surface *ssurf = wlr_scene_surface_try_from_buffer(sbuf);
+    if (!ssurf || !ssurf->surface) return false;
+
+    double s = 1.0;
+    struct wlr_scene_tree *tree = sbuf->node.parent;
+    while (tree && !tree->node.data) {
+        tree = tree->node.parent;
+    }
+    if (tree && tree->node.data) {
+        const DtwmView *v = tree->node.data;
+        if (v->kind == DTWM_VIEW_XDG && !v->is_native_dpi && v->external_client_scale > 0.25) {
+            s = v->external_client_scale;
+        }
+    }
+
+    double lsx = (*sx) / s;
+    double lsy = (*sy) / s;
+    if (g_orig_scene_surface_accepts_input) {
+        if (!g_orig_scene_surface_accepts_input(sbuf, &lsx, &lsy)) {
+            return false;
+        }
+    } else if (!wlr_surface_point_accepts_input(ssurf->surface, lsx, lsy)) {
+        return false;
+    }
+    *sx = lsx;
+    *sy = lsy;
+    return true;
+}
+
+static void sync_external_scene_tree_recursive(
+    struct wlr_scene_tree *tree, double scale, int max_log_w, int max_log_h, bool is_root_toplevel
+) {
+    if (!tree) return;
+    struct wlr_scene_node *node;
+    wl_list_for_each(node, &tree->children, link) {
+        if (node->type == WLR_SCENE_NODE_BUFFER) {
+            struct wlr_scene_buffer *sbuf = wlr_scene_buffer_from_node(node);
+            struct wlr_scene_surface *ssurf = wlr_scene_surface_try_from_buffer(sbuf);
+            if (ssurf && ssurf->surface) {
+                while (!wl_list_empty(&sbuf->events.outputs_update.listener_list)) {
+                    struct wl_list *elm = sbuf->events.outputs_update.listener_list.next;
+                    wl_list_remove(elm);
+                    wl_list_init(elm);
+                }
+                if (sbuf->point_accepts_input &&
+                    sbuf->point_accepts_input != external_surface_point_accepts_input &&
+                    !g_orig_scene_surface_accepts_input) {
+                    g_orig_scene_surface_accepts_input = sbuf->point_accepts_input;
+                }
+                sbuf->point_accepts_input = external_surface_point_accepts_input;
+
+                int lw = ssurf->surface->current.width;
+                int lh = ssurf->surface->current.height;
+                struct wlr_subsurface *sub = wlr_subsurface_try_from_wlr_surface(ssurf->surface);
+                if (sub && node->parent) {
+                    wlr_scene_node_set_position(
+                        &node->parent->node,
+                        (int)lround((double)sub->current.x * scale),
+                        (int)lround((double)sub->current.y * scale)
+                    );
+                } else if (is_root_toplevel) {
+                    if (max_log_w > 0 && lw > max_log_w) lw = max_log_w;
+                    if (max_log_h > 0 && lh > max_log_h) lh = max_log_h;
+                }
+                if (lw > 0 && lh > 0) {
+                    int dw = (int)lround((double)lw * scale);
+                    int dh = (int)lround((double)lh * scale);
+                    if (dw < 1) dw = 1;
+                    if (dh < 1) dh = 1;
+                    wlr_scene_buffer_set_dest_size(sbuf, dw, dh);
+                }
+            }
+        } else if (node->type == WLR_SCENE_NODE_TREE) {
+            struct wlr_scene_tree *child_tree = wlr_scene_tree_from_node(node);
+            sync_external_scene_tree_recursive(
+                child_tree, scale, max_log_w, max_log_h, is_root_toplevel
+            );
+        }
+    }
+}
+
+void dtwm_sync_external_view_scene(DtwmView *view) {
+    if (!view || view->kind != DTWM_VIEW_XDG || view->is_native_dpi || !view->xdg_toplevel) {
+        return;
+    }
+    double s = view->external_client_scale > 0.25 ? view->external_client_scale : 1.0;
+    int max_log_w = 0, max_log_h = 0;
+    if (view->decorated && view->client_w > 0 && view->client_h > 0) {
+        max_log_w = (int)lround((double)view->client_w / s);
+        max_log_h = (int)lround((double)view->client_h / s);
+    }
+    if (view->content_tree) {
+        struct wlr_box geo = view->xdg_toplevel->base->geometry;
+        if (!wl_list_empty(&view->content_tree->children)) {
+            struct wlr_scene_node *first =
+                wl_container_of(view->content_tree->children.next, first, link);
+            if (first->type == WLR_SCENE_NODE_TREE) {
+                wlr_scene_node_set_position(
+                    first,
+                    -(int)lround((double)geo.x * s),
+                    -(int)lround((double)geo.y * s)
+                );
+            }
+        }
+        sync_external_scene_tree_recursive(view->content_tree, s, max_log_w, max_log_h, true);
+    }
+    if (view->server) {
+        DtwmPopup *popup;
+        wl_list_for_each(popup, &view->server->popups, link) {
+            if (popup->owner_view == view && popup->scene_tree && popup->xdg_popup) {
+                struct wlr_box pgeo = popup->xdg_popup->current.geometry;
+                int px = pgeo.x;
+                int py = pgeo.y;
+                if (popup->xdg_popup->parent) {
+                    struct wlr_xdg_surface *pxdg =
+                        wlr_xdg_surface_try_from_wlr_surface(popup->xdg_popup->parent);
+                    if (pxdg && pxdg->role == WLR_XDG_SURFACE_ROLE_POPUP && pxdg->popup) {
+                        px += pxdg->popup->current.geometry.x - pxdg->geometry.x;
+                        py += pxdg->popup->current.geometry.y - pxdg->geometry.y;
+                    } else if (pxdg) {
+                        px -= pxdg->geometry.x;
+                        py -= pxdg->geometry.y;
+                    }
+                }
+                wlr_scene_node_set_position(
+                    &popup->scene_tree->node,
+                    (int)lround((double)px * s),
+                    (int)lround((double)py * s)
+                );
+                if (!wl_list_empty(&popup->scene_tree->children)) {
+                    struct wlr_scene_node *pfirst =
+                        wl_container_of(popup->scene_tree->children.next, pfirst, link);
+                    if (pfirst->type == WLR_SCENE_NODE_TREE) {
+                        struct wlr_box bgeo = popup->xdg_popup->base->geometry;
+                        wlr_scene_node_set_position(
+                            pfirst,
+                            -(int)lround((double)bgeo.x * s),
+                            -(int)lround((double)bgeo.y * s)
+                        );
+                    }
+                }
+                sync_external_scene_tree_recursive(popup->scene_tree, s, 0, 0, false);
+            }
+        }
+    }
+}
+
+static uint32_t send_xdg_toplevel_size_for_view(DtwmView *view, int phys_w, int phys_h) {
+    if (!view || !view->xdg_toplevel) return 0;
+    int lw = phys_w;
+    int lh = phys_h;
+    if (!view->is_native_dpi && view->external_client_scale > 0.25) {
+        if (phys_w > 0) {
+            lw = (int)lround((double)phys_w / view->external_client_scale);
+            if (lw < 1) lw = 1;
+        }
+        if (phys_h > 0) {
+            lh = (int)lround((double)phys_h / view->external_client_scale);
+            if (lh < 1) lh = 1;
+        }
+    }
+    return wlr_xdg_toplevel_set_size(view->xdg_toplevel, lw, lh);
 }
 
 static bool shift_is_held(DtwmServer *server) {
@@ -179,8 +398,9 @@ static void view_size_limits(
     int *out_max_w,
     int *out_max_h
 ) {
-    int min_w = 64;
-    int min_h = 48;
+    DtwmMetrics m = v ? dtwm_metrics_for_view(v) : dtwm_metrics_for_dpi(96);
+    int min_w = (int)lround(64.0 * m.scale);
+    int min_h = (int)lround(48.0 * m.scale);
     int max_w = 0;
     int max_h = 0;
     if (v && !v->is_panel && !v->is_subpanel && !v->is_swallowed && !v->is_desktop_pin) {
@@ -195,18 +415,17 @@ static void view_size_limits(
                 if (sh->max_height > 0) max_h = sh->max_height;
             }
         } else if (v->kind == DTWM_VIEW_XDG && v->xdg_toplevel) {
-            if (v->xdg_toplevel->current.min_width > min_w) {
-                min_w = v->xdg_toplevel->current.min_width;
-            }
-            if (v->xdg_toplevel->current.min_height > min_h) {
-                min_h = v->xdg_toplevel->current.min_height;
-            }
-            if (v->xdg_toplevel->current.max_width > 0) {
-                max_w = v->xdg_toplevel->current.max_width;
-            }
-            if (v->xdg_toplevel->current.max_height > 0) {
-                max_h = v->xdg_toplevel->current.max_height;
-            }
+            double ext_s = (!v->is_native_dpi && v->external_client_scale > 0.25)
+                               ? v->external_client_scale
+                               : 1.0;
+            int cmin_w = (int)lround((double)v->xdg_toplevel->current.min_width * ext_s);
+            int cmin_h = (int)lround((double)v->xdg_toplevel->current.min_height * ext_s);
+            int cmax_w = (int)lround((double)v->xdg_toplevel->current.max_width * ext_s);
+            int cmax_h = (int)lround((double)v->xdg_toplevel->current.max_height * ext_s);
+            if (cmin_w > min_w) min_w = cmin_w;
+            if (cmin_h > min_h) min_h = cmin_h;
+            if (cmax_w > 0) max_w = cmax_w;
+            if (cmax_h > 0) max_h = cmax_h;
         }
     }
     if (max_w > 0 && max_w < min_w) max_w = min_w;
@@ -240,7 +459,7 @@ static void view_apply_geometry(DtwmView *view, int x, int y, int client_w, int 
     }
     if (view->kind == DTWM_VIEW_XDG && view->xdg_toplevel) {
         view->pending_resize_serial =
-            wlr_xdg_toplevel_set_size(view->xdg_toplevel, client_w, client_h);
+            send_xdg_toplevel_size_for_view(view, client_w, client_h);
     } else if (view->kind == DTWM_VIEW_XWAYLAND && view->xwayland_surface) {
         sync_xwayland_client_pos(view);
     }
@@ -266,7 +485,7 @@ static void view_send_xdg_interactive_resize(DtwmView *view, int client_w, int c
         return;
     }
     view->pending_resize_serial =
-        wlr_xdg_toplevel_set_size(view->xdg_toplevel, client_w, client_h);
+        send_xdg_toplevel_size_for_view(view, client_w, client_h);
 }
 
 static void view_dispatch_queued_resize(DtwmView *view, bool keep_inflight) {
@@ -907,8 +1126,10 @@ static void step_window_anim(DtwmServer *server, uint64_t now_ns) {
                     if (fade > 1.0) fade = 1.0;
                     struct wlr_box win_ref =
                         (kind == DTWM_ANIM_KIND_MINIMIZE) ? server->anim_from_box : server->anim_to_box;
-                    int l = DTWM_BORDER_WIDTH, t_in = DTWM_BORDER_WIDTH + DTWM_TITLE_HEIGHT;
-                    int r = DTWM_BORDER_WIDTH, b_in = DTWM_BORDER_WIDTH;
+                    DtwmMetrics am = view ? dtwm_metrics_for_view(view)
+                                          : dtwm_metrics_for_dpi(dtwm_primary_output_dpi(server));
+                    int l = am.border_w, t_in = am.border_w + am.title_h;
+                    int r = am.border_w, b_in = am.border_w;
                     if (view) dtwm_view_insets(view, &l, &t_in, &r, &b_in);
                     int cw = win_ref.width - l - r;
                     int ch = win_ref.height - t_in - b_in;
@@ -929,8 +1150,10 @@ static void step_window_anim(DtwmServer *server, uint64_t now_ns) {
                     wlr_scene_node_set_enabled(&server->anim_client_buf->node, false);
                 }
             } else {
-                int l = DTWM_BORDER_WIDTH, t_in = DTWM_BORDER_WIDTH + DTWM_TITLE_HEIGHT;
-                int r = DTWM_BORDER_WIDTH, b_in = DTWM_BORDER_WIDTH;
+                DtwmMetrics am = view ? dtwm_metrics_for_view(view)
+                                      : dtwm_metrics_for_dpi(dtwm_primary_output_dpi(server));
+                int l = am.border_w, t_in = am.border_w + am.title_h;
+                int r = am.border_w, b_in = am.border_w;
                 if (view) dtwm_view_insets(view, &l, &t_in, &r, &b_in);
                 int cw = w - l - r;
                 int ch = h - t_in - b_in;
@@ -973,12 +1196,15 @@ static void step_window_anim(DtwmServer *server, uint64_t now_ns) {
         double frame_condense = is_minmax_icon ? anim_smoothstep(0.60, 0.95, icon_prox) : 0.0;
         double crop_blend = is_minmax_icon ? anim_smoothstep(0.55, 0.95, icon_prox) : 0.0;
 
-        int b_side = (int)lround((1.0 - frame_condense) * DTWM_BORDER_WIDTH + frame_condense * 2.0);
-        if (b_side < 2) b_side = 2;
+        DtwmMetrics am = view ? dtwm_metrics_for_view(view)
+                              : dtwm_metrics_for_dpi(dtwm_primary_output_dpi(server));
+        double min_b = (double)am.outer_bevel;
+        int b_side = (int)lround((1.0 - frame_condense) * am.border_w + frame_condense * min_b);
+        if (b_side < am.outer_bevel) b_side = am.outer_bevel;
         bool has_title = (!view || (view->decorated && view->has_title));
         int b_top = has_title
-                        ? (int)lround((1.0 - frame_condense) * (DTWM_BORDER_WIDTH + DTWM_TITLE_HEIGHT) +
-                                      frame_condense * 2.0)
+                        ? (int)lround((1.0 - frame_condense) * (am.border_w + am.title_h) +
+                                      frame_condense * min_b)
                         : b_side;
         if (b_top < b_side) b_top = b_side;
         if (b_side * 2 >= w - 4) b_side = 2;
@@ -1019,10 +1245,11 @@ static void step_window_anim(DtwmServer *server, uint64_t now_ns) {
         if (server->anim_icon_buf && server->anim_icon_buf->buffer && is_minmax_icon && view) {
             double i_alpha = anim_smoothstep(0.68, 0.94, icon_prox);
             if (i_alpha > 0.02) {
-                int img_dim = server->large_icons ? 96 : 48;
-                int img_box = img_dim + 8;
-                int tile_w = view->icon_box_w > 0 ? view->icon_box_w : 76;
-                int tile_h = view->icon_box_h > 0 ? view->icon_box_h : (img_box + 22);
+                double iscale = (double)dtwm_primary_output_dpi(server) / 96.0;
+                int img_dim = (int)lround((server->large_icons ? 96.0 : 48.0) * iscale);
+                int img_box = img_dim + (int)lround(8.0 * iscale);
+                int tile_w = view->icon_box_w > 0 ? view->icon_box_w : (int)lround(76.0 * iscale);
+                int tile_h = view->icon_box_h > 0 ? view->icon_box_h : (img_box + (int)lround(22.0 * iscale));
                 double sx = (double)w / (double)img_box;
                 double sy = (double)h / (double)img_box;
                 int dst_tw = (int)lround((double)tile_w * sx);
@@ -1245,10 +1472,12 @@ static void view_set_minimized(DtwmView *view, bool minimized) {
     int ow = 0, oh = 0;
     dtwm_view_outer_size(view, &ow, &oh);
     struct wlr_box win_box = {.x = view->x, .y = view->y, .width = ow, .height = oh};
-    int img_box = (server->large_icons ? 96 : 48) + 8;
+    double iscale = (double)dtwm_primary_output_dpi(server) / 96.0;
+    int ipad = (int)lround(4.0 * iscale);
+    int img_box = (int)lround(((server->large_icons ? 96.0 : 48.0) + 8.0) * iscale);
     struct wlr_box pre_icon_box = {
-        .x = view->icon_x - 4,
-        .y = view->icon_y - 4,
+        .x = view->icon_x - ipad,
+        .y = view->icon_y - ipad,
         .width = img_box,
         .height = img_box,
     };
@@ -1288,8 +1517,8 @@ static void view_set_minimized(DtwmView *view, bool minimized) {
     if (view->mapped && on_cur_ws && style != DTWM_ANIM_STYLE_NONE) {
         struct wlr_box icon_box = minimized
             ? (struct wlr_box){
-                  .x = view->icon_x - 4,
-                  .y = view->icon_y - 4,
+                  .x = view->icon_x - ipad,
+                  .y = view->icon_y - ipad,
                   .width = img_box,
                   .height = img_box,
               }
@@ -1337,35 +1566,43 @@ void dtwm_view_close(DtwmView *view) {
     view_close(view);
 }
 
-static float server_max_output_scale(DtwmServer *server) {
-    float max_scale = 1.0f;
+static int server_max_output_dpi(DtwmServer *server) {
+    int max_dpi = dtwm_primary_output_dpi(server);
     DtwmOutput *out;
     wl_list_for_each(out, &server->outputs, link) {
-        if (out->wlr_output && out->wlr_output->enabled && out->wlr_output->scale > max_scale) {
-            max_scale = out->wlr_output->scale;
+        if (out->wlr_output && out->wlr_output->enabled && out->dpi > max_dpi) {
+            max_dpi = out->dpi;
         }
     }
-    return max_scale;
+    return max_dpi > 0 ? max_dpi : 96;
 }
+
+static int g_loaded_cursor_phys_size = 0;
 
 void dtwm_reload_cursor_theme(DtwmServer *server, const char *theme, int size) {
     if (!server) return;
     if (size < 12) size = 24;
     if (size > 128) size = 128;
+    int max_dpi = server_max_output_dpi(server);
+    int phys_size = (int)lround((double)size * (double)max_dpi / 96.0);
+    if (phys_size < 12) phys_size = 12;
+    if (phys_size > 256) phys_size = 256;
     const char *eff_theme = (theme && theme[0] && strcmp(theme, "default") != 0) ? theme : "";
     if (server->cursor_mgr && server->cursor_size == size &&
+        g_loaded_cursor_phys_size == phys_size &&
         strcmp(server->cursor_theme, eff_theme) == 0) {
-        wlr_xcursor_manager_load(server->cursor_mgr, ceilf(server_max_output_scale(server)));
+        wlr_xcursor_manager_load(server->cursor_mgr, 1.0f);
         return;
     }
     snprintf(server->cursor_theme, sizeof(server->cursor_theme), "%s", eff_theme);
     server->cursor_size = size;
+    g_loaded_cursor_phys_size = phys_size;
     struct wlr_xcursor_manager *old_mgr = server->cursor_mgr;
     server->cursor_mgr = wlr_xcursor_manager_create(
-        eff_theme[0] ? eff_theme : nullptr, (uint32_t)size
+        eff_theme[0] ? eff_theme : nullptr, (uint32_t)phys_size
     );
     if (server->cursor_mgr) {
-        wlr_xcursor_manager_load(server->cursor_mgr, ceilf(server_max_output_scale(server)));
+        wlr_xcursor_manager_load(server->cursor_mgr, 1.0f);
         if (server->cursor) {
             wlr_cursor_set_xcursor(server->cursor, server->cursor_mgr, "default");
         }
@@ -1375,13 +1612,39 @@ void dtwm_reload_cursor_theme(DtwmServer *server, const char *theme, int size) {
     }
 }
 
+void dtwm_sync_all_external_client_scales(DtwmServer *server) {
+    if (!server) return;
+    DtwmView *v;
+    wl_list_for_each(v, &server->views, link) {
+        if (v->kind != DTWM_VIEW_XDG || !v->xdg_toplevel) continue;
+        struct wl_client *client = wl_resource_get_client(v->xdg_toplevel->resource);
+        if (wl_client_is_native_dpi(server, client)) {
+            v->is_native_dpi = true;
+            v->external_client_scale = 1.0;
+            continue;
+        }
+        double new_s = external_view_target_scale(v);
+        bool changed = fabs(new_s - v->external_client_scale) > 1e-4;
+        v->external_client_scale = new_s;
+        notify_surface_tree_scale(v->xdg_toplevel->base->surface, new_s);
+        DtwmPopup *popup;
+        wl_list_for_each(popup, &server->popups, link) {
+            if (popup->owner_view == v && popup->xdg_popup && popup->xdg_popup->base) {
+                notify_surface_tree_scale(popup->xdg_popup->base->surface, new_s);
+            }
+        }
+        if (changed && v->mapped && !v->is_lock_dialog && v->client_w > 0 && v->client_h > 0) {
+            v->pending_resize_serial =
+                send_xdg_toplevel_size_for_view(v, v->client_w, v->client_h);
+        }
+        dtwm_sync_external_view_scene(v);
+    }
+}
+
 void dtwm_reflow_views_for_outputs(DtwmServer *server) {
     if (!server) return;
 
-    float max_scale = server_max_output_scale(server);
-    if (server->cursor_mgr) {
-        wlr_xcursor_manager_load(server->cursor_mgr, ceilf(max_scale));
-    }
+    dtwm_reload_cursor_theme(server, server->cursor_theme, server->cursor_size);
 
     DtwmView *v;
     wl_list_for_each(v, &server->views, link) {
@@ -1461,16 +1724,19 @@ static void update_window_menu_buffer(DtwmServer *server) {
         return;
     }
     int mw = 0, mh = 0;
+    int mdpi = server->menu_target
+                   ? dtwm_metrics_for_view(server->menu_target).dpi
+                   : dtwm_output_dpi_at(server, server->menu_x, server->menu_y);
     struct wlr_buffer *buf = nullptr;
     if (server->menu_is_root) {
         bool has_panel = (server->panel_view != nullptr && server->panel_view->mapped);
         bool panel_min = (has_panel && server->panel_view->minimized);
         buf = dtwm_render_root_menu(
-            &server->palette, panel_min, has_panel, server->menu_hover_idx, &mw, &mh
+            &server->palette, panel_min, has_panel, server->menu_hover_idx, mdpi, &mw, &mh
         );
     } else {
         buf = dtwm_render_window_menu(
-            &server->palette, server->menu_target, server->menu_hover_idx, &mw, &mh
+            &server->palette, server->menu_target, server->menu_hover_idx, mdpi, &mw, &mh
         );
     }
     server->menu_w = mw;
@@ -1532,22 +1798,26 @@ static void close_window_menu(DtwmServer *server) {
 static int menu_item_at(DtwmServer *server, double lx, double ly) {
     int rx = (int)lx - server->menu_x;
     int ry = (int)ly - server->menu_y;
+    int mdpi = server->menu_target
+                   ? dtwm_metrics_for_view(server->menu_target).dpi
+                   : dtwm_output_dpi_at(server, server->menu_x, server->menu_y);
     if (server->menu_is_root) {
-        return dtwm_root_menu_item_at(rx, ry, server->menu_w, server->menu_h);
+        return dtwm_root_menu_item_at(rx, ry, server->menu_w, server->menu_h, mdpi);
     }
-    int mh = DTWM_MENU_PAD * 2 + DTWM_MENU_ITEM_COUNT * DTWM_MENU_ITEM_H + 6;
-    if (rx < 0 || ry < 0 || rx >= DTWM_MENU_WIDTH || ry >= mh) {
+    DtwmMetrics m = dtwm_metrics_for_dpi(mdpi);
+    int mh = m.menu_pad * 2 + DTWM_MENU_ITEM_COUNT * m.menu_item_h + m.menu_sep_h;
+    if (rx < 0 || ry < 0 || rx >= m.menu_w || ry >= mh) {
         return -1;
     }
-    int y = DTWM_MENU_PAD;
+    int y = m.menu_pad;
     for (int i = 0; i < DTWM_MENU_ITEM_COUNT; ++i) {
         if (i == DTWM_MENU_ITEM_COUNT - 1) {
-            y += 6;
+            y += m.menu_sep_h;
         }
-        if (ry >= y && ry < y + DTWM_MENU_ITEM_H) {
+        if (ry >= y && ry < y + m.menu_item_h) {
             return i;
         }
-        y += DTWM_MENU_ITEM_H;
+        y += m.menu_item_h;
     }
     return -1;
 }
@@ -1808,10 +2078,11 @@ static void promote_subpanel_to_tool_window(DtwmView *view) {
     if (!view || !view->is_subpanel || view->subpanel_torn_off) {
         return;
     }
+    DtwmMetrics m = dtwm_metrics_for_view(view);
     view->subpanel_torn_off = true;
     view->has_title = true;
     view->has_menu_btn = true;
-    view->y -= DTWM_TITLE_HEIGHT;
+    view->y -= m.title_h;
     if (view->y < 0) view->y = 0;
     if (view->frame_tree) {
         wlr_scene_node_set_position(&view->frame_tree->node, view->x, view->y);
@@ -2163,10 +2434,11 @@ static void execute_menu_action(DtwmServer *server, int idx) {
 static DtwmSnapZone compute_snap_zone(DtwmServer *server, double cx, double cy, struct wlr_box *snap_box) {
     struct wlr_box obox;
     dtwm_get_usable_output_box(server, cx, cy, &obox);
-    bool left = (cx - obox.x) < DTWM_SNAP_THRESHOLD;
-    bool right = (obox.x + obox.width - cx) < DTWM_SNAP_THRESHOLD;
-    bool top = (cy - obox.y) < DTWM_SNAP_THRESHOLD;
-    bool bottom = (obox.y + obox.height - cy) < DTWM_SNAP_THRESHOLD;
+    DtwmMetrics m = dtwm_metrics_for_dpi(dtwm_output_dpi_at(server, cx, cy));
+    bool left = (cx - obox.x) < m.snap_thresh;
+    bool right = (obox.x + obox.width - cx) < m.snap_thresh;
+    bool top = (cy - obox.y) < m.snap_thresh;
+    bool bottom = (obox.y + obox.height - cy) < m.snap_thresh;
 
     int hw = obox.width / 2;
     int hh = obox.height / 2;
@@ -2398,8 +2670,9 @@ static void process_cursor_move(DtwmServer *server) {
     int nx = server->grab_orig_box.x + (int)(server->cursor->x - server->grab_x);
     int ny = server->grab_orig_box.y + (int)(server->cursor->y - server->grab_y);
     if (shift_is_held(server)) {
-        nx = align_to_grid(nx);
-        ny = align_to_grid(ny);
+        DtwmMetrics gm = dtwm_metrics_for_view(v);
+        nx = align_to_grid(nx, gm.grid_sz);
+        ny = align_to_grid(ny, gm.grid_sz);
     }
     if (v->is_panel) {
         if (nx == v->x && ny == v->y) {
@@ -2492,8 +2765,9 @@ static void process_cursor_resize(DtwmServer *server) {
     }
 
     if (shift_is_held(server)) {
-        new_w = align_to_grid(new_w);
-        new_h = align_to_grid(new_h);
+        DtwmMetrics gm = dtwm_metrics_for_view(v);
+        new_w = align_to_grid(new_w, gm.grid_sz);
+        new_h = align_to_grid(new_h, gm.grid_sz);
         if (new_w < min_w) new_w = min_w;
         if (new_h < min_h) new_h = min_h;
         if (max_w > 0 && new_w > max_w) new_w = max_w;
@@ -3024,7 +3298,7 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
                     server->last_menu_btn_ms = t_ms;
                     int l, t, r, b;
                     dtwm_view_insets(view, &l, &t, &r, &b);
-                    open_window_menu(server, view, view->x + DTWM_BORDER_WIDTH, view->y + t);
+                    open_window_menu(server, view, view->x + l, view->y + t);
                     return;
                 }
                 case DTWM_PART_BTN_MINIMIZE:
@@ -3281,15 +3555,25 @@ static void show_hardware_osd(
     server->osd_muted = muted;
     snprintf(server->osd_label, sizeof(server->osd_label), "%s", label ? label : "");
 
+    int odpi = dtwm_output_dpi_at(
+        server,
+        server->cursor ? server->cursor->x : 0.0,
+        server->cursor ? server->cursor->y : 0.0
+    );
+    DtwmMetrics om = dtwm_metrics_for_dpi(odpi);
     int ow = 0, oh = 0;
-    struct wlr_buffer *buf = dtwm_render_osd_gauge(&server->palette, server->osd_kind, level, muted, server->osd_label, &ow, &oh);
+    struct wlr_buffer *buf = dtwm_render_osd_gauge(
+        &server->palette, server->osd_kind, level, muted, server->osd_label, odpi, &ow, &oh
+    );
     if (!buf) return;
 
     struct wlr_box usable = {0, 0, 1280, 900};
     dtwm_get_usable_output_box(server, server->cursor->x, server->cursor->y, &usable);
     int ox = usable.x + (usable.width - ow) / 2;
-    int oy = usable.y + usable.height - oh - 44;
-    if (oy < usable.y + 24) oy = usable.y + 24;
+    int oy = usable.y + usable.height - oh - (int)lround(44.0 * om.scale);
+    if (oy < usable.y + (int)lround(24.0 * om.scale)) {
+        oy = usable.y + (int)lround(24.0 * om.scale);
+    }
 
     wlr_scene_buffer_set_buffer(server->osd_buf, buf);
     wlr_buffer_drop(buf);
@@ -3532,7 +3816,7 @@ static bool handle_compositor_keybinding(DtwmServer *server, uint32_t mods, xkb_
             open_window_menu(
                 server,
                 server->focused_view,
-                server->focused_view->x + DTWM_BORDER_WIDTH,
+                server->focused_view->x + l,
                 server->focused_view->y + t
             );
         }
@@ -3866,6 +4150,18 @@ static void handle_request_cursor(struct wl_listener *listener, void *data) {
     }
 }
 
+static void handle_request_cursor_shape(struct wl_listener *listener, void *data) {
+    DtwmServer *server = wl_container_of(listener, server, request_cursor_shape);
+    struct wlr_cursor_shape_manager_v1_request_set_shape_event *ev = data;
+    if (!ev || ev->device_type != WLR_CURSOR_SHAPE_MANAGER_V1_DEVICE_TYPE_POINTER) {
+        return;
+    }
+    if (server->seat->pointer_state.focused_client == ev->seat_client && server->cursor_mgr) {
+        const char *name = wlr_cursor_shape_v1_name(ev->shape);
+        wlr_cursor_set_xcursor(server->cursor, server->cursor_mgr, name ? name : "default");
+    }
+}
+
 static void handle_request_set_selection(struct wl_listener *listener, void *data) {
     DtwmServer *server = wl_container_of(listener, server, request_set_selection);
     struct wlr_seat_request_set_selection_event *ev = data;
@@ -3954,6 +4250,27 @@ static void handle_output_frame(struct wl_listener *listener, void *data) {
     if (server && server->anim_kind != DTWM_ANIM_KIND_NONE) {
         step_window_anim(server, dtwm_now_nsec());
     }
+    if (server) {
+        DtwmView *ev;
+        wl_list_for_each(ev, &server->views, link) {
+            if (ev->mapped && ev->kind == DTWM_VIEW_XDG && !ev->is_native_dpi) {
+                if (server->grabbed_view != ev) {
+                    double target_s = external_view_target_scale(ev);
+                    if (fabs(target_s - ev->external_client_scale) > 1e-4) {
+                        ev->external_client_scale = target_s;
+                        notify_surface_tree_scale(ev->xdg_toplevel->base->surface, target_s);
+                        if (!ev->is_lock_dialog && ev->client_w > 0 && ev->client_h > 0) {
+                            ev->pending_resize_serial =
+                                send_xdg_toplevel_size_for_view(ev, ev->client_w, ev->client_h);
+                        }
+                        dtwm_view_update_frame(ev);
+                        continue;
+                    }
+                }
+                dtwm_sync_external_view_scene(ev);
+            }
+        }
+    }
     struct wlr_scene_output *scene_output = wlr_scene_get_scene_output(server->scene, output->wlr_output);
     if (!scene_output) return;
 
@@ -4001,6 +4318,26 @@ static void handle_output_destroy(struct wl_listener *listener, void *data) {
     dtwm_output_mgmt_sync(server);
 }
 
+static int resolve_initial_output_dpi(const DtwmServer *server, uint32_t output_idx, const char *name) {
+    if (!server) return 96;
+    if (output_idx < 16 && server->initial_output_dpi[output_idx] > 0) {
+        return server->initial_output_dpi[output_idx];
+    }
+    if (name && name[0]) {
+        for (int i = 0; i < server->cli_output_dpi_count; ++i) {
+            if (strcmp(server->cli_output_dpi_names[i], name) == 0 &&
+                server->cli_output_dpi_vals[i] > 0) {
+                return server->cli_output_dpi_vals[i];
+            }
+        }
+        int saved = dtwm_power_display_lookup_dpi(server, name);
+        if (saved > 0) {
+            return saved;
+        }
+    }
+    return 96;
+}
+
 static void handle_new_output(struct wl_listener *listener, void *data) {
     DtwmServer *server = wl_container_of(listener, server, new_output);
     struct wlr_output *wlr_output = data;
@@ -4016,6 +4353,7 @@ static void handle_new_output(struct wl_listener *listener, void *data) {
     } else if (!wlr_output->current_mode) {
         wlr_output_state_set_custom_mode(&state, 1280, 900, 60000);
     }
+    wlr_output_state_set_scale(&state, 1.0f);
     wlr_output_commit_state(wlr_output, &state);
     wlr_output_state_finish(&state);
 
@@ -4023,9 +4361,7 @@ static void handle_new_output(struct wl_listener *listener, void *data) {
     output->server = server;
     output->wlr_output = wlr_output;
     output->output_idx = server->next_output_idx++;
-    output->dpi = (output->output_idx < 16 && server->initial_output_dpi[output->output_idx] > 0)
-                      ? server->initial_output_dpi[output->output_idx]
-                      : 96;
+    output->dpi = resolve_initial_output_dpi(server, output->output_idx, wlr_output->name);
 
     output->frame.notify = handle_output_frame;
     wl_signal_add(&wlr_output->events.frame, &output->frame);
@@ -4066,6 +4402,8 @@ static void handle_new_output(struct wl_listener *listener, void *data) {
     output->bg_rect = wlr_scene_rect_create(server->bg_tree, obox.width, obox.height, bg);
     wlr_scene_node_set_position(&output->bg_rect->node, obox.x, obox.y);
 
+    dtwm_sync_resource_manager_dpi(server);
+    dtwm_reload_cursor_theme(server, server->cursor_theme, server->cursor_size);
     dtwm_update_output_backdrop(output);
     dtwm_update_front_panel(server);
     dtwm_icons_relayout(server);
@@ -4073,8 +4411,6 @@ static void handle_new_output(struct wl_listener *listener, void *data) {
     dtwm_lock_sync_outputs(server);
     dtwm_output_mgmt_sync(server);
     dtwm_power_display_on_new_output(server, output);
-
-    wlr_xcursor_manager_load(server->cursor_mgr, wlr_output->scale);
 }
 
 /* --- XDG Toplevels & Decorations --- */
@@ -4089,12 +4425,17 @@ static void place_initial_view(DtwmView *view) {
     }
     struct wlr_box obox;
     dtwm_get_usable_output_box(server, server->cursor->x, server->cursor->y, &obox);
+    DtwmMetrics m = dtwm_metrics_for_dpi(
+        dtwm_output_dpi_at(server, obox.x + obox.width * 0.5, obox.y + obox.height * 0.5)
+    );
     bool left_icons = !server->use_icon_box &&
                       (server->icon_placement == DTWM_ICON_PLACE_TOP_LEFT ||
                        server->icon_placement == DTWM_ICON_PLACE_BOTTOM_LEFT);
-    int left_margin = left_icons ? 104 : 48;
-    view->x = obox.x + left_margin + (idx % 6) * 36;
-    view->y = obox.y + 36 + (idx % 6) * 32;
+    int left_margin = (int)lround((left_icons ? 104.0 : 48.0) * m.scale);
+    int step_x = (int)lround(36.0 * m.scale);
+    int step_y = (int)lround(32.0 * m.scale);
+    view->x = obox.x + left_margin + (idx % 6) * step_x;
+    view->y = obox.y + step_x + (idx % 6) * step_y;
     if (view->frame_tree) {
         wlr_scene_node_set_position(&view->frame_tree->node, view->x, view->y);
     }
@@ -4105,9 +4446,25 @@ static void xdg_toplevel_map(struct wl_listener *listener, void *data) {
     DtwmView *view = wl_container_of(listener, view, map);
     view->mapped = true;
 
+    struct wl_client *client = wl_resource_get_client(view->xdg_toplevel->resource);
+    if (wl_client_is_native_dpi(view->server, client)) {
+        view->is_native_dpi = true;
+        view->external_client_scale = 1.0;
+    } else {
+        view->external_client_scale = external_view_target_scale(view);
+        notify_surface_tree_scale(view->xdg_toplevel->base->surface, view->external_client_scale);
+    }
+
     struct wlr_box geo = view->xdg_toplevel->base->geometry;
-    view->client_w = geo.width > 0 ? geo.width : view->xdg_toplevel->base->surface->current.width;
-    view->client_h = geo.height > 0 ? geo.height : view->xdg_toplevel->base->surface->current.height;
+    int lw = geo.width > 0 ? geo.width : view->xdg_toplevel->base->surface->current.width;
+    int lh = geo.height > 0 ? geo.height : view->xdg_toplevel->base->surface->current.height;
+    if (!view->is_native_dpi && view->external_client_scale > 0.25) {
+        view->client_w = (int)lround((double)lw * view->external_client_scale);
+        view->client_h = (int)lround((double)lh * view->external_client_scale);
+    } else {
+        view->client_w = lw;
+        view->client_h = lh;
+    }
 
     const char *app_id = view->xdg_toplevel->app_id ? view->xdg_toplevel->app_id : "";
     const char *title = view->xdg_toplevel->title ? view->xdg_toplevel->title : "";
@@ -4129,7 +4486,7 @@ static void xdg_toplevel_map(struct wl_listener *listener, void *data) {
             view->y = obox.y;
             view->client_w = obox.width;
             view->client_h = obox.height;
-            wlr_xdg_toplevel_set_size(view->xdg_toplevel, obox.width, obox.height);
+            send_xdg_toplevel_size_for_view(view, obox.width, obox.height);
         } else if (obox.width > 0 && obox.height > 0) {
             view->x = obox.x + (obox.width - view->client_w) / 2;
             view->y = obox.y + (obox.height - view->client_h) / 2;
@@ -4258,7 +4615,17 @@ static void xdg_toplevel_unmap(struct wl_listener *listener, void *data) {
 static void xdg_toplevel_commit(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmView *view = wl_container_of(listener, view, commit);
+    struct wl_client *client = wl_resource_get_client(view->xdg_toplevel->resource);
+    if (!view->is_native_dpi && wl_client_is_native_dpi(view->server, client)) {
+        view->is_native_dpi = true;
+        view->external_client_scale = 1.0;
+    }
     if (view->xdg_toplevel->base->initial_commit) {
+        if (!view->is_native_dpi) {
+            view->external_client_scale = external_view_target_scale(view);
+            notify_surface_tree_scale(view->xdg_toplevel->base->surface, view->external_client_scale);
+            dtwm_sync_external_view_scene(view);
+        }
         wlr_xdg_toplevel_set_wm_capabilities(
             view->xdg_toplevel,
             WLR_XDG_TOPLEVEL_WM_CAPABILITIES_WINDOW_MENU |
@@ -4281,8 +4648,14 @@ static void xdg_toplevel_commit(struct wl_listener *listener, void *data) {
          * commit so the CDE bevel frame and surface clip always match the
          * visible client buffer without overhang or gaps. */
         struct wlr_box geo = view->xdg_toplevel->base->geometry;
-        int nw = geo.width > 0 ? geo.width : view->xdg_toplevel->base->surface->current.width;
-        int nh = geo.height > 0 ? geo.height : view->xdg_toplevel->base->surface->current.height;
+        int lw = geo.width > 0 ? geo.width : view->xdg_toplevel->base->surface->current.width;
+        int lh = geo.height > 0 ? geo.height : view->xdg_toplevel->base->surface->current.height;
+        int nw = lw;
+        int nh = lh;
+        if (!view->is_native_dpi && view->external_client_scale > 0.25) {
+            nw = (int)lround((double)lw * view->external_client_scale);
+            nh = (int)lround((double)lh * view->external_client_scale);
+        }
         if (!view->is_lock_dialog && nw > 0 && nh > 0 &&
             (nw != view->client_w || nh != view->client_h) &&
             (active_resize || view->active_resize_edges != 0 || serial_settled)) {
@@ -4305,6 +4678,8 @@ static void xdg_toplevel_commit(struct wl_listener *listener, void *data) {
             if (view == view->server->focused_view) {
                 dtwm_publish_active_window_box(view->server);
             }
+        } else if (!view->is_native_dpi) {
+            dtwm_sync_external_view_scene(view);
         }
 
         if (serial_settled && view->pending_resize_serial != 0) {
@@ -4426,11 +4801,18 @@ static void handle_new_xdg_toplevel(struct wl_listener *listener, void *data) {
     view->has_min_btn = true;
     view->has_max_btn = true;
     view->workspace_mask = 1u << server->current_workspace;
+    struct wl_client *client = wl_resource_get_client(toplevel->resource);
+    view->is_native_dpi = wl_client_is_native_dpi(server, client);
+    view->external_client_scale = view->is_native_dpi ? 1.0 : external_view_target_scale(view);
 
     view_init_frame_scene_nodes(view, server->workspace_tree, toplevel->base, nullptr);
     wlr_scene_node_set_enabled(&view->frame_tree->node, false);
 
     struct wlr_surface *surf = toplevel->base->surface;
+    if (!view->is_native_dpi) {
+        notify_surface_tree_scale(surf, view->external_client_scale);
+        dtwm_sync_external_view_scene(view);
+    }
     view->map.notify = xdg_toplevel_map;
     wl_signal_add(&surf->events.map, &view->map);
     view->unmap.notify = xdg_toplevel_unmap;
@@ -4462,7 +4844,29 @@ static void xdg_popup_unconstrain(DtwmPopup *popup) {
         return;
     }
     struct wlr_box obox;
-    get_primary_output_box(popup->server, popup->server->cursor->x, popup->server->cursor->y, &obox);
+    double rx = popup->server->cursor ? popup->server->cursor->x : 0.0;
+    double ry = popup->server->cursor ? popup->server->cursor->y : 0.0;
+    if (popup->owner_view) {
+        rx = popup->owner_view->x + popup->owner_view->client_w * 0.5;
+        ry = popup->owner_view->y + popup->owner_view->client_h * 0.5;
+    }
+    get_primary_output_box(popup->server, rx, ry, &obox);
+    if (popup->owner_view) {
+        int l = 0, t = 0, r = 0, b = 0;
+        dtwm_view_insets(popup->owner_view, &l, &t, &r, &b);
+        double s = (!popup->owner_view->is_native_dpi &&
+                    popup->owner_view->external_client_scale > 0.25)
+                       ? popup->owner_view->external_client_scale
+                       : 1.0;
+        struct wlr_box rel = {
+            .x = (int)lround((double)(obox.x - (popup->owner_view->x + l)) / s),
+            .y = (int)lround((double)(obox.y - (popup->owner_view->y + t)) / s),
+            .width = (int)lround((double)obox.width / s),
+            .height = (int)lround((double)obox.height / s),
+        };
+        wlr_xdg_popup_unconstrain_from_box(popup->xdg_popup, &rel);
+        return;
+    }
     wlr_xdg_popup_unconstrain_from_box(popup->xdg_popup, &obox);
 }
 
@@ -4472,12 +4876,21 @@ static void xdg_popup_commit(struct wl_listener *listener, void *data) {
     if (popup->xdg_popup->base->initial_commit) {
         xdg_popup_unconstrain(popup);
     }
+    if (popup->owner_view && !popup->owner_view->is_native_dpi) {
+        notify_surface_tree_scale(
+            popup->xdg_popup->base->surface, popup->owner_view->external_client_scale
+        );
+        dtwm_sync_external_view_scene(popup->owner_view);
+    }
 }
 
 static void xdg_popup_reposition(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmPopup *popup = wl_container_of(listener, popup, reposition);
     xdg_popup_unconstrain(popup);
+    if (popup->owner_view && !popup->owner_view->is_native_dpi) {
+        dtwm_sync_external_view_scene(popup->owner_view);
+    }
 }
 
 static void xdg_popup_destroy(struct wl_listener *listener, void *data) {
@@ -4506,8 +4919,21 @@ static void handle_new_xdg_popup(struct wl_listener *listener, void *data) {
             parent_tree = parent_xdg->data;
         }
     }
+    struct wlr_scene_tree *walk = parent_tree;
+    while (walk && !walk->node.data) {
+        walk = walk->node.parent;
+    }
+    if (walk && walk->node.data) {
+        popup->owner_view = walk->node.data;
+    }
     popup->scene_tree = wlr_scene_xdg_surface_create(parent_tree, xdg_popup->base);
     xdg_popup->base->data = popup->scene_tree;
+    if (popup->owner_view && !popup->owner_view->is_native_dpi) {
+        notify_surface_tree_scale(
+            xdg_popup->base->surface, popup->owner_view->external_client_scale
+        );
+        dtwm_sync_external_view_scene(popup->owner_view);
+    }
 
     popup->commit.notify = xdg_popup_commit;
     wl_signal_add(&xdg_popup->base->surface->events.commit, &popup->commit);
@@ -5539,6 +5965,7 @@ typedef struct {
     int fd;
     struct wl_event_source *ev_src;
     DtwmServer *server;
+    pid_t client_pid;
     char *rx_buf;
     size_t rx_len;
     size_t rx_cap;
@@ -5660,14 +6087,151 @@ void dtwm_native_ipc_publish_prop(DtwmServer *server, const char *atom_name, con
     }
 }
 
+static bool rewrite_resource_manager_xft_dpi(
+    const char *src, size_t src_len, int dpi, char **out_buf, size_t *out_len
+) {
+    if (!out_buf || !out_len) return false;
+    if (dpi < 1 || dpi > 4096) dpi = 96;
+    size_t cap = src_len + 64;
+    char *dst = malloc(cap);
+    if (!dst) return false;
+    size_t dpos = 0;
+
+    const char *p = src;
+    const char *end = src ? (src + src_len) : nullptr;
+    while (p && p < end && *p != '\0') {
+        const char *nl = memchr(p, '\n', (size_t)(end - p));
+        size_t llen = nl ? (size_t)(nl - p) : (size_t)(end - p);
+        const char *t = p;
+        size_t tlen = llen;
+        while (tlen > 0 && (*t == ' ' || *t == '\t')) {
+            t++;
+            tlen--;
+        }
+        bool is_xft_dpi =
+            (tlen >= 8 && strncasecmp(t, "Xft.dpi:", 8) == 0) ||
+            (tlen >= 9 && strncasecmp(t, "*Xft.dpi:", 9) == 0);
+        if (!is_xft_dpi && llen > 0) {
+            memcpy(dst + dpos, p, llen);
+            dpos += llen;
+            dst[dpos++] = '\n';
+        }
+        if (!nl) break;
+        p = nl + 1;
+    }
+    int n = snprintf(dst + dpos, cap - dpos, "Xft.dpi:\t%d\n", dpi);
+    if (n > 0) {
+        dpos += (size_t)n;
+    }
+    dst[dpos] = '\0';
+    *out_buf = dst;
+    *out_len = dpos;
+    return !(src && src_len == dpos && memcmp(src, dst, dpos) == 0);
+}
+
+void dtwm_sync_resource_manager_dpi(DtwmServer *server) {
+    if (!server) return;
+    int dpi = dtwm_primary_output_dpi(server);
+    const char *cur_data = nullptr;
+    size_t cur_len = 0;
+    for (int i = 0; i < DTWM_MAX_IPC_PROPS; ++i) {
+        if (g_ipc_props[i].used && !strcmp(g_ipc_props[i].name, "RESOURCE_MANAGER")) {
+            cur_data = (const char *)g_ipc_props[i].data;
+            cur_len = g_ipc_props[i].len;
+            break;
+        }
+    }
+    char *new_buf = nullptr;
+    size_t new_len = 0;
+    bool changed = rewrite_resource_manager_xft_dpi(cur_data, cur_len, dpi, &new_buf, &new_len);
+    if (!new_buf) return;
+    if (changed || !cur_data) {
+        dtwm_native_ipc_publish_prop(server, "RESOURCE_MANAGER", new_buf, new_len);
+    }
+    if (server->xcb_conn && server->xcb_root != XCB_WINDOW_NONE) {
+        xcb_get_property_cookie_t ck = xcb_get_property(
+            server->xcb_conn, 0, server->xcb_root, XCB_ATOM_RESOURCE_MANAGER, XCB_ATOM_STRING, 0, 65536
+        );
+        xcb_get_property_reply_t *rep = xcb_get_property_reply(server->xcb_conn, ck, nullptr);
+        bool xcb_same = false;
+        if (rep) {
+            int rlen = xcb_get_property_value_length(rep);
+            if (rlen >= 0 && (size_t)rlen == new_len &&
+                memcmp(xcb_get_property_value(rep), new_buf, new_len) == 0) {
+                xcb_same = true;
+            }
+            free(rep);
+        }
+        if (!xcb_same) {
+            xcb_change_property(
+                server->xcb_conn, XCB_PROP_MODE_REPLACE, server->xcb_root,
+                XCB_ATOM_RESOURCE_MANAGER, XCB_ATOM_STRING, 8, (uint32_t)new_len, new_buf
+            );
+            xcb_flush(server->xcb_conn);
+        }
+    }
+    free(new_buf);
+}
+
+static void register_native_dpi_pid(DtwmServer *server, pid_t pid) {
+    if (!server || pid <= 0) return;
+    bool found = false;
+    for (size_t i = 0; i < server->native_dpi_pid_count; ++i) {
+        if (server->native_dpi_pids[i] == pid) {
+            found = true;
+            break;
+        }
+    }
+    if (!found && server->native_dpi_pid_count < DTWM_MAX_NATIVE_DPI_PIDS) {
+        server->native_dpi_pids[server->native_dpi_pid_count++] = pid;
+    }
+    DtwmView *v;
+    wl_list_for_each(v, &server->views, link) {
+        if (v->kind == DTWM_VIEW_XDG && v->xdg_toplevel && !v->is_native_dpi) {
+            pid_t vpid = 0;
+            wl_client_get_credentials(
+                wl_resource_get_client(v->xdg_toplevel->resource), &vpid, nullptr, nullptr
+            );
+            if (vpid == pid) {
+                v->is_native_dpi = true;
+                v->external_client_scale = 1.0;
+                notify_surface_tree_scale(v->xdg_toplevel->base->surface, 1.0);
+                if (v->mapped) {
+                    dtwm_view_update_frame(v);
+                }
+            }
+        }
+    }
+}
+
+static void unregister_native_dpi_pid_if_unused(DtwmServer *server, pid_t pid) {
+    if (!server || pid <= 0) return;
+    for (int i = 0; i < DTWM_MAX_IPC_PEERS; ++i) {
+        if (g_ipc_peers[i].fd >= 0 && g_ipc_peers[i].client_pid == pid) {
+            return;
+        }
+    }
+    for (size_t i = 0; i < server->native_dpi_pid_count; ++i) {
+        if (server->native_dpi_pids[i] == pid) {
+            server->native_dpi_pids[i] =
+                server->native_dpi_pids[server->native_dpi_pid_count - 1];
+            server->native_dpi_pid_count--;
+            break;
+        }
+    }
+}
+
 static void close_ipc_peer(DtwmIpcPeer *peer) {
     if (!peer || peer->fd < 0) return;
+    pid_t closed_pid = peer->client_pid;
+    DtwmServer *srv = peer->server;
     if (peer->ev_src) {
         wl_event_source_remove(peer->ev_src);
         peer->ev_src = nullptr;
     }
     close(peer->fd);
     peer->fd = -1;
+    peer->client_pid = 0;
     free(peer->rx_buf);
     peer->rx_buf = nullptr;
     peer->rx_len = 0;
@@ -5676,6 +6240,9 @@ static void close_ipc_peer(DtwmIpcPeer *peer) {
     peer->tx_buf = nullptr;
     peer->tx_len = 0;
     peer->tx_cap = 0;
+    if (closed_pid > 0 && srv) {
+        unregister_native_dpi_pid_if_unused(srv, closed_pid);
+    }
 }
 
 static int handle_ipc_peer_fd(int fd, uint32_t mask, void *data) {
@@ -5743,7 +6310,13 @@ static int handle_ipc_peer_fd(int fd, uint32_t mask, void *data) {
     char *nl = nullptr;
     while ((nl = strchr(start, '\n')) != nullptr) {
         *nl = '\0';
-        if (!strncmp(start, "SET ", 4)) {
+        if (!strncmp(start, "CLIENT_CAP native_dpi", 21)) {
+            long cpid = 0;
+            if (sscanf(start + 21, "%ld", &cpid) == 1 && cpid > 0) {
+                peer->client_pid = (pid_t)cpid;
+                register_native_dpi_pid(peer->server, (pid_t)cpid);
+            }
+        } else if (!strncmp(start, "SET ", 4)) {
             char *p = start + 4;
             char *sp = strrchr(p, ' ');
             if (sp) {
@@ -5763,10 +6336,11 @@ static int handle_ipc_peer_fd(int fd, uint32_t mask, void *data) {
                     payload[dlen] = 0;
                     if (!strcmp(aname, "_DT_WM_REQUEST")) {
                         dtwm_dispatch_wm_request_bytes(peer->server, (const char *)payload, dlen);
+                    } else if (!strcmp(aname, "RESOURCE_MANAGER")) {
+                        dtwm_apply_resource_manager_string(peer->server, (const char *)payload, dlen);
+                        cache_ipc_prop(aname, payload, dlen);
+                        dtwm_sync_resource_manager_dpi(peer->server);
                     } else {
-                        if (!strcmp(aname, "RESOURCE_MANAGER")) {
-                            dtwm_apply_resource_manager_string(peer->server, (const char *)payload, dlen);
-                        }
                         cache_ipc_prop(aname, payload, dlen);
                         for (int i = 0; i < DTWM_MAX_IPC_PEERS; ++i) {
                             if (g_ipc_peers[i].fd >= 0 && &g_ipc_peers[i] != peer) {
@@ -5808,6 +6382,7 @@ static int handle_native_ipc_listen(int lfd, uint32_t mask, void *data) {
         if (slot < 0) { close(cfd); continue; }
         g_ipc_peers[slot].fd = cfd;
         g_ipc_peers[slot].server = server;
+        g_ipc_peers[slot].client_pid = 0;
         g_ipc_peers[slot].rx_buf = nullptr;
         g_ipc_peers[slot].rx_len = 0;
         g_ipc_peers[slot].rx_cap = 0;
@@ -5977,6 +6552,7 @@ static void handle_xwayland_ready(struct wl_listener *listener, void *data) {
     dtwm_xdnd_on_xwayland_ready(server);
     dtwm_lock_on_xwayland_ready(server);
     dtwm_output_mgmt_publish_x11(server);
+    dtwm_sync_resource_manager_dpi(server);
     dtwm_power_display_on_xwayland_ready(server);
     dtwm_a11y_on_xwayland_ready(server);
     if (server->greeter_mode && server->xcb_conn) {
@@ -6026,6 +6602,9 @@ int main(int argc, char **argv) {
     }
 
     int opt_output_dpi[16] = {0};
+    char opt_output_dpi_names[16][64] = {{0}};
+    int opt_output_dpi_vals[16] = {0};
+    int opt_output_dpi_count = 0;
 
     static const struct option long_opts[] = {
         {"startup", required_argument, nullptr, 's'},
@@ -6052,8 +6631,22 @@ int main(int argc, char **argv) {
         case 'D': {
             unsigned int oidx = 0;
             int odpi = 96;
-            if (sscanf(optarg, "%u=%d", &oidx, &odpi) == 2 && oidx < 16 && odpi >= 1 && odpi <= 4096) {
+            char eq_chk = '\0';
+            if (sscanf(optarg, "%u%c%d", &oidx, &eq_chk, &odpi) == 3 &&
+                eq_chk == '=' && oidx < 16 && odpi >= 1 && odpi <= 4096) {
                 opt_output_dpi[oidx] = odpi;
+            } else {
+                const char *eq = strchr(optarg, '=');
+                if (eq && eq > optarg && opt_output_dpi_count < 16) {
+                    int ndpi = atoi(eq + 1);
+                    size_t nlen = (size_t)(eq - optarg);
+                    if (ndpi >= 1 && ndpi <= 4096 && nlen < sizeof(opt_output_dpi_names[0])) {
+                        memcpy(opt_output_dpi_names[opt_output_dpi_count], optarg, nlen);
+                        opt_output_dpi_names[opt_output_dpi_count][nlen] = '\0';
+                        opt_output_dpi_vals[opt_output_dpi_count] = ndpi;
+                        opt_output_dpi_count++;
+                    }
+                }
             }
             break;
         }
@@ -6082,6 +6675,9 @@ int main(int argc, char **argv) {
     server.no_xwayland = no_xwayland;
     server.native_ipc_fd = -1;
     memcpy(server.initial_output_dpi, opt_output_dpi, sizeof(opt_output_dpi));
+    memcpy(server.cli_output_dpi_names, opt_output_dpi_names, sizeof(opt_output_dpi_names));
+    memcpy(server.cli_output_dpi_vals, opt_output_dpi_vals, sizeof(opt_output_dpi_vals));
+    server.cli_output_dpi_count = opt_output_dpi_count;
     server.status_file = status_file;
     {
         char resolved[PATH_MAX];
@@ -6132,7 +6728,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    server.compositor = wlr_compositor_create(server.wl_display, 5, server.renderer);
+    server.compositor = wlr_compositor_create(server.wl_display, 6, server.renderer);
     wlr_subcompositor_create(server.wl_display);
     wlr_data_device_manager_create(server.wl_display);
     wlr_data_control_manager_v1_create(server.wl_display);
@@ -6287,6 +6883,13 @@ int main(int argc, char **argv) {
 
     server.request_cursor.notify = handle_request_cursor;
     wl_signal_add(&server.seat->events.request_set_cursor, &server.request_cursor);
+    server.cursor_shape_mgr = wlr_cursor_shape_manager_v1_create(server.wl_display, 1);
+    if (server.cursor_shape_mgr) {
+        server.request_cursor_shape.notify = handle_request_cursor_shape;
+        wl_signal_add(
+            &server.cursor_shape_mgr->events.request_set_shape, &server.request_cursor_shape
+        );
+    }
     server.request_set_selection.notify = handle_request_set_selection;
     wl_signal_add(&server.seat->events.request_set_selection, &server.request_set_selection);
     server.request_set_primary_selection.notify = handle_request_set_primary_selection;
@@ -6349,6 +6952,7 @@ int main(int argc, char **argv) {
     }
     dtwm_workspace_sync_ipc(&server);
     dtwm_output_mgmt_publish_x11(&server);
+    dtwm_sync_resource_manager_dpi(&server);
     dtwm_hw_publish_state(&server);
     if (!server.xwayland) {
         dtwm_spawn_front_panel(&server);

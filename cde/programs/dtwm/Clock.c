@@ -730,9 +730,22 @@ Resize(
 			w = G_Width (g),
 			h = G_Height (g);
 	int		radius;
+	double		dpi_s = 1.0;
+	Dimension	eff_l = G_LeftInset (g),
+			eff_r = G_RightInset (g),
+			eff_t = G_TopInset (g),
+			eff_b = G_BottomInset (g);
 
-	G_ClockWidth (g) = p_w - G_LeftInset (g) - G_RightInset (g);
-	G_ClockHeight (g) = p_h - G_TopInset (g) - G_BottomInset (g);
+	if (XtParent (g) && XmGetWidgetScale (XtParent (g), &dpi_s) && dpi_s > 1.05)
+	{
+		eff_l = (Dimension) lround ((double) eff_l * dpi_s);
+		eff_r = (Dimension) lround ((double) eff_r * dpi_s);
+		eff_t = (Dimension) lround ((double) eff_t * dpi_s);
+		eff_b = (Dimension) lround ((double) eff_b * dpi_s);
+	}
+
+	G_ClockWidth (g) = (p_w > eff_l + eff_r) ? (p_w - eff_l - eff_r) : p_w;
+	G_ClockHeight (g) = (p_h > eff_t + eff_b) ? (p_h - eff_t - eff_b) : p_h;
 	
         G_ClockWidth (g) = min (G_ClockWidth (g), G_ClockHeight (g));
         G_ClockHeight (g) = G_ClockWidth (g);

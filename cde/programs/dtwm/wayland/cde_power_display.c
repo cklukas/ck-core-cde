@@ -56,6 +56,11 @@ typedef struct {
     bool vrr_enabled;
 } DtwmVrrRule;
 
+typedef struct {
+    char name[64];
+    int dpi;
+} DtwmDpiRule;
+
 struct DtwmPowerDisplayState {
     DtwmServer *server;
     struct wlr_gamma_control_manager_v1 *gamma_mgr;
@@ -75,6 +80,8 @@ struct DtwmPowerDisplayState {
 
     int vrr_rule_count;
     DtwmVrrRule vrr_rules[16];
+    int dpi_rule_count;
+    DtwmDpiRule dpi_rules[16];
 
     /* Power / Lid / Idle Suspend policy (~/.config/ck-core/power-policy.conf) */
     time_t policy_mtime;
@@ -240,6 +247,22 @@ static void record_vrr_rule(DtwmPowerDisplayState *st, const char *name, bool en
     }
 }
 
+static void record_dpi_rule(DtwmPowerDisplayState *st, const char *name, int dpi) {
+    if (!st || !name || !name[0] || dpi < 48 || dpi > 576) return;
+    for (int i = 0; i < st->dpi_rule_count; ++i) {
+        if (strcmp(st->dpi_rules[i].name, name) == 0) {
+            st->dpi_rules[i].dpi = dpi;
+            return;
+        }
+    }
+    if (st->dpi_rule_count < 16) {
+        snprintf(st->dpi_rules[st->dpi_rule_count].name,
+                 sizeof(st->dpi_rules[0].name), "%s", name);
+        st->dpi_rules[st->dpi_rule_count].dpi = dpi;
+        st->dpi_rule_count++;
+    }
+}
+
 static void save_ergonomics_conf(const DtwmPowerDisplayState *st) {
     if (!st) return;
     char path[PATH_MAX], tmp[PATH_MAX + 32];
@@ -255,6 +278,9 @@ static void save_ergonomics_conf(const DtwmPowerDisplayState *st) {
     for (int i = 0; i < st->vrr_rule_count; ++i) {
         fprintf(fp, "vrr.%s=%d\n", st->vrr_rules[i].name,
                 st->vrr_rules[i].vrr_enabled ? 1 : 0);
+    }
+    for (int i = 0; i < st->dpi_rule_count; ++i) {
+        fprintf(fp, "dpi.%s=%d\n", st->dpi_rules[i].name, st->dpi_rules[i].dpi);
     }
     if (fclose(fp) == 0) {
         if (rename(tmp, path) != 0) unlink(tmp);
@@ -296,9 +322,31 @@ static void load_ergonomics_conf(DtwmPowerDisplayState *st) {
             st->nl_end_min = clamp_int(atoi(v), 0, 1439);
         } else if (strncmp(k, "vrr.", 4) == 0 && k[4] != '\0') {
             record_vrr_rule(st, k + 4, atoi(v) != 0);
+        } else if (strncmp(k, "dpi.", 4) == 0 && k[4] != '\0') {
+            int dpi = atoi(v);
+            if (dpi >= 48 && dpi <= 576) {
+                record_dpi_rule(st, k + 4, dpi);
+            }
         }
     }
     fclose(fp);
+}
+
+void dtwm_power_display_record_dpi(DtwmServer *server, const char *name, int dpi) {
+    if (!server || !server->power_display || !name || !name[0]) return;
+    record_dpi_rule(server->power_display, name, dpi);
+    save_ergonomics_conf(server->power_display);
+}
+
+int dtwm_power_display_lookup_dpi(const DtwmServer *server, const char *name) {
+    if (!server || !server->power_display || !name || !name[0]) return 0;
+    const DtwmPowerDisplayState *st = server->power_display;
+    for (int i = 0; i < st->dpi_rule_count; ++i) {
+        if (strcmp(st->dpi_rules[i].name, name) == 0) {
+            return st->dpi_rules[i].dpi;
+        }
+    }
+    return 0;
 }
 
 /* -------------------------------------------------------------------------

@@ -473,10 +473,19 @@ void dtwm_update_output_backdrop(DtwmOutput *output) {
 
     int tw = cairo_image_surface_get_width(tile);
     int th = cairo_image_surface_get_height(tile);
+    int tile_scale = (output->dpi >= 144) ? (int)lround((double)output->dpi / 96.0) : 1;
+    if (tile_scale < 1) tile_scale = 1;
     if (ws->image_type == 1 && tw > 0 && th > 0) {
         /* Centered */
-        cairo_set_source_surface(cr, tile, (obox.width - tw) * 0.5, (obox.height - th) * 0.5);
+        double dw = (double)tw * tile_scale;
+        double dh = (double)th * tile_scale;
+        cairo_save(cr);
+        cairo_translate(cr, floor((obox.width - dw) * 0.5), floor((obox.height - dh) * 0.5));
+        cairo_scale(cr, (double)tile_scale, (double)tile_scale);
+        cairo_set_source_surface(cr, tile, 0, 0);
+        cairo_pattern_set_filter(cairo_get_source(cr), CAIRO_FILTER_NEAREST);
         cairo_paint(cr);
+        cairo_restore(cr);
     } else if (ws->image_type >= 2 && tw > 0 && th > 0) {
         /* Scaled to output */
         cairo_save(cr);
@@ -485,9 +494,15 @@ void dtwm_update_output_backdrop(DtwmOutput *output) {
         cairo_paint(cr);
         cairo_restore(cr);
     } else {
-        /* Tiled (default CDE backdrop mode) */
+        /* Tiled (default CDE backdrop mode, crisp integer pixel-art scaling on Retina outputs) */
         cairo_pattern_t *pat = cairo_pattern_create_for_surface(tile);
         cairo_pattern_set_extend(pat, CAIRO_EXTEND_REPEAT);
+        if (tile_scale > 1) {
+            cairo_matrix_t mat;
+            cairo_matrix_init_scale(&mat, 1.0 / (double)tile_scale, 1.0 / (double)tile_scale);
+            cairo_pattern_set_matrix(pat, &mat);
+            cairo_pattern_set_filter(pat, CAIRO_FILTER_NEAREST);
+        }
         cairo_set_source(cr, pat);
         cairo_paint(cr);
         cairo_pattern_destroy(pat);
@@ -529,12 +544,17 @@ void dtwm_get_usable_output_box(DtwmServer *server, double ref_x, double ref_y, 
     } else {
         *out_box = (struct wlr_box){.x = 0, .y = 0, .width = 1280, .height = 900};
     }
+    int dpi = dtwm_output_dpi_at(
+        server, out_box->x + out_box->width * 0.5, out_box->y + out_box->height * 0.5
+    );
+    double s = (double)(dpi > 0 ? dpi : 96) / 96.0;
+    int min_clear = (int)lround(160.0 * s);
     int strut = (server->panel_view && server->panel_view->mapped && !server->panel_view->minimized &&
                  server->panel_h > 0)
-                    ? (server->panel_h + 2)
-                    : (server->show_front_panel ? DTWM_PANEL_STRUT : 0);
+                    ? (server->panel_h + (int)lround(2.0 * s))
+                    : (server->show_front_panel ? (int)lround((double)DTWM_PANEL_STRUT * s) : 0);
     if (server->show_front_panel && strut > 0 && out == get_panel_output(server) &&
-        out_box->height > strut + 160) {
+        out_box->height > strut + min_clear) {
         out_box->height -= strut;
     }
 }
@@ -1273,14 +1293,15 @@ static void handle_dt_wm_request_item(DtwmServer *server, const char *cmd) {
 }
 
 void dtwm_publish_active_window_box(DtwmServer *server) {
-    if (!server || !server->xcb_conn || server->xcb_root == XCB_WINDOW_NONE ||
-        server->atom_active_win_box == XCB_ATOM_NONE) {
-        return;
-    }
+    if (!server) return;
     DtwmView *v = server->focused_view;
     if (!v || !v->mapped || v->is_panel || v->is_desktop_pin || v->is_swallowed) {
-        xcb_delete_property(server->xcb_conn, server->xcb_root, server->atom_active_win_box);
-        xcb_flush(server->xcb_conn);
+        dtwm_native_ipc_publish_prop(server, "_DT_ACTIVE_WINDOW_BOX", nullptr, 0);
+        if (server->xcb_conn && server->xcb_root != XCB_WINDOW_NONE &&
+            server->atom_active_win_box != XCB_ATOM_NONE) {
+            xcb_delete_property(server->xcb_conn, server->xcb_root, server->atom_active_win_box);
+            xcb_flush(server->xcb_conn);
+        }
         return;
     }
     int l, t, r, b, outer_w, outer_h;
@@ -1296,11 +1317,15 @@ void dtwm_publish_active_window_box(DtwmServer *server) {
         (uint32_t)(v->client_w > 0 ? v->client_w : 1),
         (uint32_t)(v->client_h > 0 ? v->client_h : 1),
     };
-    xcb_change_property(
-        server->xcb_conn, XCB_PROP_MODE_REPLACE, server->xcb_root,
-        server->atom_active_win_box, XCB_ATOM_CARDINAL, 32, 8, box
-    );
-    xcb_flush(server->xcb_conn);
+    dtwm_native_ipc_publish_prop(server, "_DT_ACTIVE_WINDOW_BOX", box, sizeof(box));
+    if (server->xcb_conn && server->xcb_root != XCB_WINDOW_NONE &&
+        server->atom_active_win_box != XCB_ATOM_NONE) {
+        xcb_change_property(
+            server->xcb_conn, XCB_PROP_MODE_REPLACE, server->xcb_root,
+            server->atom_active_win_box, XCB_ATOM_CARDINAL, 32, 8, box
+        );
+        xcb_flush(server->xcb_conn);
+    }
 }
 
 static bool view_eligible_for_recall(const DtwmView *v) {
@@ -1349,11 +1374,9 @@ static void append_client_id_token(char *buf, size_t cap, size_t *len, const cha
 }
 
 void dtwm_publish_client_ids(DtwmServer *server) {
-    if (!server || !server->xcb_conn || server->xcb_root == XCB_WINDOW_NONE ||
-        server->atom_client_ids == XCB_ATOM_NONE) {
-        return;
-    }
+    if (!server) return;
     char buf[8192];
+    buf[0] = '\0';
     size_t len = 0;
     DtwmView *v;
     wl_list_for_each(v, &server->views, link) {
@@ -1375,11 +1398,15 @@ void dtwm_publish_client_ids(DtwmServer *server) {
             }
         }
     }
-    xcb_change_property(
-        server->xcb_conn, XCB_PROP_MODE_REPLACE, server->xcb_root,
-        server->atom_client_ids, XCB_ATOM_STRING, 8, (uint32_t)len, buf
-    );
-    xcb_flush(server->xcb_conn);
+    dtwm_native_ipc_publish_prop(server, "_DT_WAYLAND_CLIENT_IDS", buf, len);
+    if (server->xcb_conn && server->xcb_root != XCB_WINDOW_NONE &&
+        server->atom_client_ids != XCB_ATOM_NONE) {
+        xcb_change_property(
+            server->xcb_conn, XCB_PROP_MODE_REPLACE, server->xcb_root,
+            server->atom_client_ids, XCB_ATOM_STRING, 8, (uint32_t)len, buf
+        );
+        xcb_flush(server->xcb_conn);
+    }
 }
 
 bool dtwm_recall_client_by_name(DtwmServer *server, const char *name) {
@@ -1411,24 +1438,7 @@ bool dtwm_recall_client_by_name(DtwmServer *server, const char *name) {
 }
 
 static void notify_wayland_fractional_scale_for_outputs(DtwmServer *server) {
-    DtwmView *v;
-    wl_list_for_each(v, &server->views, link) {
-        if (!v->mapped || v->kind != DTWM_VIEW_XDG || !v->xdg_toplevel) continue;
-        double cx = (double)v->x + (double)v->client_w * 0.5;
-        double cy = (double)v->y + (double)v->client_h * 0.5;
-        struct wlr_output *wo = wlr_output_layout_output_at(server->output_layout, cx, cy);
-        int dpi = 96;
-        if (wo) {
-            DtwmOutput *dout;
-            wl_list_for_each(dout, &server->outputs, link) {
-                if (dout->wlr_output == wo && dout->dpi > 0) {
-                    dpi = dout->dpi;
-                    break;
-                }
-            }
-        }
-        wlr_fractional_scale_v1_notify_scale(v->xdg_toplevel->base->surface, (double)dpi / 96.0);
-    }
+    dtwm_sync_all_external_client_scales(server);
 }
 
 void dtwm_sync_xwayland_randr_dpi(DtwmServer *server) {
@@ -1535,10 +1545,12 @@ void dtwm_set_output_dpi(DtwmServer *server, uint32_t output_idx, int dpi) {
     wl_list_for_each(dout, &server->outputs, link) {
         if (dout->output_idx == output_idx) {
             dout->dpi = dpi;
+            if (dout->wlr_output && dout->wlr_output->name) {
+                dtwm_power_display_record_dpi(server, dout->wlr_output->name, dpi);
+            }
         }
     }
-    dtwm_sync_xwayland_randr_dpi(server);
-    dtwm_output_mgmt_sync(server);
+    dtwm_output_mgmt_after_reconfigure(server);
 }
 
 static bool parse_dp_hex_color(const char *line, DtwmRgba *out_rgb) {
@@ -2095,15 +2107,16 @@ void dtwm_apply_resource_manager_string(DtwmServer *server, const char *raw_data
 static void sync_xcb_resource_manager_profile(DtwmServer *server) {
     if (!server || !server->xcb_conn || server->xcb_root == XCB_WINDOW_NONE) return;
     xcb_get_property_cookie_t ck = xcb_get_property(
-        server->xcb_conn, 0, server->xcb_root, XCB_ATOM_RESOURCE_MANAGER, XCB_ATOM_STRING, 0, 16384
+        server->xcb_conn, 0, server->xcb_root, XCB_ATOM_RESOURCE_MANAGER, XCB_ATOM_STRING, 0, 65536
     );
     xcb_get_property_reply_t *rep = xcb_get_property_reply(server->xcb_conn, ck, nullptr);
     if (!rep) return;
     int len = xcb_get_property_value_length(rep);
     if (len > 0) {
-        dtwm_apply_resource_manager_string(
-            server, (const char *)xcb_get_property_value(rep), (size_t)len
-        );
+        const char *val = (const char *)xcb_get_property_value(rep);
+        dtwm_apply_resource_manager_string(server, val, (size_t)len);
+        dtwm_native_ipc_publish_prop(server, "RESOURCE_MANAGER", val, (size_t)len);
+        dtwm_sync_resource_manager_dpi(server);
     }
     free(rep);
 }

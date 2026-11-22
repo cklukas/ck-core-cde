@@ -22,6 +22,7 @@ EXTRA_DIST = tests/check-property-readers.py tests/property-client.c \
              tests/check-dtwm-wayland-wp18.py tests/check-dtwm-wayland-wp19.py \
              tests/check-dtwm-wayland-wp20.py \
              tests/check-dtwm-wayland-wp24-noxwayland.py \
+             tests/check-dtwm-wayland-hidpi.py \
              tests/check-dtwm-wayland-menus.py \
              tests/check-dtwm-wayland-busy-light.py \
              tests/check-dtwm-wayland-panel-dnd.py \
@@ -62,6 +63,7 @@ if BUILD_DTWM_WAYLAND
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp19.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp20.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp24-noxwayland.py --compositor ./dtwm-wayland
+	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-hidpi.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-menus.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-busy-light.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-panel-dnd.py --compositor ./dtwm-wayland
@@ -79,6 +81,7 @@ if BUILD_DTWM_WAYLAND
 WAYLAND_GEN_HDRS = wayland/xdg-shell-protocol.h \
                    wayland/wlr-layer-shell-unstable-v1-protocol.h \
                    wayland/wlr-output-power-management-unstable-v1-protocol.h \
+                   wayland/cursor-shape-v1-protocol.h \
                    wayland/ext-image-copy-capture-v1-protocol.h \
                    wayland/ext-workspace-v1-protocol.h \
                    wayland/xdg-toplevel-icon-v1-protocol.h \
@@ -103,6 +106,10 @@ wayland/wlr-layer-shell-unstable-v1-protocol.h: $(srcdir)/wayland/protocols/wlr-
 	$(WAYLAND_SCANNER) server-header $< $@
 
 wayland/wlr-output-power-management-unstable-v1-protocol.h: $(srcdir)/wayland/protocols/wlr-output-power-management-unstable-v1.xml
+	@$(MKDIR_P) wayland
+	$(WAYLAND_SCANNER) server-header $< $@
+
+wayland/cursor-shape-v1-protocol.h: $(WAYLAND_PROTOCOLS_DATADIR)/staging/cursor-shape/cursor-shape-v1.xml
 	@$(MKDIR_P) wayland
 	$(WAYLAND_SCANNER) server-header $< $@
 

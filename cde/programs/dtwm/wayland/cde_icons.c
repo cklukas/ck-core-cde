@@ -411,8 +411,13 @@ static void bind_wl_icon_manager(struct wl_client *client, void *data, uint32_t 
         return;
     }
     wl_resource_set_implementation(res, &wl_icon_mgr_impl, server, nullptr);
-    xdg_toplevel_icon_manager_v1_send_icon_size(res, server->large_icons ? 96 : 48);
-    xdg_toplevel_icon_manager_v1_send_icon_size(res, 96);
+    double s = (double)dtwm_primary_output_dpi(server) / 96.0;
+    int pref_sz = (int)lround((server->large_icons ? 96.0 : 48.0) * s);
+    int hi_sz = (int)lround(96.0 * s);
+    xdg_toplevel_icon_manager_v1_send_icon_size(res, pref_sz > 0 ? pref_sz : 48);
+    if (hi_sz != pref_sz) {
+        xdg_toplevel_icon_manager_v1_send_icon_size(res, hi_sz);
+    }
     xdg_toplevel_icon_manager_v1_send_done(res);
 }
 
@@ -1052,7 +1057,8 @@ static cairo_surface_t *fetch_x11_net_wm_icon(DtwmServer *server, xcb_window_t w
     if (rep->format == 32) {
         int nwords = xcb_get_property_value_length(rep) / 4;
         const uint32_t *data = (const uint32_t *)xcb_get_property_value(rep);
-        int target = server->large_icons ? 96 : 48;
+        double s = (double)dtwm_primary_output_dpi(server) / 96.0;
+        int target = (int)lround((server->large_icons ? 96.0 : 48.0) * s);
         int best_off = -1, best_w = 0, best_h = 0, best_diff = 100000;
         int idx = 0;
         while (idx + 2 <= nwords) {
@@ -1213,9 +1219,12 @@ static xcb_atom_t intern_atom_icons(xcb_connection_t *conn, const char *name) {
 static void publish_icon_sizes_and_settings(DtwmServer *server) {
     if (!server->xcb_conn || server->xcb_root == XCB_WINDOW_NONE) return;
 
-    uint32_t max_dim = server->large_icons ? 96u : 48u;
-    uint32_t min_dim = server->large_icons ? 48u : 32u;
-    uint32_t icon_sizes[6] = {min_dim, min_dim, max_dim, max_dim, 16u, 16u};
+    double s = (double)dtwm_primary_output_dpi(server) / 96.0;
+    uint32_t max_dim = (uint32_t)lround((server->large_icons ? 96.0 : 48.0) * s);
+    uint32_t min_dim = (uint32_t)lround((server->large_icons ? 48.0 : 32.0) * s);
+    uint32_t inc_dim = (uint32_t)lround(16.0 * s);
+    if (inc_dim < 8u) inc_dim = 8u;
+    uint32_t icon_sizes[6] = {min_dim, min_dim, max_dim, max_dim, inc_dim, inc_dim};
     xcb_change_property(
         server->xcb_conn,
         XCB_PROP_MODE_REPLACE,
@@ -1684,9 +1693,41 @@ static void draw_asym_bevel(
     cairo_fill(cr);
 }
 
+static void compute_icon_tile_dims(
+    const DtwmServer *server,
+    int *out_dpi,
+    int *out_img_dim,
+    int *out_frame_w,
+    int *out_img_frame_h,
+    int *out_label_frame_h,
+    int *out_bar_gap,
+    int *out_bar_w
+) {
+    int dpi = dtwm_primary_output_dpi(server);
+    double s = (double)dpi / 96.0;
+    int img_dim = (int)lround((server->large_icons ? 96.0 : 48.0) * s);
+    int half_pad = (int)lround(6.0 * s);
+    if (half_pad < 4) half_pad = 4;
+    int frame_w = img_dim + 2 * half_pad;
+    int img_frame_h = img_dim + (int)lround(11.0 * s);
+    int label_frame_h = (int)lround((server->large_icons ? 24.0 : 21.0) * s);
+    int bar_gap = (int)lround((double)DTWM_OPEN_ICON_BAR_GAP * s);
+    int bar_w = (int)lround((double)DTWM_OPEN_ICON_BAR_WIDTH * s);
+    if (bar_gap < 4) bar_gap = 4;
+    if (bar_w < 6) bar_w = 6;
+    if (out_dpi) *out_dpi = dpi;
+    if (out_img_dim) *out_img_dim = img_dim;
+    if (out_frame_w) *out_frame_w = frame_w;
+    if (out_img_frame_h) *out_img_frame_h = img_frame_h;
+    if (out_label_frame_h) *out_label_frame_h = label_frame_h;
+    if (out_bar_gap) *out_bar_gap = bar_gap;
+    if (out_bar_w) *out_bar_w = bar_w;
+}
+
 static void draw_cde_icon_title_box(
     cairo_t *cr,
     const DtwmServer *server,
+    int dpi,
     const char *text,
     double x,
     double y,
@@ -1697,6 +1738,10 @@ static void draw_cde_icon_title_box(
     if (!text || !text[0] || w <= 2.0 || h <= 2.0) return;
     const char *fspec = (server->palette.profile == DTWM_PROFILE_CLASSIC) ? "Serif 9" : "Sans 9";
     PangoLayout *layout = pango_cairo_create_layout(cr);
+    PangoContext *pctx = pango_layout_get_context(layout);
+    if (pctx) {
+        pango_cairo_context_set_resolution(pctx, (double)(dpi > 0 ? dpi : 96));
+    }
     PangoFontDescription *desc = pango_font_description_from_string(fspec);
     pango_layout_set_font_description(layout, desc);
     pango_layout_set_text(layout, text, -1);
@@ -1720,12 +1765,13 @@ static void draw_cde_icon_title_box(
 }
 
 static void draw_default_cde_app_emblem(
-    cairo_t *cr, double x, double y, double size, const DtwmView *view
+    cairo_t *cr, int dpi, double x, double y, double size, const DtwmView *view
 ) {
     const DtwmPalette *pal = &view->server->palette;
     bool win_active = !view->minimized && view_or_transient_has_focus(view);
     const DtwmColorSet *title_cs = win_active ? &pal->active : &pal->inactive;
     const DtwmColorSet *body_cs = &pal->window_bg;
+    DtwmMetrics m = dtwm_metrics_for_dpi(dpi);
 
     /* Miniature 3D CDE window glyph themed from the active palette */
     double pad = floor(size * 0.12);
@@ -1740,20 +1786,21 @@ static void draw_default_cde_app_emblem(
     cairo_fill(cr);
 
     /* Outer 3D window frame bevel matching active/inactive window border */
-    dtwm_draw_bevel(cr, wx, wy, ww, wh, 1.5, title_cs->top_shadow, title_cs->bottom_shadow);
+    dtwm_draw_bevel(cr, wx, wy, ww, wh, fmax(1.5, (double)m.outer_bevel * 0.75), title_cs->top_shadow, title_cs->bottom_shadow);
 
     /* Mini titlebar: active window color when open & focused, inactive when unfocused or minimized */
+    double ins = fmax(2.0, round(2.0 * m.scale));
     double th = fmax(6.0, floor(wh * 0.24));
     cairo_set_source_rgba(cr, title_cs->bg.r, title_cs->bg.g, title_cs->bg.b, title_cs->bg.a);
-    cairo_rectangle(cr, wx + 2, wy + 2, ww - 4, th);
+    cairo_rectangle(cr, wx + ins, wy + ins, ww - 2 * ins, th);
     cairo_fill(cr);
-    dtwm_draw_bevel(cr, wx + 2, wy + 2, ww - 4, th, 1.0, title_cs->top_shadow, title_cs->bottom_shadow);
+    dtwm_draw_bevel(cr, wx + ins, wy + ins, ww - 2 * ins, th, (double)m.inner_bevel, title_cs->top_shadow, title_cs->bottom_shadow);
 
     const char *title = dtwm_view_title(view);
     char initial[4] = {0};
     initial[0] = (title && title[0]) ? title[0] : 'X';
-    dtwm_draw_label(
-        cr, initial, wx + 2, wy + th + 2, ww - 4, wh - th - 4,
+    dtwm_draw_label_dpi(
+        cr, dpi, initial, wx + ins, wy + th + ins, ww - 2 * ins, wh - th - 2 * ins,
         body_cs->fg, true, true
     );
 }
@@ -1762,21 +1809,22 @@ struct wlr_buffer *dtwm_icons_render_tile_buffer(DtwmView *view, int *out_w, int
     if (!view || !view->server) return nullptr;
     DtwmServer *server = view->server;
 
-    /* Exact X11 dtwm WmIDecor.c GetIconDimensions (WmRECESSED) metrics:
-     * frame_w = img_dim + 2*pad(2) + 2*ext_shadow(2) + 4*int_shadow(1) = img_dim + 12 (60 for 48px)
-     * img_frame_h = img_dim + 11 (59 for 48px), label_frame_h = 21 -> frame_h = 80
-     * Open-window indicator bar sits 7px (OPEN_ICON_BAR_GAP) to the right, 10px wide x 3/8*frame_h tall.
-     */
-    int img_dim = server->large_icons ? 96 : 48;
-    int frame_w = img_dim + 12;
-    int img_frame_h = img_dim + 11;
-    int label_frame_h = server->large_icons ? 24 : 21;
+    int dpi = 96, img_dim = 48, frame_w = 60, img_frame_h = 59, label_frame_h = 21;
+    int bar_gap = DTWM_OPEN_ICON_BAR_GAP, bar_w = DTWM_OPEN_ICON_BAR_WIDTH;
+    compute_icon_tile_dims(
+        server, &dpi, &img_dim, &frame_w, &img_frame_h, &label_frame_h, &bar_gap, &bar_w
+    );
+    DtwmMetrics m = dtwm_metrics_for_dpi(dpi);
     int frame_h = img_frame_h + label_frame_h;
+    int inset = (frame_w - img_dim) / 2;
+    int ext_b = m.outer_bevel;
+    int int_b = m.inner_bevel;
+    int r1 = inset - 2 * int_b;
+    if (r1 < ext_b) r1 = ext_b;
+    int r2 = r1 + int_b;
 
     bool in_icon_box = server->use_icon_box && !view->is_panel;
     bool show_bar = !view->minimized && server->show_open_window_icons && !in_icon_box;
-    int bar_gap = DTWM_OPEN_ICON_BAR_GAP;
-    int bar_w = DTWM_OPEN_ICON_BAR_WIDTH;
     int bar_h = (frame_h * 3) / 8;
     int bar_x = frame_w + bar_gap;
     int bar_y = (frame_h - bar_h) / 2;
@@ -1796,15 +1844,12 @@ struct wlr_buffer *dtwm_icons_render_tile_buffer(DtwmView *view, int *out_w, int
     struct wlr_buffer *buf = dtwm_cairo_buffer_begin(total_w, total_h, &cr, &surf);
     if (!buf) return nullptr;
 
-    /* Clear full buffer so the 7px gap between icon frame and open-window indicator bar is transparent */
+    /* Clear full buffer so the gap between icon frame and open-window indicator bar is transparent */
     cairo_save(cr);
     cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
     cairo_paint(cr);
     cairo_restore(cr);
 
-    /* WmIDecor.c:927: only focused minimized icons use active bevels; open-window icons use inactive
-     * appearance with sunken (pressed) bevels + darker select_color fill, while the separate 10px
-     * indicator bar to the right reflects active vs inactive window focus! */
     const DtwmColorSet *ics =
         (view->minimized && view->active) ? &server->palette.active : &server->palette.inactive;
 
@@ -1813,23 +1858,23 @@ struct wlr_buffer *dtwm_icons_render_tile_buffer(DtwmView *view, int *out_w, int
         cairo_rectangle(cr, 0, 0, frame_w, frame_h);
         cairo_fill(cr);
 
-        draw_asym_bevel(cr, 0, 0, frame_w, img_frame_h, 2, 2, 1, 2, ics->top_shadow, ics->bottom_shadow);
-        draw_asym_bevel(cr, 4, 4, img_dim + 4, img_dim + 4, 1, 1, 1, 1, ics->bottom_shadow, ics->top_shadow);
-        draw_asym_bevel(cr, 5, 5, img_dim + 2, img_dim + 2, 1, 1, 1, 1, ics->top_shadow, ics->bottom_shadow);
-        draw_asym_bevel(cr, 0, img_frame_h, frame_w, label_frame_h, 1, 2, 2, 2, ics->top_shadow, ics->bottom_shadow);
+        draw_asym_bevel(cr, 0, 0, frame_w, img_frame_h, ext_b, ext_b, int_b, ext_b, ics->top_shadow, ics->bottom_shadow);
+        draw_asym_bevel(cr, r1, r1, frame_w - 2 * r1, frame_w - 2 * r1, int_b, int_b, int_b, int_b, ics->bottom_shadow, ics->top_shadow);
+        draw_asym_bevel(cr, r2, r2, frame_w - 2 * r2, frame_w - 2 * r2, int_b, int_b, int_b, int_b, ics->top_shadow, ics->bottom_shadow);
+        draw_asym_bevel(cr, 0, img_frame_h, frame_w, label_frame_h, int_b, ext_b, ext_b, ext_b, ics->top_shadow, ics->bottom_shadow);
     } else {
         DtwmRgba open_fill = {ics->bg.r * 0.85, ics->bg.g * 0.85, ics->bg.b * 0.85, 1.0};
-        cairo_set_source_rgba(cr, open_fill.r, open_fill.g, open_fill.b, 1.0);
+        cairo_set_source_rgba(cr, open_fill.r, open_fill.b == open_fill.g ? open_fill.g : open_fill.g, open_fill.b, 1.0);
         cairo_rectangle(cr, 0, 0, frame_w, frame_h);
         cairo_fill(cr);
 
-        draw_asym_bevel(cr, 0, 0, frame_w, img_frame_h, 2, 2, 1, 2, ics->bottom_shadow, ics->top_shadow);
-        draw_asym_bevel(cr, 4, 4, img_dim + 4, img_dim + 4, 1, 1, 1, 1, ics->top_shadow, ics->bottom_shadow);
-        draw_asym_bevel(cr, 5, 5, img_dim + 2, img_dim + 2, 1, 1, 1, 1, ics->bottom_shadow, ics->top_shadow);
-        draw_asym_bevel(cr, 0, img_frame_h, frame_w, label_frame_h, 1, 2, 2, 2, ics->bottom_shadow, ics->top_shadow);
+        draw_asym_bevel(cr, 0, 0, frame_w, img_frame_h, ext_b, ext_b, int_b, ext_b, ics->bottom_shadow, ics->top_shadow);
+        draw_asym_bevel(cr, r1, r1, frame_w - 2 * r1, frame_w - 2 * r1, int_b, int_b, int_b, int_b, ics->top_shadow, ics->bottom_shadow);
+        draw_asym_bevel(cr, r2, r2, frame_w - 2 * r2, frame_w - 2 * r2, int_b, int_b, int_b, int_b, ics->bottom_shadow, ics->top_shadow);
+        draw_asym_bevel(cr, 0, img_frame_h, frame_w, label_frame_h, int_b, ext_b, ext_b, ext_b, ics->bottom_shadow, ics->top_shadow);
     }
 
-    /* Composite icon image centered inside (6, 6, img_dim, img_dim) */
+    /* Composite icon image centered inside (inset, inset, img_dim, img_dim) */
     if (view->icon_surface) {
         int sw = cairo_image_surface_get_width(view->icon_surface);
         int sh = cairo_image_surface_get_height(view->icon_surface);
@@ -1837,28 +1882,38 @@ struct wlr_buffer *dtwm_icons_render_tile_buffer(DtwmView *view, int *out_w, int
             double scale = 1.0;
             if (sw > img_dim || sh > img_dim) {
                 scale = fmin((double)img_dim / sw, (double)img_dim / sh);
-            } else if (server->large_icons && sw * 2 <= img_dim && sh * 2 <= img_dim) {
-                scale = 2.0;
+            } else if ((server->large_icons || dpi > 96) && sw < img_dim && sh < img_dim) {
+                double fit = fmin((double)img_dim / sw, (double)img_dim / sh);
+                if (server->large_icons && dpi <= 96) {
+                    if (sw * 2 <= img_dim && sh * 2 <= img_dim) scale = 2.0;
+                } else {
+                    scale = fit;
+                    if (fabs(scale - round(scale)) < 0.08 && round(scale) >= 1.0) {
+                        scale = round(scale);
+                    }
+                }
             }
             double dw = sw * scale;
             double dh = sh * scale;
-            double dx = 6.0 + floor((img_dim - dw) * 0.5);
-            double dy = 6.0 + floor((img_dim - dh) * 0.5);
+            double dx = (double)inset + floor((img_dim - dw) * 0.5);
+            double dy = (double)inset + floor((img_dim - dh) * 0.5);
             cairo_save(cr);
-            cairo_rectangle(cr, 6.0, 6.0, img_dim, img_dim);
+            cairo_rectangle(cr, (double)inset, (double)inset, img_dim, img_dim);
             cairo_clip(cr);
             cairo_translate(cr, dx, dy);
             cairo_scale(cr, scale, scale);
             cairo_set_source_surface(cr, view->icon_surface, 0, 0);
             cairo_pattern_set_filter(
                 cairo_get_source(cr),
-                (scale == 2.0 || scale == 1.0) ? CAIRO_FILTER_NEAREST : CAIRO_FILTER_GOOD
+                (fabs(scale - round(scale)) < 0.01 && scale >= 1.0)
+                    ? CAIRO_FILTER_NEAREST
+                    : CAIRO_FILTER_GOOD
             );
             cairo_paint(cr);
             cairo_restore(cr);
         }
     } else {
-        draw_default_cde_app_emblem(cr, 6.0, 6.0, img_dim, view);
+        draw_default_cde_app_emblem(cr, dpi, (double)inset, (double)inset, img_dim, view);
     }
 
     /* Icon label from WM_ICON_NAME / _NET_WM_ICON_NAME (or active workspace name for FrontPanel) */
@@ -1884,14 +1939,17 @@ struct wlr_buffer *dtwm_icons_render_tile_buffer(DtwmView *view, int *out_w, int
             }
         }
     }
+    double lpad_x = fmax(4.0, round(4.0 * m.scale));
+    double lpad_y = fmax(2.0, round(2.0 * m.scale));
     draw_cde_icon_title_box(
         cr,
         server,
+        dpi,
         label,
-        4.0,
-        img_frame_h + 2.0,
-        frame_w - 8.0,
-        label_frame_h - 4.0,
+        lpad_x,
+        img_frame_h + lpad_y,
+        frame_w - 2.0 * lpad_x,
+        label_frame_h - 2.0 * lpad_y,
         server->palette.inactive.fg
     );
 
@@ -1902,7 +1960,7 @@ struct wlr_buffer *dtwm_icons_render_tile_buffer(DtwmView *view, int *out_w, int
         cairo_set_source_rgba(cr, bcs->bg.r, bcs->bg.g, bcs->bg.b, 1.0);
         cairo_rectangle(cr, bar_x, bar_y, bar_w, bar_h);
         cairo_fill(cr);
-        dtwm_draw_bevel(cr, bar_x, bar_y, bar_w, bar_h, 1.0, bcs->top_shadow, bcs->bottom_shadow);
+        dtwm_draw_bevel(cr, bar_x, bar_y, bar_w, bar_h, (double)m.inner_bevel, bcs->top_shadow, bcs->bottom_shadow);
     }
 
     dtwm_cairo_buffer_finish(cr, surf);
@@ -1966,10 +2024,19 @@ static void draw_ib_groove_h(cairo_t *cr, double x0, double x1, double y, DtwmRg
 
 static void render_icon_box_frame(DtwmServer *server, int total_content_h, int well_h) {
     if (!server || !server->icon_box_bg_buf) return;
+    int dpi = dtwm_primary_output_dpi(server);
+    DtwmMetrics m = dtwm_metrics_for_dpi(dpi);
+    int b_w = m.border_w;
+    int t_h = m.title_h;
+    int outer_b = m.outer_bevel;
+    int inner_b = m.inner_bevel;
+
     int outer_w = server->icon_box_w;
     int outer_h = server->icon_box_h;
-    if (outer_w < 180) outer_w = 180;
-    if (outer_h < 120) outer_h = 120;
+    int min_w = (int)lround(180.0 * m.scale);
+    int min_h = (int)lround(120.0 * m.scale);
+    if (outer_w < min_w) outer_w = min_w;
+    if (outer_h < min_h) outer_h = min_h;
 
     cairo_t *cr = nullptr;
     cairo_surface_t *surf = nullptr;
@@ -1984,89 +2051,92 @@ static void render_icon_box_frame(DtwmServer *server, int total_content_h, int w
     cairo_set_source_rgba(cr, fcs->bg.r, fcs->bg.g, fcs->bg.b, 1.0);
     cairo_rectangle(cr, 0, 0, outer_w, outer_h);
     cairo_fill(cr);
-    dtwm_draw_bevel(cr, 0, 0, outer_w, outer_h, 2.0, fcs->top_shadow, fcs->bottom_shadow);
+    dtwm_draw_bevel(cr, 0, 0, outer_w, outer_h, (double)outer_b, fcs->top_shadow, fcs->bottom_shadow);
     dtwm_draw_bevel(
         cr,
-        DTWM_BORDER_WIDTH - 1,
-        DTWM_BORDER_WIDTH - 1,
-        outer_w - 2 * (DTWM_BORDER_WIDTH - 1),
-        outer_h - 2 * (DTWM_BORDER_WIDTH - 1),
-        1.0,
+        b_w - inner_b,
+        b_w - inner_b,
+        outer_w - 2 * (b_w - inner_b),
+        outer_h - 2 * (b_w - inner_b),
+        (double)inner_b,
         fcs->bottom_shadow,
         fcs->top_shadow
     );
 
-    int c = DTWM_CORNER_HANDLE_LEN;
+    int c = m.corner_len;
     if (outer_w > 2 * c + 16) {
-        draw_ib_groove_v(cr, c, 1, DTWM_BORDER_WIDTH - 1, fcs->bottom_shadow, fcs->top_shadow);
-        draw_ib_groove_v(cr, outer_w - c - 2, 1, DTWM_BORDER_WIDTH - 1, fcs->bottom_shadow, fcs->top_shadow);
-        draw_ib_groove_v(cr, c, outer_h - DTWM_BORDER_WIDTH + 1, outer_h - 1, fcs->bottom_shadow, fcs->top_shadow);
-        draw_ib_groove_v(cr, outer_w - c - 2, outer_h - DTWM_BORDER_WIDTH + 1, outer_h - 1, fcs->bottom_shadow, fcs->top_shadow);
+        draw_ib_groove_v(cr, c, 1, b_w - inner_b, fcs->bottom_shadow, fcs->top_shadow);
+        draw_ib_groove_v(cr, outer_w - c - 2, 1, b_w - inner_b, fcs->bottom_shadow, fcs->top_shadow);
+        draw_ib_groove_v(cr, c, outer_h - b_w + inner_b, outer_h - 1, fcs->bottom_shadow, fcs->top_shadow);
+        draw_ib_groove_v(cr, outer_w - c - 2, outer_h - b_w + inner_b, outer_h - 1, fcs->bottom_shadow, fcs->top_shadow);
     }
     if (outer_h > 2 * c + 16) {
-        draw_ib_groove_h(cr, 1, DTWM_BORDER_WIDTH - 1, c, fcs->bottom_shadow, fcs->top_shadow);
-        draw_ib_groove_h(cr, outer_w - DTWM_BORDER_WIDTH + 1, outer_w - 1, c, fcs->bottom_shadow, fcs->top_shadow);
-        draw_ib_groove_h(cr, 1, DTWM_BORDER_WIDTH - 1, outer_h - c - 2, fcs->bottom_shadow, fcs->top_shadow);
-        draw_ib_groove_h(cr, outer_w - DTWM_BORDER_WIDTH + 1, outer_w - 1, outer_h - c - 2, fcs->bottom_shadow, fcs->top_shadow);
+        draw_ib_groove_h(cr, 1, b_w - inner_b, c, fcs->bottom_shadow, fcs->top_shadow);
+        draw_ib_groove_h(cr, outer_w - b_w + inner_b, outer_w - 1, c, fcs->bottom_shadow, fcs->top_shadow);
+        draw_ib_groove_h(cr, 1, b_w - inner_b, outer_h - c - 2, fcs->bottom_shadow, fcs->top_shadow);
+        draw_ib_groove_h(cr, outer_w - b_w + inner_b, outer_w - 1, outer_h - c - 2, fcs->bottom_shadow, fcs->top_shadow);
     }
 
     /* 2. Titlebar ("Icons") with MWM menu bar button and Maximize button */
-    double tx = DTWM_BORDER_WIDTH;
-    double ty = DTWM_BORDER_WIDTH;
-    double tw = outer_w - 2 * DTWM_BORDER_WIDTH;
-    double th = DTWM_TITLE_HEIGHT;
-    double bw = DTWM_TITLE_HEIGHT;
+    double tx = b_w;
+    double ty = b_w;
+    double tw = outer_w - 2 * b_w;
+    double th = t_h;
+    double bw = t_h;
+    double gpad = round(4.0 * m.scale);
 
     /* Left menu button */
-    dtwm_draw_bevel(cr, tx, ty, bw, th, 1.0, fcs->top_shadow, fcs->bottom_shadow);
-    dtwm_draw_bevel(cr, tx + 4, ty + th * 0.5 - 2, bw - 8, 4, 1.0, fcs->top_shadow, fcs->bottom_shadow);
+    dtwm_draw_bevel(cr, tx, ty, bw, th, (double)inner_b, fcs->top_shadow, fcs->bottom_shadow);
+    dtwm_draw_bevel(cr, tx + gpad, ty + th * 0.5 - round(2.0 * m.scale), bw - 2 * gpad, round(4.0 * m.scale), (double)inner_b, fcs->top_shadow, fcs->bottom_shadow);
 
     /* Right maximize button */
     double mx = tx + tw - bw;
-    dtwm_draw_bevel(cr, mx, ty, bw, th, 1.0, fcs->top_shadow, fcs->bottom_shadow);
+    dtwm_draw_bevel(cr, mx, ty, bw, th, (double)inner_b, fcs->top_shadow, fcs->bottom_shadow);
     if (server->icon_box_maximized) {
-        dtwm_draw_bevel(cr, mx + 4, ty + 4, bw - 8, th - 8, 1.0, fcs->bottom_shadow, fcs->top_shadow);
+        dtwm_draw_bevel(cr, mx + gpad, ty + gpad, bw - 2 * gpad, th - 2 * gpad, (double)inner_b, fcs->bottom_shadow, fcs->top_shadow);
     } else {
-        dtwm_draw_bevel(cr, mx + 4, ty + 4, bw - 8, th - 8, 1.0, fcs->top_shadow, fcs->bottom_shadow);
+        dtwm_draw_bevel(cr, mx + gpad, ty + gpad, bw - 2 * gpad, th - 2 * gpad, (double)inner_b, fcs->top_shadow, fcs->bottom_shadow);
     }
 
     /* Center title plate */
     double title_x = tx + bw;
     double title_w = tw - 2 * bw;
-    dtwm_draw_bevel(cr, title_x, ty, title_w, th, 1.0, fcs->top_shadow, fcs->bottom_shadow);
-    dtwm_draw_label(cr, "Icons", title_x, ty, title_w, th, fcs->fg, true, true);
+    dtwm_draw_bevel(cr, title_x, ty, title_w, th, (double)inner_b, fcs->top_shadow, fcs->bottom_shadow);
+    dtwm_draw_label_dpi(cr, dpi, "Icons", title_x, ty, title_w, th, fcs->fg, true, true);
 
     /* 3. Client interior + sunken scrolled well + vertical CDE scrollbar */
-    double cx = DTWM_BORDER_WIDTH;
-    double cy = DTWM_BORDER_WIDTH + DTWM_TITLE_HEIGHT;
-    double cw = outer_w - 2 * DTWM_BORDER_WIDTH;
-    double ch = outer_h - 2 * DTWM_BORDER_WIDTH - DTWM_TITLE_HEIGHT;
+    double cx = b_w;
+    double cy = b_w + t_h;
+    double cw = outer_w - 2 * b_w;
+    double ch = outer_h - 2 * b_w - t_h;
 
     cairo_set_source_rgba(cr, ics->bg.r, ics->bg.g, ics->bg.b, 1.0);
     cairo_rectangle(cr, cx, cy, cw, ch);
     cairo_fill(cr);
 
-    double sb_w = 16.0;
-    double well_x = cx + 5.0;
-    double well_y = cy + 5.0;
-    double well_w = cw - 10.0 - sb_w - 4.0;
-    double well_box_h = ch - 10.0;
-    if (well_w < 64.0) well_w = 64.0;
-    if (well_box_h < 40.0) well_box_h = 40.0;
+    double sb_w = round(16.0 * m.scale);
+    double pad5 = round(5.0 * m.scale);
+    double gap4 = round(4.0 * m.scale);
+    double well_x = cx + pad5;
+    double well_y = cy + pad5;
+    double well_w = cw - 2.0 * pad5 - sb_w - gap4;
+    double well_box_h = ch - 2.0 * pad5;
+    if (well_w < 64.0 * m.scale) well_w = 64.0 * m.scale;
+    if (well_box_h < 40.0 * m.scale) well_box_h = 40.0 * m.scale;
 
     cairo_set_source_rgba(cr, ics->bg.r * 0.86, ics->bg.g * 0.86, ics->bg.b * 0.86, 1.0);
     cairo_rectangle(cr, well_x, well_y, well_w, well_box_h);
     cairo_fill(cr);
-    dtwm_draw_bevel(cr, well_x, well_y, well_w, well_box_h, 2.0, ics->bottom_shadow, ics->top_shadow);
+    dtwm_draw_bevel(cr, well_x, well_y, well_w, well_box_h, (double)outer_b, ics->bottom_shadow, ics->top_shadow);
 
     /* Vertical CDE scrollbar */
-    double sb_x = well_x + well_w + 4.0;
+    double sb_x = well_x + well_w + gap4;
     double sb_y = well_y;
     double sb_h = well_box_h;
     cairo_set_source_rgba(cr, ics->bg.r * 0.82, ics->bg.g * 0.82, ics->bg.b * 0.82, 1.0);
     cairo_rectangle(cr, sb_x, sb_y, sb_w, sb_h);
     cairo_fill(cr);
-    dtwm_draw_bevel(cr, sb_x, sb_y, sb_w, sb_h, 1.5, ics->bottom_shadow, ics->top_shadow);
+    dtwm_draw_bevel(cr, sb_x, sb_y, sb_w, sb_h, fmax(1.5, (double)inner_b * 1.5), ics->bottom_shadow, ics->top_shadow);
 
     double arr_h = fmin(15.0, sb_h * 0.25);
     /* Up arrow */
@@ -2219,23 +2289,36 @@ static void compute_desktop_grid_metrics(DtwmServer *server, DtwmDesktopGridMetr
         gm->fbox = ubox;
     }
 
-    int img_dim = server->large_icons ? 96 : 48;
-    gm->frame_w = img_dim + 12;
-    gm->frame_h = (img_dim + 11) + (server->large_icons ? 24 : 21);
-    gm->indicator_extra =
-        server->show_open_window_icons ? (DTWM_OPEN_ICON_BAR_GAP + DTWM_OPEN_ICON_BAR_WIDTH) : 0;
+    int dpi = 96, img_dim = 48, frame_w = 60, img_frame_h = 59, label_frame_h = 21;
+    int bar_gap = DTWM_OPEN_ICON_BAR_GAP, bar_w = DTWM_OPEN_ICON_BAR_WIDTH;
+    compute_icon_tile_dims(
+        server, &dpi, &img_dim, &frame_w, &img_frame_h, &label_frame_h, &bar_gap, &bar_w
+    );
+    double s = (double)dpi / 96.0;
+    gm->frame_w = frame_w;
+    gm->frame_h = img_frame_h + label_frame_h;
+    gm->indicator_extra = server->show_open_window_icons ? (bar_gap + bar_w) : 0;
 
-    int gap = (server->icon_placement_margin >= 0 && server->icon_placement_margin <= 128)
-                  ? server->icon_placement_margin
-                  : 8;
-    gm->edge_pad_x = gap > 8 ? gap : 12;
-    gm->edge_pad_y = gap > 8 ? gap : 6;
-    gm->col_w = gm->frame_w + gm->indicator_extra + (gap > 6 ? gap : 10);
-    gm->row_h = gm->frame_h + (gap > 4 ? gap : 6);
+    int base_gap = (server->icon_placement_margin >= 0 && server->icon_placement_margin <= 128)
+                       ? server->icon_placement_margin
+                       : 8;
+    int gap = (int)lround((double)base_gap * s);
+    int pad12 = (int)lround(12.0 * s);
+    int pad10 = (int)lround(10.0 * s);
+    int pad8 = (int)lround(8.0 * s);
+    int pad6 = (int)lround(6.0 * s);
+    int pad4 = (int)lround(4.0 * s);
+    gm->edge_pad_x = gap > pad8 ? gap : pad12;
+    gm->edge_pad_y = gap > pad8 ? gap : pad6;
+    gm->col_w = gm->frame_w + gm->indicator_extra + (gap > pad6 ? gap : pad10);
+    gm->row_h = gm->frame_h + (gap > pad4 ? gap : pad6);
 
+    int panel_ref_w = (server->panel_view && server->panel_view->mapped && server->panel_w > 0)
+                          ? server->panel_w
+                          : (int)lround((double)DTWM_PANEL_WIDTH * s);
     bool side_clears_panel =
         !server->show_front_panel ||
-        (gm->fbox.width >= DTWM_PANEL_WIDTH + 2 * (gm->col_w + gm->edge_pad_x + 8));
+        (gm->fbox.width >= panel_ref_w + 2 * (gm->col_w + gm->edge_pad_x + pad8));
     gm->gbox = side_clears_panel ? gm->fbox : ubox;
 
     gm->max_rows = (gm->gbox.height - gm->edge_pad_y * 2) / gm->row_h;
@@ -2371,15 +2454,22 @@ void dtwm_icons_relayout(DtwmServer *server) {
     struct wlr_box ubox;
     dtwm_get_usable_output_box(server, 1, 1, &ubox);
 
-    int img_dim = server->large_icons ? 96 : 48;
+    int dpi = 96, img_dim = 48, frame_w = 60, img_frame_h = 59, label_frame_h = 21;
+    compute_icon_tile_dims(
+        server, &dpi, &img_dim, &frame_w, &img_frame_h, &label_frame_h, nullptr, nullptr
+    );
+    DtwmMetrics m = dtwm_metrics_for_dpi(dpi);
 
     if (server->use_icon_box && !server->greeter_mode) {
-        int min_h = server->large_icons ? 214 : 158;
+        int min_h = (int)lround((server->large_icons ? 214.0 : 158.0) * m.scale);
+        int def_w = (int)lround(524.0 * m.scale);
+        int min_w = (int)lround(220.0 * m.scale);
+        int abs_min_h = (int)lround(124.0 * m.scale);
         if (!server->icon_box_pos_initialized) {
-            server->icon_box_w = 524;
+            server->icon_box_w = def_w;
             server->icon_box_h = min_h;
-            server->icon_box_x = ubox.x + 20;
-            server->icon_box_y = ubox.y + ubox.height - server->icon_box_h - 14;
+            server->icon_box_x = ubox.x + (int)lround(20.0 * m.scale);
+            server->icon_box_y = ubox.y + ubox.height - server->icon_box_h - (int)lround(14.0 * m.scale);
             if (server->icon_box_y < ubox.y + 8) server->icon_box_y = ubox.y + 8;
             server->icon_box_pos_initialized = true;
         } else if (!server->icon_box_maximized && server->icon_box_h < min_h && !server->icon_box_resizing) {
@@ -2390,8 +2480,8 @@ void dtwm_icons_relayout(DtwmServer *server) {
                 if (server->icon_box_y < ubox.y) server->icon_box_y = ubox.y;
             }
         }
-        if (server->icon_box_w < 220) server->icon_box_w = 220;
-        if (server->icon_box_h < 124) server->icon_box_h = 124;
+        if (server->icon_box_w < min_w) server->icon_box_w = min_w;
+        if (server->icon_box_h < abs_min_h) server->icon_box_h = abs_min_h;
 
         if (server->icon_box_tree) {
             wlr_scene_node_set_position(
@@ -2400,20 +2490,23 @@ void dtwm_icons_relayout(DtwmServer *server) {
             wlr_scene_node_set_enabled(&server->icon_box_tree->node, true);
         }
 
-        int cw = server->icon_box_w - 2 * DTWM_BORDER_WIDTH;
-        int ch = server->icon_box_h - 2 * DTWM_BORDER_WIDTH - DTWM_TITLE_HEIGHT;
-        int well_x = DTWM_BORDER_WIDTH + 5;
-        int well_y = DTWM_BORDER_WIDTH + DTWM_TITLE_HEIGHT + 5;
-        int well_w = cw - 10 - 20;
-        int well_h = ch - 10;
-        if (well_w < 80) well_w = 80;
-        if (well_h < 48) well_h = 48;
+        int pad5 = (int)lround(5.0 * m.scale);
+        int sb_tot = (int)lround(20.0 * m.scale);
+        int cw = server->icon_box_w - 2 * m.border_w;
+        int ch = server->icon_box_h - 2 * m.border_w - m.title_h;
+        int well_x = m.border_w + pad5;
+        int well_y = m.border_w + m.title_h + pad5;
+        int well_w = cw - 2 * pad5 - sb_tot;
+        int well_h = ch - 2 * pad5;
+        if (well_w < (int)lround(80.0 * m.scale)) well_w = (int)lround(80.0 * m.scale);
+        if (well_h < (int)lround(48.0 * m.scale)) well_h = (int)lround(48.0 * m.scale);
 
-        int frame_w = img_dim + 12;
-        int frame_h = (img_dim + 11) + (server->large_icons ? 24 : 21);
-        int col_w = frame_w + 12;
-        int row_h = frame_h + 10;
-        int cols = (well_w - 12) / col_w;
+        int frame_h = img_frame_h + label_frame_h;
+        int pad12 = (int)lround(12.0 * m.scale);
+        int pad10 = (int)lround(10.0 * m.scale);
+        int col_w = frame_w + pad12;
+        int row_h = frame_h + pad10;
+        int cols = (well_w - pad12) / col_w;
         if (cols < 1) cols = 1;
 
         DtwmView *v;
@@ -2583,10 +2676,14 @@ DtwmView *dtwm_icons_view_at(DtwmServer *server, double lx, double ly) {
         }
         /* Hit-test separate open-window indicator bar beside icon frame (if visible) */
         if (v->icon_box_w > v->icon_w) {
-            int bar_x = tx + v->icon_w + DTWM_OPEN_ICON_BAR_GAP;
+            int bar_gap = 0, bar_w = 0;
+            compute_icon_tile_dims(
+                server, nullptr, nullptr, nullptr, nullptr, nullptr, &bar_gap, &bar_w
+            );
+            int bar_x = tx + v->icon_w + bar_gap;
             int bar_h = (v->icon_h * 3) / 8;
             int bar_y = ty + (v->icon_h - bar_h) / 2;
-            if (lx >= bar_x && lx < bar_x + DTWM_OPEN_ICON_BAR_WIDTH &&
+            if (lx >= bar_x && lx < bar_x + bar_w &&
                 ly >= bar_y && ly < bar_y + bar_h) {
                 return v;
             }
@@ -3004,8 +3101,9 @@ DtwmFramePart dtwm_icon_box_part_at(DtwmServer *server, double lx, double ly) {
     if (x < 0 || y < 0 || x >= w || y >= h) {
         return DTWM_PART_NONE;
     }
-    int b = DTWM_BORDER_WIDTH;
-    int c = DTWM_CORNER_HANDLE_LEN;
+    DtwmMetrics m = dtwm_metrics_for_dpi(dtwm_primary_output_dpi(server));
+    int b = m.border_w;
+    int c = m.corner_len;
     bool top_e = (y < b);
     bool bot_e = (y >= h - b);
     bool left_e = (x < b);
@@ -3020,8 +3118,8 @@ DtwmFramePart dtwm_icon_box_part_at(DtwmServer *server, double lx, double ly) {
         if (left_e) return DTWM_PART_RESIZE_W;
         return DTWM_PART_RESIZE_E;
     }
-    if (y >= b && y < b + DTWM_TITLE_HEIGHT) {
-        int bw = DTWM_TITLE_HEIGHT;
+    if (y >= b && y < b + m.title_h) {
+        int bw = m.title_h;
         if (x < b + bw) return DTWM_PART_BTN_MENU;
         if (x >= w - b - bw) return DTWM_PART_BTN_MAXIMIZE;
         return DTWM_PART_TITLE;
@@ -3272,17 +3370,24 @@ bool dtwm_icons_handle_drag_motion(DtwmServer *server) {
     wlr_scene_node_set_position(&v->desktop_icon_buf->node, nx, ny);
 
     if (g_icon_drag.in_icon_box) {
-        int img_dim = server->large_icons ? 96 : 48;
-        int frame_w = img_dim + 12;
-        int frame_h = (img_dim + 11) + (server->large_icons ? 24 : 21);
-        int cw = server->icon_box_w - 2 * DTWM_BORDER_WIDTH;
-        int well_x = DTWM_BORDER_WIDTH + 5;
-        int well_y = DTWM_BORDER_WIDTH + DTWM_TITLE_HEIGHT + 5;
-        int well_w = cw - 10 - 20;
-        if (well_w < 80) well_w = 80;
-        int col_w = frame_w + 12;
-        int row_h = frame_h + 10;
-        int cols = (well_w - 12) / col_w;
+        int dpi = 96, img_dim = 48, frame_w = 60, img_frame_h = 59, label_frame_h = 21;
+        compute_icon_tile_dims(
+            server, &dpi, &img_dim, &frame_w, &img_frame_h, &label_frame_h, nullptr, nullptr
+        );
+        DtwmMetrics m = dtwm_metrics_for_dpi(dpi);
+        int frame_h = img_frame_h + label_frame_h;
+        int pad5 = (int)lround(5.0 * m.scale);
+        int sb_tot = (int)lround(20.0 * m.scale);
+        int pad12 = (int)lround(12.0 * m.scale);
+        int pad10 = (int)lround(10.0 * m.scale);
+        int cw = server->icon_box_w - 2 * m.border_w;
+        int well_x = m.border_w + pad5;
+        int well_y = m.border_w + m.title_h + pad5;
+        int well_w = cw - 2 * pad5 - sb_tot;
+        if (well_w < (int)lround(80.0 * m.scale)) well_w = (int)lround(80.0 * m.scale);
+        int col_w = frame_w + pad12;
+        int row_h = frame_h + pad10;
+        int cols = (well_w - pad12) / col_w;
         if (cols < 1) cols = 1;
 
         int count = 0;
@@ -3449,12 +3554,13 @@ bool dtwm_icon_box_handle_button(DtwmServer *server, uint32_t btn, bool pressed,
             dtwm_icons_relayout(server);
         }
         /* Check scrollbar up/down arrow clicks on right edge of Icon Box */
+        DtwmMetrics m = dtwm_metrics_for_dpi(dtwm_primary_output_dpi(server));
         double rel_x = server->cursor->x - server->icon_box_x;
         double rel_y = server->cursor->y - server->icon_box_y;
-        double sb_x0 = server->icon_box_w - DTWM_BORDER_WIDTH - 21.0;
+        double sb_x0 = server->icon_box_w - m.border_w - round(21.0 * m.scale);
         if (btn == BTN_LEFT && rel_x >= sb_x0) {
-            double mid_y = DTWM_BORDER_WIDTH + DTWM_TITLE_HEIGHT +
-                           (server->icon_box_h - 2 * DTWM_BORDER_WIDTH - DTWM_TITLE_HEIGHT) * 0.5;
+            double mid_y = m.border_w + m.title_h +
+                           (server->icon_box_h - 2 * m.border_w - m.title_h) * 0.5;
             dtwm_icon_box_handle_axis(server, (rel_y < mid_y) ? -15.0 : 15.0, (rel_y < mid_y) ? -1 : 1);
         }
         return true;

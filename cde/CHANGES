@@ -1,4 +1,44 @@
 2026-11-22
+- Render CDE and CK Core Motif applications natively onto `1:1` physical Retina
+  pixels while presenting per-surface `wp_fractional_scale_v1` +
+  `wl_surface.preferred_buffer_scale` HiDPI to external Wayland clients
+  (`programs/dtwm/wayland/dtwm_wayland.h`, `programs/dtwm/wayland/cde_bevel.c`,
+  `programs/dtwm/wayland/cde_output_mgmt.c`,
+  `programs/dtwm/wayland/cde_power_display.c`,
+  `programs/dtwm/wayland/cde_workspace.c`, `programs/dtwm/wayland/cde_icons.c`,
+  `programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `programs/dtwm/wayland/WmFpWayland.c`, `programs/dtwm/Button.c`,
+  `programs/dtwm/UI.c`, `programs/dtwm/Clock.c`,
+  `programs/dtwm/Makefile.am`, `programs/dtwm/tests/check-dtwm-wayland-hidpi.py`,
+  `lib/DtWidget/Icon.c`, `programs/dtfile/File.c`, `programs/dtfile/FileMgr.c`,
+  `programs/dtfile/IconicPath.c`, `programs/dtstyle/Mouse.c`,
+  `programs/dtsession/SmWayland.c`, `debian/Xsession.wayland`,
+  `.ckgit/motif-revision`, `.ckgit/ci.yml`, `docs/improvements/wayland.md`):
+  - Bump pinned CK Core Motif ABI 9 to `da5ca5b3c6e574bea52eb203f286694ebc187353`
+    for `CLIENT_CAP native_dpi` compositor negotiation, `1:1` physical `wl_shm`
+    canvas commits without `wp_viewport` upscaling, multi-output virtual `RANDR`
+    1.5 CRTC + `"DPI"` property reporting, per-window `wl_surface.enter` monitor
+    tracking, 96-DPI catalog XLFD scaling under active `Xft.dpi`, and
+    `XmeGetScaledMask` 1-bit icon mask scaling.
+  - Keep `wlr_output` and `wlr_scene` at `1.0` (`1:1` integer physical pixels) in
+    `dtwm-wayland`, persist per-output `dpi.<name>` in
+    `~/.dt/display_ergonomics.conf`, accept `--output-dpi NAME_OR_IDX=DPI` (and
+    `DTWM_WAYLAND_OUTPUT_DPI` in `dtsession --wayland` / `Xsession.wayland`),
+    synchronize `Xft.dpi` in `RESOURCE_MANAGER`, advertise `wl_compositor` v6 and
+    `wp_cursor_shape_manager_v1`, publish `_DT_ACTIVE_WINDOW_BOX` over native
+    Wayland IPC, and render server-side 3D bevel frames, Pango titlebars, menus,
+    desktop icons, Icon Box, task switcher, and hardware OSDs directly in `1:1`
+    physical pixels (`DtwmMetrics`).
+  - Present per-surface `wp_fractional_scale_v1` and
+    `wl_surface.preferred_buffer_scale` (`S = dpi / 96.0`) to non-Motif external
+    Wayland clients (`foot`, GTK4, Qt6, Firefox), translating `xdg_toplevel`
+    configure bounds, `xdg_popup` constraints/positions, subsurface positions,
+    scene buffer destinations, and `wl_pointer` hit-testing (`*sx / S, *sy / S`).
+  - Scale `DtIconGadget` named icons and masks via `XmGetScaledPixmap` +
+    `XmeGetScaledMask` (with live `Resize`/`SetValues` reload), scale `dtwm-panel`
+    controls/handles/analog clock (re-execing cleanly on live DPI changes), scale
+    `dtfile` icon/shelf/`IconicPath` metrics, and scale `dtstyle` cursor preview
+    slots by `XmGetWidgetScale`.
 - Eliminate HiDPI bilinear seam lines at `dtwm-wayland` frame strip corners and
   render titlebar text at native output scale (`programs/dtwm/wayland/cde_bevel.c`,
   `programs/dtwm/wayland/dtwm_wayland_main.c`, `docs/improvements/wayland.md`):

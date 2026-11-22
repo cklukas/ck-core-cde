@@ -174,10 +174,19 @@ static void after_outputs_reconfigured(DtwmServer *server) {
     wl_list_for_each(out, &server->outputs, link) {
         refresh_output_scene_geometry(server, out);
     }
+    dtwm_sync_resource_manager_dpi(server);
+    dtwm_reload_cursor_theme(server, server->cursor_theme, server->cursor_size);
     dtwm_update_all_backdrops(server);
     dtwm_update_front_panel(server);
     dtwm_icons_relayout(server);
+    dtwm_sync_all_external_client_scales(server);
     dtwm_reflow_views_for_outputs(server);
+    DtwmView *v;
+    wl_list_for_each(v, &server->views, link) {
+        if (v->mapped && v->decorated) {
+            dtwm_view_update_frame(v);
+        }
+    }
     dtwm_sync_xwayland_randr_dpi(server);
     dtwm_lock_sync_outputs(server);
     dtwm_output_mgmt_sync(server);
@@ -355,10 +364,8 @@ static void apply_or_test_output_config(
                 wlr_output_state_set_custom_mode(&st, cw, ch, 60000);
             }
             wlr_output_state_set_transform(&st, head->state.transform);
-            float req_scale = (head->state.scale >= 0.5f && head->state.scale <= 4.0f)
-                                  ? head->state.scale
-                                  : 1.0f;
-            wlr_output_state_set_scale(&st, req_scale);
+            /* Always commit 1:1 physical output scale so wlr_scene operates in exact physical pixels */
+            wlr_output_state_set_scale(&st, 1.0f);
         }
 
         if (test_only) {
@@ -377,6 +384,9 @@ static void apply_or_test_output_config(
                         if (new_dpi < 72) new_dpi = 72;
                         if (new_dpi > 384) new_dpi = 384;
                         dout->dpi = new_dpi;
+                        if (wo->name && wo->name[0]) {
+                            dtwm_power_display_record_dpi(server, wo->name, new_dpi);
+                        }
                     }
                 } else {
                     wlr_output_layout_remove(server->output_layout, wo);
@@ -735,21 +745,25 @@ static void sync_ident_overlays(DtwmServer *server) {
         const char *oname = wo->name ? wo->name : "OUT";
         int num = lookup_ident_number_for_output(oname, seq_idx);
         bool sel = (num == g_ident_selected_num);
-        double scale = (out->dpi > 0) ? ((double)out->dpi / 96.0) : (double)wo->scale;
+        double scale = (out->dpi > 0) ? ((double)out->dpi / 96.0) : 1.0;
+        if (scale < 1.0) scale = 1.0;
+        if (scale > 4.0) scale = 4.0;
+        int phys_sz = (int)lround((double)IDENT_BADGE_LOGICAL_SZ * scale);
+        int phys_margin = (int)lround((double)IDENT_BADGE_MARGIN * scale);
 
         struct wlr_buffer *buf = render_ident_badge_buffer(scale, num, oname, sel);
         if (!buf) continue;
 
-        int bx = obox.x + obox.width - IDENT_BADGE_LOGICAL_SZ - IDENT_BADGE_MARGIN;
-        int by = obox.y + IDENT_BADGE_MARGIN;
+        int bx = obox.x + obox.width - phys_sz - phys_margin;
+        int by = obox.y + phys_margin;
         if (bx < obox.x + 4) bx = obox.x + 4;
-        if (by + IDENT_BADGE_LOGICAL_SZ > obox.y + obox.height - 4) {
+        if (by + phys_sz > obox.y + obox.height - 4) {
             by = obox.y + 4;
         }
 
         wlr_scene_buffer_set_buffer(badge->scene_buf, buf);
         wlr_buffer_drop(buf);
-        wlr_scene_buffer_set_dest_size(badge->scene_buf, IDENT_BADGE_LOGICAL_SZ, IDENT_BADGE_LOGICAL_SZ);
+        wlr_scene_buffer_set_dest_size(badge->scene_buf, phys_sz, phys_sz);
         wlr_scene_node_set_position(&badge->scene_buf->node, bx, by);
         wlr_scene_node_raise_to_top(&badge->scene_buf->node);
         wlr_scene_node_set_enabled(&badge->scene_buf->node, true);
@@ -876,10 +890,7 @@ bool dtwm_output_mgmt_handle_wm_request(DtwmServer *server, const char *cmd) {
                 wlr_output_state_set_custom_mode(&st, w, h, 60000);
             }
             wlr_output_state_set_transform(&st, degrees_to_transform(rot));
-            float req_scale = (dpi >= 72 && dpi <= 384) ? ((float)dpi / 96.0f) : 1.0f;
-            if (req_scale < 0.5f) req_scale = 0.5f;
-            if (req_scale > 4.0f) req_scale = 4.0f;
-            wlr_output_state_set_scale(&st, req_scale);
+            wlr_output_state_set_scale(&st, 1.0f);
         }
 
         if (wlr_output_commit_state(wo, &st)) {
@@ -887,6 +898,9 @@ bool dtwm_output_mgmt_handle_wm_request(DtwmServer *server, const char *cmd) {
                 wlr_output_layout_add(server->output_layout, wo, x, y);
                 if (dpi >= 72 && dpi <= 384) {
                     dout->dpi = dpi;
+                    if (wo->name && wo->name[0]) {
+                        dtwm_power_display_record_dpi(server, wo->name, dpi);
+                    }
                 }
             } else {
                 wlr_output_layout_remove(server->output_layout, wo);
