@@ -347,19 +347,25 @@ panel instrumentation:
   name (matching the corner badge in the virtual monitor arrangement canvas,
   with a gold highlight rim on the selected monitor) appears at the top-right
   of every active screen on both Wayland (`f.identify_outputs` in
-  `layer_overlay_tree`) and X11/XLibre (`ShapeInput` `overrideShell` overlays),
-  and disappears automatically when the dialog closes.
+  `layer_overlay_tree`, tracking either `_DTSTYLE_DISPLAY_DLG_WIN` or the
+  native `Style Manager - Display & Monitors` `xdg_toplevel` when
+  `--no-xwayland` is active) and X11/XLibre (`ShapeInput` `overrideShell`
+  overlays), and disappears automatically when the dialog closes.
+- **Packaged XDG Desktop Portals (`cde-portals.conf`) & D-Bus activation environment:**
+  `ck-core-cde` installs `/usr/share/xdg-desktop-portal/cde-portals.conf`
+  routing `ScreenCast` and `Screenshot` to `wlr` (`xdg-desktop-portal-wlr` +
+  PipeWire) and synchronizes `WAYLAND_DISPLAY`, `DISPLAY`,
+  `XDG_CURRENT_DESKTOP`, `XDG_SESSION_TYPE`, `TT_SESSION`, and CDE
+  icon/datatype/help/infolib search paths (`XMICONSEARCHPATH`,
+  `DTDATABASESEARCHPATH`, `DTAPPSEARCHPATH`, `DTHELPSEARCHPATH`,
+  `DTINFOLIBSEARCHPATH`, `XBMLANGPATH`) into the D-Bus/systemd user activation
+  environment at session startup.
 - **Standard Wayland output & portal protocols (`cde_output_mgmt.c`):**
   `dtwm-wayland` exposes `zwlr_output_manager_v1` (enabling `wlr-randr` and
   `kanshi`), `zwlr_output_power_manager_v1`, `zxdg_output_manager_v1`,
   `zwlr_export_dmabuf_manager_v1`, `ext_image_copy_capture_manager_v1` +
   `ext_output_image_capture_source_manager_v1`, and
   `zwlr_foreign_toplevel_manager_v1`.
-- **Packaged XDG Desktop Portals (`cde-portals.conf`):** `ck-core-cde` installs
-  `/usr/share/xdg-desktop-portal/cde-portals.conf` routing `ScreenCast` and
-  `Screenshot` to `wlr` (`xdg-desktop-portal-wlr` + PipeWire) and synchronizes
-  `WAYLAND_DISPLAY`, `DISPLAY`, `XDG_CURRENT_DESKTOP`, and `XDG_SESSION_TYPE`
-  into the D-Bus/systemd user activation environment at session startup.
 
 ## Native Wayland CJK Input Method framework (`WP-11`)
 

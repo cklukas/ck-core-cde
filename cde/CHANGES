@@ -1,4 +1,33 @@
 2026-11-22
+- Fix Wayland UI audit defects across `dtstyle`, `dtwm-wayland`, `dthelpgen`,
+  `Xsession.wayland`, and pinned CK Core Motif (`programs/dtstyle/Mouse.c`,
+  `programs/dtwm/wayland/cde_output_mgmt.c`,
+  `programs/dthelp/dthelpgen/helpgen.c`, `debian/Xsession.wayland`,
+  `.ckgit/motif-revision`, `.ckgit/ci.yml`, `docs/improvements/wayland.md`):
+  - Bump pinned CK Core Motif ABI 9 to `d41288c195bcf363d0a8a47325d6ad7580e01cce`
+    so `Button1` menu-bar press-drag into `xdg_popup` pulldown and cascade
+    menus hit-tests active popups under Wayland's implicit button grab,
+    unlabeled `*enableToggleVisual: True` checkboxes (such as `dtfile`
+    `Permissions` `Read`/`Write`/`Execute` grids) size to font line height with
+    visible checkmarks, and `XmFileSelectionBox` (`dtpad` `Open a File`) keeps
+    balanced `Files` and `Folders` column widths in directories without
+    matching files.
+  - Attach `Smooth Scrolling` (`mouse.wheelSmoothToggle`) after
+    `mouse.wheelDirRC` (`XmATTACH_WIDGET` with `2 * horizontalSpacing` offset)
+    instead of fixed `XmATTACH_POSITION` `58` in `Style Manager - Mouse` so
+    `Natural` never overlaps `Smooth Scrolling` under proportional fonts.
+  - Detect the mapped `Style Manager - Display & Monitors` `xdg_toplevel` view
+    in `dtwm-wayland`'s `check_display_dlg_win_viewable` when running with
+    `--no-xwayland` (plus an unseen-window expiry fallback in
+    `ident_watchdog_cb`) so monitor-identification corner badges clear
+    automatically as soon as the dialog closes.
+  - Remove an invalid `free(value)` on the `XrmDatabase`-owned string returned
+    by `_DtHelpCeGetResourceString` in `dthelpgen`'s `CheckTimeStamps`,
+    preventing `SIGABRT` (`double free or corruption`) at session startup.
+  - Export CDE application, datatype, help, infolib, icon, bitmap, and
+    `TT_SESSION` search paths into `dbus-update-activation-environment` in
+    `Xsession.wayland` so D-Bus/systemd-activated CDE clients resolve full
+    desktop icons and actions.
 - Bump pinned CK Core Motif ABI 9 to `be2e209a5e79b940137ad42da2eaae51c128e0ff`
   (`.ckgit/motif-revision`, `.ckgit/ci.yml`) so native Wayland `XRender`
   `RenderTrapezoids`, `RenderTriangles`, `RenderTriStrip`, and `RenderTriFan`

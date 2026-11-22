@@ -2746,8 +2746,9 @@ build_mouseDialog( Widget shell )
     XtSetArg(args[n], XmNtopWidget, mouse.wheelDirRC); n++;
     XtSetArg(args[n], XmNbottomAttachment, XmATTACH_OPPOSITE_WIDGET); n++;
     XtSetArg(args[n], XmNbottomWidget, mouse.wheelDirRC); n++;
-    XtSetArg(args[n], XmNleftAttachment, XmATTACH_POSITION); n++;
-    XtSetArg(args[n], XmNleftPosition, 58); n++;
+    XtSetArg(args[n], XmNleftAttachment, XmATTACH_WIDGET); n++;
+    XtSetArg(args[n], XmNleftWidget, mouse.wheelDirRC); n++;
+    XtSetArg(args[n], XmNleftOffset, style.horizontalSpacing * 2); n++;
     XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
     mouse.wheelSmoothToggle =
 	XmCreateToggleButtonGadget(mouse.scrollWheelForm, "wheelSmoothToggle", args, n);

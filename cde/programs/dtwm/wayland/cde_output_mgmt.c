@@ -60,6 +60,7 @@ static struct wl_list g_ident_badges;
 static bool g_ident_list_inited = false;
 static struct wl_event_source *g_ident_watchdog = nullptr;
 static bool g_ident_saw_dlg_win = false;
+static int g_ident_unseen_ticks = 0;
 static xcb_atom_t g_atom_ident_state = XCB_ATOM_NONE;
 static xcb_atom_t g_atom_dlg_win = XCB_ATOM_NONE;
 
@@ -601,7 +602,23 @@ static struct wlr_buffer *render_ident_badge_buffer(
 
 static bool check_display_dlg_win_viewable(DtwmServer *server, bool *out_has_prop) {
     *out_has_prop = false;
-    if (!server || !server->xcb_conn || server->xcb_root == XCB_WINDOW_NONE) return false;
+    if (!server) return false;
+    if (!server->xcb_conn || server->xcb_root == XCB_WINDOW_NONE) {
+        DtwmView *v;
+        wl_list_for_each(v, &server->views, link) {
+            if (!v->mapped || v->minimized || v->kind != DTWM_VIEW_XDG || !v->xdg_toplevel) {
+                continue;
+            }
+            const char *title = v->xdg_toplevel->title ? v->xdg_toplevel->title : "";
+            const char *app_id = v->xdg_toplevel->app_id ? v->xdg_toplevel->app_id : "";
+            if (strstr(title, "Display & Monitors") != nullptr ||
+                (strcasestr(app_id, "dtstyle") != nullptr &&
+                 (strstr(title, "Monitors") != nullptr || strstr(title, "Display") != nullptr))) {
+                return true;
+            }
+        }
+        return false;
+    }
     if (g_atom_dlg_win == XCB_ATOM_NONE) {
         g_atom_dlg_win = intern_xcb_atom(server->xcb_conn, "_DTSTYLE_DISPLAY_DLG_WIN");
     }
@@ -638,9 +655,13 @@ static int ident_watchdog_cb(void *data) {
     bool viewable = check_display_dlg_win_viewable(server, &has_prop);
     if (viewable) {
         g_ident_saw_dlg_win = true;
-    } else if (g_ident_saw_dlg_win || has_prop) {
-        clear_ident_overlays(server);
-        return 0;
+        g_ident_unseen_ticks = 0;
+    } else {
+        g_ident_unseen_ticks++;
+        if (g_ident_saw_dlg_win || has_prop || g_ident_unseen_ticks >= 6) {
+            clear_ident_overlays(server);
+            return 0;
+        }
     }
 
     if (g_ident_watchdog) {
@@ -652,6 +673,7 @@ static int ident_watchdog_cb(void *data) {
 static void clear_ident_overlays(DtwmServer *server) {
     g_ident_active = false;
     g_ident_saw_dlg_win = false;
+    g_ident_unseen_ticks = 0;
     g_ident_rule_count = 0;
     if (g_ident_watchdog) {
         wl_event_source_remove(g_ident_watchdog);
@@ -799,6 +821,7 @@ bool dtwm_output_mgmt_handle_wm_request(DtwmServer *server, const char *cmd) {
         }
 
         g_ident_active = true;
+        g_ident_unseen_ticks = 0;
         sync_ident_overlays(server);
         return true;
     }

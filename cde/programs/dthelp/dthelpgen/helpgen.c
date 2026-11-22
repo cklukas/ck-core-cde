@@ -836,7 +836,6 @@ CheckTimeStamps (
 	if (value == nullptr)
 	    return 1;
 	timeVal = atol(value);
-	free(value);
 	if (timeVal != buf.st_mtime)
 	    return 1;
 
