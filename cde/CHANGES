@@ -1,4 +1,13 @@
 2026-11-22
+- Eliminate HiDPI bilinear seam lines at `dtwm-wayland` frame strip corners and
+  render titlebar text at native output scale (`programs/dtwm/wayland/cde_bevel.c`,
+  `programs/dtwm/wayland/dtwm_wayland_main.c`, `docs/improvements/wayland.md`):
+  - Render `frame_{top,bottom,left,right}_buf` strips at `ceil(max_output_scale)`
+    with `wlr_scene_buffer_set_dest_size` and `WLR_SCALE_FILTER_NEAREST` on
+    integer-scaled outputs (and refresh decorated frame buffers in
+    `dtwm_reflow_views_for_outputs`) so `PIXMAN_REPEAT_NONE` bilinear upscaling
+    never blends out-of-bounds black texels across strip junctions on `2x` HiDPI
+    displays and window titlebars render at native HiDPI resolution.
 - Synchronize Wayland interactive window resize, eliminate `dtfile` resize
   stalls and status-bar bevel artifacts, and fix native Wayland screen-saver and
   session-lock state & unlock dialog routing (`programs/dtwm/wayland/dtwm_wayland.h`,

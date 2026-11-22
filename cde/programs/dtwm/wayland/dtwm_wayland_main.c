@@ -1424,6 +1424,13 @@ void dtwm_reflow_views_for_outputs(DtwmServer *server) {
         }
         if (nx != v->x || ny != v->y) {
             view_apply_geometry(v, nx, ny, v->client_w, v->client_h);
+        } else if (v->decorated) {
+            dtwm_view_update_frame(v);
+        }
+    }
+    wl_list_for_each(v, &server->views, link) {
+        if (v->mapped && v->decorated && (v->is_panel || v->is_subpanel)) {
+            dtwm_view_update_frame(v);
         }
     }
     dtwm_publish_active_window_box(server);

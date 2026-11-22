@@ -30,10 +30,12 @@ framing or interaction rules.
   frame both Wayland and XWayland windows identically;
 - Server-side frames compose a palette-matched `client_bg_rect`, a client-clipped
   `content_tree`, four tight opaque `DRM_FORMAT_XRGB8888` bevel border strips
-  (`frame_top_buf`, `frame_bottom_buf`, `frame_left_buf`, `frame_right_buf`), and
-  an unclipped `popup_anchor_tree` above the borders so popup menus extend freely
-  outside the window while eliminating full-window `ARGB8888` shadow buffers and
-  client interior overhang;
+  (`frame_top_buf`, `frame_bottom_buf`, `frame_left_buf`, `frame_right_buf`)
+  rendered at native HiDPI output scale (`ceil(max_output_scale)`) with
+  `WLR_SCALE_FILTER_NEAREST` on integer-scaled displays, and an unclipped
+  `popup_anchor_tree` above the borders so popup menus extend freely outside the
+  window while keeping crisp HiDPI titlebar text and eliminating strip seams,
+  full-window `ARGB8888` shadow buffers, and client interior overhang;
 - XWayland client coordinates are offset by the frame's left and top insets so
   override-redirect Motif popup menus and dropdowns align directly beneath their
   parent menu bars.

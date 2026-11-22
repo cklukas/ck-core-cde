@@ -411,6 +411,8 @@ static void render_frame_strip(
     int outer_w,
     int outer_h,
     int left,
+    int buf_scale,
+    bool all_int_scale,
     const DtwmColorSet *cs,
     bool is_modern,
     bool is_hc,
@@ -421,15 +423,23 @@ static void render_frame_strip(
     }
     if (rw <= 0 || rh <= 0) {
         wlr_scene_buffer_set_buffer(sbuf, nullptr);
+        wlr_scene_buffer_set_dest_size(sbuf, 0, 0);
         return;
     }
 
+    if (buf_scale < 1) {
+        buf_scale = 1;
+    }
     cairo_t *cr = nullptr;
-    DtwmCairoBuffer *buf = dtwm_cairo_buffer_create_fmt(rw, rh, true, &cr);
+    DtwmCairoBuffer *buf =
+        dtwm_cairo_buffer_create_fmt(rw * buf_scale, rh * buf_scale, true, &cr);
     if (!buf) {
         return;
     }
 
+    if (buf_scale > 1) {
+        cairo_scale(cr, (double)buf_scale, (double)buf_scale);
+    }
     cairo_translate(cr, -ox, -oy);
 
     /* 1. Fill strip background */
@@ -583,7 +593,11 @@ static void render_frame_strip(
     cairo_destroy(cr);
 
     wlr_scene_node_set_position(&sbuf->node, ox, oy);
+    wlr_scene_buffer_set_filter_mode(
+        sbuf, all_int_scale ? WLR_SCALE_FILTER_NEAREST : WLR_SCALE_FILTER_BILINEAR
+    );
     wlr_scene_buffer_set_buffer(sbuf, &buf->base);
+    wlr_scene_buffer_set_dest_size(sbuf, rw, rh);
     wlr_buffer_drop(&buf->base);
 }
 
@@ -646,21 +660,44 @@ void dtwm_view_update_frame(DtwmView *view) {
                       view->server->palette.profile == DTWM_PROFILE_MODERN_DARK);
     bool is_hc = (view->server->palette.profile == DTWM_PROFILE_HIGH_CONTRAST);
 
+    float max_scale = 1.0f;
+    bool all_int_scale = true;
+    if (view->server) {
+        DtwmOutput *dout;
+        wl_list_for_each(dout, &view->server->outputs, link) {
+            if (dout->wlr_output && dout->wlr_output->enabled) {
+                float s = dout->wlr_output->scale;
+                if (s > max_scale) {
+                    max_scale = s;
+                }
+                if (fabsf(s - roundf(s)) > 0.01f) {
+                    all_int_scale = false;
+                }
+            }
+        }
+    }
+    int buf_scale = (int)ceilf(max_scale);
+    if (buf_scale < 1) {
+        buf_scale = 1;
+    } else if (buf_scale > 4) {
+        buf_scale = 4;
+    }
+
     render_frame_strip(
         view, view->frame_top_buf, 0, 0, outer_w, top,
-        outer_w, outer_h, left, cs, is_modern, is_hc, true
+        outer_w, outer_h, left, buf_scale, all_int_scale, cs, is_modern, is_hc, true
     );
     render_frame_strip(
         view, view->frame_bottom_buf, 0, top + view->client_h, outer_w, bottom,
-        outer_w, outer_h, left, cs, is_modern, is_hc, false
+        outer_w, outer_h, left, buf_scale, all_int_scale, cs, is_modern, is_hc, false
     );
     render_frame_strip(
         view, view->frame_left_buf, 0, top, left, view->client_h,
-        outer_w, outer_h, left, cs, is_modern, is_hc, false
+        outer_w, outer_h, left, buf_scale, all_int_scale, cs, is_modern, is_hc, false
     );
     render_frame_strip(
         view, view->frame_right_buf, left + view->client_w, top, right, view->client_h,
-        outer_w, outer_h, left, cs, is_modern, is_hc, false
+        outer_w, outer_h, left, buf_scale, all_int_scale, cs, is_modern, is_hc, false
     );
 }
 
