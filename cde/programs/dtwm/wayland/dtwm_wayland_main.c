@@ -5338,17 +5338,27 @@ static void ensure_wayland_ttsession_env(void) {
 
     pid_t pid = fork();
     if (pid == 0) {
+        close(pfd[0]);
+        pid_t daemon_pid = fork();
+        if (daemon_pid < 0) {
+            _exit(127);
+        }
+        if (daemon_pid > 0) {
+            _exit(0);
+        }
+        setsid();
         sigset_t empty_mask;
         sigemptyset(&empty_mask);
         sigprocmask(SIG_SETMASK, &empty_mask, nullptr);
-        close(pfd[0]);
         dup2(pfd[1], STDOUT_FILENO);
         if (pfd[1] > STDOUT_FILENO) close(pfd[1]);
-        int devnull = open("/dev/null", O_WRONLY);
+        int devnull = open("/dev/null", O_RDWR);
         if (devnull >= 0) {
+            dup2(devnull, STDIN_FILENO);
             dup2(devnull, STDERR_FILENO);
             if (devnull > STDERR_FILENO) close(devnull);
         }
+        unsetenv("DISPLAY");
         execl(tt_bin, "ttsession", "-p", (char *)nullptr);
         _exit(127);
     }
@@ -5361,7 +5371,7 @@ static void ensure_wayland_ttsession_env(void) {
     char line[512] = {0};
     size_t used = 0;
     struct pollfd pf = {.fd = pfd[0], .events = POLLIN, .revents = 0};
-    while (used + 1 < sizeof(line) && poll(&pf, 1, 1500) > 0 &&
+    while (used + 1 < sizeof(line) && poll(&pf, 1, 4000) > 0 &&
            (pf.revents & (POLLIN | POLLHUP))) {
         char ch = '\0';
         ssize_t nr = read(pfd[0], &ch, 1);
@@ -5372,7 +5382,7 @@ static void ensure_wayland_ttsession_env(void) {
     close(pfd[0]);
 
     int st = 0;
-    (void)waitpid(pid, &st, WNOHANG);
+    (void)waitpid(pid, &st, 0);
 
     if (line[0]) {
         setenv("TT_SESSION", line, 1);
@@ -6109,17 +6119,18 @@ int main(int argc, char **argv) {
         goto cleanup;
     }
     server.wayland_socket = socket;
+    setenv("WAYLAND_DISPLAY", socket, 1);
+
+    if (server.no_xwayland && !server.greeter_mode) {
+        ensure_wayland_ttsession_env();
+    }
 
     if (!wlr_backend_start(server.backend)) {
         exit_code = 1;
         goto cleanup;
     }
 
-    setenv("WAYLAND_DISPLAY", socket, 1);
     start_native_ipc_server(&server);
-    if (server.no_xwayland && !server.greeter_mode && server.show_front_panel) {
-        ensure_wayland_ttsession_env();
-    }
     {
         const char *tts = getenv("TT_SESSION");
         if (!tts || !tts[0]) {

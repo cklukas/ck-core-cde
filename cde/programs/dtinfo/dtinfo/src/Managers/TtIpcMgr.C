@@ -181,16 +181,26 @@ TtIpcMgr::TtIpcMgr()
   xsession = tt_X_session(
        (const char *)(XDisplayString((window_system().display()))) ) ;
 
-  if( tt_ptr_error( xsession ) != TT_OK )
+  const char *session_id = xsession;
+  if( tt_ptr_error( xsession ) != TT_OK || !xsession || !xsession[0] )
   {
-      errmsg = LogToolTalkMessage (DtMsgLogError, 
-				   ERR_TT_DISPLAY_AS_SESSION,
-				   (char*)DFLTXT_DISPLAY_AS_SESSION,
-				   tt_state);
-      message_mgr().error_dialog( (char*)UAS_String(errmsg) ) ;
-      XtFree (errmsg);
-      tt_release( mark ) ;
-      return ;
+      const char *env_sess = getenv("TT_SESSION");
+      if (!env_sess || !env_sess[0])
+          env_sess = getenv("_SUN_TT_SESSION");
+      if (env_sess && env_sess[0])
+      {
+          session_id = env_sess;
+      }
+      else
+      {
+          errmsg = LogToolTalkMessage (DtMsgLogWarning, 
+                                       ERR_TT_DISPLAY_AS_SESSION,
+                                       (char*)DFLTXT_DISPLAY_AS_SESSION,
+                                       tt_state);
+          XtFree (errmsg);
+          tt_release( mark ) ;
+          return ;
+      }
   }
 
   // set up to actually join the "default" session for any
@@ -198,7 +208,7 @@ TtIpcMgr::TtIpcMgr()
   XtAppAddWorkProc( window_system().app_context(),
                     ipc_init_wp1, this ) ;
 
-  if( (tt_state = tt_default_session_set( xsession )) == TT_OK )
+  if( (tt_state = tt_default_session_set( session_id )) == TT_OK )
   {
       procid = ttdt_open( &ttfd, "Dtinfo", "Fujitsu", "CDE", True ) ;
       //why is fujitsu mentioned here? 05/15/18 - C

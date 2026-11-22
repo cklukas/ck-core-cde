@@ -50,6 +50,7 @@
  */
 
 #include <X11/Shell.h>
+#include <X11/cursorfont.h>
 #include <X11/Xmu/Editres.h>
 #include <Xm/Xm.h>
 #include <Xm/XmP.h>
@@ -948,6 +949,60 @@ WindowSystem::primary_modal_cursor (WCallback *wcb)
 // create_cursor
 // /////////////////////////////////////////////////////////////////
 
+static Pixmap
+load_cursor_bitmap_with_fallbacks (Screen *screen, const char *name)
+{
+  if (!screen || !name || !name[0])
+    return XmUNSPECIFIED_PIXMAP;
+
+  Pixmap pm = XmGetPixmapByDepth (screen, (char *) name, 1, 0, 1);
+  if (pm != XmUNSPECIFIED_PIXMAP)
+    return pm;
+
+  static const char *const dirs[] = {
+#ifdef CDE_INSTALLATION_TOP
+    CDE_INSTALLATION_TOP "/include/X11/bitmaps",
+    CDE_INSTALLATION_TOP "/appconfig/icons/C",
+#endif
+    "/usr/dt/include/X11/bitmaps",
+    "/usr/include/X11/bitmaps",
+    "/usr/dt/appconfig/icons/C",
+  };
+  static const char *const exts[] = { "", ".bm", ".xbm" };
+
+  char candidate[512];
+  for (size_t d = 0; d < sizeof(dirs) / sizeof(dirs[0]); ++d)
+    {
+      for (size_t e = 0; e < sizeof(exts) / sizeof(exts[0]); ++e)
+        {
+          snprintf (candidate, sizeof(candidate), "%s/%s%s", dirs[d], name, exts[e]);
+          if (access (candidate, R_OK) == 0)
+            {
+              pm = XmGetPixmapByDepth (screen, candidate, 1, 0, 1);
+              if (pm != XmUNSPECIFIED_PIXMAP)
+                return pm;
+            }
+        }
+    }
+  return XmUNSPECIFIED_PIXMAP;
+}
+
+static Cursor
+fallback_font_cursor (Display *dpy, const char *filename)
+{
+  unsigned int shape = XC_left_ptr;
+  if (filename)
+    {
+      if (strstr (filename, "hour") != NULL || strstr (filename, "wait") != NULL)
+        shape = XC_watch;
+      else if (strstr (filename, "noenter") != NULL)
+        shape = XC_X_cursor;
+      else if (strstr (filename, "bomb") != NULL)
+        shape = XC_pirate;
+    }
+  return XCreateFontCursor (dpy, shape);
+}
+
 Cursor
 WindowSystem::create_cursor (const char *filename)
 {
@@ -957,16 +1012,15 @@ WindowSystem::create_cursor (const char *filename)
   unsigned short c = ~0;
   static XColor white = { 0,  c,  c,  c, DoRed | DoGreen | DoBlue };
   static XColor black = { 0,  0,  0,  0, DoRed | DoGreen | DoBlue };
-  int  hot_x, hot_y;
-  int depth, len;
+  int  hot_x = 0, hot_y = 0;
+  int depth = 1, len;
   Boolean success;
 
-  // Get the cursor pixmap. 
-  cursor_bits = XmGetPixmapByDepth (screen, (char *) filename, 1, 0, 1);
+  // Get the cursor pixmap (with standard Motif/CDE bitmap path fallbacks).
+  cursor_bits = load_cursor_bitmap_with_fallbacks (screen, filename);
   if (cursor_bits == XmUNSPECIFIED_PIXMAP)
     {
-      fprintf (stderr, "Unable to load bitmap %s\n", filename);
-      abort();
+      return fallback_font_cursor (f_display, filename);
     }
 
   success = XmeGetPixmapData (screen, cursor_bits, //
@@ -977,7 +1031,8 @@ WindowSystem::create_cursor (const char *filename)
 			      0, 0);		   // width, height
 
   if(!success) {
-    assert (success);
+    XmDestroyPixmap (screen, cursor_bits);
+    return fallback_font_cursor (f_display, filename);
   }
 
   // Get the cursor mask pixmap. 
@@ -985,14 +1040,14 @@ WindowSystem::create_cursor (const char *filename)
   char *mask_filename = new char [len + 2];
   *((char *) memcpy(mask_filename, filename, len) + len) = '\0';
   *((char *) memcpy(mask_filename + len, "m", 1) + 1) = '\0';
-  cursor_mask = XmGetPixmapByDepth (screen, mask_filename, 1, 0, 1);
+  cursor_mask = load_cursor_bitmap_with_fallbacks (screen, mask_filename);
+  delete [] mask_filename;
+
   if (cursor_mask == XmUNSPECIFIED_PIXMAP)
     {
-      fprintf (stderr, "Unable to load bitmap %s\n", mask_filename);
-      abort();
+      XmDestroyPixmap (screen, cursor_bits);
+      return fallback_font_cursor (f_display, filename);
     }
-
-  delete [] mask_filename;
 
   cursor = XCreatePixmapCursor (f_display, cursor_bits, cursor_mask,
 				&black, &white, hot_x, hot_y);
@@ -1101,9 +1156,12 @@ WindowSystem::default_pixmap (Dimension *width, Dimension *height)
 #else
 	XpmAttributes xpm_attr ;
 	xpm_attr.valuemask = 0 ;
+	Window draw_win = XtWindow((Widget)toplevel());
+	if (!draw_win)
+	  draw_win = DefaultRootWindow(f_display);
 	
 	XpmCreatePixmapFromData(f_display,
-					    XtWindow((Widget)toplevel()),
+					    draw_win,
 					    (char**)graphic_unavailable_data,
 					    &temp_pixmap,
 					    NULL, &xpm_attr);
@@ -1161,9 +1219,12 @@ WindowSystem::detached_pixmap(Dimension *width, Dimension *height)
 #else
       XpmAttributes xpm_attr;
       xpm_attr.valuemask = 0 ;
+      Window draw_win = XtWindow((Widget)toplevel());
+      if (!draw_win)
+        draw_win = DefaultRootWindow(f_display);
 
       int status = XpmCreatePixmapFromData(f_display,
-					   XtWindow((Widget)toplevel()),
+					   draw_win,
 					   (char**)detached_pixmap_data,
 					   &f_detached_pixmap,
 					   NULL, &xpm_attr);

@@ -588,6 +588,29 @@ static void ensure_cde_search_paths(const char *argv0) {
         setenv("XMICONBMSEARCHPATH", bmpath, 1);
     }
 
+    if (!getenv("XBMLANGPATH")) {
+        char xbmpath[PATH_MAX * 4];
+        if (home && home[0]) {
+            snprintf(
+                xbmpath, sizeof(xbmpath),
+                "%s/.dt/icons/%%B%%M.bm:%s/.dt/icons/%%B:"
+                "%s/icons/%%L/%%B%%M.bm:%s/icons/%%L/%%B:"
+                "%s/icons/C/%%B%%M.bm:%s/icons/C/%%B:"
+                CDE_INSTALLATION_TOP "/include/X11/bitmaps/%%B:/usr/include/X11/bitmaps/%%B:%%D",
+                home, home, appcfg, appcfg, appcfg, appcfg
+            );
+        } else {
+            snprintf(
+                xbmpath, sizeof(xbmpath),
+                "%s/icons/%%L/%%B%%M.bm:%s/icons/%%L/%%B:"
+                "%s/icons/C/%%B%%M.bm:%s/icons/C/%%B:"
+                CDE_INSTALLATION_TOP "/include/X11/bitmaps/%%B:/usr/include/X11/bitmaps/%%B:%%D",
+                appcfg, appcfg, appcfg, appcfg
+            );
+        }
+        setenv("XBMLANGPATH", xbmpath, 1);
+    }
+
     if (!getenv("DTHELPSEARCHPATH") || !getenv("DTHELPSEARCHPATH")[0]) {
         char helppath[PATH_MAX * 4];
         if (home && home[0]) {

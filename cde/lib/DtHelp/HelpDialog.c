@@ -577,6 +577,10 @@ static const char *HelpFontTypeName(XmFontType type)
         return "fontset";
     if (type == XmFONT_IS_FONT)
         return "font";
+#ifdef XmFONT_IS_XFT
+    if (type == XmFONT_IS_XFT)
+        return "xft";
+#endif
     return "unknown";
 }
 
@@ -600,7 +604,7 @@ static void HelpLogFontList(const char *label, XmFontList fontList)
         XmFontType type;
         XtPointer raw = XmFontListEntryGetFont(entry, &type);
         const char *typeName = HelpFontTypeName(type);
-        if (type == XmFONT_IS_FONTSET) {
+        if (type == XmFONT_IS_FONTSET && raw) {
             XFontSet fs = (XFontSet) raw;
             char *fontListName = XBaseFontNameListOfFontSet(fs);
             HelpFontDebugLog("  %s[%d] fontset base names=%s",
@@ -608,11 +612,14 @@ static void HelpLogFontList(const char *label, XmFontList fontList)
                              fontListName ? fontListName : "<null>");
             if (fontListName)
                 XFree(fontListName);
-        } else if (raw) {
+        } else if (type == XmFONT_IS_FONT && raw) {
             XFontStruct *fontStruct = (XFontStruct *) raw;
             HelpFontDebugLog("  %s[%d] %s ascent=%d descent=%d",
                              label, entryIndex, typeName,
                              fontStruct->ascent, fontStruct->descent);
+        } else if (raw) {
+            HelpFontDebugLog("  %s[%d] %s ptr=%p",
+                             label, entryIndex, typeName, raw);
         } else {
             HelpFontDebugLog("  %s[%d] %s has no font data",
                              label, entryIndex, typeName);

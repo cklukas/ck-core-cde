@@ -2413,22 +2413,29 @@ _DtHelpXmFontListGetPropertyMax(
         unsigned long *ret_propertyValue)
 {
     Boolean gotValue = False;
+    Boolean sawXftEntry = False;
     XmFontContext context;
     XmFontListEntry entry;
     XtPointer fontData;
 
-    if (nullptr == fontList) return False;           /* RETURN on error */
+    if (nullptr == fontList || nullptr == ret_propertyValue)
+        return False;                                /* RETURN on error */
 
     /* walk through the fontList entries and add them in */
-    XmFontListInitFontContext(&context,fontList);
+    if (!XmFontListInitFontContext(&context, fontList))
+        return False;
+
     for ( entry = XmFontListNextEntry(context);
           nullptr != entry;
           entry = XmFontListNextEntry(context) )
     {
        unsigned long value;
-       XmFontType type;
+       XmFontType type = XmFONT_IS_FONT;
 
        fontData = XmFontListEntryGetFont(entry,&type);
+       if (nullptr == fontData)
+           continue;
+
        if (XmFONT_IS_FONT == type)
        {
           XFontStruct * fontStruct;
@@ -2450,11 +2457,11 @@ _DtHelpXmFontListGetPropertyMax(
              }
           } /* if the getproperty call was good */
        }
-       else  /* XmFONT_IS_FONTSET */
+       else if (XmFONT_IS_FONTSET == type)
        {
           XFontSet fontSet;
-          XFontStruct **font_list;
-          char **name_list;
+          XFontStruct **font_list = nullptr;
+          char **name_list = nullptr;
           int numfont;
           int i;
 
@@ -2464,7 +2471,8 @@ _DtHelpXmFontListGetPropertyMax(
           numfont=XFontsOfFontSet(fontSet,&font_list,&name_list);
           for(i = 0; i < numfont; i++) 
           {
-              if(XGetFontProperty(font_list[i], atom, &value) == TRUE) 
+              if(nullptr != font_list[i] &&
+                 XGetFontProperty(font_list[i], atom, &value) == TRUE) 
               {
                   if(gotValue == False) /* haven't gotten any prop value yet */
                   {
@@ -2478,9 +2486,31 @@ _DtHelpXmFontListGetPropertyMax(
                   }
               } /* if the getproperty call was good */
           } /* for all fonts in the font set */
-       } /* this entry uses a font set */
+       }
+       else
+       {
+          /* XmFONT_IS_XFT or custom render-table entry: never cast to XFontSet */
+          sawXftEntry = True;
+       }
     } /* for all font entries in the font list */
     XmFontListFreeFontContext(context);
+
+    if (!gotValue && sawXftEntry)
+    {
+        /* Measure 10 'n' glyphs directly through Motif's render-table engine
+         * to obtain AVERAGE_WIDTH in 10ths of a pixel for Xft entries. */
+        XmString sample = XmStringCreateLocalized("nnnnnnnnnn");
+        if (nullptr != sample)
+        {
+            Dimension sampleWidth = XmStringWidth(fontList, sample);
+            XmStringFree(sample);
+            if (sampleWidth > 0)
+            {
+                *ret_propertyValue = (unsigned long) sampleWidth;
+                gotValue = True;
+            }
+        }
+    }
 
     return(gotValue);
 }

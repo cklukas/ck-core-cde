@@ -810,10 +810,14 @@ __DtHelpFontDatabaseInit (
     /*
      * save the string font in the lists
      */
-    if (type == XmFONT_IS_FONTSET)
+    if (type == XmFONT_IS_FONTSET && string_font != nullptr)
         n = SaveFontSet ((XFontSet) string_font, fontInfo, &savedIdx);
-    else
+    else if (type == XmFONT_IS_FONT && string_font != nullptr)
         n = SaveFontStruct ((XFontStruct *) string_font, fontInfo, &savedIdx);
+    else if (user_font != nullptr)
+        n = SaveFontStruct (user_font, fontInfo, &savedIdx);
+    else
+        n = -1;
 
     /*
      * the default font index stands in when the font cannot be saved.

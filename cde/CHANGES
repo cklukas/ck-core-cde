@@ -1,4 +1,36 @@
 2026-11-22
+- Fix Help Viewer (`dthelpview`) and Information Manager (`dtinfo`) Front Panel
+  launch, Xft font-list crashes, inline-graphic null dereferences, and large
+  window resize stalls on Wayland (`lib/DtHelp/HelpUtil.c`,
+  `lib/DtHelp/Font.c`, `lib/DtHelp/HelpDialog.c`, `lib/DtHelp/Makefile.am`,
+  `lib/DtHelp/tests/check-xft-fontlist-property.*`,
+  `programs/dtinfo/dtinfo/src/Other/WindowSystemMotif.C`,
+  `programs/dtinfo/dtinfo/src/Managers/TtIpcMgr.C`,
+  `programs/dtinfo/dtinfo/src/Managers/GraphicsMgr.C`,
+  `programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `programs/dtwm/wayland/WmFpWayland.c`, `debian/Xsession.wayland`,
+  `.ckgit/motif-revision`, `.ckgit/ci.yml`, `docs/improvements/wayland.md`):
+  - Bump pinned CK Core Motif ABI 9 to `4b29c4a19a5e669512b0e876b7f3a53569135aa4`
+    so opened XLFD fonts are retained in the Wayland X11 virtualizer's
+    `font_buckets` cache (eliminating per-span `FcFontMatch`/`FT_New_Face`/
+    `FT_Done_Face` stalls and blank child widgets when resizing `dthelpview` or
+    `dtinfo` windows larger) and `_SUN_TT_SESSION`/`TT_SESSION` root properties
+    use `XA_STRING` for native `tt_X_session` lookups.
+  - Handle `XmFONT_IS_XFT` entries safely in `_DtHelpXmFontListGetPropertyMax`,
+    `__DtHelpFontDatabaseInit`, and `HelpLogFontList` instead of casting
+    `XftFont *` to `XFontSet` (`XFontsOfFontSet` `SIGSEGV`) or `XFontStruct *`.
+  - Search Motif/CDE bitmap fallback directories and fall back cleanly to
+    standard X11 font cursors in `WindowSystem::create_cursor` instead of
+    aborting (`SIGABRT`) when `xm_noenter16`, `xm_hour16`, or `bomb` is outside
+    `XBMLANGPATH`; include `/usr/dt/include/X11/bitmaps/%B` and
+    `/usr/include/X11/bitmaps/%B:%D` in `Xsession.wayland` and `WmFpWayland.c`.
+  - Export `WAYLAND_DISPLAY` before starting the double-forked `ttsession -p`
+    daemon in `dtwm-wayland --no-xwayland` so ToolTalk-autostarted helpers such
+    as `dtinfo_start` (`CONTROL InfoManager` -> `DtLoadInfoLib`) connect cleanly
+    to the Wayland session, and fall back to `TT_SESSION`/`_SUN_TT_SESSION` in
+    `TtIpcMgr::TtIpcMgr` without blocking startup on a modal error dialog.
+  - Guard null `image_type` before `strcasecmp` in `GraphicsMgr::get_graphic`
+    when loading `"unknown"`-typed inline graphics in `dtinfo` chapters.
 - Fix clipped large cursor previews (`48` / `64`) in `Style Manager - Mouse`
   (`programs/dtstyle/Mouse.c`, `docs/improvements/wayland.md`):
   - Replace the nested `XmRowColumn` preview strip (whose post-map `48 px` ->

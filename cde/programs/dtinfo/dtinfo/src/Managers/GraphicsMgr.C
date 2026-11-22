@@ -251,18 +251,16 @@ GraphicsMgr::get_graphic (const UAS_String &imdata,
   Pixmap ret_pixmap = 0;
   Pixmap ret_mask = 0;
   
-  if (!strcasecmp (image_type, "unknown")) {
+  if (image_type && !strcasecmp (image_type, "unknown")) {
     // If it is unknown at this point then it needs to be nulled out so the
     // graphics api will determine the type.
     image_type = NULL;
   }
-
-  if (!strcasecmp (image_type, "XBM")) {
+  else if (image_type && !strcasecmp (image_type, "XBM")) {
     // match up infolib name for XBM to DtGr library
     image_type = (char*)"BM";
   }
-
-  if (!strcasecmp (image_type, "XPM")) {
+  else if (image_type && !strcasecmp (image_type, "XPM")) {
     // match up infolib name for XPM to DtGr library
     image_type = (char*)"PM";
   }
@@ -274,7 +272,7 @@ GraphicsMgr::get_graphic (const UAS_String &imdata,
 
   // Context struct is required for TIFF data type only
   _DtGrContext *ret_context = NULL ;
-  if (!strcasecmp (image_type, "TIFF")) {
+  if (image_type && !strcasecmp (image_type, "TIFF")) {
     ret_context = new _DtGrContext ;
     ret_context->image_type = NULL ;
     ret_context->context    = NULL ;

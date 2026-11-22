@@ -15,11 +15,13 @@ EXTRA_DIST = tests/check-help-strings.py tests/help-strings.c \
 	     tests/check-access-uncompress-temp.py tests/check-access-uncompress-temp.c \
 	     tests/check-canvas-interp-temp.py tests/check-canvas-interp-temp.c \
 	     tests/check-sdl-attributes.py tests/check-sdl-attributes.c \
-	     tests/check-stream-end.py tests/check-stream-end.c
+	     tests/check-stream-end.py tests/check-stream-end.c \
+	     tests/check-xft-fontlist-property.py tests/check-xft-fontlist-property.c
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-help-strings.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-display-area-theme-sync.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-xft-fontlist-property.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-access-uncompress-temp.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-canvas-interp-temp.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-stream-end.py

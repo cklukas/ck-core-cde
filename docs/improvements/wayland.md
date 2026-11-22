@@ -739,6 +739,18 @@ compositor session is ready.
   `check-dtwm-wayland-exit-session.py` (`f.quit_mwm`, external-compositor
   `dtsession --wayland` logout, and degraded/standalone `XSession_Exit`
   fallback) run automatically under `make check`.
+- **Native Wayland Help Viewer (`dthelpview`) & Information Manager (`dtinfo`):**
+  `dtwm-wayland --no-xwayland` exports `WAYLAND_DISPLAY` before launching the
+  session `ttsession -p` daemon and publishes `_SUN_TT_SESSION` / `TT_SESSION` as
+  `XA_STRING` onto each `libXm.so.9` virtual root window so Front Panel ToolTalk
+  actions (`CONTROL InfoManager` → `DtLoadInfoLib` → `dtinfo_start` → `dtinfo`,
+  plus the *Information* subpanel's `dthelpview` launchers) open directly
+  without XWayland. `libDtHelp` (`_DtHelpXmFontListGetPropertyMax`,
+  `__DtHelpFontDatabaseInit`) natively supports `XmFONT_IS_XFT` render-table
+  entries alongside core XLFD fonts, `dtinfo` resolves Motif/CDE cursor bitmaps
+  with standard cursor fallbacks and null-safe inline graphic type detection,
+  and `libXm`'s `font_buckets` XLFD cache keeps large interactive window resizes
+  responsive across dense help topics and book chapters.
 - **Signed Ubuntu LTS `.deb` and APT repository qualification (`WP-08`):**
   `scripts/build-ubuntu-debs.py --verify-install` packages `ck-core-motif9`,
   `ck-core-fs-lib`, `ck-core-cde`, `ck-core-dtlogin`, and `ck-core-apps` into a
