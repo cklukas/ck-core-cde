@@ -1,4 +1,9 @@
 2026-11-22
+- Bump pinned CK Core Motif ABI 9 to `be2e209a5e79b940137ad42da2eaae51c128e0ff`
+  (`.ckgit/motif-revision`, `.ckgit/ci.yml`) so native Wayland `XRender`
+  `RenderTrapezoids`, `RenderTriangles`, `RenderTriStrip`, and `RenderTriFan`
+  composite into child subwindows without doubling `(ddx, ddy)` offsets and
+  align `xSrc`/`ySrc` to the first vertex per XRender 0.11.
 - Fix Help Viewer (`dthelpview`) and Information Manager (`dtinfo`) Front Panel
   launch, Xft font-list crashes, inline-graphic null dereferences, and large
   window resize stalls on Wayland (`lib/DtHelp/HelpUtil.c`,
