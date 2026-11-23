@@ -726,6 +726,8 @@ compositor session is ready.
   and `xdg-desktop-portal-wlr`), `check-dtwm-wayland-wp11.py` (`WP-11`
   `zwp_text_input_v3`, `zwp_input_method_v2`, `zwp_input_popup_surface_v2` CJK
   candidate popups, `keyboard_grab`, and `ext-session-lock-v1` isolation),
+  `check-dtwm-wayland-panel-dnd.py` (the mapped Xwayland Front Panel, docked
+  subpanel persistence, and transparent File Manager drag icons),
   `check-dtwm-wayland-wp12.py` (`WP-12` parallel dual Wayland + X11 `Xvfb`
   verification of `dtappintegrate --xdg --watch` live `inotify` indexing,
   `Super`/`Super+Space` → `ck-launch` `libXm.so.9` activation, Wayland

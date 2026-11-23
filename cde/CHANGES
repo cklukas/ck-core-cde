@@ -1,4 +1,6 @@
 2026-11-24
+- Make the Front Panel drag-and-drop regression find the panel by its X11
+  window class, wait for docking and synchronize synthetic pointer events.
 - Qualify the Display & Monitors dialog against the hybrid compositor's
   1:1 output geometry, independently published DPI, and overlay cleanup.
 - Restore the session settings regression build and check that the restored

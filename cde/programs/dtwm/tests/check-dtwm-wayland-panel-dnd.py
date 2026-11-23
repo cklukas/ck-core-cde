@@ -93,18 +93,15 @@ static uint32_t now_ms(void) {
     return (uint32_t)(ts.tv_sec * 1000u + (uint32_t)(ts.tv_nsec / 1000000L));
 }
 
-static void vp_move(struct wl_display *d, struct wl_proxy *vp,
-                    uint32_t x, uint32_t y, uint32_t w, uint32_t h) {
+static void vp_move(struct wl_proxy *vp, uint32_t x, uint32_t y,
+                    uint32_t w, uint32_t h) {
     wl_proxy_marshal(vp, 1, now_ms(), x, y, w, h);
     wl_proxy_marshal(vp, 4);
-    wl_display_flush(d);
 }
 
-static void vp_btn(struct wl_display *d, struct wl_proxy *vp,
-                   uint32_t b, uint32_t s) {
+static void vp_btn(struct wl_proxy *vp, uint32_t b, uint32_t s) {
     wl_proxy_marshal(vp, 2, now_ms(), b, s);
     wl_proxy_marshal(vp, 4);
-    wl_display_flush(d);
 }
 
 int main(void) {
@@ -122,16 +119,19 @@ int main(void) {
     while (fgets(line, sizeof(line), stdin)) {
         unsigned a = 0, b = 0, c = 0, e = 0;
         if (sscanf(line, "move %u %u %u %u", &a, &b, &c, &e) == 4) {
-            vp_move(d, vp, a, b, c, e);
+            vp_move(vp, a, b, c, e);
         } else if (sscanf(line, "down %u", &a) == 1) {
-            vp_btn(d, vp, a, 1);
+            vp_btn(vp, a, 1);
         } else if (sscanf(line, "up %u", &a) == 1) {
-            vp_btn(d, vp, a, 0);
+            vp_btn(vp, a, 0);
         } else if (sscanf(line, "sleep %u", &a) == 1) {
             usleep(a * 1000);
         } else if (strncmp(line, "quit", 4) == 0) {
             break;
+        } else {
+            return 4;
         }
+        if (wl_display_roundtrip(d) < 0) return 5;
         printf("OK\n");
         fflush(stdout);
     }
@@ -154,7 +154,8 @@ def find_cde_build_and_src(comp_bin: Path) -> tuple[Path, Path]:
 
 
 def map_state(cenv: dict[str, str], wid: str) -> str:
-    out = subprocess.run(["xwininfo", "-id", wid], env=cenv, capture_output=True, text=True).stdout
+    out = subprocess.run(["xwininfo", "-id", wid], env=cenv, capture_output=True,
+                         text=True, timeout=2).stdout
     for ln in out.splitlines():
         if "Map State:" in ln:
             return ln.split(":", 1)[1].strip()
@@ -162,10 +163,11 @@ def map_state(cenv: dict[str, str], wid: str) -> str:
 
 
 def find_win(cenv: dict[str, str], substr: str) -> tuple[str | None, tuple[int, int, int, int] | None]:
-    out = subprocess.run(["xwininfo", "-root", "-tree"], env=cenv, capture_output=True, text=True).stdout
+    out = subprocess.run(["xwininfo", "-root", "-tree"], env=cenv, capture_output=True,
+                         text=True, timeout=2).stdout
     for ln in out.splitlines():
         if substr in ln:
-            m = re.match(r"\s+(0x[0-9a-f]+)\s+.*?(\d+)x(\d+)\+(-?\d+)\+(-?\d+)", ln)
+            m = re.match(r"\s+(0x[0-9a-f]+)\s+.*?(\d+)x(\d+)[+-]\d+[+-]\d+\s+([+-]\d+)([+-]\d+)", ln)
             if m:
                 return m.group(1), (int(m.group(2)), int(m.group(3)), int(m.group(4)), int(m.group(5)))
     return None, None
@@ -205,7 +207,7 @@ def main() -> int:
         subprocess.run([cc, "-O2", str(vp_c), "-lwayland-client", "-o", str(vp_bin)], check=True)
 
         env = os.environ.copy()
-        for k in ("WAYLAND_DISPLAY", "DISPLAY", "TT_SESSION", "DTUSERSESSION"):
+        for k in ("WAYLAND_DISPLAY", "DISPLAY", "TT_SESSION", "_SUN_TT_SESSION", "DTUSERSESSION"):
             env.pop(k, None)
         env.update({
             "HOME": str(home),
@@ -244,23 +246,30 @@ def main() -> int:
             if not wl or not x11:
                 raise SystemExit("dtwm-wayland failed to publish status file")
 
-            cenv = {**env, "WAYLAND_DISPLAY": wl, "DISPLAY": x11}
-            fp_box = None
-            for _ in range(80):
-                wid, box = find_win(cenv, '"FrontPanel"')
-                if wid and box:
-                    fp_box = box
-                    break
-                time.sleep(0.1)
-            if not fp_box:
-                raise SystemExit("FrontPanel did not map")
-
-            # Measure actual headless output size
+            cenv = {**env, "WAYLAND_DISPLAY": wl, "DISPLAY": x11, "CK_MOTIF_BACKEND": "x11"}
             init_png = work / "init.png"
-            subprocess.run(["grim", str(init_png)], env=cenv, check=True)
+            subprocess.run(["grim", str(init_png)], env=cenv, check=True, timeout=5)
             with Image.open(init_png) as im:
                 out_w, out_h = im.size
                 bg_sample = im.convert("RGB").getpixel((out_w // 2, out_h // 2))
+
+            fp_box = None
+            last_box = None
+            deadline = time.monotonic() + 12
+            while time.monotonic() < deadline:
+                wid, box = find_win(cenv, '("dtwm-front-panel" "Dtwm")')
+                if wid and box:
+                    last_box = box
+                    width, height, x, y = box
+                    # The shell can be viewable before its compositor position arrives.
+                    if (abs(2 * x + width - out_w) <= 2
+                            and abs(y + height - out_h) <= 8
+                            and map_state(cenv, wid) == "IsViewable"):
+                        fp_box = box
+                        break
+                time.sleep(0.1)
+            if not fp_box:
+                raise SystemExit(f"The Front Panel did not dock on {out_w}x{out_h} (last: {last_box})")
 
             vp = subprocess.Popen(
                 [str(vp_bin)], env=cenv, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True,
@@ -271,7 +280,8 @@ def main() -> int:
                 assert vp.stdin and vp.stdout
                 vp.stdin.write(cmd + "\n")
                 vp.stdin.flush()
-                vp.stdout.readline()
+                if vp.stdout.readline().strip() != "OK":
+                    raise SystemExit(f"Virtual pointer did not accept {cmd!r}")
 
             # 1. Right-click empty gray subpanel bar above Mail -> Add Subpanel
             fw, fh, fx, fy = fp_box
@@ -327,21 +337,26 @@ def main() -> int:
             if map_state(cenv, mail_sp_wid) != "IsViewable":
                 raise SystemExit("Docked Mail subpanel auto-closed on desktop click")
 
-            dtf = subprocess.Popen(
-                [str(dtfile_bin), "-dir", str(home)],
-                env=cenv,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                start_new_session=True,
-            )
+            dtfile_log = work / "dtfile.log"
+            with dtfile_log.open("wb") as log:
+                dtf = subprocess.Popen(
+                    [str(dtfile_bin), "-dir", str(home)],
+                    env=cenv, stdout=log, stderr=subprocess.STDOUT, start_new_session=True,
+                )
             dtf_box = None
             for _ in range(80):
-                _, dtf_box = find_win(cenv, '"File Manager - home"')
-                if dtf_box:
+                dtf_wid, box = find_win(cenv, '"File Manager - home"')
+                if dtf_wid and box and map_state(cenv, dtf_wid) == "IsViewable":
+                    dtf_box = box
+                    break
+                if dtf.poll() is not None:
                     break
                 time.sleep(0.1)
             if not dtf_box:
-                raise SystemExit("dtfile did not map")
+                raise SystemExit(
+                    f"dtfile did not map (status {dtf.returncode}):\n"
+                    f"{dtfile_log.read_text(errors='replace')}"
+                )
             time.sleep(0.5)
 
             dfw, dfh, dfx, dfy = dtf_box
@@ -366,15 +381,19 @@ def main() -> int:
                 send(f"move {nx} {ny} {out_w} {out_h}")
                 send("sleep 50")
 
-            out_drag = subprocess.run(["xwininfo", "-root", "-tree"], env=cenv, capture_output=True, text=True).stdout
             drag_win = None
-            for ln in out_drag.splitlines():
-                m = re.match(r"\s+(0x[0-9a-f]+)\s+\(has no name\):\s+\(\)\s+(\d+)x(\d+)\+(\d+)\+(\d+)", ln)
-                if m:
-                    dw, dh, dx, dy = map(int, m.groups()[1:])
-                    if 20 <= dw <= 220 and 20 <= dh <= 220 and dx > 500 and dy > 300 and map_state(cenv, m.group(1)) == "IsViewable":
-                        drag_win = (m.group(1), dw, dh, dx, dy)
-                        break
+            deadline = time.monotonic() + 3
+            while time.monotonic() < deadline and not drag_win:
+                out_drag = subprocess.check_output(["xwininfo", "-root", "-tree"], env=cenv, text=True, timeout=5)
+                for ln in out_drag.splitlines():
+                    m = re.match(r"\s+(0x[0-9a-f]+)\s+\(has no name\):\s+\(\)\s+(\d+)x(\d+)\+(\d+)\+(\d+)", ln)
+                    if m:
+                        dw, dh, dx, dy = map(int, m.groups()[1:])
+                        if 20 <= dw <= 220 and 20 <= dh <= 220 and dx > 500 and dy > 300 and map_state(cenv, m.group(1)) == "IsViewable":
+                            drag_win = (m.group(1), dw, dh, dx, dy)
+                            break
+                if not drag_win:
+                    time.sleep(0.1)
             if not drag_win:
                 raise SystemExit("No visible XmDragOverShell drag icon window during dtfile drag")
 
