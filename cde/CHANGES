@@ -1,3 +1,22 @@
+2026-11-23
+- Complete P0 Mail & Calendar integration, background sync, rules execution,
+  OAuth2 refresh, real Quick-Filter row hiding, and message actions (`dtmail`,
+  `dtcm`):
+  - Replace plain-text invitation header with a clickable Motif RSVP banner bar
+    in `dtmail` (`ItipBanner.{h,C}`, `RoamMenuWindow.{h,C}`) that sends
+    `_DTCM_IPC` `IMPORT_ICS` to a running `dtcm` or launches
+    `dtcm --import-ics <path>` (`calendarA.c`) so the Calendar RSVP dialog opens
+    automatically.
+  - Wire background periodic IMAP polling (`sync_interval_sec` timer in
+    `RoamMenuWindow.C`), automatic local rule evaluation (`dtmail_rules_evaluate`
+    in `CurlMailEngine.C` for Move/Junk/Mark Read/Star on incoming sync), an
+    `OAuth Client ID` field in `AccountSetupDialog.C`, and automatic OAuth2
+    access-token refresh (`dtmail_oauth2_ensure_access_token` in
+    `OAuth2Client.{h,C}`, `AccountSetupDialog.C`, `SendMsgDialog.C`).
+  - Upgrade Quick Filter (`RoamMenuWindow.C`) to hide non-matching rows with
+    exact index mapping back to the mailbox, and add **Star / Unstar (`S`)**,
+    **Mark Read / Unread (`U`)**, **Archive (`E`)**, and **Move to Junk** to the
+    message-list context menu and shortcuts.
 2026-11-22
 - Render CDE and CK Core Motif applications natively onto `1:1` physical Retina
   pixels while presenting per-surface `wp_fractional_scale_v1` +

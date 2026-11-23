@@ -223,6 +223,20 @@ Display *dpy;
 XtAppContext    app;
 static XtSignalId sig_int_id = 0;
 static volatile sig_atomic_t sig_int_requested = 0;
+static char g_cli_import_ics[MAXPATHLEN] = "";
+
+static void
+cli_import_ics_timer_cb(XtPointer client_data, XtIntervalId *id)
+{
+	(void)id;
+	Calendar *c = (Calendar *)client_data;
+	if (c && g_cli_import_ics[0] != '\0') {
+		char path[MAXPATHLEN];
+		snprintf(path, sizeof(path), "%s", g_cli_import_ics);
+		g_cli_import_ics[0] = '\0';
+		dtcm_import_ics_file(c, path, NULL);
+	}
+}
 
 extern void
 destroy_paint_cache(Paint_cache *cache, int num_entries) {
@@ -3339,6 +3353,9 @@ init_calendar(int argc, char **argv)
 		nullptr);
 
 	XtMapWidget(calendar->frame);
+	if (g_cli_import_ics[0] != '\0') {
+		XtAppAddTimeOut(app, 150, cli_import_ics_timer_cb, (XtPointer)calendar);
+	}
 
         XtAddCallback(calendar->canvas, XmNresizeCallback, resize_proc, nullptr);
         XtAddCallback(calendar->canvas, XmNinputCallback, view_event_cb, nullptr);
@@ -3498,6 +3515,20 @@ main(int argc, char **argv) {
 
 	XtSetLanguageProc(nullptr, nullptr, nullptr);
 	_DtEnvControl(DT_ENV_SET); /* set up environment variables */
+
+	/* Extract --import-ics <path> before XtAppInitialize */
+	{
+		int out_argc = 1;
+		for (int ai = 1; ai < argc; ai++) {
+			if (strcmp(argv[ai], "--import-ics") == 0 && ai + 1 < argc) {
+				snprintf(g_cli_import_ics, sizeof(g_cli_import_ics), "%s", argv[++ai]);
+			} else {
+				argv[out_argc++] = argv[ai];
+			}
+		}
+		argc = out_argc;
+		argv[argc] = NULL;
+	}
 
         init_calendar(argc, argv);
 

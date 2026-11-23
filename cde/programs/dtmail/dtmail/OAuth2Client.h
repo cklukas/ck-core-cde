@@ -52,6 +52,12 @@ int  dtmail_oauth2_refresh_token(const DtMailAccount *acct,
                                  DtMailOAuthTokens *out_tokens,
                                  char *errbuf, size_t errlen);
 
+/* Look up oauth_access from keyring, or auto-refresh via oauth_refresh if missing/expired */
+int  dtmail_oauth2_ensure_access_token(const DtMailAccount *acct,
+                                       char *out_token, size_t out_len,
+                                       int force_refresh,
+                                       char *errbuf, size_t errlen);
+
 /* Launch ck-browser / $BROWSER / xdg-open for the authorization URL */
 int  dtmail_oauth2_open_browser(const char *url);
 

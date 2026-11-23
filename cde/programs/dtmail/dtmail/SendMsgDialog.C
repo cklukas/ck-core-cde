@@ -47,6 +47,7 @@
 #include "SendMsgDialog.h"
 #include "MailAccountStore.h"
 #include "CurlMailEngine.h"
+#include "OAuth2Client.h"
 #include "AddressAutocomplete.h"
 #include "NoOpCmd.h"
 #include "RoamCmds.h"
@@ -4320,14 +4321,26 @@ SendMsgDialog::finishUndoSendDispatch()
         if (tok[0]) rcpts[nrcpts++] = tok;
     }
 
-    char secret[512] = "";
-    const char *kind = (smtp_acct->auth_mode == DTMAIL_AUTH_OAUTH2) ? "oauth_access" : "password";
-    (void)dtmail_keyring_lookup(smtp_acct->id, kind, secret, sizeof(secret));
-
+    char secret[2048] = "";
     char serr[256] = "";
+    if (smtp_acct->auth_mode == DTMAIL_AUTH_OAUTH2) {
+        (void)dtmail_oauth2_ensure_access_token(smtp_acct, secret, sizeof(secret), 0,
+                                                serr, sizeof(serr));
+    } else {
+        (void)dtmail_keyring_lookup(smtp_acct->id, "password", secret, sizeof(secret));
+    }
+
     int sres = dtmail_smtp_send(smtp_acct, secret, smtp_acct->email,
                                 rcpts, nrcpts, _pending_smtp_raw, _pending_smtp_len,
                                 serr, sizeof(serr));
+    if (sres != 0 && smtp_acct->auth_mode == DTMAIL_AUTH_OAUTH2) {
+        if (dtmail_oauth2_ensure_access_token(smtp_acct, secret, sizeof(secret), 1,
+                                              serr, sizeof(serr)) == 0) {
+            sres = dtmail_smtp_send(smtp_acct, secret, smtp_acct->email,
+                                    rcpts, nrcpts, _pending_smtp_raw, _pending_smtp_len,
+                                    serr, sizeof(serr));
+        }
+    }
     if (sres == 0) {
         char sent_path[1024];
         if (dtmail_account_folder_path(smtp_acct->id, "Sent", sent_path, sizeof(sent_path)) == 0) {

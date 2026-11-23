@@ -38,6 +38,7 @@ static Widget g_tf_ihost = NULL;
 static Widget g_tf_iport = NULL;
 static Widget g_tf_shost = NULL;
 static Widget g_tf_sport = NULL;
+static Widget g_tf_oauth_cid = NULL;
 static Widget g_lbl_status = NULL;
 static Widget g_rb_auth_pass = NULL;
 static Widget g_rb_auth_oauth = NULL;
@@ -79,9 +80,20 @@ sync_worker_fn(void *arg)
             continue;
         int added = 0;
         char err[256] = "";
-        if (dtmail_imap_sync_folder(a, job->secrets[i], "INBOX",
-                                    job->mbox_paths[i], &added,
-                                    err, sizeof(err)) == 0) {
+        int rc = dtmail_imap_sync_folder(a, job->secrets[i], "INBOX",
+                                         job->mbox_paths[i], &added,
+                                         err, sizeof(err));
+        if (rc != 0 && a->auth_mode == DTMAIL_AUTH_OAUTH2) {
+            /* Retry once after refreshing expired OAuth2 access token */
+            char fresh_tok[2048] = "";
+            if (dtmail_oauth2_ensure_access_token(a, fresh_tok, sizeof(fresh_tok), 1,
+                                                  err, sizeof(err)) == 0) {
+                rc = dtmail_imap_sync_folder(a, fresh_tok, "INBOX",
+                                             job->mbox_paths[i], &added,
+                                             err, sizeof(err));
+            }
+        }
+        if (rc == 0) {
             job->total_added += added;
         } else {
             job->errors++;
@@ -206,6 +218,8 @@ populate_form_from_account(const DtMailAccount *a)
     XmTextFieldSetString(g_tf_shost, (char *)a->smtp_host);
     snprintf(pbuf, sizeof(pbuf), "%d", a->smtp_port);
     XmTextFieldSetString(g_tf_sport, pbuf);
+    if (g_tf_oauth_cid)
+        XmTextFieldSetString(g_tf_oauth_cid, (char *)a->oauth_client_id);
     XmToggleButtonSetState(g_rb_auth_pass, a->auth_mode == DTMAIL_AUTH_PASSWORD, False);
     XmToggleButtonSetState(g_rb_auth_oauth, a->auth_mode == DTMAIL_AUTH_OAUTH2, False);
     XmToggleButtonSetState(g_rb_auth_local, a->auth_mode == DTMAIL_AUTH_SENDMAIL_LOCAL, False);
@@ -223,6 +237,7 @@ read_account_from_form(DtMailAccount *a, char *pass_out, size_t pass_len)
     char *s_iport = XmTextFieldGetString(g_tf_iport);
     char *s_shost = XmTextFieldGetString(g_tf_shost);
     char *s_sport = XmTextFieldGetString(g_tf_sport);
+    char *s_ocid  = g_tf_oauth_cid ? XmTextFieldGetString(g_tf_oauth_cid) : NULL;
 
     snprintf(a->name, sizeof(a->name), "%s", (s_name && s_name[0]) ? s_name : "Mail Account");
     snprintf(a->email, sizeof(a->email), "%s", s_email ? s_email : "");
@@ -234,6 +249,8 @@ read_account_from_form(DtMailAccount *a, char *pass_out, size_t pass_len)
     snprintf(a->smtp_host, sizeof(a->smtp_host), "%s", s_shost ? s_shost : "");
     a->smtp_port = (s_sport && atoi(s_sport) > 0) ? atoi(s_sport) : 587;
     a->smtp_tls = (a->smtp_port == 465) ? DTMAIL_TLS_IMPLICIT : DTMAIL_TLS_STARTTLS;
+    if (s_ocid && s_ocid[0])
+        snprintf(a->oauth_client_id, sizeof(a->oauth_client_id), "%s", s_ocid);
     if (XmToggleButtonGetState(g_rb_auth_oauth))
         a->auth_mode = DTMAIL_AUTH_OAUTH2;
     else if (XmToggleButtonGetState(g_rb_auth_local))
@@ -254,6 +271,7 @@ read_account_from_form(DtMailAccount *a, char *pass_out, size_t pass_len)
     if (s_iport) XtFree(s_iport);
     if (s_shost) XtFree(s_shost);
     if (s_sport) XtFree(s_sport);
+    if (s_ocid) XtFree(s_ocid);
 }
 
 static void
@@ -540,13 +558,14 @@ dtmail_show_accounts_dialog(Widget parent, DtMailSyncDoneCb on_sync_done, void *
         Widget r6 = make_labeled_row(form, r5, "IMAP Port:", 8, &g_tf_iport);
         Widget r7 = make_labeled_row(form, r6, "SMTP Host:", 26, &g_tf_shost);
         Widget r8 = make_labeled_row(form, r7, "SMTP Port:", 8, &g_tf_sport);
+        Widget r9 = make_labeled_row(form, r8, "OAuth Client ID:", 32, &g_tf_oauth_cid);
 
         Widget auth_rc = XtVaCreateManagedWidget("authRC", xmRowColumnWidgetClass, form,
             XmNorientation, XmHORIZONTAL,
             XmNradioBehavior, True,
             XmNspacing, 10,
             XmNtopAttachment, XmATTACH_WIDGET,
-            XmNtopWidget, r8,
+            XmNtopWidget, r9,
             XmNtopOffset, 8,
             XmNleftAttachment, XmATTACH_FORM,
             XmNrightAttachment, XmATTACH_FORM,

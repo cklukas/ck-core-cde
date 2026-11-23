@@ -148,6 +148,7 @@
     
 struct DtMailFolderSidebar;
 struct DtMailQuickFilterBar;
+struct DtMailItipBanner;
 
 class RoamMenuWindow : public MenuWindow, public AbstractEditorParent
 {
@@ -566,12 +567,28 @@ class RoamMenuWindow : public MenuWindow, public AbstractEditorParent
     void	invokeForward() { if (_comp_forward) _comp_forward->execute(); }
     void	invokeDelete() { if (_msg_delete) _msg_delete->execute(); }
     void	invokeComposeNew() { if (_comp_new) _comp_new->execute(); }
+    void	toggleStarSelected();
+    void	toggleReadUnreadSelected();
+    void	archiveSelected();
+    void	junkSelected();
+    void	scheduleAutoSync();
+    void	refreshItipBanner();
+    void	handleFilteredSelection(int visible_pos);
 
   private:
     DtMailFolderSidebar *_folder_sidebar;
     DtMailQuickFilterBar *_quick_filter;
+    DtMailItipBanner    *_itip_banner;
+    XtIntervalId	_auto_sync_timer;
     Boolean		_thread_mode;
     Widget		_msg_context_menu;
+    Boolean		_filter_active;
+    XmString		*_filter_saved_items;
+    int			_filter_saved_count;
+    int			*_filter_index_map;
+    int			_filter_map_count;
+    static void		autoSyncTimerCB(XtPointer, XtIntervalId *);
+    void		clearFilterSnapshot();
     
     static XtResource	_resources[];
     static char		*_supported[];

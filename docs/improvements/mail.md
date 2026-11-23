@@ -492,9 +492,21 @@ local `/usr/sbin/sendmail` MTA to be usable on a modern desktop:
   **Mailbox → Accounts & Servers... → Sign In (OAuth2)**.
 - **Meeting invitations (`text/calendar` → `dtcm`)**: `ItipBanner.C` detects
   `BEGIN:VCALENDAR` / `BEGIN:VEVENT` meeting invitations when displaying a
-  message, renders an inline summary banner in the reading pane, and hands the
-  `.ics` file (`~/.dt/calendar/incoming_invite.ics`, `0600`) to Calendar Manager
-  via **Mailbox → Open Invite in Calendar (dtcm)**.
+  message, shows an inline Motif RSVP banner above the reading pane with a
+  **RSVP in Calendar (dtcm)** button, saves the `.ics` file
+  (`~/.dt/calendar/incoming_invite.ics`, `0600`), and hands it directly to a
+  running `dtcm` via `_DTCM_IPC` `IMPORT_ICS` or launches
+  `dtcm --import-ics <path>`.
+- **Automatic sync, rule execution, and OAuth2 refresh**: `RoamMenuWindow.C`
+  polls enabled IMAP accounts every `sync_interval_sec`, `CurlMailEngine.C`
+  evaluates `~/.dt/dtmail_rules` on incoming mail (Move, Junk, Mark Read, Star),
+  `AccountSetupDialog.C` provides an `OAuth Client ID` field, and
+  `dtmail_oauth2_ensure_access_token()` refreshes expired OAuth2 tokens
+  automatically before retrying IMAP/SMTP operations.
+- **Row-hiding Quick Filter & triage actions**: `applyQuickFilter()` hides
+  non-matching rows while mapping selections back to the underlying mailbox, and
+  the message-list context menu and keyboard shortcuts support **Star (`S`)**,
+  **Mark Read/Unread (`U`)**, **Archive (`E`)**, and **Move to Junk**.
 - **Sender & recipient autocomplete**: `AddressAutocomplete.C` harvests unique
   `Name <email>` contacts into `~/.dt/dtmail_contacts` (`0600`) and completes
   prefixes in Compose `To:`, `Cc:`, and `Bcc:` fields.

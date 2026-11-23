@@ -414,8 +414,15 @@ RoamMenuWindow::RoamMenuWindow (char *name) : MenuWindow ("dtmail", True)
     _move_copy_button = NULL;
     _folder_sidebar = NULL;
     _quick_filter = NULL;
+    _itip_banner = NULL;
+    _auto_sync_timer = 0;
     _thread_mode = FALSE;
     _msg_context_menu = NULL;
+    _filter_active = FALSE;
+    _filter_saved_items = NULL;
+    _filter_saved_count = 0;
+    _filter_index_map = NULL;
+    _filter_map_count = 0;
 
     
     _mailbox    = NULL;
@@ -565,6 +572,16 @@ RoamMenuWindow::~RoamMenuWindow()
     delete 	_att_cmdlist;
     delete	_att_save;
 
+    if (_auto_sync_timer) {
+        XtRemoveTimeOut(_auto_sync_timer);
+        _auto_sync_timer = 0;
+    }
+    clearFilterSnapshot();
+    if (_itip_banner) {
+        dtmail_itip_register_change_cb(NULL, NULL);
+        dtmail_itip_banner_destroy(_itip_banner);
+        _itip_banner = NULL;
+    }
     if (_folder_sidebar) {
         dtmail_folder_sidebar_destroy(_folder_sidebar);
         _folder_sidebar = NULL;
@@ -936,6 +953,15 @@ RoamMenuWindow::createWorkArea(Widget parent)
 	XmNtopWidget, _rowOfMessageStatus,
 	XmNbottomAttachment, XmATTACH_FORM,
 	NULL );
+
+    /* Inline clickable Motif RSVP banner for text/calendar invitations */
+    _itip_banner = dtmail_itip_banner_create(form3, _rowOfMessageStatus, wid);
+    dtmail_itip_register_change_cb(
+        [](int, const DtMailItipInvite *, void *ud) {
+            RoamMenuWindow *rw = (RoamMenuWindow *)ud;
+            if (rw) rw->refreshItipBanner();
+        }, this);
+    scheduleAutoSync();
 
     DtMailEnv mail_error;
 
@@ -5745,6 +5771,39 @@ static void dtmail_ctx_delete_cb(Widget, XtPointer cd, XtPointer)
     if (r) r->invokeDelete();
 }
 
+static void dtmail_ctx_star_cb(Widget, XtPointer cd, XtPointer)
+{
+    RoamMenuWindow *r = (RoamMenuWindow *)cd;
+    if (r) r->toggleStarSelected();
+}
+
+static void dtmail_ctx_unread_cb(Widget, XtPointer cd, XtPointer)
+{
+    RoamMenuWindow *r = (RoamMenuWindow *)cd;
+    if (r) r->toggleReadUnreadSelected();
+}
+
+static void dtmail_ctx_archive_cb(Widget, XtPointer cd, XtPointer)
+{
+    RoamMenuWindow *r = (RoamMenuWindow *)cd;
+    if (r) r->archiveSelected();
+}
+
+static void dtmail_ctx_junk_cb(Widget, XtPointer cd, XtPointer)
+{
+    RoamMenuWindow *r = (RoamMenuWindow *)cd;
+    if (r) r->junkSelected();
+}
+
+static void dtmail_filtered_select_cb(Widget, XtPointer cd, XtPointer call_data)
+{
+    RoamMenuWindow *r = (RoamMenuWindow *)cd;
+    XmListCallbackStruct *cbs = (XmListCallbackStruct *)call_data;
+    if (r && cbs && cbs->item_position > 0) {
+        r->handleFilteredSelection(cbs->item_position);
+    }
+}
+
 static void dtmail_ctx_popup_handler(Widget w, XtPointer cd, XEvent *ev, Boolean *cont)
 {
     (void)w;
@@ -5782,12 +5841,26 @@ RoamMenuWindow::setupModernInteractions()
         Widget b3 = XtVaCreateManagedWidget("CtxForward", xmPushButtonWidgetClass,
             _msg_context_menu, XmNlabelString, XmStringCreateLocalized((char *)"Forward (F)"), NULL);
         XtAddCallback(b3, XmNactivateCallback, dtmail_ctx_forward_cb, this);
+        Widget b5 = XtVaCreateManagedWidget("CtxStar", xmPushButtonWidgetClass,
+            _msg_context_menu, XmNlabelString, XmStringCreateLocalized((char *)"Star / Unstar (S)"), NULL);
+        XtAddCallback(b5, XmNactivateCallback, dtmail_ctx_star_cb, this);
+        Widget b6 = XtVaCreateManagedWidget("CtxUnread", xmPushButtonWidgetClass,
+            _msg_context_menu, XmNlabelString, XmStringCreateLocalized((char *)"Mark Read / Unread (U)"), NULL);
+        XtAddCallback(b6, XmNactivateCallback, dtmail_ctx_unread_cb, this);
+        Widget b7 = XtVaCreateManagedWidget("CtxArchive", xmPushButtonWidgetClass,
+            _msg_context_menu, XmNlabelString, XmStringCreateLocalized((char *)"Archive (E)"), NULL);
+        XtAddCallback(b7, XmNactivateCallback, dtmail_ctx_archive_cb, this);
+        Widget b8 = XtVaCreateManagedWidget("CtxJunk", xmPushButtonWidgetClass,
+            _msg_context_menu, XmNlabelString, XmStringCreateLocalized((char *)"Move to Junk"), NULL);
+        XtAddCallback(b8, XmNactivateCallback, dtmail_ctx_junk_cb, this);
         Widget b4 = XtVaCreateManagedWidget("CtxDelete", xmPushButtonWidgetClass,
             _msg_context_menu, XmNlabelString, XmStringCreateLocalized((char *)"Delete (Del)"), NULL);
         XtAddCallback(b4, XmNactivateCallback, dtmail_ctx_delete_cb, this);
 
         XtAddEventHandler(lw, ButtonPressMask, False,
                           dtmail_ctx_popup_handler, (XtPointer)_msg_context_menu);
+        XtAddCallback(lw, XmNextendedSelectionCallback, dtmail_filtered_select_cb, this);
+        XtAddCallback(lw, XmNbrowseSelectionCallback, dtmail_filtered_select_cb, this);
     }
     XtAddEventHandler(lw, KeyPressMask, False, dtmail_list_key_handler, (XtPointer)this);
 }
@@ -5830,11 +5903,245 @@ RoamMenuWindow::dispatchShortcutKey(unsigned long keysym, unsigned int state)
         case XK_F:
             invokeForward();
             break;
+        case XK_s:
+        case XK_S:
+            toggleStarSelected();
+            break;
+        case XK_u:
+        case XK_U:
+            toggleReadUnreadSelected();
+            break;
+        case XK_e:
+        case XK_E:
+            archiveSelected();
+            break;
         case XK_Delete:
             invokeDelete();
             break;
         default:
             break;
+    }
+}
+
+void
+RoamMenuWindow::toggleStarSelected()
+{
+    if (!_list) return;
+    Widget lw = _list->get_scrolling_list();
+    if (!lw) return;
+    int *pos_list = NULL, pos_cnt = 0;
+    if (!XmListGetSelectedPos(lw, &pos_list, &pos_cnt) || pos_cnt <= 0) {
+        if (pos_list) XtFree((char *)pos_list);
+        return;
+    }
+    int pos = pos_list[0];
+    XtFree((char *)pos_list);
+
+    XmStringTable items = NULL;
+    int count = 0;
+    XtVaGetValues(lw, XmNitems, &items, XmNitemCount, &count, NULL);
+    if (pos < 1 || pos > count) return;
+    char *txt = NULL;
+    if (!XmStringGetLtoR(items[pos - 1], XmFONTLIST_DEFAULT_TAG, &txt) || !txt) return;
+
+    char buf[1024];
+    int starred_now = 0;
+    if (txt[0] == '*' && txt[1] == ' ') {
+        snprintf(buf, sizeof(buf), "%s", txt + 2);
+        starred_now = 0;
+    } else {
+        snprintf(buf, sizeof(buf), "* %s", txt);
+        starred_now = 1;
+    }
+    XtFree(txt);
+
+    XmString ns = XmStringCreateLocalized(buf);
+    XmListReplaceItemsPosUnselected(lw, &ns, 1, pos);
+    XmListSelectPos(lw, pos, False);
+    if (_filter_active && pos - 1 < _filter_map_count) {
+        int orig_idx = _filter_index_map[pos - 1] - 1;
+        if (orig_idx >= 0 && orig_idx < _filter_saved_count) {
+            XmStringFree(_filter_saved_items[orig_idx]);
+            _filter_saved_items[orig_idx] = XmStringCopy(ns);
+        }
+    }
+    XmStringFree(ns);
+    this->message((char *)(starred_now ? "Message starred." : "Star removed."));
+}
+
+void
+RoamMenuWindow::toggleReadUnreadSelected()
+{
+    if (!_list) return;
+    Widget lw = _list->get_scrolling_list();
+    if (!lw) return;
+    int *pos_list = NULL, pos_cnt = 0;
+    if (!XmListGetSelectedPos(lw, &pos_list, &pos_cnt) || pos_cnt <= 0) {
+        if (pos_list) XtFree((char *)pos_list);
+        return;
+    }
+    int pos = pos_list[0];
+    XtFree((char *)pos_list);
+
+    XmStringTable items = NULL;
+    int count = 0;
+    XtVaGetValues(lw, XmNitems, &items, XmNitemCount, &count, NULL);
+    if (pos < 1 || pos > count) return;
+    char *txt = NULL;
+    if (!XmStringGetLtoR(items[pos - 1], XmFONTLIST_DEFAULT_TAG, &txt) || !txt) return;
+
+    char buf[1024];
+    int unread_now = 0;
+    if (txt[0] == 'N' && txt[1] == ' ') {
+        snprintf(buf, sizeof(buf), "  %s", txt + 2);
+        unread_now = 0;
+    } else if (txt[0] == ' ' && txt[1] == ' ') {
+        snprintf(buf, sizeof(buf), "N %s", txt + 2);
+        unread_now = 1;
+    } else {
+        snprintf(buf, sizeof(buf), "N %s", txt);
+        unread_now = 1;
+    }
+    XtFree(txt);
+
+    XmString ns = XmStringCreateLocalized(buf);
+    XmListReplaceItemsPosUnselected(lw, &ns, 1, pos);
+    XmListSelectPos(lw, pos, False);
+    if (_filter_active && pos - 1 < _filter_map_count) {
+        int orig_idx = _filter_index_map[pos - 1] - 1;
+        if (orig_idx >= 0 && orig_idx < _filter_saved_count) {
+            XmStringFree(_filter_saved_items[orig_idx]);
+            _filter_saved_items[orig_idx] = XmStringCopy(ns);
+        }
+    }
+    XmStringFree(ns);
+    this->message((char *)(unread_now ? "Marked as unread." : "Marked as read."));
+}
+
+static int resolve_special_folder(const char *folder_name, char *out, size_t out_len)
+{
+    if (dtmail_accounts_count() > 0 && dtmail_accounts_get(0)) {
+        return dtmail_account_folder_path(dtmail_accounts_get(0)->id, folder_name, out, out_len);
+    }
+    const char *home = getenv("HOME");
+    if (!home || !home[0]) return -1;
+    char d1[1024], d2[1024];
+    snprintf(d1, sizeof(d1), "%s/.dt", home);
+    snprintf(d2, sizeof(d2), "%s/.dt/mail", home);
+    (void)mkdir(d1, 0700);
+    (void)mkdir(d2, 0700);
+    snprintf(out, out_len, "%s/%s", d2, folder_name);
+    return 0;
+}
+
+void
+RoamMenuWindow::archiveSelected()
+{
+    if (!_list) return;
+    char target[1024];
+    if (resolve_special_folder("Archive", target, sizeof(target)) != 0) return;
+    DtMailEnv err;
+    err.clear();
+    if (_list->copySelected(err, target, TRUE, TRUE) == 0 && !err.isSet()) {
+        refreshFolderSidebar();
+        this->message((char *)"Archived selected message(s).");
+    } else {
+        this->message((char *)"Could not archive selected message.");
+    }
+}
+
+void
+RoamMenuWindow::junkSelected()
+{
+    if (!_list) return;
+    char target[1024];
+    if (resolve_special_folder("Junk", target, sizeof(target)) != 0) return;
+    DtMailEnv err;
+    err.clear();
+    if (_list->copySelected(err, target, TRUE, TRUE) == 0 && !err.isSet()) {
+        refreshFolderSidebar();
+        this->message((char *)"Moved selected message(s) to Junk.");
+    } else {
+        this->message((char *)"Could not move selected message to Junk.");
+    }
+}
+
+void
+RoamMenuWindow::refreshItipBanner()
+{
+    if (_itip_banner) dtmail_itip_banner_refresh(_itip_banner);
+}
+
+void
+RoamMenuWindow::autoSyncTimerCB(XtPointer client_data, XtIntervalId *id)
+{
+    RoamMenuWindow *self = (RoamMenuWindow *)client_data;
+    if (!self || self->_auto_sync_timer != *id) return;
+    self->_auto_sync_timer = 0;
+
+    if (dtmail_accounts_count() > 0 && self->baseWidget()) {
+        dtmail_start_async_sync(
+            XtWidgetToApplicationContext(self->baseWidget()),
+            dtmail_rmw_sync_done_cb, self);
+    }
+    self->scheduleAutoSync();
+}
+
+void
+RoamMenuWindow::scheduleAutoSync()
+{
+    if (_auto_sync_timer) {
+        XtRemoveTimeOut(_auto_sync_timer);
+        _auto_sync_timer = 0;
+    }
+    int min_sec = 0;
+    int naccts = dtmail_accounts_count();
+    for (int i = 0; i < naccts; i++) {
+        const DtMailAccount *a = dtmail_accounts_get(i);
+        if (a && a->enabled && a->imap_host[0]) {
+            int s = (a->sync_interval_sec >= 30) ? a->sync_interval_sec : 300;
+            if (min_sec == 0 || s < min_sec) min_sec = s;
+        }
+    }
+    if (min_sec > 0 && this->baseWidget()) {
+        _auto_sync_timer = XtAppAddTimeOut(
+            XtWidgetToApplicationContext(this->baseWidget()),
+            (unsigned long)min_sec * 1000UL,
+            &RoamMenuWindow::autoSyncTimerCB, this);
+    }
+}
+
+void
+RoamMenuWindow::clearFilterSnapshot()
+{
+    if (_filter_saved_items) {
+        for (int i = 0; i < _filter_saved_count; i++) {
+            XmStringFree(_filter_saved_items[i]);
+        }
+        free(_filter_saved_items);
+        _filter_saved_items = NULL;
+        _filter_saved_count = 0;
+    }
+    if (_filter_index_map) {
+        free(_filter_index_map);
+        _filter_index_map = NULL;
+        _filter_map_count = 0;
+    }
+    _filter_active = FALSE;
+}
+
+void
+RoamMenuWindow::handleFilteredSelection(int visible_pos)
+{
+    if (!_filter_active || !_list || visible_pos < 1 || visible_pos > _filter_map_count) {
+        return;
+    }
+    int orig_pos = _filter_index_map[visible_pos - 1];
+    DtMailMessageHandle h = _list->msgno(orig_pos);
+    if (h) {
+        DtMailEnv err;
+        err.clear();
+        _list->display_message(err, h);
     }
 }
 
@@ -5877,6 +6184,7 @@ void
 RoamMenuWindow::refreshFolderSidebar()
 {
     if (_folder_sidebar) dtmail_folder_sidebar_refresh(_folder_sidebar);
+    scheduleAutoSync();
 }
 
 void
@@ -5899,44 +6207,66 @@ RoamMenuWindow::applyQuickFilter(const char *query, int mode)
     Widget lw = _list->get_scrolling_list();
     if (!lw) return;
 
-    XmStringTable items = NULL;
-    int count = 0;
-    XtVaGetValues(lw, XmNitems, &items, XmNitemCount, &count, NULL);
-
     if ((!query || !query[0]) && mode == DTMAIL_FILTER_ALL) {
+        if (_filter_active && _filter_saved_items) {
+            XmListDeleteAllItems(lw);
+            if (_filter_saved_count > 0) {
+                XmListAddItemsUnselected(lw, _filter_saved_items, _filter_saved_count, 1);
+            }
+            clearFilterSnapshot();
+        }
         dtmail_quick_filter_set_status(_quick_filter, "");
         return;
     }
 
-    int matches = 0;
-    int first_match = 0;
-    XmListDeselectAllItems(lw);
+    /* Snapshot full unfiltered list once when entering filter mode */
+    if (!_filter_active) {
+        XmStringTable items = NULL;
+        int count = 0;
+        XtVaGetValues(lw, XmNitems, &items, XmNitemCount, &count, NULL);
+        _filter_saved_count = count;
+        if (count > 0) {
+            _filter_saved_items = (XmString *)calloc((size_t)count, sizeof(XmString));
+            _filter_index_map = (int *)calloc((size_t)count, sizeof(int));
+            for (int i = 0; i < count; i++) {
+                _filter_saved_items[i] = XmStringCopy(items[i]);
+            }
+        }
+        _filter_active = TRUE;
+    }
 
-    for (int i = 0; i < count; i++) {
+    int total = _filter_saved_count;
+    XmString *filtered = (total > 0) ? (XmString *)calloc((size_t)total, sizeof(XmString)) : NULL;
+    int matches = 0;
+
+    for (int i = 0; i < total; i++) {
         char *row_txt = NULL;
-        if (!XmStringGetLtoR(items[i], XmFONTLIST_DEFAULT_TAG, &row_txt) || !row_txt) {
+        if (!XmStringGetLtoR(_filter_saved_items[i], XmFONTLIST_DEFAULT_TAG, &row_txt) || !row_txt) {
             continue;
         }
         int is_unread = (row_txt[0] == 'N' || row_txt[0] == 'U') ? 1 : 0;
-        int is_starred = (strchr(row_txt, '*') != NULL) ? 1 : 0;
+        int is_starred = (row_txt[0] == '*' || strstr(row_txt, "* ") != NULL) ? 1 : 0;
         int has_attach = (strstr(row_txt, "Att") != NULL || strchr(row_txt, '+') != NULL) ? 1 : 0;
         if (dtmail_quick_filter_matches(row_txt, row_txt, "",
                                         is_unread, is_starred, has_attach,
                                         query ? query : "",
                                         (DtMailFilterMode)mode)) {
+            if (filtered) filtered[matches] = _filter_saved_items[i];
+            if (_filter_index_map) _filter_index_map[matches] = i + 1;
             matches++;
-            if (first_match == 0) first_match = i + 1;
-            XmListSelectPos(lw, i + 1, False);
         }
         XtFree(row_txt);
     }
 
-    char buf[64];
-    if (matches > 0) {
-        snprintf(buf, sizeof(buf), "%d / %d", matches, count);
-        XmListSetPos(lw, first_match);
-    } else {
-        snprintf(buf, sizeof(buf), "0 / %d", count);
+    _filter_map_count = matches;
+    XmListDeleteAllItems(lw);
+    if (matches > 0 && filtered) {
+        XmListAddItemsUnselected(lw, filtered, matches, 1);
+        XmListSelectPos(lw, 1, False);
     }
+    free(filtered);
+
+    char buf[64];
+    snprintf(buf, sizeof(buf), "%d / %d", matches, total);
     dtmail_quick_filter_set_status(_quick_filter, buf);
 }

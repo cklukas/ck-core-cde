@@ -231,6 +231,7 @@ def main():
             CXX, "-std=c++11", "-g", "-O1",
             "-fsanitize=address,undefined", "-fno-omit-frame-pointer",
             "-DHAVE_LIBCURL=1",
+            "-DDTMAIL_ITIP_NO_GUI=1",
             f"-I{DTMAIL_DIR}",
             *curl_cflags,
             harness_c,

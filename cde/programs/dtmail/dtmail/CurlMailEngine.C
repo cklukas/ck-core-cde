@@ -24,6 +24,7 @@
 #endif
 
 #include "CurlMailEngine.h"
+#include "MailThreadRules.h"
 
 int
 dtmail_mbox_append_rfc5322(const char *mbox_path,
@@ -351,6 +352,35 @@ extract_from_header(const char *raw, size_t len, char *out, size_t out_len)
     }
 }
 
+static void
+extract_header_value(const char *msg, size_t len, const char *hdr_name, char *out, size_t out_len)
+{
+    if (!out || out_len == 0) return;
+    out[0] = '\0';
+    if (!msg || !hdr_name) return;
+    size_t hlen = strlen(hdr_name);
+    const char *p = msg;
+    const char *end = msg + len;
+    while (p < end) {
+        const char *nl = (const char *)memchr(p, '\n', (size_t)(end - p));
+        const char *lend = nl ? nl : end;
+        if (lend == p || (lend == p + 1 && *p == '\r')) break;
+        if ((size_t)(lend - p) > hlen + 1 &&
+            strncasecmp(p, hdr_name, hlen) == 0 && p[hlen] == ':') {
+            const char *v = p + hlen + 1;
+            while (v < lend && (*v == ' ' || *v == '\t')) v++;
+            size_t vlen = (size_t)(lend - v);
+            while (vlen > 0 && (v[vlen - 1] == '\r' || v[vlen - 1] == '\n' || v[vlen - 1] == ' '))
+                vlen--;
+            if (vlen >= out_len) vlen = out_len - 1;
+            memcpy(out, v, vlen);
+            out[vlen] = '\0';
+            return;
+        }
+        p = nl ? nl + 1 : end;
+    }
+}
+
 int
 dtmail_imap_sync_folder(const DtMailAccount *acct,
                         const char *secret,
@@ -441,9 +471,49 @@ dtmail_imap_sync_folder(const DtMailAccount *acct,
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &msg);
         CURLcode fres = curl_easy_perform(curl);
         if (fres == CURLE_OK && msg.data && msg.len > 0) {
-            char from_addr[256];
+            char from_addr[256], to_hdr[256], subj_hdr[256];
             extract_from_header(msg.data, msg.len, from_addr, sizeof(from_addr));
-            if (dtmail_mbox_append_rfc5322(local_mbox_path, from_addr, msg.data, msg.len) == 0) {
+            extract_header_value(msg.data, msg.len, "To", to_hdr, sizeof(to_hdr));
+            extract_header_value(msg.data, msg.len, "Subject", subj_hdr, sizeof(subj_hdr));
+
+            /* Evaluate local mail rules (~/.dt/dtmail_rules) on incoming messages */
+            const char *dest_path = local_mbox_path;
+            char rule_dest[1024] = "";
+            const char *prefix_hdr = NULL;
+            dtmail_rules_init();
+            int ridx = dtmail_rules_evaluate(from_addr, to_hdr, subj_hdr);
+            if (ridx >= 0) {
+                const DtMailRule *rule = dtmail_rules_get(ridx);
+                if (rule) {
+                    if (rule->action == DTMAIL_RULE_ACT_MOVE && rule->target_folder[0] &&
+                        dtmail_account_folder_path(acct->id, rule->target_folder, rule_dest, sizeof(rule_dest)) == 0) {
+                        dest_path = rule_dest;
+                    } else if (rule->action == DTMAIL_RULE_ACT_JUNK &&
+                               dtmail_account_folder_path(acct->id, "Junk", rule_dest, sizeof(rule_dest)) == 0) {
+                        dest_path = rule_dest;
+                    } else if (rule->action == DTMAIL_RULE_ACT_MARK_READ) {
+                        prefix_hdr = "Status: RO\r\n";
+                    } else if (rule->action == DTMAIL_RULE_ACT_STAR) {
+                        prefix_hdr = "X-DtMail-Starred: 1\r\n";
+                    }
+                }
+            }
+
+            int app_rc = -1;
+            if (prefix_hdr) {
+                size_t plen = strlen(prefix_hdr);
+                char *aug = (char *)malloc(plen + msg.len);
+                if (aug) {
+                    memcpy(aug, prefix_hdr, plen);
+                    memcpy(aug + plen, msg.data, msg.len);
+                    app_rc = dtmail_mbox_append_rfc5322(dest_path, from_addr, aug, plen + msg.len);
+                    free(aug);
+                }
+            } else {
+                app_rc = dtmail_mbox_append_rfc5322(dest_path, from_addr, msg.data, msg.len);
+            }
+
+            if (app_rc == 0) {
                 unsigned long *ns = (unsigned long *)realloc(
                     seen_uids, (size_t)(seen_count + 1) * sizeof(unsigned long));
                 if (ns) {

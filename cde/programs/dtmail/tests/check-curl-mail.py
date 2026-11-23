@@ -231,6 +231,7 @@ def main() -> int:
                  f"-I{dtmail_src}", src,
                  os.path.join(dtmail_src, "CurlMailEngine.C"),
                  os.path.join(dtmail_src, "MailAccountStore.C"),
+                 os.path.join(dtmail_src, "MailThreadRules.C"),
                  "-lcurl", "-o", exe],
                 check=True,
             )

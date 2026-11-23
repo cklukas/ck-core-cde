@@ -474,6 +474,37 @@ int dtmail_oauth2_refresh_token(const DtMailAccount *acct,
     return oauth_post_token(turl, body, out_tokens, errbuf, errlen);
 }
 
+int dtmail_oauth2_ensure_access_token(const DtMailAccount *acct,
+                                      char *out_token, size_t out_len,
+                                      int force_refresh,
+                                      char *errbuf, size_t errlen)
+{
+    if (!acct || !out_token || out_len < 16) return -1;
+    out_token[0] = '\0';
+    if (!force_refresh) {
+        if (dtmail_keyring_lookup(acct->id, "oauth_access", out_token, out_len) == 0 &&
+            out_token[0]) {
+            return 0;
+        }
+    }
+    char refresh[2048] = "";
+    if (dtmail_keyring_lookup(acct->id, "oauth_refresh", refresh, sizeof(refresh)) != 0 ||
+        !refresh[0]) {
+        if (errbuf && errlen) snprintf(errbuf, errlen, "No OAuth2 refresh token in keyring");
+        return -1;
+    }
+    DtMailOAuthTokens tok;
+    if (dtmail_oauth2_refresh_token(acct, refresh, &tok, errbuf, errlen) != 0) {
+        return -1;
+    }
+    (void)dtmail_keyring_store(acct->id, "oauth_access", tok.access_token);
+    if (tok.refresh_token[0]) {
+        (void)dtmail_keyring_store(acct->id, "oauth_refresh", tok.refresh_token);
+    }
+    snprintf(out_token, out_len, "%s", tok.access_token);
+    return 0;
+}
+
 int dtmail_oauth2_open_browser(const char *url)
 {
     if (!url || !url[0]) return -1;
