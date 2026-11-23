@@ -1,4 +1,12 @@
 2026-11-23
+- Adopt CK Core Motif `d8308020c789` for DPI-scaled classic and high-contrast
+  `XmScrollBar` and `XmScale` default geometry (`.ckgit/motif-revision`,
+  `.ckgit/ci.yml`):
+  - Scales classic `XmScrollBar` thickness, minimum slider thumb extent, and
+    slider marks with per-output DPI and live display-scale changes across CDE
+    dialogs and scrolled views (such as `dtstyle` **Backdrop** and `dtfile`)
+    while preserving explicit dimensions and constrained `XmScrolledWindow`
+    outer bounds.
 - Complete P2 Mail threading/autocomplete popup and Calendar Week View/CalDAV
   write-back (`dtmail`, `dtcm`):
   - Wire `dtmail_thread_group()` directly into `RoamMenuWindow::toggleThreadMode()`
