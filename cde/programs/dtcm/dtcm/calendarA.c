@@ -125,6 +125,7 @@ static  char sccsid[] = "@(#)calendarA.c 1.196 95/04/12 Copyr 1991 Sun Microsyst
 #include "ux_helpers.h"
 #include "undo_stack.h"
 #include "agenda_ui.h"
+#include "quick_add.h"
 #include "context_menu.h"
 #include "overlay_ui.h"
 #include "ics_csa.h"
@@ -2762,12 +2763,30 @@ canvas_key_handler(Widget w, XtPointer client_data, XEvent *event, Boolean *cont
                 return;
         }
         if (ctrl && (ks == XK_n || ks == XK_N)) {
-                show_editor(c, 0, 0, False);
+                dtcm_quick_add_toggle(c, True);
                 return;
         }
         if (ks == XK_Home || (!ctrl && (ks == XK_t || ks == XK_T))) {
                 today_button(c->canvas, nullptr, nullptr);
                 return;
+        }
+        if (!ctrl && !(event->xkey.state & Mod1Mask)) {
+                if (ks == XK_d || ks == XK_D) {
+                        day_button(c->canvas, nullptr, nullptr);
+                        return;
+                }
+                if (ks == XK_w || ks == XK_W) {
+                        week_button(c->canvas, nullptr, nullptr);
+                        return;
+                }
+                if (ks == XK_m || ks == XK_M) {
+                        month_button(c->canvas, nullptr, nullptr);
+                        return;
+                }
+                if (ks == XK_a || ks == XK_A) {
+                        agenda_button(c->canvas, nullptr, nullptr);
+                        return;
+                }
         }
         if (ks == XK_Return || ks == XK_KP_Enter) {
                 time_t st = 0, en = 0;

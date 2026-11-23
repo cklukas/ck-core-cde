@@ -211,6 +211,7 @@ dtmail_accounts_load_file(const char *path)
         char *f_otoku   = next_tsv_field(&cur);
         char *f_enabled = next_tsv_field(&cur);
         char *f_sync    = next_tsv_field(&cur);
+        char *f_sig     = next_tsv_field(&cur);
 
         if (!f_id || !f_id[0] || !f_email)
             continue;
@@ -235,6 +236,7 @@ dtmail_accounts_load_file(const char *path)
         a.enabled = f_enabled ? (atoi(f_enabled) ? 1 : 0) : 1;
         a.sync_interval_sec = f_sync ? atoi(f_sync) : 300;
         if (a.sync_interval_sec < 30) a.sync_interval_sec = 300;
+        snprintf(a.signature, sizeof(a.signature), "%s", f_sig ? f_sig : "");
         (void)dtmail_accounts_upsert(&a);
     }
     fclose(fp);
@@ -261,13 +263,13 @@ dtmail_accounts_save_file(const char *path)
     fprintf(fp, "# dtmail accounts (v1, TSV, secrets stored in keyring)\n");
     for (int i = 0; i < g_account_count; i++) {
         const DtMailAccount *a = &g_accounts[i];
-        fprintf(fp, "%s\t%s\t%s\t%s\t%s\t%d\t%d\t%s\t%d\t%d\t%d\t%d\t%s\t%s\t%s\t%d\t%d\n",
+        fprintf(fp, "%s\t%s\t%s\t%s\t%s\t%d\t%d\t%s\t%d\t%d\t%d\t%d\t%s\t%s\t%s\t%d\t%d\t%s\n",
                 a->id, a->name, a->email, a->username,
                 a->imap_host, a->imap_port, (int)a->imap_tls,
                 a->smtp_host, a->smtp_port, (int)a->smtp_tls,
                 (int)a->auth_mode, (int)a->oauth_provider,
                 a->oauth_client_id, a->oauth_auth_url, a->oauth_token_url,
-                a->enabled ? 1 : 0, a->sync_interval_sec);
+                a->enabled ? 1 : 0, a->sync_interval_sec, a->signature);
     }
     if (fclose(fp) != 0) {
         unlink(tmp);

@@ -1,4 +1,17 @@
 2026-11-23
+- Complete P1 Mail and Calendar UX polish (`dtmail`, `dtcm`):
+  - Add first-run Welcome CTA banner (`Add Account...` / `Dismiss`) when no
+    remote accounts are configured, one-click **Open HTML in Browser** button on
+    the reading-pane header (`RoamMenuWindow.{h,C}`, `Editor.C`), and Compose
+    **From:** account switcher + per-account `signature` (`MailAccountStore.{h,C}`,
+    `AccountSetupDialog.C`, `SendMsgDialog.{h,C}`).
+  - Add single-line natural-language **Quick Add** bar (`Ctrl+N`) in `dtcm`
+    (`quick_add.{h,c}`, `tests/check-quick-add.py`), single-key view shortcuts
+    (`D`/`W`/`M`/`A` in `calendarA.c`), mini-calendar busy-day markers
+    (`XmMonthPanelSetBusyMask` in `MonthPanel.{h,c}`, `MonthPanelP.h`,
+    `dayglance.c`), multi-option reminder Snooze (`5m`/`15m`/`1h`/`Tomorrow` in
+    `alarm.c`), and Month View `+N more` overflow indicator + click popover
+    (`monthglance.c`).
 - Complete P0 Mail & Calendar integration, background sync, rules execution,
   OAuth2 refresh, real Quick-Filter row hiding, and message actions (`dtmail`,
   `dtcm`):

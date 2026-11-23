@@ -302,6 +302,7 @@ Initialize( Widget rw, Widget nw, ArgList args, Cardinal *num_args )
 
 	new_w->month_panel.display_rows = 6;  /* minimum to show all days */
 	new_w->month_panel.selected_day = 0;
+	new_w->month_panel.busy_days_mask = 0;
 	new_w->month_panel.normal_day_font = nullptr;
 	new_w->month_panel.bold_day_font = nullptr;
 
@@ -518,6 +519,18 @@ update_today_highlights(XmMonthPanelWidget mw)
 			if (!btn) continue;
 			Boolean is_today = (is_cur_month && (i + 1) == today_d);
 			Boolean is_sel = (mw->month_panel.selected_day == (i + 1));
+			Boolean is_busy = ((mw->month_panel.busy_days_mask & (1u << (i + 1))) != 0);
+
+			{
+				char dlbl[16];
+				if (is_busy)
+					snprintf(dlbl, sizeof(dlbl), "%d*", i + 1);
+				else
+					snprintf(dlbl, sizeof(dlbl), "%d", i + 1);
+				XmString xs = XmStringCreateLocalized(dlbl);
+				XtVaSetValues(btn, XmNlabelString, xs, nullptr);
+				XmStringFree(xs);
+			}
 
 			if (is_today) {
 				XmChangeColor(btn, day_bg);
@@ -566,6 +579,18 @@ XmMonthPanelSetSelectedDay(Widget panel, int day)
 	if (mw->month_panel.selected_day == day)
 		return;
 	mw->month_panel.selected_day = day;
+	update_today_highlights(mw);
+}
+
+void
+XmMonthPanelSetBusyMask(Widget panel, unsigned int busy_mask)
+{
+	if (!panel || !XmIsMonthPanel(panel))
+		return;
+	XmMonthPanelWidget mw = (XmMonthPanelWidget)panel;
+	if (mw->month_panel.busy_days_mask == busy_mask)
+		return;
+	mw->month_panel.busy_days_mask = busy_mask;
 	update_today_highlights(mw);
 }
 

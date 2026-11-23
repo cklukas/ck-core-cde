@@ -59,6 +59,15 @@
 
 static char *g_last_html_body = NULL;
 static size_t g_last_html_len = 0;
+static void (*g_html_change_cb)(int has_html, void *ud) = NULL;
+static void *g_html_change_ud = NULL;
+
+extern "C" void
+dtmail_html_register_change_cb(void (*cb)(int, void *), void *ud)
+{
+    g_html_change_cb = cb;
+    g_html_change_ud = ud;
+}
 
 extern "C" int dtmail_current_msg_has_html(void)
 {
@@ -279,6 +288,9 @@ Editor::set_message(DtMail::Message * msg,
 		    display_ptr = rendered_html;
 		    display_size = (unsigned long)strlen(rendered_html);
 		}
+	    }
+	    if (format != IF_INDENTED && g_html_change_cb) {
+		g_html_change_cb(g_last_html_body != NULL && g_last_html_len > 0, g_html_change_ud);
 	    }
 
 	    if (format == IF_INDENTED) {

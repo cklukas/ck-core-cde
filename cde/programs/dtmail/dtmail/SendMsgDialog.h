@@ -245,6 +245,12 @@ class SendMsgDialog : public MenuWindow, public AbstractEditorParent {
     char   _pending_smtp_rcpts[1024];
     char   _pending_smtp_acct_id[64];
 
+    /* From account picker */
+    Widget _from_acct_btn;
+    int    _selected_from_acct_idx;
+    static void cycleFromAccountCB(Widget, XtPointer, XtPointer);
+    void   updateFromAccountButton();
+
     static void undoSendTickCB(XtPointer, XtIntervalId *);
     static void cancelUndoSendCB(Widget, XtPointer, XtPointer);
     void   startUndoSendCountdown(const char *acct_id, const char *rcpts,

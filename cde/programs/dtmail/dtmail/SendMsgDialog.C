@@ -259,6 +259,8 @@ _header_list(16)
     _pending_smtp_len = 0;
     _pending_smtp_rcpts[0] = '\0';
     _pending_smtp_acct_id[0] = '\0';
+    _from_acct_btn = NULL;
+    _selected_from_acct_idx = 0;
     
     _file_include = NULL;
     _file_save_as = NULL;
@@ -1312,13 +1314,24 @@ SendMsgDialog::send_message(const char * trans_impl, int trans_type)
     // Modern TLS SMTP dispatch when a configured SMTP account is active
     {
         const DtMailAccount *smtp_acct = NULL;
-        for (int ai = 0; ai < dtmail_accounts_count(); ai++) {
-            const DtMailAccount *cand = dtmail_accounts_get(ai);
-            if (cand && cand->enabled &&
-                cand->auth_mode != DTMAIL_AUTH_SENDMAIL_LOCAL &&
-                cand->smtp_host[0]) {
-                smtp_acct = cand;
-                break;
+        int naccts = dtmail_accounts_count();
+        if (_selected_from_acct_idx >= 0 && _selected_from_acct_idx < naccts) {
+            const DtMailAccount *sel = dtmail_accounts_get(_selected_from_acct_idx);
+            if (sel && sel->enabled &&
+                sel->auth_mode != DTMAIL_AUTH_SENDMAIL_LOCAL &&
+                sel->smtp_host[0]) {
+                smtp_acct = sel;
+            }
+        }
+        if (!smtp_acct) {
+            for (int ai = 0; ai < naccts; ai++) {
+                const DtMailAccount *cand = dtmail_accounts_get(ai);
+                if (cand && cand->enabled &&
+                    cand->auth_mode != DTMAIL_AUTH_SENDMAIL_LOCAL &&
+                    cand->smtp_host[0]) {
+                    smtp_acct = cand;
+                    break;
+                }
             }
         }
         if (smtp_acct) {
@@ -1342,7 +1355,8 @@ SendMsgDialog::send_message(const char * trans_impl, int trans_type)
 
             char *body_txt = editor->textEditor()->get_contents();
             size_t blen = body_txt ? strlen(body_txt) : 0;
-            size_t rcap = blen + 2048;
+            size_t sig_extra = smtp_acct->signature[0] ? (strlen(smtp_acct->signature) + 16) : 0;
+            size_t rcap = blen + sig_extra + 2048;
             char *raw = (char *)malloc(rcap);
             if (raw) {
                 int hlen = snprintf(raw, rcap,
@@ -1357,15 +1371,23 @@ SendMsgDialog::send_message(const char * trans_impl, int trans_type)
                     to_s,
                     cc_s[0] ? "Cc: " : "", cc_s, cc_s[0] ? "\r\n" : "",
                     sub_s);
+                size_t total_len = (hlen > 0) ? (size_t)hlen : 0;
                 if (hlen > 0 && blen > 0) {
-                    memcpy(raw + hlen, body_txt, blen);
-                    raw[hlen + blen] = '\0';
+                    memcpy(raw + total_len, body_txt, blen);
+                    total_len += blen;
                 }
+                if (smtp_acct->signature[0] &&
+                    (!body_txt || !strstr(body_txt, smtp_acct->signature))) {
+                    int sl = snprintf(raw + total_len, rcap - total_len,
+                                      "\r\n-- \r\n%s\r\n", smtp_acct->signature);
+                    if (sl > 0) total_len += (size_t)sl;
+                }
+                raw[total_len] = '\0';
 
                 /* Queue 5-second Undo Send countdown before SMTP dispatch */
                 char rcpt_csv[1024];
                 snprintf(rcpt_csv, sizeof(rcpt_csv), "%s,%s,%s", to_s, cc_s, bcc_s);
-                startUndoSendCountdown(smtp_acct->id, rcpt_csv, raw, (size_t)hlen + blen);
+                startUndoSendCountdown(smtp_acct->id, rcpt_csv, raw, total_len);
                 if (body_txt) free(body_txt);
                 delete [] buf;
                 return;
@@ -1647,6 +1669,16 @@ SendMsgDialog::createWorkArea ( Widget parent )
         NULL);
     XmStringFree(us_cancel);
     XtAddCallback(cancel_btn, XmNactivateCallback, &SendMsgDialog::cancelUndoSendCB, this);
+
+    /* From account selector button (cycles configured accounts) */
+    _from_acct_btn = XtVaCreateWidget("FromAccountBtn", xmPushButtonWidgetClass, send_form,
+        XmNrightAttachment, XmATTACH_FORM,
+        XmNrightOffset, 8,
+        XmNbottomAttachment, XmATTACH_FORM,
+        XmNbottomOffset, 5,
+        NULL);
+    XtAddCallback(_from_acct_btn, XmNactivateCallback, &SendMsgDialog::cycleFromAccountCB, this);
+    updateFromAccountButton();
     
     // Now attach the editor to the form and to the rowCol
     // And the rowCol to the bottom of the form.
@@ -4203,6 +4235,41 @@ SendMsgDialog::cancelUndoSendCB(Widget, XtPointer client_data, XtPointer)
 {
     SendMsgDialog *self = (SendMsgDialog *)client_data;
     if (self) self->cancelUndoSend();
+}
+
+void
+SendMsgDialog::cycleFromAccountCB(Widget, XtPointer client_data, XtPointer)
+{
+    SendMsgDialog *self = (SendMsgDialog *)client_data;
+    if (!self) return;
+    int n = dtmail_accounts_count();
+    if (n <= 0) return;
+    self->_selected_from_acct_idx = (self->_selected_from_acct_idx + 1) % n;
+    self->updateFromAccountButton();
+}
+
+void
+SendMsgDialog::updateFromAccountButton()
+{
+    if (!_from_acct_btn) return;
+    int n = dtmail_accounts_count();
+    if (n <= 0) {
+        XtUnmanageChild(_from_acct_btn);
+        return;
+    }
+    if (_selected_from_acct_idx < 0 || _selected_from_acct_idx >= n) {
+        _selected_from_acct_idx = 0;
+    }
+    const DtMailAccount *a = dtmail_accounts_get(_selected_from_acct_idx);
+    if (!a) return;
+    char lbl[320];
+    snprintf(lbl, sizeof(lbl), "From: %s <%s>%s",
+             a->name[0] ? a->name : a->id, a->email,
+             (n > 1) ? " [Switch]" : "");
+    XmString s = XmStringCreateLocalized(lbl);
+    XtVaSetValues(_from_acct_btn, XmNlabelString, s, NULL);
+    XmStringFree(s);
+    XtManageChild(_from_acct_btn);
 }
 
 void

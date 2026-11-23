@@ -46,6 +46,7 @@ typedef struct {
     char oauth_token_url[512];
     int  enabled;
     int  sync_interval_sec;
+    char signature[256];
 } DtMailAccount;
 
 /* Provider presets: "gmail", "icloud", "fastmail", "m365", "custom", "local" */

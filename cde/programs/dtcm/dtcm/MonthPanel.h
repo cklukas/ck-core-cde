@@ -83,6 +83,7 @@ extern Widget XmCreateMonthPanel(
                         Cardinal argCount) ;
 
 extern void XmMonthPanelSetSelectedDay(Widget panel, int day);
+extern void XmMonthPanelSetBusyMask(Widget panel, unsigned int busy_mask);
 
 /********    End Public Function Declarations    ********/
 

@@ -857,6 +857,23 @@ paint_dayview(Calendar *c, Boolean repaint, XRectangle *rect, Boolean update_mon
 				nullptr);
 			XmMonthPanelSetSelectedDay(d->month_panels[pk],
 				(py == year_num && pm == month_num) ? sel_dom : 0);
+
+			/* Compute busy-day bitmask for this mini-calendar month */
+			unsigned int bmask = 0;
+			if (c->paint_cache && c->paint_cache_size > 0) {
+				for (int ci = 0; ci < c->paint_cache_size; ci++) {
+					time_t st_t = (time_t)c->paint_cache[ci].start_time;
+					struct tm stm;
+					if (localtime_r(&st_t, &stm)) {
+						if ((stm.tm_year + 1900) == py &&
+						    (stm.tm_mon + 1) == pm &&
+						    stm.tm_mday >= 1 && stm.tm_mday <= 31) {
+							bmask |= (1u << stm.tm_mday);
+						}
+					}
+				}
+			}
+			XmMonthPanelSetBusyMask(d->month_panels[pk], bmask);
 		}
 	}
 

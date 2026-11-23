@@ -74,6 +74,10 @@ static  char sccsid[] = "@(#)monthglance.c 1.82 95/07/27 Copyr 1994 Sun Microsys
 #include <X11/IntrinsicP.h>
 #include <X11/cursorfont.h>
 #include <Xm/Xm.h>
+#include <Xm/DialogS.h>
+#include <Xm/Form.h>
+#include <Xm/List.h>
+#include <Xm/PushB.h>
 #include <Xm/DrawingA.h>
 #include <Xm/Label.h>
 #include <Xm/PushB.h>
@@ -306,6 +310,23 @@ paint_day_entries(
         pfy = fontextents.max_ink_extent.height;
         maxlines = h / pfy;
 
+	/* Count total matching events on this day to detect overflow */
+	int total_for_day = 0;
+	for (i = 0; i < (int)appt_total; i++) {
+		if (!dtcm_filter_matches(cache[i].summary)) continue;
+		if (is_multiday_event(cache[i].start_time, cache[i].end_time)) continue;
+		if (cache[i].start_time >= lower && cache[i].start_time < upper)
+			total_for_day++;
+	}
+	for (i = 0; i < ovl_count; i++) {
+		if (!dtcm_filter_matches(ovl[i].summary)) continue;
+		if (is_multiday_event((Tick)ovl[i].start_utc, (Tick)ovl[i].end_utc)) continue;
+		if ((Tick)ovl[i].start_utc >= lower && (Tick)ovl[i].start_utc < upper)
+			total_for_day++;
+	}
+	int has_overflow = (total_for_day > maxlines && maxlines >= 2) ? 1 : 0;
+	int draw_limit = has_overflow ? (maxlines - 1) : maxlines;
+
 	/* loop thru the list of appointments twice, first displaying 
 	   the no time appointments, and then the appointments with times 
 	   associated. */
@@ -320,7 +341,7 @@ paint_day_entries(
 	                if (start_tick >= lower && 
 			    start_tick < upper && 
 			    (loop == cache[i].show_time)) {                        
-				if (nlines < maxlines) {
+				if (nlines < draw_limit) {
 					Boolean	pad;
 					static int pad_width = 0;
 					char clean_sum[256], loc_buf[128], cat_buf[64];
@@ -405,7 +426,7 @@ paint_day_entries(
 	}
 
 	/* Paint single-day overlaid calendar occurrences in this day cell */
-	for (i = 0; i < ovl_count && nlines < maxlines; i++) {
+	for (i = 0; i < ovl_count && nlines < draw_limit; i++) {
 		if (!dtcm_filter_matches(ovl[i].summary))
 			continue;
 		if (is_multiday_event((Tick)ovl[i].start_utc, (Tick)ovl[i].end_utc))
@@ -441,6 +462,20 @@ paint_day_entries(
 		(void)gr_text(xc, x + 5, y, pf, obuf, rect);
 		y += pfy;
 		nlines++;
+	}
+
+	if (has_overflow && total_for_day > nlines) {
+		int extra = total_for_day - nlines;
+		char mbuf[32];
+		snprintf(mbuf, sizeof(mbuf), "+%d more", extra);
+		Pixel blue_pix;
+		if (alloc_rgb_pixel(xc, 0x1a00, 0x5200, 0x9600, &blue_pix)) {
+			XSetForeground(xc->display, xc->gc, blue_pix);
+		}
+		(void)gr_text(xc, x + 4, y, pf, mbuf, rect);
+		XSetForeground(xc->display, xc->gc, xc->foreground);
+		/* Register clickable hit box with cache_idx = -2 for "+N more" popover */
+		dtcm_hittest_add(x, y - pfy, w, pfy + 2, -2, day);
 	}
 }
 
@@ -1026,6 +1061,89 @@ get_time_str (Dtcm_appointment *appt, char *buf)
                 (void) sprintf(buf, "%02d%02d ", hr, mn);
 }
 
+static void
+month_overflow_close_cb(Widget w, XtPointer cd, XtPointer call_data)
+{
+	(void)w; (void)call_data;
+	Widget shell = (Widget)cd;
+	if (shell) {
+		XtPopdown(shell);
+		XtDestroyWidget(shell);
+	}
+}
+
+static void
+show_month_overflow_popover(Calendar *c, Tick day)
+{
+	if (!c || !c->frame) return;
+	Tick lower = lowerbound(day);
+	Tick upper = next_ndays(day, 1);
+
+	char title[128];
+	struct tm tm;
+	time_t dt = (time_t)day;
+	localtime_r(&dt, &tm);
+	snprintf(title, sizeof(title), "Appointments - %04d-%02d-%02d",
+		 tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday);
+
+	Widget shell = XmCreateDialogShell(c->frame, "monthOverflowDlg", nullptr, 0);
+	XtVaSetValues(shell, XmNtitle, title, nullptr);
+
+	Widget form = XtVaCreateWidget("moForm", xmFormWidgetClass, shell,
+		XmNmarginWidth, 10, XmNmarginHeight, 10,
+		XmNwidth, 360, XmNheight, 260,
+		nullptr);
+
+	XmString cls_s = XmStringCreateLocalized((char *)"Close");
+	Widget cls_btn = XtVaCreateManagedWidget("moClose", xmPushButtonWidgetClass, form,
+		XmNlabelString, cls_s,
+		XmNbottomAttachment, XmATTACH_FORM,
+		XmNrightAttachment, XmATTACH_FORM,
+		nullptr);
+	XmStringFree(cls_s);
+	XtAddCallback(cls_btn, XmNactivateCallback, month_overflow_close_cb, (XtPointer)shell);
+
+	Arg al[4];
+	int ac = 0;
+	XtSetArg(al[ac], XmNvisibleItemCount, 10); ac++;
+	Widget list_w = XmCreateScrolledList(form, (char *)"moList", al, ac);
+	XtManageChild(list_w);
+	XtVaSetValues(XtParent(list_w),
+		XmNtopAttachment, XmATTACH_FORM,
+		XmNleftAttachment, XmATTACH_FORM,
+		XmNrightAttachment, XmATTACH_FORM,
+		XmNbottomAttachment, XmATTACH_WIDGET,
+		XmNbottomWidget, cls_btn,
+		XmNbottomOffset, 8,
+		nullptr);
+
+	if (c->paint_cache && c->paint_cache_size > 0) {
+		for (int i = 0; i < c->paint_cache_size; i++) {
+			if (c->paint_cache[i].start_time >= lower &&
+			    c->paint_cache[i].start_time < upper) {
+				struct tm stm;
+				time_t st = (time_t)c->paint_cache[i].start_time;
+				localtime_r(&st, &stm);
+				char clean_sum[256], line[320];
+				dtcm_ics_decompose_what_ex(c->paint_cache[i].summary,
+					clean_sum, sizeof(clean_sum),
+					nullptr, 0, nullptr, 0, nullptr, 0);
+				if (c->paint_cache[i].show_time)
+					snprintf(line, sizeof(line), "%02d:%02d  %s",
+						 stm.tm_hour, stm.tm_min, clean_sum);
+				else
+					snprintf(line, sizeof(line), "(All Day)  %s", clean_sum);
+				XmString s = XmStringCreateLocalized(line);
+				XmListAddItemUnselected(list_w, s, 0);
+				XmStringFree(s);
+			}
+		}
+	}
+
+	XtManageChild(form);
+	XtPopup(shell, XtGrabNone);
+}
+
 extern void
 month_event(XEvent *event)
 {
@@ -1155,6 +1273,10 @@ month_event(XEvent *event)
                 drag_cache_idx = -1;
                 if (event->xbutton.button == Button1) {
                         const DtcmHitBox *hb = dtcm_hittest_find(x, y);
+                        if (hb && hb->cache_idx == -2) {
+                                show_month_overflow_popover(c, hb->day);
+                                break;
+                        }
                         if (hb) {
                                 drag_cache_idx = hb->cache_idx;
                                 drag_start_x = x;

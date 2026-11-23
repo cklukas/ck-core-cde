@@ -101,6 +101,7 @@ typedef struct {
    Widget *days;   
    int    display_rows;
    int    selected_day;
+   unsigned int busy_days_mask;
    XmFontList normal_day_font;
    XmFontList bold_day_font;
 } XmMonthPanelPart;

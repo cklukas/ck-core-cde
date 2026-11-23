@@ -111,6 +111,7 @@
 
 extern "C" int dtmail_current_msg_has_html(void);
 extern "C" int dtmail_open_current_html_in_browser(void);
+extern "C" void dtmail_html_register_change_cb(void (*cb)(int, void *), void *ud);
 #include "RoamApp.h"
 #include "ButtonInterface.h"
 #include "WorkingDialogManager.h"
@@ -415,6 +416,9 @@ RoamMenuWindow::RoamMenuWindow (char *name) : MenuWindow ("dtmail", True)
     _folder_sidebar = NULL;
     _quick_filter = NULL;
     _itip_banner = NULL;
+    _html_open_btn = NULL;
+    _onboarding_bar = NULL;
+    _onboarding_dismissed = FALSE;
     _auto_sync_timer = 0;
     _thread_mode = FALSE;
     _msg_context_menu = NULL;
@@ -582,6 +586,7 @@ RoamMenuWindow::~RoamMenuWindow()
         dtmail_itip_banner_destroy(_itip_banner);
         _itip_banner = NULL;
     }
+    dtmail_html_register_change_cb(NULL, NULL);
     if (_folder_sidebar) {
         dtmail_folder_sidebar_destroy(_folder_sidebar);
         _folder_sidebar = NULL;
@@ -852,6 +857,66 @@ RoamMenuWindow::createWorkArea(Widget parent)
         },
         this);
 
+    /* First-run onboarding CTA banner when no remote accounts are configured */
+    _onboarding_bar = XtVaCreateWidget("OnboardingBar", xmFormWidgetClass, form2,
+        XmNtopAttachment, XmATTACH_WIDGET,
+        XmNtopWidget, dtmail_quick_filter_widget(_quick_filter),
+        XmNtopOffset, 2,
+        XmNleftAttachment, XmATTACH_FORM,
+        XmNleftOffset, 2,
+        XmNrightAttachment, XmATTACH_FORM,
+        XmNrightOffset, 2,
+        XmNshadowThickness, 1,
+        XmNshadowType, XmSHADOW_ETCHED_IN,
+        NULL);
+    XmString ob_dis_s = XmStringCreateLocalized((char *)"Dismiss");
+    Widget ob_dis = XtVaCreateManagedWidget("OnboardingDismissBtn", xmPushButtonWidgetClass,
+        _onboarding_bar,
+        XmNlabelString, ob_dis_s,
+        XmNtopAttachment, XmATTACH_FORM, XmNtopOffset, 3,
+        XmNbottomAttachment, XmATTACH_FORM, XmNbottomOffset, 3,
+        XmNrightAttachment, XmATTACH_FORM, XmNrightOffset, 5,
+        NULL);
+    XmStringFree(ob_dis_s);
+    XtAddCallback(ob_dis, XmNactivateCallback,
+        [](Widget, XtPointer ud, XtPointer) {
+            RoamMenuWindow *rw = (RoamMenuWindow *)ud;
+            if (rw) rw->dismissOnboardingBanner();
+        }, this);
+
+    XmString ob_add_s = XmStringCreateLocalized((char *)"Add Account...");
+    Widget ob_add = XtVaCreateManagedWidget("OnboardingAddBtn", xmPushButtonWidgetClass,
+        _onboarding_bar,
+        XmNlabelString, ob_add_s,
+        XmNtopAttachment, XmATTACH_FORM, XmNtopOffset, 3,
+        XmNbottomAttachment, XmATTACH_FORM, XmNbottomOffset, 3,
+        XmNrightAttachment, XmATTACH_WIDGET, XmNrightWidget, ob_dis, XmNrightOffset, 5,
+        NULL);
+    XmStringFree(ob_add_s);
+    XtAddCallback(ob_add, XmNactivateCallback,
+        [](Widget, XtPointer ud, XtPointer) {
+            RoamMenuWindow *rw = (RoamMenuWindow *)ud;
+            if (rw) dtmail_show_accounts_dialog(rw->baseWidget(),
+                [](int, const char *, void *u) {
+                    RoamMenuWindow *r = (RoamMenuWindow *)u;
+                    if (r) r->refreshFolderSidebar();
+                }, rw);
+        }, this);
+
+    XmString ob_lbl_s = XmStringCreateLocalized(
+        (char *)"Welcome to Mail - Add a Gmail, iCloud, Fastmail, M365, or IMAP account to sync mail.");
+    XtVaCreateManagedWidget("OnboardingLabel", xmLabelWidgetClass,
+        _onboarding_bar,
+        XmNlabelString, ob_lbl_s,
+        XmNalignment, XmALIGNMENT_BEGINNING,
+        XmNtopAttachment, XmATTACH_FORM, XmNtopOffset, 5,
+        XmNbottomAttachment, XmATTACH_FORM, XmNbottomOffset, 5,
+        XmNleftAttachment, XmATTACH_FORM, XmNleftOffset, 8,
+        XmNrightAttachment, XmATTACH_WIDGET, XmNrightWidget, ob_add, XmNrightOffset, 8,
+        NULL);
+    XmStringFree(ob_lbl_s);
+    refreshOnboardingBanner();
+
     _list = new MsgScrollingList( this, form2, "Message_List");
     msgListDragSetup();
     setupModernInteractions();
@@ -960,6 +1025,11 @@ RoamMenuWindow::createWorkArea(Widget parent)
         [](int, const DtMailItipInvite *, void *ud) {
             RoamMenuWindow *rw = (RoamMenuWindow *)ud;
             if (rw) rw->refreshItipBanner();
+        }, this);
+    dtmail_html_register_change_cb(
+        [](int has_html, void *ud) {
+            RoamMenuWindow *rw = (RoamMenuWindow *)ud;
+            if (rw) rw->refreshHtmlOpenButton(has_html);
         }, this);
     scheduleAutoSync();
 
@@ -3238,6 +3308,25 @@ RoamMenuWindow::addToRowOfMessageStatus()
  	XmNlabelString, labelStr2,
  	XmNrightAttachment, XmATTACH_FORM,
  	NULL );
+
+    /* One-click Open HTML in Browser button (shown only when viewing HTML email) */
+    XmString html_s = XmStringCreateLocalized((char *)"Open HTML in Browser");
+    _html_open_btn = XtVaCreateWidget("OpenHtmlInlineBtn", xmPushButtonWidgetClass,
+        _rowOfMessageStatus,
+        XmNlabelString, html_s,
+        XmNtopAttachment, XmATTACH_FORM,
+        XmNbottomAttachment, XmATTACH_FORM,
+        XmNrightAttachment, XmATTACH_WIDGET,
+        XmNrightWidget, _message_summary,
+        XmNrightOffset, 8,
+        NULL);
+    XmStringFree(html_s);
+    XtAddCallback(_html_open_btn, XmNactivateCallback,
+        [](Widget, XtPointer ud, XtPointer) {
+            RoamMenuWindow *rw = (RoamMenuWindow *)ud;
+            if (dtmail_open_current_html_in_browser() == 0 && rw)
+                rw->message((char *)"Opened HTML message in browser.");
+        }, this);
 
      XtVaSetValues(_message,
 	 XmNrightAttachment, XmATTACH_WIDGET,
@@ -6073,6 +6162,56 @@ RoamMenuWindow::refreshItipBanner()
 }
 
 void
+RoamMenuWindow::refreshHtmlOpenButton(int has_html)
+{
+    if (!_html_open_btn || !_message || !_message_summary) return;
+    if (has_html) {
+        XtManageChild(_html_open_btn);
+        XtVaSetValues(_message,
+            XmNrightAttachment, XmATTACH_WIDGET,
+            XmNrightWidget, _html_open_btn,
+            XmNrightOffset, 8,
+            NULL);
+    } else {
+        XtVaSetValues(_message,
+            XmNrightAttachment, XmATTACH_WIDGET,
+            XmNrightWidget, _message_summary,
+            XmNrightOffset, 10,
+            NULL);
+        XtUnmanageChild(_html_open_btn);
+    }
+}
+
+void
+RoamMenuWindow::refreshOnboardingBanner()
+{
+    if (!_onboarding_bar || !_rowOfLabels || !_quick_filter) return;
+    int show = (dtmail_accounts_count() == 0 && !_onboarding_dismissed) ? 1 : 0;
+    if (show) {
+        XtManageChild(_onboarding_bar);
+        XtVaSetValues(_rowOfLabels,
+            XmNtopAttachment, XmATTACH_WIDGET,
+            XmNtopWidget, _onboarding_bar,
+            XmNtopOffset, 3,
+            NULL);
+    } else {
+        XtVaSetValues(_rowOfLabels,
+            XmNtopAttachment, XmATTACH_WIDGET,
+            XmNtopWidget, dtmail_quick_filter_widget(_quick_filter),
+            XmNtopOffset, 3,
+            NULL);
+        XtUnmanageChild(_onboarding_bar);
+    }
+}
+
+void
+RoamMenuWindow::dismissOnboardingBanner()
+{
+    _onboarding_dismissed = TRUE;
+    refreshOnboardingBanner();
+}
+
+void
 RoamMenuWindow::autoSyncTimerCB(XtPointer client_data, XtIntervalId *id)
 {
     RoamMenuWindow *self = (RoamMenuWindow *)client_data;
@@ -6184,6 +6323,7 @@ void
 RoamMenuWindow::refreshFolderSidebar()
 {
     if (_folder_sidebar) dtmail_folder_sidebar_refresh(_folder_sidebar);
+    refreshOnboardingBanner();
     scheduleAutoSync();
 }
 

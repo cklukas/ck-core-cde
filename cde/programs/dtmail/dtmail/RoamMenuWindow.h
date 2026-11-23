@@ -573,12 +573,18 @@ class RoamMenuWindow : public MenuWindow, public AbstractEditorParent
     void	junkSelected();
     void	scheduleAutoSync();
     void	refreshItipBanner();
+    void	refreshHtmlOpenButton(int has_html);
+    void	refreshOnboardingBanner();
+    void	dismissOnboardingBanner();
     void	handleFilteredSelection(int visible_pos);
 
   private:
     DtMailFolderSidebar *_folder_sidebar;
     DtMailQuickFilterBar *_quick_filter;
     DtMailItipBanner    *_itip_banner;
+    Widget		_html_open_btn;
+    Widget		_onboarding_bar;
+    Boolean		_onboarding_dismissed;
     XtIntervalId	_auto_sync_timer;
     Boolean		_thread_mode;
     Widget		_msg_context_menu;

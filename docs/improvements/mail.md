@@ -510,4 +510,10 @@ local `/usr/sbin/sendmail` MTA to be usable on a modern desktop:
 - **Sender & recipient autocomplete**: `AddressAutocomplete.C` harvests unique
   `Name <email>` contacts into `~/.dt/dtmail_contacts` (`0600`) and completes
   prefixes in Compose `To:`, `Cc:`, and `Bcc:` fields.
+- **First-run onboarding, HTML button, and Compose identity**: when no remote
+  accounts exist, `RoamMenuWindow.C` displays a dismissible welcome banner with
+  an **Add Account...** action; HTML emails surface a one-click **Open HTML in
+  Browser** button on the reading-pane status bar; and Compose (`SendMsgDialog.C`)
+  provides a **From:** account switcher with per-account signatures stored in
+  `~/.dt/dtmail_accounts`.
 - Verified under ASan/UBSan by `tests/check-oauth2-pkce.py`.

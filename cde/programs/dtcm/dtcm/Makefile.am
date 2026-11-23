@@ -18,6 +18,7 @@ check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-ux-helpers.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-undo-stack.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-overlay-store.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-quick-add.py
 
 AM_CFLAGS = $(DT_INCDIR) $(CSA_INCDIR) -I$(top_srcdir)/lib/csa	\
 -I$(top_srcdir)/programs/dtcm/libDtCmP $(LIBCURL_CFLAGS) \
@@ -50,7 +51,8 @@ dtcm_SOURCES = MonthPanel.c    RFCMIME.c       about.c \
                monthglance.c   namesvc.c       notify_desktop.c \
                notify_desktop.h overlay_store.c overlay_store.h \
                overlay_ui.c    overlay_ui.h    print.c \
-               props.c         props_pu.c      reminders.c \
+               props.c         props_pu.c      quick_add.c     quick_add.h \
+               reminders.c \
                rfp.c           select.c        server_status.c \
                server_status.h session.c \
 	       submit.c        tempbr.c        timezone.c \
