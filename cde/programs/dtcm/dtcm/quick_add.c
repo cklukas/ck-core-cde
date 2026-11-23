@@ -18,6 +18,7 @@
 #include <Xm/PushB.h>
 #include <Xm/TextF.h>
 #include "ics_csa.h"
+#include "caldav_ui.h"
 #include "agenda_ui.h"
 #include "dayglance.h"
 #include "weekglance.h"
@@ -207,6 +208,7 @@ static void qa_submit_cb(Widget w, XtPointer cd, XtPointer call_data)
                 prepare_to_paint_monthview(g_qa_cal, NULL);
             else if (g_qa_cal->view->glance == agendaGlance)
                 paint_agendaview(g_qa_cal);
+            dtcm_caldav_trigger_writeback(g_qa_cal);
             if (g_qa_cal->message_text) {
                 char msg[320];
                 snprintf(msg, sizeof(msg), "Added: %s", qev.summary);

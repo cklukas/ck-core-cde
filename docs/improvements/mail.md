@@ -508,8 +508,12 @@ local `/usr/sbin/sendmail` MTA to be usable on a modern desktop:
   the message-list context menu and keyboard shortcuts support **Star (`S`)**,
   **Mark Read/Unread (`U`)**, **Archive (`E`)**, and **Move to Junk**.
 - **Sender & recipient autocomplete**: `AddressAutocomplete.C` harvests unique
-  `Name <email>` contacts into `~/.dt/dtmail_contacts` (`0600`) and completes
-  prefixes in Compose `To:`, `Cc:`, and `Bcc:` fields.
+  `Name <email>` contacts into `~/.dt/dtmail_contacts` (`0600`), shows a live
+  dropdown suggestion popup while typing in Compose `To:`, `Cc:`, and `Bcc:`
+  fields, and supports Enter-key completion.
+- **Indented Conversation Threading**: **View → Thread by Conversation** runs
+  `dtmail_thread_group()` on the message list to group replies under their
+  conversation root with `[N]` thread counts and `|-` indented reply rows.
 - **First-run onboarding, HTML button, and Compose identity**: when no remote
   accounts exist, `RoamMenuWindow.C` displays a dismissible welcome banner with
   an **Add Account...** action; HTML emails surface a one-click **Open HTML in

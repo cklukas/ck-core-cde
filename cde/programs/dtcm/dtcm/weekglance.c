@@ -76,6 +76,7 @@
 #include "goto.h"
 #include "tempbr.h"
 #include "ux_helpers.h"
+#include "undo_stack.h"
 #include "context_menu.h"
 #include "agenda_ui.h"
 
@@ -884,6 +885,7 @@ draw_week(Calendar *c, XRectangle *rect, Boundary boundary)
 
 
         gr_clear_box(xc, 0, 0, w->canvas_w, w->canvas_h);
+        dtcm_hittest_clear();
  
 	CalTextExtents(w->font, days2[3], cm_strlen(days2[3]), 
 		       &notused, &notused, &width1, &notused);
@@ -1196,6 +1198,10 @@ fill_day(Calendar *c, Week *w, int x, int y, int day,
 	
 	                if (nlines < maxlines) {
 	                        n = paint_entry(c, x, y, maxchars, &cache[i], rect);
+	                        dtcm_hittest_add(x, y - char_height,
+	                                         w->day_width > 6 ? w->day_width - 6 : w->day_width,
+	                                         (n > 0 ? n : 1) * char_height,
+	                                         i, day);
 	                        y += n * char_height;
 	                        nlines += n;
 	                }
@@ -1300,6 +1306,101 @@ draw_chart(Calendar *c, Week *w, XRectangle *rect)
         }
 }
 
+static Boolean
+reschedule_week_appt(Calendar *c, int cache_idx, Tick target_day)
+{
+        if (!c || c->cal_handle == 0 || !c->paint_cache ||
+            cache_idx < 0 || cache_idx >= c->paint_cache_size)
+                return False;
+
+        Paint_cache *pc = &c->paint_cache[cache_idx];
+        Tick src_day = lowerbound(pc->start_time);
+        Tick dst_day = lowerbound(target_day);
+        int delta_days = (int)((dst_day - src_day + (dst_day >= src_day ? 43200 : -43200)) / 86400);
+        if (delta_days == 0)
+                return False;
+
+        Tick start = src_day;
+        Tick stop = next_ndays(src_day, 1) - 1;
+        CSA_attribute *range_attrs = nullptr;
+        CSA_enum *ops = nullptr;
+        int rcount = 0;
+        CSA_uint32 n_entries = 0;
+        CSA_entry_handle *list = nullptr;
+
+        setup_range(&range_attrs, &ops, &rcount, start, stop, CSA_TYPE_EVENT,
+                    0, B_FALSE, c->general->version);
+        CSA_return_code stat = csa_list_entries(c->cal_handle, rcount,
+                                                range_attrs, ops, &n_entries, &list, nullptr);
+        free_range(&range_attrs, &ops, rcount);
+        if (stat != CSA_SUCCESS || !list || n_entries == 0) {
+                if (list) csa_free(list);
+                return False;
+        }
+
+        CSA_entry_handle target = 0;
+        Dtcm_appointment *appt = allocate_appt_struct(appt_read,
+                                                      c->general->version,
+                                                      CSA_ENTRY_ATTR_START_DATE_I,
+                                                      CSA_ENTRY_ATTR_END_DATE_I,
+                                                      CSA_ENTRY_ATTR_SUMMARY_I,
+                                                      nullptr);
+        for (CSA_uint32 i = 0; i < n_entries; i++) {
+                if (query_appt_struct(c->cal_handle, list[i], appt) == CSA_SUCCESS) {
+                        Tick st = 0;
+                        if (appt->time && appt->time->value && appt->time->value->item.date_time_value)
+                                _csa_iso8601_to_tick(appt->time->value->item.date_time_value, &st);
+                        const char *sum = (appt->what && appt->what->value && appt->what->value->item.string_value)
+                                          ? appt->what->value->item.string_value : "";
+                        if (st == pc->start_time &&
+                            strcmp(sum, pc->summary ? pc->summary : "") == 0) {
+                                target = list[i];
+                                break;
+                        }
+                }
+        }
+        free_appt_struct(&appt);
+        if (target == 0) {
+                csa_free(list);
+                return False;
+        }
+
+        Tick new_start = dtcm_shift_time_by_days(pc->start_time, delta_days);
+        Tick new_end = (pc->end_time > pc->start_time)
+                       ? dtcm_shift_time_by_days(pc->end_time, delta_days)
+                       : new_start;
+
+        char start_iso[BUFSIZ], end_iso[BUFSIZ];
+        _csa_tick_to_iso8601(new_start, start_iso);
+        _csa_tick_to_iso8601(new_end, end_iso);
+
+        CSA_attribute_value vals[2];
+        CSA_attribute attrs[2];
+        memset(vals, 0, sizeof(vals));
+        memset(attrs, 0, sizeof(attrs));
+        vals[0].type = CSA_VALUE_DATE_TIME;
+        vals[0].item.date_time_value = start_iso;
+        attrs[0].name = CSA_ENTRY_ATTR_START_DATE;
+        attrs[0].value = &vals[0];
+        vals[1].type = CSA_VALUE_DATE_TIME;
+        vals[1].item.date_time_value = end_iso;
+        attrs[1].name = CSA_ENTRY_ATTR_END_DATE;
+        attrs[1].value = &vals[1];
+
+        CSA_entry_handle updated = 0;
+        stat = csa_update_entry_attributes(c->cal_handle, target, CSA_SCOPE_ONE,
+                                           CSA_FALSE, 2, attrs, &updated, nullptr);
+        if (updated) csa_free((CSA_buffer)(uintptr_t)updated);
+        csa_free(list);
+        if (stat == CSA_SUCCESS) {
+                dtcm_undo_push_reschedule(pc->start_time, pc->end_time,
+                                          new_start, new_end,
+                                          pc->show_time, pc->summary);
+                return True;
+        }
+        return False;
+}
+
 extern void
 week_event(XEvent *event)
 {
@@ -1307,6 +1408,9 @@ week_event(XEvent *event)
         Props *p = (Props*)c->properties;
         static int lastdate;
         static XEvent lastevent;
+        static int drag_cache_idx = -1;
+        static int drag_start_x = 0, drag_start_y = 0;
+        static Tick drag_source_day = 0;
         int x, y, i, j, hr, id;
         Week    *w = (Week *)c->view->week_info;
         Selection *wsel;
@@ -1348,8 +1452,29 @@ week_event(XEvent *event)
 		if (j == -1)
 			return;
 		if (event->xbutton.button == Button3) {
-			dtcm_context_menu_popup(c, &event->xbutton, j, -1);
+			const DtcmHitBox *hb3 = dtcm_hittest_find(x, y);
+			int hidx = (hb3 && hb3->cache_idx >= 0) ? hb3->cache_idx : -1;
+			if (hidx >= 0 && c->paint_cache && hidx < c->paint_cache_size) {
+				Paint_cache *pc = &c->paint_cache[hidx];
+				dtcm_selected_appt_set(hidx, pc->start_time, pc->end_time,
+						       pc->show_time, pc->summary);
+			}
+			dtcm_context_menu_popup(c, &event->xbutton, j, hidx);
 			break;
+		}
+		drag_cache_idx = -1;
+		if (event->xbutton.button == Button1) {
+			const DtcmHitBox *hb1 = dtcm_hittest_find(x, y);
+			if (hb1 && hb1->cache_idx >= 0 && c->paint_cache &&
+			    hb1->cache_idx < c->paint_cache_size) {
+				Paint_cache *pc = &c->paint_cache[hb1->cache_idx];
+				dtcm_selected_appt_set(hb1->cache_idx, pc->start_time, pc->end_time,
+						       pc->show_time, pc->summary);
+				drag_cache_idx = hb1->cache_idx;
+				drag_start_x = x;
+				drag_start_y = y;
+				drag_source_day = hb1->day;
+			}
 		}
 		hr = (inchart(w, x, y)) ? week_xytohour(w, x, y) : (wsel->row + w->begin_hour);
 
@@ -1392,6 +1517,24 @@ week_event(XEvent *event)
 		lastdate = c->view->date;
 		lastcol = wsel->col;
 		lastrow = wsel->row;
+                break;
+        case ButtonRelease:
+                if (event->xbutton.button == Button1 && drag_cache_idx >= 0) {
+                        int dx = x - drag_start_x;
+                        int dy = y - drag_start_y;
+                        if (dx < 0) dx = -dx;
+                        if (dy < 0) dy = -dy;
+                        Tick drop_day = week_xytoclock(w, x, y);
+                        if ((dx > 8 || dy > 8) && drop_day > 0 && drop_day != drag_source_day) {
+                                if (reschedule_week_appt(c, drag_cache_idx, drop_day)) {
+                                        invalidate_cache(c);
+                                        paint_weekview(c, nullptr);
+                                        if (c->message_text)
+                                                set_message(c->message_text, "Moved appointment to new day.");
+                                }
+                        }
+                        drag_cache_idx = -1;
+                }
                 break;
         default: 
                 break;

@@ -251,6 +251,14 @@ class SendMsgDialog : public MenuWindow, public AbstractEditorParent {
     static void cycleFromAccountCB(Widget, XtPointer, XtPointer);
     void   updateFromAccountButton();
 
+    /* Live dropdown autocomplete popup */
+    Widget _ac_shell;
+    Widget _ac_list;
+    Widget _ac_target_field;
+    static void autocompleteChangedCB(Widget, XtPointer, XtPointer);
+    static void autocompleteSelectCB(Widget, XtPointer, XtPointer);
+    void   hideAutocompletePopup();
+
     static void undoSendTickCB(XtPointer, XtIntervalId *);
     static void cancelUndoSendCB(Widget, XtPointer, XtPointer);
     void   startUndoSendCountdown(const char *acct_id, const char *rcpts,

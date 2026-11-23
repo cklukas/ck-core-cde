@@ -802,3 +802,21 @@ dtcm_caldav_add_menu_item(Calendar *c, Widget file_menu)
     if (dtcm_caldav_load_profile(&cfg) == 0 && cfg.auto_sync_mins > 0)
         reschedule_autosync(c, cfg.auto_sync_mins);
 }
+
+void
+dtcm_caldav_trigger_writeback(Calendar *c)
+{
+    if (!c || g_job_busy)
+        return;
+    DtcmCaldavConfig cfg;
+    if (dtcm_caldav_load_profile(&cfg) != 0 || !cfg.url[0])
+        return;
+    if (cfg.username[0]) {
+        if (g_password_buf[0])
+            snprintf(cfg.password, sizeof(cfg.password), "%s", g_password_buf);
+        else
+            (void)dtcm_caldav_keyring_lookup(cfg.url, cfg.username,
+                                             cfg.password, sizeof(cfg.password));
+    }
+    start_async_op(c, CALDAV_OP_SYNC, &cfg);
+}

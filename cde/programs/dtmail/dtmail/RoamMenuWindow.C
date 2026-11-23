@@ -6309,14 +6309,112 @@ RoamMenuWindow::focusQuickFilter()
 void
 RoamMenuWindow::toggleThreadMode()
 {
+    if (!_list) return;
+    Widget lw = _list->get_scrolling_list();
+    if (!lw) return;
+
     _thread_mode = !_thread_mode;
-    if (_thread_mode) {
-        if (_view_sortSubject) _view_sortSubject->execute();
-        this->message((char *)"Conversation threading enabled (grouped by subject/thread).");
-    } else {
-        if (_view_sortTD) _view_sortTD->execute();
-        this->message((char *)"Conversation threading disabled (sorted by date/time).");
+    if (!_thread_mode) {
+        if (_filter_active && _filter_saved_items) {
+            XmListDeleteAllItems(lw);
+            if (_filter_saved_count > 0) {
+                XmListAddItemsUnselected(lw, _filter_saved_items, _filter_saved_count, 1);
+            }
+            clearFilterSnapshot();
+        }
+        this->message((char *)"Conversation threading disabled.");
+        return;
     }
+
+    if (!_filter_active) {
+        XmStringTable items = NULL;
+        int count = 0;
+        XtVaGetValues(lw, XmNitems, &items, XmNitemCount, &count, NULL);
+        _filter_saved_count = count;
+        if (count > 0) {
+            _filter_saved_items = (XmString *)calloc((size_t)count, sizeof(XmString));
+            _filter_index_map = (int *)calloc((size_t)count, sizeof(int));
+            for (int i = 0; i < count; i++) {
+                _filter_saved_items[i] = XmStringCopy(items[i]);
+            }
+        }
+        _filter_active = TRUE;
+    }
+
+    int n = _filter_saved_count;
+    if (n <= 0) {
+        this->message((char *)"Conversation threading enabled (0 messages).");
+        return;
+    }
+
+    DtMailThreadItem *titems = (DtMailThreadItem *)calloc((size_t)n, sizeof(DtMailThreadItem));
+    if (!titems) return;
+
+    for (int i = 0; i < n; i++) {
+        titems[i].orig_index = i;
+        titems[i].timestamp = (long)i;
+        char *row_txt = NULL;
+        if (XmStringGetLtoR(_filter_saved_items[i], XmFONTLIST_DEFAULT_TAG, &row_txt) && row_txt) {
+            /* Extract Subject column (dtmail header line places Subject around col 22..52) */
+            const char *sub_start = row_txt;
+            size_t rlen = strlen(row_txt);
+            if (rlen > 22) sub_start = row_txt + 22;
+            char tmp[256];
+            snprintf(tmp, sizeof(tmp), "%.40s", sub_start);
+            /* Trim trailing spaces */
+            size_t tl = strlen(tmp);
+            while (tl > 0 && tmp[tl - 1] == ' ') tmp[--tl] = '\0';
+            snprintf(titems[i].subject, sizeof(titems[i].subject), "%s", tmp);
+            XtFree(row_txt);
+        }
+    }
+
+    int nthreads = dtmail_thread_group(titems, n);
+
+    /* Count messages per thread_id so roots can display [N] badge */
+    int *thread_counts = (int *)calloc((size_t)(nthreads + 2), sizeof(int));
+    if (thread_counts) {
+        for (int i = 0; i < n; i++) {
+            if (titems[i].thread_id >= 0 && titems[i].thread_id <= nthreads) {
+                thread_counts[titems[i].thread_id]++;
+            }
+        }
+    }
+
+    XmString *threaded = (XmString *)calloc((size_t)n, sizeof(XmString));
+    for (int i = 0; i < n; i++) {
+        int orig = titems[i].orig_index;
+        if (_filter_index_map) _filter_index_map[i] = orig + 1;
+        char *row_txt = NULL;
+        if (XmStringGetLtoR(_filter_saved_items[orig], XmFONTLIST_DEFAULT_TAG, &row_txt) && row_txt) {
+            char line[1024];
+            int tcnt = (thread_counts && titems[i].thread_id >= 0 && titems[i].thread_id <= nthreads)
+                       ? thread_counts[titems[i].thread_id] : 1;
+            if (titems[i].depth > 0) {
+                snprintf(line, sizeof(line), "  |- %s", row_txt);
+            } else if (tcnt > 1) {
+                snprintf(line, sizeof(line), "[%d] %s", tcnt, row_txt);
+            } else {
+                snprintf(line, sizeof(line), "%s", row_txt);
+            }
+            threaded[i] = XmStringCreateLocalized(line);
+            XtFree(row_txt);
+        } else {
+            threaded[i] = XmStringCopy(_filter_saved_items[orig]);
+        }
+    }
+
+    _filter_map_count = n;
+    XmListDeleteAllItems(lw);
+    XmListAddItemsUnselected(lw, threaded, n, 1);
+    for (int i = 0; i < n; i++) XmStringFree(threaded[i]);
+    free(threaded);
+    free(thread_counts);
+    free(titems);
+
+    char msg[128];
+    snprintf(msg, sizeof(msg), "Conversation threading enabled (%d threads, %d messages).", nthreads, n);
+    this->message(msg);
 }
 
 void

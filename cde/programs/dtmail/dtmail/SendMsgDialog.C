@@ -261,6 +261,9 @@ _header_list(16)
     _pending_smtp_acct_id[0] = '\0';
     _from_acct_btn = NULL;
     _selected_from_acct_idx = 0;
+    _ac_shell = NULL;
+    _ac_list = NULL;
+    _ac_target_field = NULL;
     
     _file_include = NULL;
     _file_save_as = NULL;
@@ -1843,6 +1846,14 @@ SendMsgDialog::createHeaders(Widget header_form)
 		      XmNvalueChangedCallback,
 		      headerValueChanged,
 		      this);
+	if (strcasecmp(hl->label, "To") == 0 ||
+	    strcasecmp(hl->label, "Cc") == 0 ||
+	    strcasecmp(hl->label, "Bcc") == 0) {
+	    XtAddCallback(hl->field_widget,
+			  XmNvalueChangedCallback,
+			  &SendMsgDialog::autocompleteChangedCB,
+			  this);
+	}
 
 	if (hl->value) {
 	    XtVaSetValues(hl->field_widget,
@@ -4270,6 +4281,111 @@ SendMsgDialog::updateFromAccountButton()
     XtVaSetValues(_from_acct_btn, XmNlabelString, s, NULL);
     XmStringFree(s);
     XtManageChild(_from_acct_btn);
+}
+
+void
+SendMsgDialog::hideAutocompletePopup()
+{
+    if (_ac_shell && XtIsRealized(_ac_shell)) {
+        XtPopdown(_ac_shell);
+    }
+}
+
+void
+SendMsgDialog::autocompleteSelectCB(Widget w, XtPointer client_data, XtPointer call_data)
+{
+    (void)w;
+    SendMsgDialog *self = (SendMsgDialog *)client_data;
+    XmListCallbackStruct *cbs = (XmListCallbackStruct *)call_data;
+    if (!self || !cbs || !self->_ac_target_field) return;
+
+    char *chosen = NULL;
+    if (XmStringGetLtoR(cbs->item, XmFONTLIST_DEFAULT_TAG, &chosen) && chosen) {
+        char *cur = XmTextFieldGetString(self->_ac_target_field);
+        char completed[1024];
+        if (cur) {
+            char *last_sep = strrchr(cur, ',');
+            if (last_sep) {
+                size_t plen = (size_t)(last_sep - cur) + 1;
+                if (plen > 512) plen = 512;
+                snprintf(completed, sizeof(completed), "%.*s %s", (int)plen, cur, chosen);
+            } else {
+                snprintf(completed, sizeof(completed), "%s", chosen);
+            }
+            XtFree(cur);
+        } else {
+            snprintf(completed, sizeof(completed), "%s", chosen);
+        }
+        XmTextFieldSetString(self->_ac_target_field, completed);
+        XmTextFieldSetInsertionPosition(self->_ac_target_field, (XmTextPosition)strlen(completed));
+        XtFree(chosen);
+    }
+    self->hideAutocompletePopup();
+}
+
+void
+SendMsgDialog::autocompleteChangedCB(Widget w, XtPointer client_data, XtPointer)
+{
+    SendMsgDialog *self = (SendMsgDialog *)client_data;
+    if (!self || !XmIsTextField(w)) return;
+
+    dtmail_contacts_init();
+    char *cur = XmTextFieldGetString(w);
+    if (!cur) return;
+
+    char *last_sep = strrchr(cur, ',');
+    char *tok = last_sep ? last_sep + 1 : cur;
+    while (*tok == ' ' || *tok == '\t') tok++;
+
+    if (strlen(tok) < 2 || strchr(tok, '@')) {
+        XtFree(cur);
+        self->hideAutocompletePopup();
+        return;
+    }
+
+    char matches[8][256];
+    int n = dtmail_contacts_match(tok, matches, 8);
+    XtFree(cur);
+    if (n <= 0) {
+        self->hideAutocompletePopup();
+        return;
+    }
+
+    if (!self->_ac_shell) {
+        self->_ac_shell = XtVaCreatePopupShell("acPopupShell",
+            overrideShellWidgetClass, self->baseWidget(),
+            XmNallowShellResize, True,
+            NULL);
+        Arg al[4];
+        int ac = 0;
+        XtSetArg(al[ac], XmNselectionPolicy, XmBROWSE_SELECT); ac++;
+        XtSetArg(al[ac], XmNvisibleItemCount, 5); ac++;
+        self->_ac_list = XmCreateScrolledList(self->_ac_shell, (char *)"acList", al, ac);
+        XtManageChild(self->_ac_list);
+        XtAddCallback(self->_ac_list, XmNbrowseSelectionCallback,
+                      &SendMsgDialog::autocompleteSelectCB, self);
+        XtAddCallback(self->_ac_list, XmNdefaultActionCallback,
+                      &SendMsgDialog::autocompleteSelectCB, self);
+    }
+
+    self->_ac_target_field = w;
+    XmListDeleteAllItems(self->_ac_list);
+    for (int i = 0; i < n; i++) {
+        XmString s = XmStringCreateLocalized(matches[i]);
+        XmListAddItemUnselected(self->_ac_list, s, 0);
+        XmStringFree(s);
+    }
+
+    Position rx = 0, ry = 0;
+    Dimension fh = 0, fw = 0;
+    XtTranslateCoords(w, 0, 0, &rx, &ry);
+    XtVaGetValues(w, XmNheight, &fh, XmNwidth, &fw, NULL);
+    XtVaSetValues(self->_ac_shell,
+        XmNx, rx,
+        XmNy, (Position)(ry + fh + 1),
+        XmNwidth, (fw > 220 ? fw : 260),
+        NULL);
+    XtPopup(self->_ac_shell, XtGrabNone);
 }
 
 void

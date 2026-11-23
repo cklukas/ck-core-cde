@@ -1,4 +1,15 @@
 2026-11-23
+- Complete P2 Mail threading/autocomplete popup and Calendar Week View/CalDAV
+  write-back (`dtmail`, `dtcm`):
+  - Wire `dtmail_thread_group()` directly into `RoamMenuWindow::toggleThreadMode()`
+    to render true conversation threads with `[N]` root counts and `|-` indented
+    replies while preserving exact click-to-message mapping, and add a live
+    dropdown contact autocomplete popup in `SendMsgDialog.C` as you type in
+    `To:`/`Cc:`/`Bcc:`.
+  - Add Week View appointment hit-testing, direct card selection, right-click
+    context menu parity (`Edit`/`Copy`/`Paste`/`Delete`), and drag-to-reschedule
+    across days in `weekglance.c`, plus automatic non-blocking CalDAV write-back
+    trigger (`dtcm_caldav_trigger_writeback` in `caldav_ui.{h,c}`, `quick_add.c`).
 - Complete P1 Mail and Calendar UX polish (`dtmail`, `dtcm`):
   - Add first-run Welcome CTA banner (`Add Account...` / `Dismiss`) when no
     remote accounts are configured, one-click **Open HTML in Browser** button on
