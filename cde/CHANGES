@@ -1,4 +1,6 @@
 2026-11-23
+- Wait for Xvfb to allocate and initialize a display before starting the
+  X11 desktop in signed Ubuntu package verification.
 - Preserve the selected session when the greeter exits after authentication.
   Qualify Wayland and X11 handoff through the real greeter with scoped
   fixture accounts and process checks.

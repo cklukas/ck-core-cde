@@ -20,6 +20,7 @@ import hashlib
 import json
 import os
 import re
+import select
 import shutil
 import signal
 import subprocess
@@ -227,6 +228,23 @@ def stop_process_groups(procs: list[subprocess.Popen]) -> None:
             except ProcessLookupError:
                 pass
             proc.wait()
+
+
+def wait_for_xvfb_display(read_end: int, log_path: Path) -> str:
+    deadline = time.monotonic() + 20
+    reply = bytearray()
+    while b"\n" not in reply and len(reply) < 16:
+        remaining = max(0, deadline - time.monotonic())
+        if not select.select([read_end], [], [], remaining)[0]:
+            break
+        chunk = os.read(read_end, 16 - len(reply))
+        if not chunk:
+            break
+        reply.extend(chunk)
+    number, newline, _ = reply.partition(b"\n")
+    if newline and number.isdigit():
+        return ":" + number.decode("ascii")
+    raise SystemExit(f"Xvfb did not report a ready display; see {log_path}")
 
 
 def verify_signed_repo(repo: Path, out_dir: Path, tmp_dir: Path) -> dict[str, object]:
@@ -445,22 +463,30 @@ def verify_package_sessions(
 
         # 2) Boot installed CDE (X11 / XLibre) desktop session under Xvfb WITHOUT LD_LIBRARY_PATH,
         #    verify libXm.so.9 maps on dtwm + clients, and capture via /usr/bin/ck-grab --capture --full-screen!
-        x11_dpy = ":29"
-        xvfb = subprocess.Popen(
-            ["Xvfb", x11_dpy, "-screen", "0", "1280x900x24", "-nolisten", "tcp"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            start_new_session=True,
-        )
+        xvfb_log_path = out_dir / "installed-xvfb.log"
+        with xvfb_log_path.open("w", encoding="utf-8") as xvfb_log:
+            xvfb = subprocess.Popen(
+                ["Xvfb", "-displayfd", "1", "-screen", "0", "1280x900x24",
+                 "-nolisten", "tcp", "-noreset"],
+                stdout=subprocess.PIPE,
+                stderr=xvfb_log,
+                start_new_session=True,
+            )
         x11_procs = [xvfb]
         try:
-            time.sleep(0.8)
+            with xvfb.stdout as displayfd:
+                x11_dpy = wait_for_xvfb_display(displayfd.fileno(), xvfb_log_path)
             x11_env = {
                 **cde_common_env,
                 "DISPLAY": x11_dpy,
             }
-            subprocess.run(["xsetroot", "-solid", "#3c586e"], env=x11_env, check=False)
-            p_dtwm = subprocess.Popen(["/usr/dt/bin/dtwm"], env=x11_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+            subprocess.run(["xsetroot", "-solid", "#3c586e"], env=x11_env, check=True)
+            x11_log_path = out_dir / "installed-x11.log"
+            with x11_log_path.open("w", encoding="utf-8") as x11_log:
+                p_dtwm = subprocess.Popen(
+                    ["/usr/dt/bin/dtwm"], env=x11_env,
+                    stdout=x11_log, stderr=subprocess.STDOUT, start_new_session=True,
+                )
             x11_procs.append(p_dtwm)
             time.sleep(2.5)
             p_xclk = subprocess.Popen(["/usr/bin/ck-clock", "-geometry", "52x52"], env=x11_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
@@ -472,7 +498,7 @@ def verify_package_sessions(
 
             for label, proc in [("dtwm", p_dtwm), ("dtpad", p_xpad), ("dtterm", p_xterm), ("ck-calc", p_xcalc)]:
                 if proc.poll() is not None:
-                    raise SystemExit(f"installed X11 {label} exited with {proc.returncode}")
+                    raise SystemExit(f"installed X11 {label} exited with {proc.returncode}; see {x11_log_path}")
                 maps = Path(f"/proc/{proc.pid}/maps").read_text(encoding="utf-8", errors="replace")
                 xm_lines = [ln.split()[-1] for ln in maps.splitlines() if "libXm.so" in ln]
                 if not xm_lines or not xm_lines[0].startswith("/usr/dt/lib/libXm.so.9"):

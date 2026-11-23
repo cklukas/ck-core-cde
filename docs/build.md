@@ -767,6 +767,10 @@ python3 scripts/build-ubuntu-debs.py --in-guest --verify-install \
 The verifier uses the repository's signing key for a scoped APT source. It
 checks the installed Motif digest and live library mappings, captures the
 native Wayland and X11 desktops, and verifies clean compositor shutdown.
+The X11 check lets Xvfb allocate a display and waits for its readiness
+notification. It keeps the display available between desktop setup and
+window manager startup. Diagnostics are saved in `installed-xvfb.log` and
+`installed-x11.log`.
 The guest's `_apt` user needs to be able to traverse `$GUEST_SCRATCH/tmp`
 and its ancestors to read the staged public key.
 
