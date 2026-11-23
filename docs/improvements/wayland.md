@@ -721,7 +721,8 @@ compositor session is ready.
   `SystemSubpanel` + `Copy To Main Panel` persistence, live `ck-status-gauge`
   embedding, `StatusNotifier` tray, and toast banner),
   `check-dtwm-wayland-wp10.py` (`WP-10` `wlr-randr`, `dtstyle` *Display &
-  Monitors*, `zwlr_foreign_toplevel_manager_v1`, `ext-image-copy-capture-v1`,
+  Monitors*, 1:1 rotated output geometry with a separately published 192 DPI,
+  `zwlr_foreign_toplevel_manager_v1`, `ext-image-copy-capture-v1`,
   and `xdg-desktop-portal-wlr`), `check-dtwm-wayland-wp11.py` (`WP-11`
   `zwp_text_input_v3`, `zwp_input_method_v2`, `zwp_input_popup_surface_v2` CJK
   candidate popups, `keyboard_grab`, and `ext-session-lock-v1` isolation),

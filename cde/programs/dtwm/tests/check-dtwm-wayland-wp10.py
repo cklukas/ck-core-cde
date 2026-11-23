@@ -173,15 +173,20 @@ int main(int argc, char **argv) {
     if (argc >= 3 && strcmp(argv[1], "--dlg-ipc") == 0) {
         Atom da = XInternAtom(dpy, "_DTSTYLE_DISPLAY_DLG_WIN", True);
         Atom at = None; int af = 0; unsigned long n = 0, r = 0; unsigned char *p = NULL;
-        if (da != None && XGetWindowProperty(dpy, root, da, 0, 1, False, XA_WINDOW, &at, &af, &n, &r, &p) == Success && p && n >= 1) {
+        if (da != None && XGetWindowProperty(dpy, root, da, 0, 1, False, XA_WINDOW, &at, &af, &n, &r, &p) == Success &&
+            p && at == XA_WINDOW && af == 32 && n == 1) {
             Window dlg = *(Window *)p;
             XFree(p);
             Atom ipc = XInternAtom(dpy, "_DTSTYLE_DISPLAY_IPC", False);
             XChangeProperty(dpy, dlg, ipc, XA_STRING, 8, PropModeReplace, (const unsigned char *)argv[2], (int)strlen(argv[2]));
             XSync(dpy, False);
+            XCloseDisplay(dpy);
+            return 0;
         }
+        if (p) XFree(p);
+        fprintf(stderr, "Display & Monitors did not publish its dialog window\n");
         XCloseDisplay(dpy);
-        return 0;
+        return 1;
     }
 
     if (argc >= 2 && strcmp(argv[1], "--probe-x11-corner") == 0) {
@@ -237,6 +242,17 @@ int main(int argc, char **argv) {
 def count_bright_white_rgb(img: Image.Image) -> int:
     raw = img.convert("RGB").tobytes()
     return sum(1 for i in range(0, len(raw), 3) if raw[i] > 215 and raw[i + 1] > 215 and raw[i + 2] > 215)
+
+
+def wait_for_identify_to_clear(probe: Path, env: dict[str, str]) -> None:
+    deadline = time.monotonic() + 10
+    while True:
+        state = subprocess.check_output([str(probe), "--get-ident"], env=env, text=True, timeout=5)
+        if state.strip() == "active=0":
+            return
+        if time.monotonic() >= deadline:
+            raise SystemExit(f"expected active=0 after closing Display dialog, got: {state!r}")
+        time.sleep(0.1)
 
 
 def main() -> int:
@@ -367,23 +383,30 @@ def main() -> int:
                 if "|HEADLESS-1|1|1280|120|" not in prop_after_randr or "|144|" not in prop_after_randr:
                     raise SystemExit(f"_DT_WAYLAND_OUTPUTS did not reflect wlr-randr apply:\n{prop_after_randr}")
 
-            # 2. Launch dtstyle -display_dialog and verify Monitors dialog & foreign toplevels
+            # 2. Launch dtstyle -display_dialog and wait for the advertised dialog.
             if dtstyle_bin.is_file():
-                p_dtstyle = subprocess.Popen(
-                    [str(dtstyle_bin), "-display_dialog", "-geometry", "+36+28"],
-                    env=c_env,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                    start_new_session=True,
-                )
+                style_log = work / "dtstyle.log"
+                with style_log.open("wb") as log:
+                    p_dtstyle = subprocess.Popen(
+                        [str(dtstyle_bin), "-display_dialog", "-geometry", "+36+28"],
+                        env=c_env, stdout=log, stderr=subprocess.STDOUT, start_new_session=True,
+                    )
                 procs.append(p_dtstyle)
-                time.sleep(1.6)
 
-            probe_out = subprocess.check_output([str(probe_bin)], env=c_env, text=True)
+            deadline = time.monotonic() + 15
+            while True:
+                probe_out = subprocess.check_output([str(probe_bin)], env=c_env, text=True, timeout=5)
+                if not dtstyle_bin.is_file() or "Style Manager - Display & Monitors" in probe_out:
+                    break
+                if p_dtstyle.poll() is not None or time.monotonic() >= deadline:
+                    raise SystemExit(
+                        "zwlr_foreign_toplevel_manager_v1 did not report Display & Monitors dialog "
+                        f"(dtstyle status {p_dtstyle.returncode}):\n{probe_out}"
+                        f"{style_log.read_text(errors='replace')}"
+                    )
+                time.sleep(0.1)
             if "PROTO_GLOBALS=1,1,1" not in probe_out:
                 raise SystemExit(f"missing Wayland output/power/dmabuf manager globals:\n{probe_out}")
-            if dtstyle_bin.is_file() and "Style Manager - Display & Monitors" not in probe_out:
-                raise SystemExit(f"zwlr_foreign_toplevel_manager_v1 did not report Display & Monitors dialog:\n{probe_out}")
 
             # Capture primary & secondary monitor screenshots showing Style Manager + corner screen numbers 1 & 2
             shot = work / "wp10-dtstyle-monitors.png"
@@ -425,24 +448,32 @@ def main() -> int:
             if "900x1440" not in probe_rot:
                 raise SystemExit(f"expected rotated 900x1440 logical size on HEADLESS-1:\n{probe_rot}")
 
-            # 3b. Verify live 200% (192 DPI) Wayland output scale (1440x900 @ 90 deg @ 192 DPI -> 450x720 logical!)
+            # 3b. Hybrid mode keeps rotated output geometry at 1:1 and publishes DPI separately.
             subprocess.run(
                 [str(xprop_bin), "f.set_output_layout HEADLESS-1 1 1280 0 1440x900 90 192"],
                 env=c_env,
                 check=True,
             )
-            time.sleep(0.3)
-            probe_scaled = subprocess.check_output([str(probe_bin)], env=c_env, text=True)
-            if "450x720" not in probe_scaled:
-                raise SystemExit(f"expected 200% scaled 450x720 logical size on HEADLESS-1:\n{probe_scaled}")
+            deadline = time.monotonic() + 5
+            while True:
+                output_property = subprocess.check_output([str(xprop_bin)], env=c_env, text=True, timeout=5)
+                if any(row.split("|")[1:9] == ["HEADLESS-1", "1", "1280", "0", "1440", "900", "90", "192"]
+                       for row in output_property.splitlines()):
+                    break
+                if time.monotonic() >= deadline:
+                    raise SystemExit(f"HEADLESS-1 did not publish the requested 192 DPI mode:\n{output_property}")
+                time.sleep(0.1)
+            probe_scaled = subprocess.check_output([str(probe_bin)], env=c_env, text=True, timeout=5)
+            output_fields = dict(line.split("=", 1) for line in probe_scaled.splitlines() if "=" in line)
+            if not any(key.startswith("XDG_OUT_") and key.endswith("_NAME") and value == "HEADLESS-1"
+                       and output_fields.get(key.removesuffix("_NAME") + "_SIZE") == "900x1440"
+                       for key, value in output_fields.items()):
+                raise SystemExit(f"HEADLESS-1 did not preserve 1:1 rotated geometry at 192 DPI:\n{probe_scaled}")
 
-            # 3c. Verify closing Display & Monitors dialog clears Wayland corner overlays immediately
+            # 3c. Verify the close operation clears the Wayland corner overlays.
             if dtstyle_bin.is_file():
                 subprocess.run([str(xprop_bin), "--dlg-ipc", "cancel"], env=c_env, check=True)
-                time.sleep(0.4)
-                ident_closed = subprocess.check_output([str(xprop_bin), "--get-ident"], env=c_env, text=True)
-                if ident_closed.strip() != "active=0":
-                    raise SystemExit(f"expected active=0 after closing Display dialog, got: {ident_closed!r}")
+                wait_for_identify_to_clear(xprop_bin, c_env)
                 shot_closed = work / "wp10-dtstyle-closed.png"
                 subprocess.run(["grim", "-o", "HEADLESS-2", str(shot_closed)], env=c_env, check=True)
                 with Image.open(shot_closed) as imc:
@@ -489,10 +520,7 @@ def main() -> int:
                 if "WHITE=0" in x11_px:
                     raise SystemExit(f"X11 corner screen-number overlay missing white digit pixels: {x11_px}")
                 subprocess.run([str(xprop_bin), "--dlg-ipc", "cancel"], env=x11_env, check=True)
-                time.sleep(0.3)
-                x11_ident_after = subprocess.check_output([str(xprop_bin), "--get-ident"], env=x11_env, text=True)
-                if x11_ident_after.strip() != "active=0":
-                    raise SystemExit(f"X11 corner screen-number overlay did not clear on close: {x11_ident_after!r}")
+                wait_for_identify_to_clear(xprop_bin, x11_env)
 
             # 4. Verify xdg-desktop-portal-wlr connects to dtwm-wayland + PipeWire and registers D-Bus portal backend
             wlr_portal_paths = (

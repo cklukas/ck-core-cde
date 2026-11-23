@@ -1,4 +1,6 @@
 2026-11-24
+- Qualify the Display & Monitors dialog against the hybrid compositor's
+  1:1 output geometry, independently published DPI, and overlay cleanup.
 - Restore the session settings regression build and check that the restored
   idle timeout reaches the active Wayland backend.
 
