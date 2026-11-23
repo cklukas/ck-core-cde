@@ -731,6 +731,11 @@ limactl start --tty=false --name=cde-ubuntu2604 scripts/lima/cde-ubuntu-26.04.ya
 python3 scripts/run-lima-wayland-harness.py --task-root "$TASK_ROOT"
 ```
 
+The provisioner also installs the libarchive development headers used by
+the File Manager and its archive tests. Run the File Manager tests with
+the matched file-engine prefix on `PKG_CONFIG_PATH` and a temporary
+directory with trusted ownership and non-group-writable ancestors.
+
 After staging the build, the runner starts a dual-output headless `wlroots`
 compositor with rootless `Xwayland`, launches both native Wayland and Motif/CDE
 clients, checks `/proc/<pid>/maps` so every Motif process maps the recorded

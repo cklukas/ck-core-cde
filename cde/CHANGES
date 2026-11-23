@@ -1,4 +1,6 @@
 2026-11-23
+- Install the libarchive development headers in the Ubuntu Lima guest for
+  the File Manager build and archive tests.
 - Finish hybrid Wayland logout cleanly by sending the compositor quit
   request after session cleanup and preserving the logout status if
   Xwayland closes before its reply arrives. Wait for dtsession readiness

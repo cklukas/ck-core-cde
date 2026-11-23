@@ -55,7 +55,7 @@ provision:
       libxdmcp-dev libxinerama-dev libxrandr-dev libxrender-dev libxcursor-dev \
       libxfixes-dev libxss-dev libxaw7-dev libxft-dev libice-dev libsm-dev \
       libfontconfig1-dev libfreetype-dev libharfbuzz-dev libicu-dev \
-      librsvg2-dev libdbus-1-dev libjpeg-dev libpng-dev liblmdb-dev \
+      librsvg2-dev libdbus-1-dev libjpeg-dev libpng-dev liblmdb-dev libarchive-dev \
       libtirpc-dev libpam0g-dev libutempter-dev tcl-dev ksh93u+m \
       x11-xserver-utils x11-utils xfonts-utils xfonts-base xfonts-100dpi xbitmaps \
       ncompress opensp rpcsvc-proto rpcbind ncurses-bin xvfb \
