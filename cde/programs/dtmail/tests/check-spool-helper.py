@@ -695,15 +695,28 @@ def a_lock_that_is_held_is_busy_and_tells_its_age():
     h = Helper(binaries["helper"])
     try:
         check(lock(h, OP_LOCK_TRY, b"0\0first")[0] == OK, "the first lock")
-        status, body, fds = lock(h, OP_LOCK_TRY, b"0\0second")
-        check(status == BUSY and len(body) == 4 and not fds, "status %d" % status)
-        check(struct.unpack("=I", body)[0] <= 1, "a lock that was just made is not old")
-        check((spool / (user + ".lock")).read_bytes() == b"0\0first", "the held lock is not changed")
+        held_lock = spool / (user + ".lock")
+        created_at = held_lock.stat().st_ctime_ns // 1_000_000_000
+        clock = work / "lock-age-clock"
+
+        def busy_age(text):
+            # The helper measures the age using whole seconds on the spool
+            # filesystem. Bracket its request using that same clock.
+            clock.touch()
+            earliest = max(0, clock.stat().st_ctime_ns // 1_000_000_000 - created_at)
+            status, body, fds = lock(h, OP_LOCK_TRY, text)
+            clock.touch()
+            latest = max(0, clock.stat().st_ctime_ns // 1_000_000_000 - created_at)
+            check(status == BUSY and len(body) == 4 and not fds, "status %d" % status)
+            age = struct.unpack("=I", body)[0]
+            check(earliest <= age <= latest, "age %d outside filesystem bounds %d..%d" % (age, earliest, latest))
+            return age
+
+        initial_age = busy_age(b"0\0second")
+        check(held_lock.read_bytes() == b"0\0first", "the held lock is not changed")
         check(listing() == [user + ".lock"], "no temporary file stays after a busy lock: %r" % listing())
         time.sleep(2.2)
-        status, body, fds = lock(h, OP_LOCK_TRY, b"0\0third")
-        age = struct.unpack("=I", body)[0]
-        check(status == BUSY and 2 <= age <= 5, "age %d after two seconds" % age)
+        check(busy_age(b"0\0third") >= initial_age + 2, "the held lock aged after waiting two seconds")
         # a lock that is not ours can be broken, whoever made it
         check(h.call(OP_LOCK_BREAK, u32(LOCK_MAIL))[0] == OK, "break")
         check(listing() == [], "...removes it")
