@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -322,6 +323,27 @@ def extract_motif_dirs(makefile: Path) -> tuple[list[str], list[str]]:
     return inc, lib
 
 
+def wait_for_docked_panel(env: dict[str, str], output_width: int, output_height: int) -> None:
+    panel_geometry = re.compile(
+        r'\("dtwm-front-panel" "Dtwm"\)\s+(\d+)x(\d+)[+-]\d+[+-]\d+\s+([+-]\d+)([+-]\d+)'
+    )
+    deadline = time.monotonic() + 12
+    last_geometry = None
+    while time.monotonic() < deadline:
+        tree = subprocess.run(["xwininfo", "-root", "-tree"], env=env, check=True,
+                              capture_output=True, text=True, timeout=2).stdout
+        match = panel_geometry.search(tree)
+        if match:
+            width, height, x, y = map(int, match.groups())
+            last_geometry = match.group(0)
+            # Xt first positions the shell over the full Xwayland screen.
+            # Wait until the compositor docks it on the left-hand output.
+            if abs(2 * x + width - output_width) <= 2 and abs(y + height - output_height) <= 8:
+                return
+        time.sleep(0.1)
+    raise SystemExit(f"Front Panel did not dock on the left-hand output (last: {last_geometry})")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--compositor", required=True)
@@ -438,15 +460,16 @@ def main() -> int:
             shot_ws1 = work / "wp03-ws1-one.png"
             subprocess.run(["grim", str(shot_ws1)], env=c_env, check=True)
 
-            # 3. Click Workspace "Two" button on the docked CDE Front Panel!
-            # Output 1 is 1280x900 (or 1280x720 headless default — query image height!)
+            # 3. Click Workspace "Two" button on the docked CDE Front Panel.
             with Image.open(shot_ws1) as im1:
                 total_w, out_h = im1.size
-                out1_w = total_w // 2
+            out1_w = total_w // 2
+            wait_for_docked_panel(c_env, out1_w, out_h)
+            subprocess.run(["grim", str(shot_ws1)], env=c_env, check=True)
+            with Image.open(shot_ws1) as im1:
                 sample_ws1 = im1.convert("RGB").getpixel((out1_w - 60, 40))
 
-            # Panel is 840x74 centered on output 1 at y = out_h - 76; central well is 248px wide centered at out1_w/2.
-            # Top-right button in 2x2 grid is Workspace "Two" ("ws1") at (out1_w/2 + 60, out_h - 54)
+            # Workspace "Two" is the top-right button in the 2x2 grid.
             btn_two_x = out1_w // 2 + 60
             btn_two_y = out_h - 54
             subprocess.run(["wlrctl", "pointer", "move", "-10000", "-10000"], env=c_env, check=True)

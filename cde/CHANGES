@@ -1,4 +1,6 @@
 2026-11-23
+- Wait for the Front Panel to dock on the left output before testing
+  its workspace button under Xwayland.
 - Read the complete Xvfb display number before starting the ToolTalk
   session tests so split writes cannot stop the X server prematurely.
 - Add read-only CardDAV address-book sync to dtmail To, Cc and Bcc
