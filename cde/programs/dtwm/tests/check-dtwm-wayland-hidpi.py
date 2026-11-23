@@ -23,8 +23,10 @@
 from __future__ import annotations
 
 import argparse
+from contextlib import suppress
 import os
 from pathlib import Path
+import select
 import shutil
 import signal
 import socket
@@ -129,6 +131,7 @@ EXT_CLIENT_C = r"""
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
+#include <time.h>
 #include <unistd.h>
 #include <wayland-client.h>
 
@@ -404,39 +407,48 @@ static void click_global(void *data, struct wl_registry *rg, uint32_t nm, const 
 }
 static const struct wl_registry_listener click_reg_l = { .global = click_global, .global_remove = reg_rem };
 
-int main(int argc, char **argv) {
-    if (argc >= 2 && !strcmp(argv[1], "--click")) {
-        /* One-shot virtual pointer clicker: --click X Y EXT_W EXT_H */
-        if (argc < 6) return 2;
-        int cx = atoi(argv[2]);
-        int cy = atoi(argv[3]);
-        int ew = atoi(argv[4]);
-        int eh = atoi(argv[5]);
-        struct wl_display *dpy = wl_display_connect(NULL);
-        if (!dpy) return 1;
-        struct zwlr_virtual_pointer_manager_v1 *vpm = NULL;
-        struct wl_registry *reg = wl_display_get_registry(dpy);
-        wl_registry_add_listener(reg, &click_reg_l, &vpm);
-        wl_display_roundtrip(dpy);
-        if (!vpm) return 1;
-        struct zwlr_virtual_pointer_v1 *vp = zwlr_virtual_pointer_manager_v1_create_virtual_pointer(vpm, NULL);
-        zwlr_virtual_pointer_v1_motion_absolute(vp, 10, (uint32_t)cx, (uint32_t)cy, (uint32_t)ew, (uint32_t)eh);
-        zwlr_virtual_pointer_v1_frame(vp);
-        wl_display_roundtrip(dpy);
-        usleep(20000);
-        zwlr_virtual_pointer_v1_button(vp, 20, BTN_LEFT, WL_POINTER_BUTTON_STATE_PRESSED);
-        zwlr_virtual_pointer_v1_frame(vp);
-        wl_display_roundtrip(dpy);
-        usleep(20000);
-        zwlr_virtual_pointer_v1_button(vp, 30, BTN_LEFT, WL_POINTER_BUTTON_STATE_RELEASED);
-        zwlr_virtual_pointer_v1_frame(vp);
-        wl_display_roundtrip(dpy);
-        zwlr_virtual_pointer_v1_destroy(vp);
-        zwlr_virtual_pointer_manager_v1_destroy(vpm);
-        wl_display_disconnect(dpy);
-        return 0;
-    }
+static uint32_t now_ms(void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (uint32_t)(ts.tv_sec * 1000u + ts.tv_nsec / 1000000L);
+}
 
+static int run_pointer(uint32_t width, uint32_t height) {
+    struct wl_display *dpy = wl_display_connect(NULL);
+    if (!dpy) return 1;
+    struct zwlr_virtual_pointer_manager_v1 *vpm = NULL;
+    struct wl_registry *reg = wl_display_get_registry(dpy);
+    wl_registry_add_listener(reg, &click_reg_l, &vpm);
+    if (wl_display_roundtrip(dpy) < 0 || !vpm) return 1;
+    struct zwlr_virtual_pointer_v1 *vp =
+        zwlr_virtual_pointer_manager_v1_create_virtual_pointer(vpm, NULL);
+
+    unsigned int x, y;
+    while (scanf("%u %u", &x, &y) == 2) {
+        zwlr_virtual_pointer_v1_motion_absolute(vp, now_ms(), x, y, width, height);
+        zwlr_virtual_pointer_v1_frame(vp);
+        if (wl_display_roundtrip(dpy) < 0) return 1;
+        usleep(20000);
+        zwlr_virtual_pointer_v1_button(vp, now_ms(), BTN_LEFT, WL_POINTER_BUTTON_STATE_PRESSED);
+        zwlr_virtual_pointer_v1_frame(vp);
+        if (wl_display_roundtrip(dpy) < 0) return 1;
+        usleep(20000);
+        zwlr_virtual_pointer_v1_button(vp, now_ms(), BTN_LEFT, WL_POINTER_BUTTON_STATE_RELEASED);
+        zwlr_virtual_pointer_v1_frame(vp);
+        if (wl_display_roundtrip(dpy) < 0) return 1;
+        puts("OK");
+        fflush(stdout);
+    }
+    zwlr_virtual_pointer_v1_destroy(vp);
+    zwlr_virtual_pointer_manager_v1_destroy(vpm);
+    wl_display_flush(dpy);
+    wl_display_disconnect(dpy);
+    return 0;
+}
+
+int main(int argc, char **argv) {
+    if (argc == 4 && !strcmp(argv[1], "--pointer"))
+        return run_pointer((uint32_t)atoi(argv[2]), (uint32_t)atoi(argv[3]));
     if (argc < 2) return 2;
     g_state_path = argv[1];
     signal(SIGTERM, on_sig);
@@ -582,6 +594,19 @@ def parse_active_box(props: dict[str, bytes]) -> tuple[int, int, int, int] | Non
     return (x, y, w, h)
 
 
+def resolve_motif_prefix(comp_path: Path) -> Path:
+    configured = os.environ.get("MOTIF_PREFIX")
+    candidates = [Path(configured)] if configured else [
+        *(parent / "motif-prefix" for parent in comp_path.parents),
+        Path("/usr/dt"),
+        Path("/var/tmp/ck-wayland-build/wp00/motif-prefix"),
+    ]
+    for prefix in candidates:
+        if all((prefix / name).is_file() for name in ("include/Xm/Xm.h", "lib/libXm.so", "lib/libXm.so.9")):
+            return prefix.resolve()
+    raise SystemExit("Set MOTIF_PREFIX to an installed CK Core Motif ABI 9 prefix")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--compositor", required=True)
@@ -590,6 +615,7 @@ def main() -> int:
     comp_path = Path(args.compositor).resolve()
     if not comp_path.is_file():
         raise SystemExit(f"missing compositor: {comp_path}")
+    motif_prefix = resolve_motif_prefix(comp_path)
 
     cc = os.environ.get("CC", "cc")
     grim_bin = shutil.which("grim")
@@ -634,12 +660,10 @@ def main() -> int:
         motif_c = tmp / "motif_client.c"
         motif_bin = tmp / "motif_client"
         motif_c.write_text(MOTIF_CLIENT_C, encoding="utf-8")
-        motif_prefix = Path("/var/tmp/ck-wayland-build/wp00/motif-prefix")
-        inc_flags = [f"-I{motif_prefix}/include"] if (motif_prefix / "include/Xm/Xm.h").is_file() else ["-I/usr/dt/include"]
-        lib_dir = f"{motif_prefix}/lib" if (motif_prefix / "lib/libXm.so").is_file() else "/usr/dt/lib"
+        lib_dir = motif_prefix / "lib"
         subprocess.run(
             [
-                cc, "-O2", *inc_flags, str(motif_c),
+                cc, "-O2", f"-I{motif_prefix}/include", str(motif_c),
                 f"-L{lib_dir}", f"-Wl,-rpath,{lib_dir}",
                 "-lXm", "-lXt", "-lX11", "-o", str(motif_bin),
             ],
@@ -657,6 +681,10 @@ def main() -> int:
         })
         env.pop("DISPLAY", None)
         env.pop("WAYLAND_DISPLAY", None)
+        motif_env = {
+            **env,
+            "LD_LIBRARY_PATH": ":".join(filter(None, (str(lib_dir), env.get("LD_LIBRARY_PATH")))),
+        }
 
         comp_proc = subprocess.Popen(
             [
@@ -675,12 +703,14 @@ def main() -> int:
         )
         motif_proc: subprocess.Popen | None = None
         ext_proc: subprocess.Popen | None = None
+        pointer_proc: subprocess.Popen | None = None
         foot_proc: subprocess.Popen | None = None
         try:
             if not wait_until(lambda: "WAYLAND_DISPLAY" in parse_kv(status_file), timeout=10.0):
                 raise RuntimeError("dtwm-wayland failed to write status file")
             wl_sock = parse_kv(status_file)["WAYLAND_DISPLAY"]
             env["WAYLAND_DISPLAY"] = wl_sock
+            motif_env["WAYLAND_DISPLAY"] = wl_sock
             ipc_path = rt_dir / f"dtwm-wayland-{wl_sock}.ipc"
             if not wait_until(lambda: ipc_path.exists(), timeout=5.0):
                 raise RuntimeError(f"missing IPC socket {ipc_path}")
@@ -698,7 +728,7 @@ def main() -> int:
 
             # 1. Launch Path B Motif client with odd physical width 501x301
             motif_state = tmp / "motif.state"
-            motif_proc = subprocess.Popen([str(motif_bin), str(motif_state)], env=env)
+            motif_proc = subprocess.Popen([str(motif_bin), str(motif_state)], env=motif_env)
             if not wait_until(lambda: float(parse_kv(motif_state).get("SCALE", "0")) == 2.0, timeout=8.0):
                 raise AssertionError(f"Motif client did not report 2.0 scale at 192 DPI: {parse_kv(motif_state)}")
             ms = parse_kv(motif_state)
@@ -733,7 +763,22 @@ def main() -> int:
                     if not (r > 180 and g > 150 and b < 80):
                         raise AssertionError(f"expected yellow BR quadrant at ({bx+600},{by+450}), got RGB={(r,g,b)}")
 
-            # Click all 4 quadrants in physical coordinates and verify logical (0..400, 0..300) delivery!
+            # Use one pointer across all clicks and output reconfigurations.
+            pointer_proc = subprocess.Popen(
+                [str(ext_bin), "--pointer", str(phys_w), str(phys_h)],
+                env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True,
+            )
+
+            def click(px_x: int, px_y: int) -> None:
+                if not pointer_proc.stdin or not pointer_proc.stdout:
+                    raise RuntimeError("Virtual pointer pipes are unavailable")
+                pointer_proc.stdin.write(f"{px_x} {px_y}\n")
+                pointer_proc.stdin.flush()
+                ready, _, _ = select.select([pointer_proc.stdout], [], [], 3.0)
+                if not ready or pointer_proc.stdout.readline().strip() != "OK":
+                    raise RuntimeError(f"Virtual pointer did not acknowledge click at ({px_x}, {px_y})")
+
+            # Check physical clicks in all four quadrants against logical coordinates.
             quad_targets = [
                 (bx + 200, by + 150, 100.0, 75.0),
                 (bx + 600, by + 150, 300.0, 75.0),
@@ -741,11 +786,7 @@ def main() -> int:
                 (bx + 600, by + 450, 300.0, 225.0),
             ]
             for idx, (px_x, px_y, exp_lx, exp_ly) in enumerate(quad_targets, start=1):
-                subprocess.run(
-                    [str(ext_bin), "--click", str(px_x), str(px_y), str(phys_w), str(phys_h)],
-                    env=env,
-                    check=True,
-                )
+                click(px_x, px_y)
                 if not wait_until(lambda: int(parse_kv(ext_state).get("CLICKS", "0")) >= idx, timeout=3.0):
                     raise AssertionError(f"quadrant {idx} click not delivered: {parse_kv(ext_state)}")
                 got_x = float(parse_kv(ext_state)["CLICK_X"])
@@ -773,11 +814,7 @@ def main() -> int:
             target_px_y = by15 + int(round(bh15 * 0.75))
             exp_lx15 = (target_px_x - bx15) / 1.5
             exp_ly15 = (target_px_y - by15) / 1.5
-            subprocess.run(
-                [str(ext_bin), "--click", str(target_px_x), str(target_px_y), str(phys_w), str(phys_h)],
-                env=env,
-                check=True,
-            )
+            click(target_px_x, target_px_y)
             if not wait_until(lambda: int(parse_kv(ext_state).get("CLICKS", "0")) > prev_clicks, timeout=3.0):
                 raise AssertionError("1.5x click not delivered")
             got_x15 = float(parse_kv(ext_state)["CLICK_X"])
@@ -825,7 +862,10 @@ def main() -> int:
             )
             return 0
         finally:
-            for p in (foot_proc, ext_proc, motif_proc, comp_proc):
+            if pointer_proc and pointer_proc.stdin:
+                with suppress(BrokenPipeError):
+                    pointer_proc.stdin.close()
+            for p in (foot_proc, pointer_proc, ext_proc, motif_proc, comp_proc):
                 if p and p.poll() is None:
                     p.terminate()
                     try:

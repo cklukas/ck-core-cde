@@ -779,7 +779,9 @@ compositor session is ready.
   `check-dtwm-wayland-hidpi.py` (hybrid `1:1` physical Motif + per-surface
   external Wayland `wp_fractional_scale_v1` / `preferred_buffer_scale` HiDPI at
   `192`, `144` fractional, and `96` DPI with odd-width `501×301` client buffers
-  and 4-quadrant pointer coordinate verification),
+  and 4-quadrant pointer coordinate verification using one virtual pointer
+  across the DPI changes. Set `MOTIF_PREFIX` to select the ABI 9 installation
+  for the Motif probe),
   `check-dtwm-wayland-menus.py` (XWayland Motif pulldown/popup menu focus,
   mid-press `zwlr_virtual_pointer_v1` crash cleanup, `wayvnc` stuck-button
   auto-heal, stationary-click `wl_pointer` focus restoration, and post-modeset
