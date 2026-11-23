@@ -1,4 +1,12 @@
 2026-11-23
+- Cleanly stop and restart the native Wayland compositor with cursor-shape
+  support. Publish the managed Wayland session's backend and CDE icon and
+  datatype search paths to activation services after native session startup.
+- Pin CK Core Motif `4e43217c495f` for DPI-scaled classic and high-contrast
+  pane grips, arrows, menu metrics and selection layouts. Match the file-engine
+  build pin to the CI revision used by the dtfile synchronization helpers.
+- Keep the front-panel session-reader regression fixtures current with the
+  subpanel class-hint metadata used by the compositor.
 - Fix UTF-8 `dtterm` NUL-box glyph corruption when started with `XmFONT_IS_FONT`
   or before `dtsession` merges `RESOURCE_MANAGER` (`lib/DtTerm`, `Xsession.wayland`):
   - Convert wide-character (`wchar_t`) line buffers properly in

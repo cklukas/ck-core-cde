@@ -776,8 +776,12 @@ compositor session is ready.
   `check-dtappintegrate-curated.py` (Application Manager installed vs.
   auto-gray + blue download arrow badge vs. hidden stub curation), and
   `check-dtwm-wayland-exit-session.py` (`f.quit_mwm`, external-compositor
-  `dtsession --wayland` logout, and degraded/standalone `XSession_Exit`
-  fallback) run automatically under `make check`.
+  `dtsession --wayland` logout, degraded/standalone `XSession_Exit` fallback,
+  native `SIGTERM` and restart, and activation environment export) run
+  automatically under `make check`. Native session startup publishes the
+  active Wayland socket, toolkit backend, icon paths, and datatype search path
+  after the session process re-executes. Activated clients receive the same
+  lookup paths as clients launched directly by the session.
 - **Native Wayland Help Viewer (`dthelpview`) & Information Manager (`dtinfo`):**
   `dtwm-wayland --no-xwayland` exports `WAYLAND_DISPLAY` before launching the
   session `ttsession -p` daemon and publishes `_SUN_TT_SESSION` / `TT_SESSION` as

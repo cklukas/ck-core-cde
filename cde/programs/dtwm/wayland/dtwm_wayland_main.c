@@ -7023,6 +7023,10 @@ cleanup:
     wl_list_remove(&server.cursor_hold_begin.link);
     wl_list_remove(&server.cursor_hold_end.link);
     wl_list_remove(&server.request_cursor.link);
+    if (server.cursor_shape_mgr) {
+        wl_list_remove(&server.request_cursor_shape.link);
+        server.cursor_shape_mgr = nullptr;
+    }
     wl_list_remove(&server.request_set_selection.link);
     wl_list_remove(&server.request_set_primary_selection.link);
     wl_list_remove(&server.request_start_drag.link);

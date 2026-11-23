@@ -37,6 +37,9 @@ enum { XmNx = 1, XmNy, XmNwidth, XmNimageName };
 #define XtDisplay(w) ((void *)0)
 #define XtWindow(w) 0
 #define XtScreen(w) ((void *)0)
+#define None 0
+#define XtX(w) 0
+typedef struct { char *res_name, *res_class; } XClassHint;
 
 enum { SUBPANEL_NAME, SUBPANEL_CONTAINER_NAME, CONTROL_NAME, BOX_NAME, ELEMENTS };
 enum { BOX = 1, SUBPANEL = 2 };
@@ -90,6 +93,7 @@ static void XtManageChild(Widget w) { (void)w; ++manage_calls; }
 static void XtSetMappedWhenManaged(Widget w, Boolean b) { (void)w; (void)b; }
 static void XtSetValues(Widget w, Arg *a, int n) { (void)w; (void)a; (void)n; }
 static void _DtWsmSetDtWmHints(void *d, int w, DtWmHints *h) { (void)d; (void)w; (void)h; }
+static void XSetClassHint(void *d, int w, XClassHint *h) { (void)d; (void)w; (void)h; }
 static void XIconifyWindow(void *d, int w, int s) { (void)d; (void)w; (void)s; ++iconify_calls; }
 static int XScreenNumberOfScreen(void *s) { (void)s; return 0; }
 static Boolean CheckOtherMonitorsOn(SubpanelData *s) { (void)s; return False; }

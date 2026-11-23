@@ -408,6 +408,57 @@ static void ensure_ttsession_started(void) {
     XCloseDisplay(dpy);
 }
 
+/* Run once after the session has its final backend and ToolTalk environment,
+ * including after dtsession re-execs for native Wayland. */
+static void start_managed_session_services(void) {
+    pid_t spid = fork();
+    if (spid == 0) {
+        if (fork() == 0) {
+            setsid();
+            execl(
+                "/bin/sh", "sh", "-c",
+                "if command -v gnome-keyring-daemon >/dev/null 2>&1; then "
+                "eval \"$(gnome-keyring-daemon --start --components=secrets,ssh 2>/dev/null)\" || true; "
+                "export SSH_AUTH_SOCK; "
+                "fi; "
+                "if [ \"${DTWM_WAYLAND_NO_XWAYLAND:-}\" = 1 ]; then export DISPLAY=; fi; "
+                "activation_vars='WAYLAND_DISPLAY DISPLAY CK_MOTIF_BACKEND "
+                "DTWM_WAYLAND_NO_XWAYLAND XDG_CURRENT_DESKTOP XDG_SESSION_TYPE LANG "
+                "XMODIFIERS GTK_IM_MODULE QT_IM_MODULE SSH_AUTH_SOCK XM_ACCESSIBILITY "
+                "DTAPPSEARCHPATH DTDATABASESEARCHPATH DTHELPSEARCHPATH DTINFOLIBSEARCHPATH "
+                "DTINFOLIBDEFAULT XMICONSEARCHPATH XMICONBMSEARCHPATH XBMLANGPATH "
+                "XFILESEARCHPATH TT_SESSION _SUN_TT_SESSION'; "
+                "if command -v dbus-update-activation-environment >/dev/null 2>&1; then "
+                "dbus-update-activation-environment --systemd $activation_vars >/dev/null 2>&1 || "
+                "dbus-update-activation-environment $activation_vars >/dev/null 2>&1 || true; "
+                "fi; "
+                "case \"${CDE_WAYLAND_IMS:-}\" in "
+                "fcitx5|fcitx) command -v fcitx5 >/dev/null 2>&1 && fcitx5 -d >/dev/null 2>&1 & ;; "
+                "ibus) command -v ibus-daemon >/dev/null 2>&1 && ibus-daemon -drx >/dev/null 2>&1 & ;; "
+                "esac; "
+                "if command -v ck-polkit-agent >/dev/null 2>&1; then "
+                "ck-polkit-agent >/dev/null 2>&1 & "
+                "elif [ -x " CDE_INSTALLATION_TOP "/bin/ck-polkit-agent ]; then "
+                CDE_INSTALLATION_TOP "/bin/ck-polkit-agent >/dev/null 2>&1 & "
+                "fi; "
+                "if command -v ck-status >/dev/null 2>&1; then "
+                "ck-status --daemon >/dev/null 2>&1 & "
+                "fi; "
+                "_midi_cfg=\"${XDG_CONFIG_HOME:-$HOME/.config}/ck-core/midi.conf\"; "
+                "if [ -f \"$_midi_cfg\" ] && grep -q '^virtual_port=1' \"$_midi_cfg\" && command -v ck-midi >/dev/null 2>&1; then "
+                "ck-midi --daemon >/dev/null 2>&1 & "
+                "fi",
+                (char *)nullptr
+            );
+            _exit(0);
+        }
+        _exit(0);
+    } else if (spid > 0) {
+        int sst = 0;
+        (void)waitpid(spid, &sst, 0);
+    }
+}
+
 static void spawn_compositor_if_needed(char **orig_argv) {
     const char *wl_env = getenv("WAYLAND_DISPLAY");
     const char *x_env = getenv("DISPLAY");
@@ -528,50 +579,6 @@ static void spawn_compositor_if_needed(char **orig_argv) {
                     setenv("DTSESSION_MANAGED_COMPOSITOR_PID", pid_buf, 1);
                     execv("/proc/self/exe", orig_argv);
                     execvp(orig_argv[0], orig_argv);
-                }
-                /* Publish live WAYLAND_DISPLAY / DISPLAY to D-Bus & systemd user activation
-                 * so xdg-desktop-portal / xdg-desktop-portal-wlr (WebRTC screen sharing),
-                 * Secret Service (gnome-keyring-daemon), Polkit authentication (ck-polkit-agent),
-                 * Wayland/XIM Input Methods (fcitx5 / ibus), and ck-status --daemon connect
-                 * to the active Wayland & XWayland sockets. */
-                pid_t spid = fork();
-                if (spid == 0) {
-                    if (fork() == 0) {
-                        setsid();
-                        execl(
-                            "/bin/sh", "sh", "-c",
-                            "if command -v gnome-keyring-daemon >/dev/null 2>&1; then "
-                            "eval \"$(gnome-keyring-daemon --start --components=secrets,ssh 2>/dev/null)\" || true; "
-                            "export SSH_AUTH_SOCK; "
-                            "fi; "
-                            "if command -v dbus-update-activation-environment >/dev/null 2>&1; then "
-                            "dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XMODIFIERS GTK_IM_MODULE QT_IM_MODULE SSH_AUTH_SOCK >/dev/null 2>&1 || "
-                            "dbus-update-activation-environment WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XMODIFIERS GTK_IM_MODULE QT_IM_MODULE SSH_AUTH_SOCK >/dev/null 2>&1 || true; "
-                            "fi; "
-                            "case \"${CDE_WAYLAND_IMS:-}\" in "
-                            "fcitx5|fcitx) command -v fcitx5 >/dev/null 2>&1 && fcitx5 -d >/dev/null 2>&1 & ;; "
-                            "ibus) command -v ibus-daemon >/dev/null 2>&1 && ibus-daemon -drx >/dev/null 2>&1 & ;; "
-                            "esac; "
-                            "if command -v ck-polkit-agent >/dev/null 2>&1; then "
-                            "ck-polkit-agent >/dev/null 2>&1 & "
-                            "elif [ -x " CDE_INSTALLATION_TOP "/bin/ck-polkit-agent ]; then "
-                            CDE_INSTALLATION_TOP "/bin/ck-polkit-agent >/dev/null 2>&1 & "
-                            "fi; "
-                            "if command -v ck-status >/dev/null 2>&1; then "
-                            "ck-status --daemon >/dev/null 2>&1 & "
-                            "fi; "
-                            "_midi_cfg=\"${XDG_CONFIG_HOME:-$HOME/.config}/ck-core/midi.conf\"; "
-                            "if [ -f \"$_midi_cfg\" ] && grep -q '^virtual_port=1' \"$_midi_cfg\" && command -v ck-midi >/dev/null 2>&1; then "
-                            "ck-midi --daemon >/dev/null 2>&1 & "
-                            "fi",
-                            (char *)nullptr
-                        );
-                        _exit(0);
-                    }
-                    _exit(0);
-                } else if (spid > 0) {
-                    int sst = 0;
-                    (void)waitpid(spid, &sst, 0);
                 }
                 break;
             }
@@ -728,6 +735,9 @@ void SmWaylandPreInit(int *argc, char **argv) {
         }
         ensure_appmanager_gathered_wl();
         ensure_ttsession_started();
+        if (g_smwl.compositor_pid > 0 && getenv("WAYLAND_DISPLAY")) {
+            start_managed_session_services();
+        }
     }
 }
 

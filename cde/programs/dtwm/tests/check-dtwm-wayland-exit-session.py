@@ -9,11 +9,15 @@
    `_DT_SM_WINDOW_INFO` XID on root while `dtwm-wayland`, `dtwm-panel`, and `ttsession`
    stay alive): ToolTalk `XSession_Exit` succeeds (`TT_HANDLED`, no `TT_ERR_NO_MATCH`)
    via `dtwm-panel`'s `TT_HANDLE` fallback and terminates `dtwm-wayland` cleanly (exit 0).
+4. Native Wayland start, SIGTERM and restart exit cleanly without Xwayland.
+5. A dtsession-owned native compositor exports the application search paths
+   and backend after the session process re-execs.
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import subprocess
 import tempfile
@@ -277,7 +281,7 @@ def resolve_tool(candidates: list[Path]) -> Path | None:
     return None
 
 
-def wait_status_env(status_file: Path, timeout: float = 10.0) -> dict[str, str]:
+def wait_status_env(status_file: Path, timeout: float = 10.0, *, native: bool = False) -> dict[str, str]:
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         if status_file.is_file():
@@ -286,7 +290,8 @@ def wait_status_env(status_file: Path, timeout: float = 10.0) -> dict[str, str]:
                 if "=" in ln:
                     k, v = ln.split("=", 1)
                     kv[k.strip()] = v.strip()
-            if kv.get("WAYLAND_DISPLAY") and kv.get("DISPLAY"):
+            backend_ready = kv.get("NO_XWAYLAND") == "1" if native else bool(kv.get("DISPLAY"))
+            if kv.get("WAYLAND_DISPLAY") and backend_ready:
                 return kv
         time.sleep(0.05)
     raise SystemExit(f"timed out waiting for status file {status_file}")
@@ -319,6 +324,9 @@ def make_isolated_env(case_dir: Path, panel_bin: Path, extra_path_dirs: list[Pat
     env.pop("DISPLAY", None)
     env.pop("TT_SESSION", None)
     env.pop("SESSION_MANAGER", None)
+    env.pop("_SUN_TT_SESSION", None)
+    env.pop("CK_MOTIF_BACKEND", None)
+    env.pop("DTWM_WAYLAND_NO_XWAYLAND", None)
     env["HOME"] = str(home)
     env["XDG_RUNTIME_DIR"] = str(xdg)
     env["WLR_BACKENDS"] = "headless"
@@ -355,9 +363,93 @@ def kill_proc_group(proc: subprocess.Popen[bytes] | None) -> None:
             proc.kill()
 
 
+def check_native_activation(
+    work: Path, dtsession: Path, compositor: Path, panel: Path, ld_dirs: list[Path],
+) -> None:
+    env = make_isolated_env(work, panel, [], ld_dirs)
+    capture = work / "activation.json"
+    bin_dir = work / "bin"
+    bin_dir.mkdir()
+    record = bin_dir / "dbus-update-activation-environment"
+    record.write_text(
+        "#!/usr/bin/python3\n"
+        "import json, os, pathlib, sys\n"
+        "path = pathlib.Path(os.environ['CDE_ACTIVATION_CAPTURE'])\n"
+        "values = {name: os.environ.get(name) for name in sys.argv[1:] if not name.startswith('-')}\n"
+        "temp = path.with_suffix('.new')\n"
+        "temp.write_text(json.dumps(values))\n"
+        "temp.replace(path)\n",
+        encoding="utf-8",
+    )
+    record.chmod(0o755)
+    # Limit the startup helper's PATH to the activation recorder. The session
+    # and compositor below use exact executable paths.
+    search_paths = {
+        "DTDATABASESEARCHPATH": str(work / "home/.dt/types") + ",/usr/dt/appconfig/types/C",
+        "XMICONSEARCHPATH": "/usr/dt/appconfig/icons/%L/%B%M.pm:/usr/dt/appconfig/icons/C/%B%M.pm",
+        "XMICONBMSEARCHPATH": "/usr/dt/appconfig/icons/%L/%B%M.bm:/usr/dt/appconfig/icons/C/%B%M.bm",
+        "XBMLANGPATH": "/usr/dt/appconfig/icons/C/%B",
+        "XFILESEARCHPATH": "/usr/dt/app-defaults/%L/%N:/usr/dt/app-defaults/C/%N",
+    }
+    env.update(search_paths, PATH=str(bin_dir), DTWM_WAYLAND_BIN=str(compositor),
+               CDE_ACTIVATION_CAPTURE=str(capture))
+    env.pop("DBUS_SESSION_BUS_ADDRESS", None)
+    env.pop("DTSESSION_MANAGED_COMPOSITOR_PID", None)
+    log = work / "dtsession.log"
+    with log.open("wb") as stream:
+        proc = subprocess.Popen(
+            [str(dtsession), "--wayland", "--no-xwayland", "-norestore"],
+            env=env, stdout=stream, stderr=subprocess.STDOUT, start_new_session=True,
+        )
+    try:
+        deadline = time.monotonic() + 15
+        while time.monotonic() < deadline and proc.poll() is None and not capture.exists():
+            time.sleep(0.05)
+        if not capture.exists():
+            raise SystemExit(f"native dtsession did not request activation export:\n{log.read_text(errors='replace')}")
+        actual = json.loads(capture.read_text())
+        expected = dict(search_paths, DISPLAY="", CK_MOTIF_BACKEND="wayland", DTWM_WAYLAND_NO_XWAYLAND="1")
+        for key, value in expected.items():
+            if actual.get(key) != value:
+                raise SystemExit(f"native activation export has incorrect {key}: {actual.get(key)!r}")
+        if not actual.get("WAYLAND_DISPLAY") or not (
+            Path(env["XDG_RUNTIME_DIR"]) / actual["WAYLAND_DISPLAY"]
+        ).is_socket():
+            raise SystemExit("native activation export lacks the active compositor socket")
+    finally:
+        kill_proc_group(proc)
+
+
+def check_native_shutdown(
+    work: Path, compositor: Path, panel: Path, bins: list[Path], ld_dirs: list[Path],
+) -> None:
+    native_env = make_isolated_env(work, panel, bins, ld_dirs)
+    for attempt in range(2):
+        status = work / f"status-{attempt}"
+        log = work / f"comp-{attempt}.log"
+        proc = None
+        try:
+            with log.open("wb") as stream:
+                proc = subprocess.Popen(
+                    [str(compositor), "--no-panel", "--no-xwayland", "--status-file", str(status)],
+                    env=native_env, stdout=stream, stderr=subprocess.STDOUT, start_new_session=True,
+                )
+            ready = wait_status_env(status, native=True)
+            if "DISPLAY" in ready:
+                raise SystemExit("native shutdown regression unexpectedly started Xwayland")
+            proc.terminate()
+            wait_clean_exit(proc, f"Native SIGTERM run {attempt + 1}", log)
+            if (Path(native_env["XDG_RUNTIME_DIR"]) / ready["WAYLAND_DISPLAY"]).exists():
+                raise SystemExit("native shutdown left its listening socket behind")
+        finally:
+            kill_proc_group(proc)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--compositor", required=True)
+    ap.add_argument("--native-only", action="store_true",
+                    help="Run the native restart and dtsession activation regressions")
     args = ap.parse_args()
 
     comp_bin = Path(args.compositor).resolve()
@@ -399,6 +491,15 @@ def main() -> int:
     tmp_base = os.environ.get("TMPDIR", "/var/tmp")
     with tempfile.TemporaryDirectory(prefix="dtwm-wl-exit-", dir=tmp_base) as work_s:
         work = Path(work_s)
+        extra_bins = [p.parent for p in (panel_bin, dtsession_bin, ttsession_bin) if p is not None]
+        if dtsession_bin is None:
+            raise SystemExit("dtsession binary is required for the native activation check")
+        check_native_shutdown(work / "native", comp_bin, panel_bin, extra_bins, ld_dirs)
+        check_native_activation(work / "activation", dtsession_bin, comp_bin, panel_bin, ld_dirs)
+        print("PASS: native SIGTERM/restart and activation export", flush=True)
+        if args.native_only:
+            return 0
+
         helper_c = work / "exit_helper.c"
         helper_bin = work / "exit_helper"
         helper_c.write_text(HELPER_C, encoding="utf-8")
@@ -425,8 +526,6 @@ def main() -> int:
             "-o", str(helper_bin),
         ]
         subprocess.run(compile_cmd, check=True)
-
-        extra_bins = [p.parent for p in (panel_bin, dtsession_bin, ttsession_bin) if p is not None]
 
         # --- Case 1: Direct f.quit_mwm terminates dtwm-wayland cleanly ---
         c1 = work / "case1"
@@ -472,7 +571,9 @@ def main() -> int:
                         [str(dtsession_bin), "--wayland"],
                         env=env2, stdout=sf, stderr=subprocess.STDOUT, start_new_session=True,
                     )
-                subprocess.run([str(helper_bin), "wait_sm_and_set_quiet"], env=env2, check=True)
+                probe = subprocess.run([str(helper_bin), "wait_sm_and_set_quiet"], env=env2, check=False)
+                if probe.returncode:
+                    raise SystemExit(f"hybrid dtsession did not initialize:\n{log2_sm.read_text(errors='replace')}")
                 # Allow dtwm-panel to register its TT_HANDLE fallback too so TT_HANDLE_PUSH precedence is exercised
                 time.sleep(0.8)
                 subprocess.run([str(helper_bin), "send_xsession_exit"], env=env2, check=True)
@@ -508,7 +609,7 @@ def main() -> int:
             finally:
                 kill_proc_group(p_comp3)
 
-        print("PASS: check-dtwm-wayland-exit-session verified (f.quit_mwm, external dtsession logout, degraded no-dtsession fallback)")
+        print("PASS: hybrid Wayland quit, logout and degraded logout")
         return 0
 
 
