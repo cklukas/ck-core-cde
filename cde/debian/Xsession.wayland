@@ -8,6 +8,12 @@ unset WAYLAND_DISPLAY DISPLAY
 export XDG_CURRENT_DESKTOP="${XDG_CURRENT_DESKTOP:-CDE}"
 export XDG_SESSION_DESKTOP="${XDG_SESSION_DESKTOP:-cde-wayland}"
 export XDG_SESSION_TYPE="wayland"
+if [ "${LC_ALL:-}" = "C" ] || [ "${LC_ALL:-}" = "POSIX" ]; then
+    unset LC_ALL
+fi
+if [ "${LC_CTYPE:-}" = "C" ] || [ "${LC_CTYPE:-}" = "POSIX" ]; then
+    unset LC_CTYPE
+fi
 if [ -z "${LANG:-}" ] || [ "${LANG}" = "C" ] || [ "${LANG}" = "POSIX" ]; then
     if command -v locale >/dev/null 2>&1 && locale -a 2>/dev/null | grep -qi '^en_US\.utf-\?8$'; then
         export LANG="en_US.UTF-8"

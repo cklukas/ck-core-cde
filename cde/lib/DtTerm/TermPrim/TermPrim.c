@@ -739,14 +739,20 @@ _DtTermPrimGetFontSet
 		Debug('f', fprintf(stderr, ">>  font %d: %s\n", i + 1,
 			fontNames[i]));
 	    }
-	} else {
+	} else if (fontType == XmFONT_IS_FONT) {
 	    unsigned long ret;
-	    Debug('f', fprintf(stderr, ">>fontType != XmFONT_IS_FONTSET\n"));
+	    Debug('f', fprintf(stderr, ">>fontType == XmFONT_IS_FONT\n"));
 	    *font = (XFontStruct *) pointer;
-	    if (XGetFontProperty(*font, XA_FONT, &ret)) {
-		Debug('f', fprintf(stderr, ">>font: %s\n",
-			XGetAtomName(XtDisplay(w), ret)));
+	    if (*font && XGetFontProperty(*font, XA_FONT, &ret)) {
+		char *aname = XGetAtomName(XtDisplay(w), ret);
+		if (aname) {
+		    Debug('f', fprintf(stderr, ">>font: %s\n", aname));
+		    XFree(aname);
+		}
 	    }
+	} else {
+	    Debug('f', fprintf(stderr, ">>fontType == %d (non-core rendition)\n",
+		    (int) fontType));
 	}
     }
 
@@ -800,6 +806,79 @@ IsMonospacedFontStruct(
     return overallI.width == overallW.width;
 }
 
+static XFontSet
+CreateUsableFontSet(
+		Display *dpy,
+		const char *baseFontNameList)
+{
+    if (!dpy || !baseFontNameList || !*baseFontNameList)
+	return nullptr;
+
+    char **missing = nullptr;
+    int missingCount = 0;
+    XFontSet fs = XCreateFontSet(dpy, baseFontNameList,
+	    &missing, &missingCount, nullptr);
+    if (missing)
+	XFreeStringList(missing);
+    if (!fs)
+	return nullptr;
+
+    XFontStruct **fonts = nullptr;
+    char **fontNames = nullptr;
+    if (XFontsOfFontSet(fs, &fonts, &fontNames) <= 0) {
+	XFreeFontSet(dpy, fs);
+	return nullptr;
+    }
+    return fs;
+}
+
+static XFontSet
+PromoteFontStructToFontSet(
+		Display *dpy,
+		XFontStruct *font)
+{
+    static const char fallbackList[] =
+	"-dt-interface user-medium-r-normal-m*-*-*-*-*-*-*-*-*,"
+	"-misc-fixed-medium-r-normal--13-*-*-*-*-*-*,"
+	"fixed";
+    char pattern[1024];
+    unsigned long ret = 0;
+
+    if (font && XGetFontProperty(font, XA_FONT, &ret)) {
+	char *fontName = XGetAtomName(dpy, ret);
+	if (fontName) {
+	    char stem[512];
+	    snprintf(stem, sizeof(stem), "%s", fontName);
+	    XFree(fontName);
+
+	    /* If `stem` is a 14-field XLFD ending in `-registry-encoding`
+	     * (e.g. `-iso8859-1`), wildcard the last two fields to `-*-*` so
+	     * XCreateFontSet binds both ISO8859-1 and ISO10646-1 glyphs. */
+	    if (stem[0] == '-') {
+		char *lastDash = strrchr(stem, '-');
+		if (lastDash && lastDash > stem) {
+		    *lastDash = '\0';
+		    char *prevDash = strrchr(stem, '-');
+		    if (prevDash && prevDash > stem) {
+			*prevDash = '\0';
+			snprintf(pattern, sizeof(pattern), "%s-*-*,%s",
+				stem, fallbackList);
+			XFontSet fs = CreateUsableFontSet(dpy, pattern);
+			if (fs)
+			    return fs;
+		    }
+		}
+	    }
+	    snprintf(pattern, sizeof(pattern), "%s,%s", stem, fallbackList);
+	    XFontSet fs = CreateUsableFontSet(dpy, pattern);
+	    if (fs)
+		return fs;
+	}
+    }
+
+    return CreateUsableFontSet(dpy, fallbackList);
+}
+
 static TermFont
 CreateRenderFont
 (
@@ -826,6 +905,19 @@ CreateRenderFont
     /* get our fontset from the fontlist...  */
     (void) _DtTermPrimGetFontSet(w, fontList, &fontSet, &font);
 
+    /* In multibyte/UTF-8 locales, always prefer an XFontSet so XwcDraw* can
+     * render full Unicode codepoints even when the resource or default
+     * XmTEXT_FONTLIST supplied an XmFONT_IS_FONT entry without trailing ':'. */
+    if (!fontSet && MB_CUR_MAX > 1) {
+	XFontSet promoted = PromoteFontStructToFontSet(XtDisplay(w), font);
+	if (promoted) {
+	    fontSet = promoted;
+	    fontSetOwned = True;
+	    font = nullptr;
+	    fontOwned = False;
+	}
+    }
+
     /* dtterm only supports monospaced fonts; fall back if needed. */
     if (fontSet) {
 	int num_fonts = 0;
@@ -849,22 +941,24 @@ CreateRenderFont
 			    "dtterm: proportional font selected; falling back to \"fixed\".\n");
 		    warnedProportional = True;
 		}
-		char **missing = nullptr;
-		int missingCount = 0;
-		XFontSet fixedSet = XCreateFontSet(XtDisplay(w), "fixed",
-			&missing, &missingCount, (char **)0);
-		if (missing)
-		    XFreeStringList(missing);
-		if (fixedSet && missingCount == 0) {
+		XFontSet fixedSet = CreateUsableFontSet(XtDisplay(w),
+			"-dt-interface user-medium-r-normal-m*-*-*-*-*-*-*-*-*,"
+			"-misc-fixed-medium-r-normal--13-*-*-*-*-*-*,"
+			"fixed");
+		if (fixedSet) {
+		    if (fontSetOwned)
+			XFreeFontSet(XtDisplay(w), fontSet);
 		    fontSet = fixedSet;
 		    font = nullptr;
 		    fontSetOwned = True;
+		    fontOwned = False;
 		} else {
-		    if (fixedSet)
-			XFreeFontSet(XtDisplay(w), fixedSet);
+		    if (fontSetOwned)
+			XFreeFontSet(XtDisplay(w), fontSet);
 		    font = XLoadQueryFont(XtDisplay(w), "fixed");
 		    fontOwned = font != nullptr;
 		    fontSet = nullptr;
+		    fontSetOwned = False;
 		}
 	    }
 	}
@@ -881,6 +975,9 @@ CreateRenderFont
 		fontOwned = True;
 	    }
 	}
+    } else {
+	font = XLoadQueryFont(XtDisplay(w), "fixed");
+	fontOwned = font != nullptr;
     }
 
     /* generate a TermFont from either the fontset or the font... */
@@ -1390,7 +1487,12 @@ Initialize(Widget ref_w, Widget w, Arg *args, Cardinal *num_args)
 			    ">>missing charsets in boldfont \"%s\"\n",
 			    missingCharsetList[i]));
 		(void) XFreeStringList(missingCharsetList);
-		if (tw->term.boldFontSet) {
+	    }
+
+	    if (tw->term.boldFontSet) {
+		XFontStruct **bfonts = nullptr;
+		char **bfnames = nullptr;
+		if (XFontsOfFontSet(tw->term.boldFontSet, &bfonts, &bfnames) <= 0) {
 		    (void) XFreeFontSet(XtDisplay(w), tw->term.boldFontSet);
 		    tw->term.boldFontSet = (XFontSet) 0;
 		}

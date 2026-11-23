@@ -6,12 +6,13 @@ lib_LTLIBRARIES = libDtTerm.la
 
 EXTRA_DIST = tests/check-terminal-parser.py tests/check-suid-root.py \
 	     tests/check-realloc-failures.py tests/check-realloc-failures.c \
-	     tests/realloc-inject.h
+	     tests/realloc-inject.h tests/check-utf8-font-fallback.py
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-terminal-parser.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-suid-root.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-realloc-failures.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-utf8-font-fallback.py
 
 libDtTerm_la_SOURCES =
 

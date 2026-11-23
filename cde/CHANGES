@@ -1,4 +1,17 @@
 2026-11-23
+- Fix UTF-8 `dtterm` NUL-box glyph corruption when started with `XmFONT_IS_FONT`
+  or before `dtsession` merges `RESOURCE_MANAGER` (`lib/DtTerm`, `Xsession.wayland`):
+  - Convert wide-character (`wchar_t`) line buffers properly in
+    `TermPrimRenderFont.c` (`XDrawImageString16` / `XDrawString16` for 2-byte
+    `ISO10646-1` `XFontStruct`s and 1-byte narrowing for `ISO8859-1`
+    `XFontStruct`s) instead of passing raw UTF-32 memory to 8-bit
+    `XDrawImageString` (`k\0\0\0l\0\0\0...`).
+  - Promote `XmFONT_IS_FONT` entries to `XFontSet`s in `TermPrim.c` when
+    `MB_CUR_MAX > 1`, retain usable `XFontSet` and `boldFontSet` handles when
+    `XCreateFontSet` reports optional missing legacy charsets in `XLC_LOCALE`,
+    guard non-core `XmFONT_IS_XFT` renditions, sanitize `LC_ALL`/`LC_CTYPE`
+    `C`/`POSIX` overrides in `Xsession.wayland`, and add
+    `lib/DtTerm/tests/check-utf8-font-fallback.py`.
 - Adopt CK Core Motif `d8308020c789` for DPI-scaled classic and high-contrast
   `XmScrollBar` and `XmScale` default geometry (`.ckgit/motif-revision`,
   `.ckgit/ci.yml`):

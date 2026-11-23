@@ -49,5 +49,19 @@ saved session still takes precedence.
 
 *The live Terminal font-size menu in the uConsole session.*
 
+## Reliable UTF-8 rendering across `XFontSet` and `XFontStruct` fallbacks
+
+In multibyte and UTF-8 locales (`MB_CUR_MAX > 1`), `DtTerm` stores wide
+characters (`wchar_t`) in its terminal line buffer. When an application,
+command-line `-fn` option, or early-boot fallback before `dtsession` populates
+`RESOURCE_MANAGER` supplies a single-font `XmFONT_IS_FONT` (`XFontStruct`)
+instead of an `XmFONT_IS_FONTSET`, `libDtTerm` now promotes the font's XLFD
+stem to a full `XFontSet` (`ISO8859-1` + `ISO10646-1`), retains valid
+`XFontSet`s even when `XCreateFontSet` reports optional missing legacy charsets
+in `XLC_LOCALE`, and converts `wchar_t` buffers cleanly in `FontRenderFunction`
+(`XDrawImageString16` for 2-byte `ISO10646-1` fonts and 1-byte narrowing for
+8-bit `ISO8859-1` fonts) so raw UTF-32 zero bytes are never drawn as missing
+glyph boxes.
+
 The [desktop gallery](../desktop.md#terminal) shows the Terminal from the ARM64
 smoke session.
