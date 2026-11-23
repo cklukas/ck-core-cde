@@ -2547,7 +2547,7 @@ SmExit (
 	  XDeleteProperty (smGD.display, RootWindow(smGD.display, 0), XaVsmInfo);
 	  XFlush (smGD.display);
 	}
-      SmWaylandShutdown ();
+      SmWaylandShutdown (exitStatus);
       _exit(exitStatus);
     }
   else

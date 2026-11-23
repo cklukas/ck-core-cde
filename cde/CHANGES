@@ -1,4 +1,8 @@
 2026-11-23
+- Finish hybrid Wayland logout cleanly by sending the compositor quit
+  request after session cleanup and preserving the logout status if
+  Xwayland closes before its reply arrives. Wait for dtsession readiness
+  and stop detached helpers in the logout regression fixture.
 - Wait for the Front Panel to dock on the left output before testing
   its workspace button under Xwayland.
 - Read the complete Xvfb display number before starting the ToolTalk

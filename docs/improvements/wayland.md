@@ -783,6 +783,9 @@ compositor session is ready.
   active Wayland socket, toolkit backend, icon paths, and datatype search path
   after the session process re-executes. Activated clients receive the same
   lookup paths as clients launched directly by the session.
+  In a hybrid logout with an external compositor, dtsession finishes session
+  cleanup before sending the quit request on Xwayland. It retains the
+  completed logout status if Xwayland closes during that final round trip.
 - **Native Wayland Help Viewer (`dthelpview`) & Information Manager (`dtinfo`):**
   `dtwm-wayland --no-xwayland` exports `WAYLAND_DISPLAY` before launching the
   session `ttsession -p` daemon and publishes `_SUN_TT_SESSION` / `TT_SESSION` as

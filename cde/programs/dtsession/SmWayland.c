@@ -870,7 +870,14 @@ static int ignore_smwl_x_error(Display *dpy, XErrorEvent *ev) {
     return 0;
 }
 
-static void request_external_compositor_quit(void) {
+static int quit_exit_status;
+
+static int finish_on_quit_disconnect(Display *dpy) {
+    (void)dpy;
+    _exit(quit_exit_status);
+}
+
+static void request_external_compositor_quit(int exit_status) {
     Display *dpy = g_smwl.x_dpy ? g_smwl.x_dpy : smGD.display;
     Boolean opened_local = False;
     if (!dpy) {
@@ -897,19 +904,29 @@ static void request_external_compositor_quit(void) {
             }
             XFree(data);
         }
+        int mode = PropModeAppend;
+        if (wm_win == None) {
+            const char *wl_act = getenv("CK_MOTIF_WAYLAND_ACTIVE");
+            if (wl_act && strcmp(wl_act, "1") == 0) {
+                wm_win = root;
+                mode = PropModeReplace;
+            }
+        }
         if (wm_win != None) {
             static const char quit_cmd[] = "f.quit_mwm";
-            XChangeProperty(dpy, wm_win, wm_req, XA_STRING, 8, PropModeAppend,
+            /* Wait for delivery on the final round trip. The compositor can
+             * close Xwayland before the reply reaches us. A completed logout
+             * keeps its exit status when that connection disappears. */
+            quit_exit_status = exit_status;
+            XIOErrorHandler previous_io_handler = XSetIOErrorHandler(finish_on_quit_disconnect);
+            XChangeProperty(dpy, wm_win, wm_req, XA_STRING, 8, mode,
                             (const unsigned char *)quit_cmd, (int)sizeof(quit_cmd));
             XSync(dpy, False);
-        } else {
-            const char *wl_act = getenv("CK_MOTIF_WAYLAND_ACTIVE");
-            if (wl_act && strcmp(wl_act, "1") == 0 && wm_req != None) {
-                static const char quit_cmd[] = "f.quit_mwm";
-                XChangeProperty(dpy, root, wm_req, XA_STRING, 8, PropModeReplace,
-                                (const unsigned char *)quit_cmd, (int)sizeof(quit_cmd));
-                XSync(dpy, False);
+            if (opened_local) {
+                XCloseDisplay(dpy);
+                opened_local = False;
             }
+            XSetIOErrorHandler(previous_io_handler);
         }
     }
     XSetErrorHandler(prev_handler);
@@ -919,13 +936,11 @@ static void request_external_compositor_quit(void) {
     }
 }
 
-void SmWaylandShutdown(void) {
+void SmWaylandShutdown(int exit_status) {
     if (g_smwl.active_lock) {
         SmWaylandReleaseSessionLock();
     }
-    if (g_smwl.compositor_pid <= 0 && SmWaylandActive() && smGD.loggingOut) {
-        request_external_compositor_quit();
-    }
+    Boolean quit_external = g_smwl.compositor_pid <= 0 && SmWaylandActive() && smGD.loggingOut;
     if (g_smwl.idle_notif) {
         ext_idle_notification_v1_destroy(g_smwl.idle_notif);
         g_smwl.idle_notif = nullptr;
@@ -984,6 +999,9 @@ void SmWaylandShutdown(void) {
             nanosleep(&slp, nullptr);
         }
     }
+    if (quit_external) {
+        request_external_compositor_quit(exit_status);
+    }
 }
 
 #else /* !BUILD_DTWM_WAYLAND */
@@ -997,6 +1015,6 @@ void SmWaylandMarkLockWindow(Display *dpy, Window win) { (void)dpy; (void)win; }
 Boolean SmWaylandAcquireSessionLock(void) { return False; }
 Boolean SmWaylandSessionIsLocked(void) { return False; }
 void SmWaylandReleaseSessionLock(void) {}
-void SmWaylandShutdown(void) {}
+void SmWaylandShutdown(int exit_status) { (void)exit_status; }
 
 #endif /* BUILD_DTWM_WAYLAND */

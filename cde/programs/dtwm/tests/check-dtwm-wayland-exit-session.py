@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import signal
 import subprocess
 import tempfile
 import time
@@ -119,6 +120,8 @@ int main(int argc, char **argv) {
         }
         Atom req_a = XInternAtom(dpy, "_DT_WM_REQUEST", False);
         static const char cmd[] = "f.quit_mwm";
+        XSetIOErrorHandler(on_xio_shutdown);
+        g_sent_exit = 1;
         XChangeProperty(dpy, wm_win, req_a, XA_STRING, 8, PropModeAppend,
                         (const unsigned char *)cmd, (int)sizeof(cmd));
         XSync(dpy, False);
@@ -131,7 +134,7 @@ int main(int argc, char **argv) {
         if (!dpy) return 2;
         Window root = DefaultRootWindow(dpy);
         Window sm_win = None;
-        for (int i = 0; i < 80; ++i) {
+        for (int i = 0; i < 200; ++i) {
             if (_DtGetSmWindow(dpy, root, &sm_win) == Success && sm_win != None) {
                 XWindowAttributes wa;
                 g_xerr = 0;
@@ -328,6 +331,10 @@ def make_isolated_env(case_dir: Path, panel_bin: Path, extra_path_dirs: list[Pat
     env.pop("CK_MOTIF_BACKEND", None)
     env.pop("DTWM_WAYLAND_NO_XWAYLAND", None)
     env["HOME"] = str(home)
+    env["XDG_CONFIG_HOME"] = str(home / ".config")
+    env["XDG_CACHE_HOME"] = str(home / ".cache")
+    env["XDG_DATA_HOME"] = str(home / ".local/share")
+    env["XDG_STATE_HOME"] = str(home / ".local/state")
     env["XDG_RUNTIME_DIR"] = str(xdg)
     env["WLR_BACKENDS"] = "headless"
     env["WLR_RENDERER"] = "pixman"
@@ -361,6 +368,44 @@ def kill_proc_group(proc: subprocess.Popen[bytes] | None) -> None:
             os.killpg(proc.pid, 9)
         except OSError:
             proc.kill()
+
+
+def stop_isolated_children(env: dict[str, str]) -> None:
+    # Session helpers may start their own process groups. Match both paths
+    # allocated for this case before stopping any detached process.
+    markers = {os.fsencode(f"{key}={env[key]}") for key in ("HOME", "XDG_RUNTIME_DIR")}
+
+    def children() -> list[int]:
+        found = []
+        for proc in Path("/proc").iterdir():
+            if not proc.name.isdecimal():
+                continue
+            try:
+                values = (proc / "environ").read_bytes().split(b"\0")
+            except OSError:
+                continue
+            if markers.issubset(values):
+                found.append(int(proc.name))
+        return found
+
+    for sig in (signal.SIGTERM, signal.SIGKILL):
+        deadline = time.monotonic() + 2
+        signaled = set()
+        while time.monotonic() < deadline:
+            pending = children()
+            if not pending:
+                return
+            for pid in pending:
+                if pid in signaled:
+                    continue
+                try:
+                    os.kill(pid, sig)
+                except ProcessLookupError:
+                    continue
+                signaled.add(pid)
+            time.sleep(0.05)
+    if remaining := children():
+        raise RuntimeError(f"Session helpers did not stop: {remaining}")
 
 
 def check_native_activation(
@@ -402,7 +447,7 @@ def check_native_activation(
             env=env, stdout=stream, stderr=subprocess.STDOUT, start_new_session=True,
         )
     try:
-        deadline = time.monotonic() + 15
+        deadline = time.monotonic() + 25
         while time.monotonic() < deadline and proc.poll() is None and not capture.exists():
             time.sleep(0.05)
         if not capture.exists():
@@ -418,6 +463,7 @@ def check_native_activation(
             raise SystemExit("native activation export lacks the active compositor socket")
     finally:
         kill_proc_group(proc)
+        stop_isolated_children(env)
 
 
 def check_native_shutdown(
@@ -443,6 +489,7 @@ def check_native_shutdown(
                 raise SystemExit("native shutdown left its listening socket behind")
         finally:
             kill_proc_group(proc)
+            stop_isolated_children(native_env)
 
 
 def main() -> int:
@@ -489,7 +536,7 @@ def main() -> int:
             ld_dirs.append(Path(tok[2:]))
 
     tmp_base = os.environ.get("TMPDIR", "/var/tmp")
-    with tempfile.TemporaryDirectory(prefix="dtwm-wl-exit-", dir=tmp_base) as work_s:
+    with tempfile.TemporaryDirectory(prefix="dtwm-exit-", dir=tmp_base) as work_s:
         work = Path(work_s)
         extra_bins = [p.parent for p in (panel_bin, dtsession_bin, ttsession_bin) if p is not None]
         if dtsession_bin is None:
@@ -545,6 +592,7 @@ def main() -> int:
             wait_clean_exit(p_comp1, "Case 1 dtwm-wayland (f.quit_mwm)", log1)
         finally:
             kill_proc_group(p_comp1)
+            stop_isolated_children(env1)
 
         # --- Case 2: External dtwm-wayland + dtwm-panel + dtsession --wayland ---
         if dtsession_bin and ttsession_bin:
@@ -582,6 +630,7 @@ def main() -> int:
             finally:
                 kill_proc_group(p_sm2)
                 kill_proc_group(p_comp2)
+                stop_isolated_children(env2)
 
         # --- Case 3: Degraded session (dtsession already exited, stale _DT_SM_WINDOW_INFO on root) ---
         if ttsession_bin:
@@ -608,6 +657,7 @@ def main() -> int:
                 wait_clean_exit(p_comp3, "Case 3 degraded dtwm-wayland (no dtsession)", log3_comp, timeout=10.0)
             finally:
                 kill_proc_group(p_comp3)
+                stop_isolated_children(env3)
 
         print("PASS: hybrid Wayland quit, logout and degraded logout")
         return 0
