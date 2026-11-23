@@ -707,8 +707,9 @@ compositor session is ready.
 - **Focused Wayland regression suite (`programs/dtwm` and `programs/dtlogin`):**
   `check-dtwm-wayland.py` (`WP-02` bevels, move/resize, grid/snap, `Alt+Tab`,
   cohort appearance profiles), `check-dtwm-wayland-workspaces.py` (`WP-03`
-  workspaces, backdrops, `libDtSvc`, `ext-workspace-v1`, and a click
-  after the genuine Xwayland Front Panel docks on the left output),
+  workspaces, backdrops, `libDtSvc`, `ext-workspace-v1`, and absolute pointer
+  input on two outputs. A maximized native terminal must leave the docked
+  Front Panel visible),
   `check-dtwm-wayland-icons.py` (`WP-04` open-window icons, `48`/`96`
   `WM_ICON_SIZE`, live XWayland & `xdg-toplevel-icon-v1` icons, `dtfile` pins,
   `ck-clock` Front Panel embedding), `check-dtwm-wayland-wp05.py` (`WP-05`

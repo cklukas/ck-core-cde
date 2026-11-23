@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import os
 import re
+import select
 import shutil
 import subprocess
 import tempfile
@@ -323,7 +324,7 @@ def extract_motif_dirs(makefile: Path) -> tuple[list[str], list[str]]:
     return inc, lib
 
 
-def wait_for_docked_panel(env: dict[str, str], output_width: int, output_height: int) -> None:
+def wait_for_docked_panel(env: dict[str, str], output_width: int, output_height: int) -> int:
     panel_geometry = re.compile(
         r'\("dtwm-front-panel" "Dtwm"\)\s+(\d+)x(\d+)[+-]\d+[+-]\d+\s+([+-]\d+)([+-]\d+)'
     )
@@ -339,9 +340,19 @@ def wait_for_docked_panel(env: dict[str, str], output_width: int, output_height:
             # Xt first positions the shell over the full Xwayland screen.
             # Wait until the compositor docks it on the left-hand output.
             if abs(2 * x + width - output_width) <= 2 and abs(y + height - output_height) <= 8:
-                return
+                return y
         time.sleep(0.1)
     raise SystemExit(f"Front Panel did not dock on the left-hand output (last: {last_geometry})")
+
+
+def active_window_box(env: dict[str, str]) -> tuple[int, ...]:
+    response = subprocess.check_output(["xprop", "-root", "_DT_ACTIVE_WINDOW_BOX"],
+                                       env=env, text=True, timeout=2)
+    if " = " in response:
+        box = tuple(int(value) for value in response.split(" = ", 1)[1].split(","))
+        if len(box) == 8:
+            return box
+    return ()
 
 
 def main() -> int:
@@ -400,6 +411,10 @@ def main() -> int:
             [cc, "-O2", f"-I{work}", str(ext_c), str(ext_code), "-lwayland-client", "-o", str(ext_bin)],
             check=True,
         )
+        pointer_bin = work / "pointer"
+        pointer_source = Path(__file__).with_name("wayland-test-pointer.c")
+        subprocess.run([cc, "-O2", str(pointer_source), "-lwayland-client", "-o", str(pointer_bin)],
+                       check=True)
 
         backdrops_dir = cde_src / "programs" / "backdrops"
         env = os.environ.copy()
@@ -452,10 +467,24 @@ def main() -> int:
             if "EXT_WS[0]=One STATE=1" not in ew1 or "EXT_WS[1]=Two STATE=0" not in ew1:
                 raise SystemExit(f"unexpected initial ext-workspace-v1 output:\n{ew1}")
 
-            # 2. Spawn Wayland foot window on Workspace 1 ("One"), capture screenshot
-            p_wl = subprocess.Popen(["foot"], env=c_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+            # 2. Keep a native Wayland terminal open even without an interactive shell.
+            terminal_id = "cde-workspace-test"
+            terminal_log = work / "foot.log"
+            with terminal_log.open("wb") as log:
+                p_wl = subprocess.Popen(
+                    ["foot", "--app-id", terminal_id, "--title", "Workspace Probe", "sleep", "60"],
+                    env=c_env, stdout=log, stderr=subprocess.STDOUT, start_new_session=True,
+                )
             procs.append(p_wl)
-            time.sleep(1.0)
+            deadline = time.monotonic() + 8
+            while True:
+                ids = subprocess.check_output(["xprop", "-root", "_DT_WAYLAND_CLIENT_IDS"],
+                                              env=c_env, text=True, timeout=2)
+                if terminal_id in ids and (terminal_box := active_window_box(c_env)):
+                    break
+                if p_wl.poll() is not None or time.monotonic() >= deadline:
+                    raise SystemExit(f"Workspace terminal did not map: {terminal_log.read_text(errors='replace')}")
+                time.sleep(0.1)
 
             shot_ws1 = work / "wp03-ws1-one.png"
             subprocess.run(["grim", str(shot_ws1)], env=c_env, check=True)
@@ -464,22 +493,76 @@ def main() -> int:
             with Image.open(shot_ws1) as im1:
                 total_w, out_h = im1.size
             out1_w = total_w // 2
-            wait_for_docked_panel(c_env, out1_w, out_h)
+            panel_top = wait_for_docked_panel(c_env, out1_w, out_h)
             subprocess.run(["grim", str(shot_ws1)], env=c_env, check=True)
             with Image.open(shot_ws1) as im1:
                 sample_ws1 = im1.convert("RGB").getpixel((out1_w - 60, 40))
 
+            pointer = subprocess.Popen(
+                [str(pointer_bin)], env=c_env,
+                stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True,
+                start_new_session=True,
+            )
+            procs.append(pointer)
+
+            def send_pointer(command: str) -> None:
+                assert pointer.stdin and pointer.stdout
+                pointer.stdin.write(command + "\n")
+                pointer.stdin.flush()
+                ready, _, _ = select.select([pointer.stdout], [], [], 3)
+                if not ready or pointer.stdout.readline().strip() != "OK":
+                    raise SystemExit(f"Virtual pointer did not acknowledge {command!r}")
+
+            def click() -> None:
+                send_pointer("down 272")
+                send_pointer("sleep 40")
+                send_pointer("up 272")
+
+            # Double-click the terminal's measured titlebar and verify the strut.
+            x, y, width, _, _, client_y, _, _ = terminal_box
+            title_x = x + width // 2
+            title_y = y + (client_y - y) // 2
+            send_pointer(f"move {title_x} {title_y} {total_w} {out_h}")
+            click()
+            time.sleep(0.08)
+            click()
+            deadline = time.monotonic() + 4
+            while True:
+                box = active_window_box(c_env)
+                if box and box[2] == out1_w and box[1] + box[3] <= panel_top + 4:
+                    break
+                if time.monotonic() >= deadline:
+                    raise SystemExit(f"Workspace terminal did not maximize above panel at y={panel_top}: {box}")
+                time.sleep(0.1)
+
+            shot_max = work / "wp03-ws1-maximized-strut.png"
+            deadline = time.monotonic() + 4
+            while True:
+                subprocess.run(["grim", str(shot_max)], env=c_env, check=True, timeout=3)
+                with Image.open(shot_max) as im_max:
+                    rgb = im_max.convert("RGB")
+                    terminal_px = rgb.getpixel((out1_w - 45, out_h // 2))
+                    panel_px = rgb.getpixel((out1_w // 2 - 200, out_h - 10))
+                # Wait for the resized terminal buffer to cover the output up to the strut.
+                if max(terminal_px) < 100 and panel_px[0] >= 120 and panel_px[1] >= 120:
+                    break
+                if time.monotonic() >= deadline:
+                    raise SystemExit(f"Maximized terminal or panel pixels were missing: {terminal_px=}, {panel_px=}")
+                time.sleep(0.1)
+
             # Workspace "Two" is the top-right button in the 2x2 grid.
             btn_two_x = out1_w // 2 + 60
             btn_two_y = out_h - 54
-            subprocess.run(["wlrctl", "pointer", "move", "-10000", "-10000"], env=c_env, check=True)
-            subprocess.run(["wlrctl", "pointer", "move", str(btn_two_x), str(btn_two_y)], env=c_env, check=True)
-            subprocess.run(["wlrctl", "pointer", "click", "left"], env=c_env, check=True)
-            time.sleep(0.4)
-
-            q2 = subprocess.run([str(dtsvc_bin), "query"], env=c_env, check=True, capture_output=True, text=True).stdout
-            if "CURRENT=ws1 COUNT=4" not in q2:
-                raise SystemExit(f"Front Panel click did not switch workspace to ws1:\n{q2}")
+            send_pointer(f"move {btn_two_x} {btn_two_y} {total_w} {out_h}")
+            click()
+            deadline = time.monotonic() + 4
+            while True:
+                q2 = subprocess.check_output([str(dtsvc_bin), "query"], env=c_env, text=True, timeout=3)
+                if "CURRENT=ws1 COUNT=4" in q2:
+                    break
+                if time.monotonic() >= deadline:
+                    raise SystemExit(f"Front Panel click did not switch workspace to ws1:\n{q2}")
+                time.sleep(0.1)
 
             shot_ws2 = work / "wp03-ws2-two.png"
             subprocess.run(["grim", str(shot_ws2)], env=c_env, check=True)
@@ -496,26 +579,10 @@ def main() -> int:
             shot_ws3 = work / "wp03-ws3-brickwall.png"
             subprocess.run(["grim", str(shot_ws3)], env=c_env, check=True)
 
-            # 5. Switch back to Workspace 1 ("One") via native Wayland ext-workspace-v1 protocol & verify maximize strut
+            # 5. Switch back to Workspace 1 via the native ext-workspace-v1 protocol.
             ew_act = subprocess.run([str(ext_bin), "activate", "0"], env=c_env, check=True, capture_output=True, text=True).stdout
             if "EXT_WS[0]=One STATE=1" not in ew_act:
                 raise SystemExit(f"ext-workspace-v1 activate(0) failed:\n{ew_act}")
-
-            # Double-click foot titlebar (120, 56) to maximize -> verify Front Panel bottom strut remains uncovered!
-            subprocess.run(["wlrctl", "pointer", "move", "-10000", "-10000"], env=c_env, check=True)
-            subprocess.run(["wlrctl", "pointer", "move", "120", "56"], env=c_env, check=True)
-            subprocess.run(["wlrctl", "pointer", "click", "left"], env=c_env, check=True)
-            time.sleep(0.08)
-            subprocess.run(["wlrctl", "pointer", "click", "left"], env=c_env, check=True)
-            time.sleep(0.4)
-
-            shot_max = work / "wp03-ws1-maximized-strut.png"
-            subprocess.run(["grim", str(shot_max)], env=c_env, check=True)
-            with Image.open(shot_max) as im_max:
-                # Sample Front Panel chassis at (out1_w//2 - 200, out_h - 10) -> must still be CDE panel slate (~174,178,195), NOT foot terminal black!
-                panel_px = im_max.convert("RGB").getpixel((out1_w // 2 - 200, out_h - 10))
-                if panel_px[0] < 120 or panel_px[1] < 120:
-                    raise SystemExit(f"maximized window covered Front Panel strut! pixel at panel={panel_px}")
 
             if args.save_dir:
                 sdir = Path(args.save_dir)

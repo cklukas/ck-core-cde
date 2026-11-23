@@ -1,4 +1,8 @@
 2026-11-24
+- Use synchronized absolute pointer input for the two-output workspace
+  regression and verify the maximized terminal leaves the Front Panel visible.
+  Share the virtual pointer fixture with the drag test, which now waits for
+  the test folder's published position before starting the drag.
 - Run the Wayland HiDPI regression with the configured Motif ABI 9
   installation and one virtual pointer across live DPI changes.
 - Make the Front Panel drag-and-drop regression find the panel by its X11

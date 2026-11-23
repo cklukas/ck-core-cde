@@ -26,6 +26,7 @@ EXTRA_DIST = tests/check-property-readers.py tests/property-client.c \
              tests/check-dtwm-wayland-menus.py \
              tests/check-dtwm-wayland-busy-light.py \
              tests/check-dtwm-wayland-panel-dnd.py \
+             tests/wayland-test-pointer.c \
              tests/check-dtappintegrate-curated.py \
              tests/check-dtwm-wayland-exit-session.py \
              tests/check-dtwm-icon-order.py \
