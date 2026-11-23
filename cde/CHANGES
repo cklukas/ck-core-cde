@@ -1,6 +1,8 @@
 2026-11-23
 - Verify spool-lock age against the spool filesystem clock so scheduling
   delays do not cause false failures in the mail helper regression.
+- Recommend the keyring and signature verification helpers in Ubuntu
+  cohort packages so dtmail can use the enabled mail features.
 - Bound the wait for the compositor's Front Panel child on shutdown and
   panel restart so an unresponsive panel cannot hang the Wayland session.
 - Wait for Xvfb to allocate and initialize a display before starting the

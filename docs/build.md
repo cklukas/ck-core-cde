@@ -773,6 +773,9 @@ window manager startup. Diagnostics are saved in `installed-xvfb.log` and
 `installed-x11.log`.
 The guest's `_apt` user needs to be able to traverse `$GUEST_SCRATCH/tmp`
 and its ancestors to read the staged public key.
+The desktop package recommends GNOME Keyring and `secret-tool` for
+dtmail's CardDAV credentials, plus GnuPG and `gpgsm` for local message
+signature verification.
 
 All runtime libraries and executables install beneath `/usr/dt` with
 `RUNPATH=/usr/dt/lib` and `/etc/ld.so.conf.d/ck-core-cde.conf`, avoiding file or

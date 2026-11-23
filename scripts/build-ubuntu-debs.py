@@ -727,7 +727,8 @@ def guest_build_and_verify(args: argparse.Namespace) -> int:
             "Architecture": arch,
             "Installed-Size": str(installed_size_kb(r_cde)),
             "Depends": ", ".join(dict.fromkeys(cde_deps)),
-            "Recommends": "ck-core-apps, xdg-desktop-portal, xdg-desktop-portal-wlr, pipewire, wlr-randr, libnotify-bin, xfonts-100dpi",
+            "Recommends": "ck-core-apps, gnome-keyring, gnupg, gpgsm, libsecret-tools, "
+            "xdg-desktop-portal, xdg-desktop-portal-wlr, pipewire, wlr-randr, libnotify-bin, xfonts-100dpi",
             "Suggests": "fcitx5 | ibus, fonts-noto-cjk",
             "Conflicts": "cde-desktop",
             "Replaces": "cde-desktop",
