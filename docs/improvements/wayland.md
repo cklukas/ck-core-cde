@@ -357,6 +357,9 @@ panel instrumentation:
   choosing **Copy To Main Panel** immediately updates the main Front Panel and
   persists `~/.dt/sessions/dtwmfp.session` (saved both on customization and on
   `dtwm-panel` `SIGTERM`/`SIGINT` shutdown).
+  On shutdown or panel restart, the Wayland compositor gives its panel
+  child time to save this state, then terminates and reaps an unresponsive
+  child so the session can finish.
 - **Live 4-Quadrant Status Gauge (`ck-status --gauge`):** Can be pinned into
   `CONTROL Blank2` (`POSITION_HINTS 8`, `~/.dt/types/ckstatus_gauge.fp`) as a
   borderless, centered `74×54` `TYPE client` (`ck-status-gauge`) panel

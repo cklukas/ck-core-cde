@@ -9,6 +9,7 @@
 #include "ext-workspace-v1-protocol.h"
 
 #include <ctype.h>
+#include <errno.h>
 #include <linux/input-event-codes.h>
 #include <math.h>
 #include <signal.h>
@@ -18,6 +19,7 @@
 #include <strings.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <time.h>
 #include <unistd.h>
 #include <xcb/randr.h>
 #include <xcb/xcb.h>
@@ -686,6 +688,33 @@ static void spawn_genuine_front_panel(DtwmServer *server) {
     }
 }
 
+static pid_t wait_front_panel(pid_t pid, int options) {
+    pid_t result;
+    do {
+        result = waitpid(pid, nullptr, options);
+    } while (result < 0 && errno == EINTR);
+    return result;
+}
+
+static void stop_genuine_front_panel(DtwmServer *server) {
+    pid_t pid = server->panel_pid;
+    if (pid <= 0) return;
+    server->panel_pid = 0;
+
+    /* Check that the recorded process is still our child before signaling it. */
+    if (wait_front_panel(pid, WNOHANG) != 0) return;
+    kill(pid, SIGTERM);
+    const struct timespec interval = { .tv_nsec = 10000000 };
+    for (int i = 0; i < 200; i++) {
+        nanosleep(&interval, nullptr);
+        if (wait_front_panel(pid, WNOHANG) != 0) return;
+    }
+    /* A panel blocked in a display or ToolTalk call cannot handle SIGTERM. */
+    fprintf(stderr, "dtwm-wayland: Front Panel did not stop after SIGTERM\n");
+    kill(pid, SIGKILL);
+    (void)wait_front_panel(pid, 0);
+}
+
 void dtwm_spawn_front_panel(DtwmServer *server) {
     spawn_genuine_front_panel(server);
 }
@@ -1234,13 +1263,8 @@ static void handle_dt_wm_request_item(DtwmServer *server, const char *cmd) {
         return;
     }
     if (strncmp(cmd, "f.restart", 9) == 0) {
-        if (server->panel_pid > 0) {
-            kill(server->panel_pid, SIGTERM);
-            int wstatus = 0;
-            waitpid(server->panel_pid, &wstatus, 0);
-            server->panel_pid = 0;
-            server->panel_view = nullptr;
-        }
+        stop_genuine_front_panel(server);
+        server->panel_view = nullptr;
         spawn_genuine_front_panel(server);
         return;
     }
@@ -2590,12 +2614,7 @@ void dtwm_workspaces_init(DtwmServer *server) {
 }
 
 void dtwm_workspaces_finish(DtwmServer *server) {
-    if (server->panel_pid > 0) {
-        kill(server->panel_pid, SIGTERM);
-        int status = 0;
-        waitpid(server->panel_pid, &status, 0);
-        server->panel_pid = 0;
-    }
+    stop_genuine_front_panel(server);
     if (server->xcb_event_source) {
         wl_event_source_remove(server->xcb_event_source);
         server->xcb_event_source = nullptr;

@@ -12,6 +12,7 @@
 4. Native Wayland start, SIGTERM and restart exit cleanly without Xwayland.
 5. A dtsession-owned native compositor exports the application search paths
    and backend after the session process re-execs.
+6. An unresponsive Front Panel child cannot leave the compositor hung.
 """
 
 from __future__ import annotations
@@ -19,6 +20,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
 import signal
 import subprocess
 import tempfile
@@ -142,13 +144,15 @@ int main(int argc, char **argv) {
                 Status ok = XGetWindowAttributes(dpy, sm_win, &wa);
                 XSync(dpy, False);
                 XSetErrorHandler(prev);
-                if (ok && !g_xerr) break;
+                /* dtsession selects property events on this window at the
+                 * end of startup, immediately before entering READY. */
+                if (ok && !g_xerr && (wa.all_event_masks & PropertyChangeMask)) break;
             }
             sm_win = None;
             usleep(100000);
         }
         if (sm_win == None) {
-            fprintf(stderr, "timed out waiting for live dtsession window\n");
+            fprintf(stderr, "timed out waiting for dtsession to receive state changes\n");
             XCloseDisplay(dpy);
             return 3;
         }
@@ -388,8 +392,8 @@ def stop_isolated_children(env: dict[str, str]) -> None:
                 found.append(int(proc.name))
         return found
 
-    for sig in (signal.SIGTERM, signal.SIGKILL):
-        deadline = time.monotonic() + 2
+    for sig, timeout in ((signal.SIGTERM, 2), (signal.SIGKILL, 5)):
+        deadline = time.monotonic() + timeout
         signaled = set()
         while time.monotonic() < deadline:
             pending = children()
@@ -492,6 +496,50 @@ def check_native_shutdown(
             stop_isolated_children(native_env)
 
 
+def check_unresponsive_panel_shutdown(
+    work: Path, compositor: Path, bins: list[Path], ld_dirs: list[Path],
+) -> None:
+    panel = work / "dtwm-panel"
+    env = make_isolated_env(work, panel, bins, ld_dirs)
+    # The compositor finds the panel next to its executable. Keep the
+    # replacement confined to the fixture directory.
+    fixture_comp = work / compositor.name
+    shutil.copy2(compositor, fixture_comp)
+    marker = work / "panel.pid"
+    panel.write_text(
+        "#!/usr/bin/python3\n"
+        "import os, pathlib, signal\n"
+        "signal.signal(signal.SIGTERM, signal.SIG_IGN)\n"
+        "pathlib.Path(os.environ['CDE_TEST_PANEL_PID']).write_text(str(os.getpid()))\n"
+        "while True: signal.pause()\n",
+        encoding="utf-8",
+    )
+    panel.chmod(0o755)
+    env["CDE_TEST_PANEL_PID"] = str(marker)
+    status = work / "status"
+    log = work / "comp.log"
+    with log.open("wb") as stream:
+        proc = subprocess.Popen(
+            [str(fixture_comp), "--no-xwayland", "--status-file", str(status)],
+            env=env, stdout=stream, stderr=subprocess.STDOUT, start_new_session=True,
+        )
+    try:
+        ready = wait_status_env(status, native=True)
+        panel_pid = int(marker.read_text())
+        parent = Path(f"/proc/{panel_pid}/stat").read_text().rsplit(")", 1)[1].split()[1]
+        if int(parent) != proc.pid:
+            raise SystemExit("unresponsive panel fixture is not a child of the compositor")
+        proc.terminate()
+        wait_clean_exit(proc, "Native shutdown with an unresponsive panel", log)
+        if Path(f"/proc/{panel_pid}").exists():
+            raise SystemExit("native shutdown did not reap its panel child")
+        if (Path(env["XDG_RUNTIME_DIR"]) / ready["WAYLAND_DISPLAY"]).exists():
+            raise SystemExit("native shutdown left its listening socket behind")
+    finally:
+        kill_proc_group(proc)
+        stop_isolated_children(env)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--compositor", required=True)
@@ -544,6 +592,8 @@ def main() -> int:
         check_native_shutdown(work / "native", comp_bin, panel_bin, extra_bins, ld_dirs)
         check_native_activation(work / "activation", dtsession_bin, comp_bin, panel_bin, ld_dirs)
         print("PASS: native SIGTERM/restart and activation export", flush=True)
+        check_unresponsive_panel_shutdown(work / "unresponsive-panel", comp_bin, extra_bins, ld_dirs)
+        print("PASS: native shutdown reaped the unresponsive Front Panel", flush=True)
         if args.native_only:
             return 0
 
