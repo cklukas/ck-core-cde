@@ -159,6 +159,8 @@ static char *SmNewString(char *s) { return s ? strdup(s) : strdup(""); }
 
 /* Xlib */
 static int font_count, mapping_calls, mapping_codes, modifier_calls, modifier_keys;
+static int x11_saver_timeout, wayland_idle_timeout;
+static Boolean wayland_active;
 static char *font_dirs[1000];
 #define XChangePointerControl fake_XChangePointerControl
 #define XSetScreenSaver fake_XSetScreenSaver
@@ -172,7 +174,13 @@ static char *font_dirs[1000];
 #define XtGetApplicationResources fake_XtGetApplicationResources
 #define XrmMergeDatabases fake_XrmMergeDatabases
 static int XChangePointerControl(void *d, int a, int b, int c, int e, int f) { return 0; }
-static int XSetScreenSaver(void *d, int a, int b, int c, int e) { return 0; }
+static int XSetScreenSaver(void *d, int timeout, int b, int c, int e)
+{
+    x11_saver_timeout = timeout;
+    return 0;
+}
+static Boolean SmWaylandActive(void) { return wayland_active; }
+static void SmWaylandUpdateIdleTimeout(int timeout) { wayland_idle_timeout = timeout; }
 static int XChangeKeyboardControl(void *d, unsigned long m, XKeyboardControl *c) { return 0; }
 static int XSetPointerMapping(void *d, unsigned char *map, int n) { (void) map; return n; }
 static int XSetFontPath(void *d, char **dirs, int n)
@@ -387,11 +395,37 @@ static int key_map(void)
     return 0;
 }
 
+#ifdef CHECK_WAYLAND_IDLE
+static int screen_saver_timeout(void)
+{
+    settings("", "", "", "", 0, 0, 0);
+    smSettings.timeout = 300;
+    smSaverRes.saverTimeout = 180;
+    smSaverRes.lockTimeout = 60;
+    x11_saver_timeout = wayland_idle_timeout = -1;
+    CHECK(RestoreSettings() == 0);
+    CHECK(x11_saver_timeout == 60 && wayland_idle_timeout == -1);
+
+    settings("", "", "", "", 0, 0, 0);
+    smSettings.timeout = 300;
+    smSaverRes.saverTimeout = 180;
+    smSaverRes.lockTimeout = 60;
+    wayland_active = True;
+    x11_saver_timeout = -1;
+    CHECK(RestoreSettings() == 0);
+    CHECK(x11_saver_timeout == 60 && wayland_idle_timeout == 60);
+    return 0;
+}
+#endif
+
 static struct { const char *name; int (*run)(void); } scenarios[] = {
     {"quote_depth", quote_depth}, {"quoting_basics", quoting_basics},
     {"long_commands", long_commands}, {"growth_boundaries", growth_boundaries},
     {"missing_arguments", missing_arguments}, {"lines_stand_alone", lines_stand_alone},
     {"font_path", font_path}, {"modifier_map", modifier_map}, {"key_map", key_map},
+#ifdef CHECK_WAYLAND_IDLE
+    {"screen_saver_timeout", screen_saver_timeout},
+#endif
     {NULL, NULL}
 };
 
@@ -408,6 +442,7 @@ int main(int argc, char **argv)
 '''
 
 cc = shlex.split(os.environ.get("CC", "gcc"))
+wayland_check = ["-DCHECK_WAYLAND_IDLE"] if "SmWaylandUpdateIdleTimeout(" in settings else []
 failed = []
 with tempfile.TemporaryDirectory(prefix="dtsession-parsers-", dir=os.environ.get("TMPDIR")) as scratch:
     scratch = Path(scratch)
@@ -416,7 +451,7 @@ with tempfile.TemporaryDirectory(prefix="dtsession-parsers-", dir=os.environ.get
     env = dict(os.environ, ASAN_OPTIONS="detect_leaks=0")
     binary = scratch / "parsers"
     build = cc + ["-std=gnu23", "-O1", "-g", f"-fsanitize={_CK_SANITIZE_LIST}", "-fno-sanitize-recover=all",
-                  "-fno-omit-frame-pointer", "-w", "-DMULTIBYTE", str(c), "-o", str(binary)]
+                  "-fno-omit-frame-pointer", "-w", "-DMULTIBYTE", *wayland_check, str(c), "-o", str(binary)]
     compiled = subprocess.run(build, capture_output=True, text=True)
     if compiled.returncode:
         sys.stderr.write(compiled.stderr[:6000])

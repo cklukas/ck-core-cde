@@ -1,3 +1,7 @@
+2026-11-24
+- Restore the session settings regression build and check that the restored
+  idle timeout reaches the active Wayland backend.
+
 2026-11-23
 - Verify spool-lock age against the spool filesystem clock so scheduling
   delays do not cause false failures in the mail helper regression.
