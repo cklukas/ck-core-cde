@@ -744,6 +744,22 @@ metadata (`Packages`, `Packages.gz`, `Release`, `Release.gpg`, `InRelease`, and
 python3 scripts/build-ubuntu-debs.py --task-root "$TASK_ROOT" --verify-install
 ```
 
+Run install verification in a clean Ubuntu guest. To qualify a repository built
+on another machine, make the complete repository accessible inside the guest
+and point the verifier to it.
+
+```sh
+python3 scripts/build-ubuntu-debs.py --in-guest --verify-install \
+  --verify-repo "$SIGNED_REPO" --output-dir "$EVIDENCE" \
+  --guest-build-root "$GUEST_SCRATCH"
+```
+
+The verifier uses the repository's signing key for a scoped APT source. It
+checks the installed Motif digest and live library mappings, captures the
+native Wayland and X11 desktops, and verifies clean compositor shutdown.
+The guest's `_apt` user needs to be able to traverse `$GUEST_SCRATCH/tmp`
+and its ancestors to read the staged public key.
+
 All runtime libraries and executables install beneath `/usr/dt` with
 `RUNPATH=/usr/dt/lib` and `/etc/ld.so.conf.d/ck-core-cde.conf`, avoiding file or
 SONAME collisions with system `libxm4`. `ck-core-cde` ships `dtwm-wayland`,

@@ -1,4 +1,7 @@
 2026-11-23
+- Verify existing signed Ubuntu package repositories in a clean guest.
+  Check native Wayland at 192 DPI and X11, the installed Motif digest and
+  library mappings, and clean compositor shutdown.
 - Cleanly stop and restart the native Wayland compositor with cursor-shape
   support. Publish the managed Wayland session's backend and CDE icon and
   datatype search paths to activation services after native session startup.
