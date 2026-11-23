@@ -1,4 +1,6 @@
 2026-11-23
+- Read the complete Xvfb display number before starting the ToolTalk
+  session tests so split writes cannot stop the X server prematurely.
 - Add read-only CardDAV address-book sync to dtmail To, Cc and Bcc
   completion. Use the desktop keyring for the configured collection password.
 - Show OpenPGP/MIME and S/MIME verification results in dtmail message views.

@@ -661,6 +661,11 @@ make -j4 -C programs/dtudcexch
 make -j4 -C programs/dtlogin
 ```
 
+The ToolTalk session checks start their own Xvfb for the shell cases when
+available. They wait for a complete display number and report a failed
+Xvfb startup as a test failure. Run those checks from the configured
+build tree with `make -C lib/tt/bin/ttsession check`.
+
 The final default-language gate uses ARM64 shadow builds with both GCC
 and Clang, followed by the complete `make check` suite in each build tree. The
 same qualified GCC output is staged into an isolated uConsole CDE session which

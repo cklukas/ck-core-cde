@@ -168,14 +168,30 @@ if shutil.which("Xvfb"):
                              "320x200x24", "-nolisten", "tcp"], pass_fds=(write_end,),
                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     os.close(write_end)
-    ready_fds, _, _ = select.select([read_end], [], [], 20)
-    number = os.read(read_end, 16).decode().strip() if ready_fds else ""
-    os.close(read_end)
-    if number.isdigit():
-        xdisplay = ":" + number
+    deadline = time.monotonic() + 20
+    reply = bytearray()
+    try:
+        # Xvfb can send the number and its newline in separate writes.
+        # Closing the pipe after the first fragment can kill the X server.
+        while b"\n" not in reply and len(reply) < 16:
+            remaining = max(0, deadline - time.monotonic())
+            if not select.select([read_end], [], [], remaining)[0]:
+                break
+            chunk = os.read(read_end, 16 - len(reply))
+            if not chunk:
+                break
+            reply.extend(chunk)
+    finally:
+        os.close(read_end)
+    number, newline, _ = reply.partition(b"\n")
+    if newline and number.isdigit():
+        xdisplay = ":" + number.decode("ascii")
     else:
-        xvfb.kill()
+        if xvfb.poll() is None:
+            xvfb.kill()
+        xvfb.wait()
         xvfb = None
+        check("Xvfb starts for the shell cases", False, "incomplete display number")
 
 
 def stop_xvfb():
