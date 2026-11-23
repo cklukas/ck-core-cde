@@ -1,4 +1,14 @@
 2026-11-23
+- Add read-only CardDAV address-book sync to dtmail To, Cc and Bcc
+  completion. Use the desktop keyring for the configured collection password.
+- Show OpenPGP/MIME and S/MIME verification results in dtmail message views.
+  Distinguish trusted, invalid, unavailable and missing-key results.
+- Add indexed mail-body search across folders and open the matching message
+  from the results. Index decoded text and readable HTML in memory.
+- Keep dtmail running when the Secret Service helper closes its input
+  before receiving the credential. Reap only the child processes owned by
+  the mail transport so keyring, spool and crypto helpers can collect their
+  own exit status.
 - Verify existing signed Ubuntu package repositories in a clean guest.
   Check native Wayland at 192 DPI and X11, the installed Motif digest and
   library mappings, and clean compositor shutdown.

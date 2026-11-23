@@ -14,6 +14,55 @@ small program that holds the group does nothing but serve the user's own
 mailbox. This page records what the programs do with the group and with the
 data they are given.
 
+## CardDAV recipient completion
+
+The `~/.mailrc` entry takes the full HTTPS address-book collection URL.
+
+```mailrc
+set carddavurl="https://dav.example.org/addressbooks/user/contacts/"
+set carddavuser="user"
+```
+
+Use `secret-tool` to store the address-book password in Secret Service. Enter
+the password at its prompt.
+
+```sh
+secret-tool store --label='dtmail CardDAV' \
+  service ck-core-cde-dtmail account carddav kind password
+```
+
+Omit `carddavuser` for a collection that allows anonymous reads. For a private
+certificate authority, set `carddavcafile` to the path of its PEM certificate.
+The system trust store is used by default. dtmail fetches the collection
+asynchronously and merges its contacts into the To, Cc and Bcc suggestions.
+The current session keeps the last successful response if a refresh fails.
+Changing or removing the collection clears its suggestions.
+The feature requires libcurl and libxml2. Password authentication also uses
+the Secret Service desktop keyring. The mail transport waits only for its
+registered delivery processes, so credential, spool and signature helpers
+can collect their own exit statuses.
+
+## Signature status
+
+The message preview and separate message viewer indicate the result of
+verifying OpenPGP/MIME and detached or opaque S/MIME signatures. Verification
+uses the user's GnuPG keyring and local certificate trust settings. The result
+distinguishes trusted, invalid, missing-key and unverified signatures. The
+trust verdict concerns the signing key or certificate. Verification uses
+GMime and the installed `gpg` and `gpgsm` engines.
+
+## Search mail bodies
+
+Choose **Message → Find… → Search Mail Bodies…** to look for a phrase across
+the open mailbox, the inbox and folders under `~/.dt/mail`, `~/Mail` and the
+configured mail folder. The search indexes decoded text and readable HTML
+without attachments. A double-click on a result opens the message in its
+folder. If the folder changes, run the search again before opening it.
+
+The dialog keeps an in-memory SQLite FTS5 index and refreshes changed folders
+before each search. It lists up to 500 matching messages. The feature requires
+GMime and SQLite with FTS5.
+
 ## The mail spool and its helper
 
 The spool directory of many systems is writable only for the `mail` group, so

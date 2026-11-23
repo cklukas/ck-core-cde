@@ -59,7 +59,8 @@ provision:
       libtirpc-dev libpam0g-dev libutempter-dev tcl-dev ksh93u+m \
       x11-xserver-utils x11-utils xfonts-utils xfonts-base xfonts-100dpi xbitmaps \
       ncompress opensp rpcsvc-proto rpcbind ncurses-bin xvfb \
-      libcairo2-dev libasound2-dev libpulse-dev libfluidsynth-dev libcurl4-openssl-dev \
+      libcairo2-dev libasound2-dev libpulse-dev libfluidsynth-dev libcurl4-openssl-dev libxml2-dev \
+      libgmime-3.0-dev libsqlite3-dev gpgsm \
       libwayland-dev libwayland-bin wayland-protocols libwlroots-0.19-dev \
       xwayland libseat-dev libinput-dev libxkbcommon-dev libdrm-dev \
       libgbm-dev libegl-dev libgles-dev libpixman-1-dev \

@@ -84,6 +84,8 @@ public:
   };
 
 private:
+  Widget _body_search = NULL;
+  static void bodySearchCallback(Widget, XtPointer, XtPointer);
 
   struct ActionAreaItem {
     char		* label;	// Button label.

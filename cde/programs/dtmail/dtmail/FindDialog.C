@@ -56,6 +56,7 @@
 #include <DtMail/DtMail.h>
 #include <DtMail/DtMail.hh>
 #include "FindDialog.h"
+#include "BodySearchDialog.h"
 #include "RoamApp.h"
 #include "RoamMenuWindow.h"
 #include "RoamCmds.h"
@@ -359,6 +360,13 @@ FindDialog::createWorkArea(Widget dialog)
   XmStringFree(strForward);
   XmStringFree(strBackward);
 
+#if DTMAIL_BODY_INDEX_ENABLED
+  Widget body_search = XtVaCreateManagedWidget("Search Mail Bodies...", xmPushButtonWidgetClass,
+      fd_form, XmNtopAttachment, XmATTACH_WIDGET, XmNtopWidget, fd_direction,
+      XmNleftAttachment, XmATTACH_POSITION, XmNleftPosition, 5, NULL);
+  XtAddCallback(body_search, XmNactivateCallback, bodySearchCallback, this);
+#endif
+
   //
   // Now create the Action Area.
   //
@@ -460,6 +468,16 @@ FindDialog::createWorkArea(Widget dialog)
   XtRealizeWidget(dialog);
 
   return (fd_pane);
+}
+
+void
+FindDialog::bodySearchCallback(Widget, XtPointer closure, XtPointer)
+{
+    auto *find = static_cast<FindDialog *>(closure);
+    if (!find->_body_search)
+        find->_body_search = dtmail_create_body_search(find->_w, find->_roamWindow);
+    if (find->_body_search)
+        XtManageChild(find->_body_search);
 }
 
 

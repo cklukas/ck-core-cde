@@ -45,12 +45,17 @@
 #endif
 
 #include <Xm/Form.h>
+#include <Xm/Label.h>
 #include <Xm/SeparatoG.h>
 #include <Dt/Dnd.h>
 #include "DtMailEditor.hh"
 #include "XmTextEditor.h"
 #include "AttachArea.h"
 #include "Attachment.h"
+#include "MailSignature.h"
+
+#include <memory>
+#include <strings.h>
 #ifdef DTEDITOR
 #include "DtEditor.hh"
 #endif
@@ -103,6 +108,7 @@ DtMailEditor::DtMailEditor(
     _showAttachArea = TRUE;
     _doingDrag = FALSE;
     _separator = NULL;
+    _signatureLabel = NULL;
     _msgHandle = NULL;
     _dragX = -1;
     _dragY = -1;
@@ -203,6 +209,74 @@ Widget
 DtMailEditor::container()
 {
     return(_w);
+}
+
+void
+DtMailEditor::showMessageSignature(DtMail::Message *message)
+{
+    const char *label = NULL;
+    if (message) {
+        DtMailEnv error;
+        DtMail::Envelope *envelope = message->getEnvelope(error);
+        DtMailValueSeq values;
+        if (envelope && error.isNotSet())
+            envelope->getHeader(error, "Content-Type", DTM_FALSE, values);
+        const char *type = values.length() ? values[0]->raw() : "";
+        while (*type == ' ' || *type == '\t')
+            ++type;
+
+        if (!strncasecmp(type, "multipart/signed", 16) ||
+            !strncasecmp(type, "application/pkcs7-mime", 22) ||
+            !strncasecmp(type, "application/x-pkcs7-mime", 24)) {
+            DtMailBuffer raw = {};
+            message->toBuffer(error, raw);
+            std::unique_ptr<char[]> data(static_cast<char *>(raw.buffer));
+            auto signature = dtmail_verify_signature(data.get(), raw.size);
+            switch (signature.status) {
+            case DtMailSignatureStatus::Trusted:
+                label = signature.kind == DtMailSignatureKind::OpenPGP
+                    ? "OpenPGP signature verified with a trusted key"
+                    : "S/MIME signature verified with a trusted certificate";
+                break;
+            case DtMailSignatureStatus::Untrusted:
+                label = "Signature signer trust could not be established";
+                break;
+            case DtMailSignatureStatus::Invalid:
+                label = "Signature invalid";
+                break;
+            case DtMailSignatureStatus::MissingKey:
+                label = "Signature verification needs a public key or certificate";
+                break;
+            case DtMailSignatureStatus::Unverifiable:
+                label = "Signature could not be verified";
+                break;
+            case DtMailSignatureStatus::Unsigned:
+                break;
+            }
+        }
+    }
+
+    Widget editor = _myTextEditor->get_editor();
+    if (!label) {
+        if (_signatureLabel && XtIsManaged(_signatureLabel)) {
+            XtVaSetValues(editor, XmNtopAttachment, XmATTACH_FORM, NULL);
+            XtUnmanageChild(_signatureLabel);
+        }
+        return;
+    }
+    if (!_signatureLabel) {
+        _signatureLabel = XtVaCreateWidget("signatureStatus", xmLabelWidgetClass, _w,
+            XmNalignment, XmALIGNMENT_BEGINNING,
+            XmNtopAttachment, XmATTACH_FORM,
+            XmNleftAttachment, XmATTACH_FORM, XmNleftOffset, 4,
+            XmNrightAttachment, XmATTACH_FORM, XmNrightOffset, 4, NULL);
+    }
+    XmString text = XmStringCreateLocalized((char *)label);
+    XtVaSetValues(_signatureLabel, XmNlabelString, text, NULL);
+    XmStringFree(text);
+    XtManageChild(_signatureLabel);
+    XtVaSetValues(editor, XmNtopAttachment, XmATTACH_WIDGET,
+                  XmNtopWidget, _signatureLabel, NULL);
 }
 
 void

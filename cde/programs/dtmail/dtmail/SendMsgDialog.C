@@ -49,6 +49,8 @@
 #include "CurlMailEngine.h"
 #include "OAuth2Client.h"
 #include "AddressAutocomplete.h"
+#include "CardDavContacts.h"
+#include <fcntl.h>
 #include "NoOpCmd.h"
 #include "RoamCmds.h"
 #include "ComposeCmds.hh"
@@ -95,6 +97,19 @@
 
 // Pipe used between RFCTransport::childHandler and XtAppAddInput
 static int _transfds[2];
+
+static int makeTransportWakePipe(int fds[2])
+{
+    if (pipe(fds) < 0)
+        return -1;
+    if (fcntl(fds[1], F_SETFL, O_NONBLOCK) == 0 &&
+        fcntl(fds[0], F_SETFD, FD_CLOEXEC) == 0 &&
+        fcntl(fds[1], F_SETFD, FD_CLOEXEC) == 0)
+        return 0;
+    close(fds[0]);
+    close(fds[1]);
+    return -1;
+}
 
 static const char *ComposeIcon = "IcMcomp";
 
@@ -204,6 +219,25 @@ Boolean SendMsgDialog::reservedHeader(const char *label)
     return FALSE;
 }
 
+static void refreshCardDav()
+{
+    DtMailEnv error;
+    DtMail::MailRc *rc = theRoamApp.session()->session()->mailRc(error);
+    const char *url = NULL;
+    const char *user = NULL;
+    const char *ca_file = NULL;
+    rc->getValue(error, "carddavurl", &url);
+    if (url) {
+        error.clear();
+        rc->getValue(error, "carddavuser", &user);
+        rc->getValue(error, "carddavcafile", &ca_file);
+    }
+    dtmail_carddav_refresh(url, user, ca_file);
+    free((void *)ca_file);
+    free((void *)user);
+    free((void *)url);
+}
+
 
 SendMsgDialog::SendMsgDialog() 
 : MenuWindow ( "ComposeDialog", True ),
@@ -298,6 +332,7 @@ _header_list(16)
  
     if (NULL != value)
       free((void*) value);
+    refreshCardDav();
 
     // Load the header list with the predefined/fixed headers.
     //
@@ -1406,7 +1441,7 @@ SendMsgDialog::send_message(const char * trans_impl, int trans_type)
         {
 	    // Create the pipe between the RFCTransport::childHandler
 	    // and XtAppAddInput
-	    if (pipe(_transfds) < 0) {
+	    if (makeTransportWakePipe(_transfds) < 0) {
 	        // If this failed, make sure we try to initialize again later.
 		mail_exec_error.setError(DTME_NoMemory); 	
     		popupMemoryError (mail_exec_error);
@@ -1441,7 +1476,7 @@ SendMsgDialog::send_message(const char * trans_impl, int trans_type)
         {
 	    // Create the pipe between the RFCTransport::childHandler
 	    // and XtAppAddInput
-	    if (pipe(_transfds) < 0) {
+	    if (makeTransportWakePipe(_transfds) < 0) {
 	        // If this failed, make sure we try to initialize again later.
 		mail_exec_error.setError(DTME_NoMemory); 	
     		popupMemoryError (mail_exec_error);
@@ -4343,8 +4378,32 @@ SendMsgDialog::autocompleteChangedCB(Widget w, XtPointer client_data, XtPointer)
         return;
     }
 
+    refreshCardDav();
     char matches[8][256];
     int n = dtmail_contacts_match(tok, matches, 8);
+    if (n < 8) {
+        char remote[8][256];
+        int count = dtmail_carddav_match(tok, remote, 8);
+        for (int i = 0; i < count && n < 8; ++i) {
+            bool duplicate = false;
+            const char *addr = strrchr(remote[i], '<');
+            addr = addr ? addr + 1 : remote[i];
+            size_t length = strlen(addr);
+            if (length && addr[length - 1] == '>')
+                --length;
+            for (int j = 0; j < n; ++j) {
+                const char *existing = strrchr(matches[j], '<');
+                existing = existing ? existing + 1 : matches[j];
+                if (!strncasecmp(existing, addr, length) &&
+                    (existing[length] == '\0' || existing[length] == '>')) {
+                    duplicate = true;
+                    break;
+                }
+            }
+            if (!duplicate)
+                strcpy(matches[n++], remote[i]);
+        }
+    }
     XtFree(cur);
     if (n <= 0) {
         self->hideAutocompletePopup();

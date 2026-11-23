@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -457,8 +458,24 @@ dtmail_keyring_store(const char *acct_id, const char *kind, const char *secret)
         return -1;
 
     int pfd[2];
-    if (pipe(pfd) != 0)
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, pfd) != 0)
         return -1;
+
+    int send_flags = 0;
+#ifdef MSG_NOSIGNAL
+    send_flags = MSG_NOSIGNAL;
+#elif defined(SO_NOSIGPIPE)
+    int one = 1;
+    if (setsockopt(pfd[1], SOL_SOCKET, SO_NOSIGPIPE, &one, sizeof(one)) < 0) {
+        close(pfd[0]);
+        close(pfd[1]);
+        return -1;
+    }
+#else
+    close(pfd[0]);
+    close(pfd[1]);
+    return -1;
+#endif
 
     pid_t pid = fork();
     if (pid < 0) {
@@ -492,13 +509,24 @@ dtmail_keyring_store(const char *acct_id, const char *kind, const char *secret)
     }
 
     close(pfd[0]);
-    size_t slen = strlen(secret);
-    ssize_t wr = write(pfd[1], secret, slen);
-    (void)wr;
+    size_t length = strlen(secret);
+    size_t delivered = 0;
+    while (delivered < length) {
+        ssize_t written = send(pfd[1], secret + delivered, length - delivered, send_flags);
+        if (written < 0 && errno == EINTR)
+            continue;
+        if (written <= 0)
+            break;
+        delivered += static_cast<size_t>(written);
+    }
     close(pfd[1]);
 
-    int status = 0;
-    if (waitpid(pid, &status, 0) < 0)
+    int status;
+    pid_t waited;
+    do {
+        waited = waitpid(pid, &status, 0);
+    } while (waited < 0 && errno == EINTR);
+    if (waited != pid || delivered != length)
         return -1;
     return (WIFEXITED(status) && WEXITSTATUS(status) == 0) ? 0 : -1;
 }
@@ -546,6 +574,8 @@ dtmail_keyring_lookup(const char *acct_id, const char *kind, char *out, size_t o
     size_t total = 0;
     while (total + 1 < out_len) {
         ssize_t n = read(pfd[0], out + total, out_len - 1 - total);
+        if (n < 0 && errno == EINTR)
+            continue;
         if (n <= 0) break;
         total += (size_t)n;
     }
@@ -555,8 +585,12 @@ dtmail_keyring_lookup(const char *acct_id, const char *kind, char *out, size_t o
     while (total > 0 && (out[total - 1] == '\n' || out[total - 1] == '\r'))
         out[--total] = '\0';
 
-    int status = 0;
-    if (waitpid(pid, &status, 0) < 0)
+    int status;
+    pid_t waited;
+    do {
+        waited = waitpid(pid, &status, 0);
+    } while (waited < 0 && errno == EINTR);
+    if (waited != pid)
         return -1;
     return (WIFEXITED(status) && WEXITSTATUS(status) == 0 && total > 0) ? 0 : -1;
 }

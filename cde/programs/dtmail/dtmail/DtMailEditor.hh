@@ -71,6 +71,7 @@ class DtMailEditor : public UIComponent {
     void	manageAttachArea();
     void	unmanageAttachArea();
     void	setMsgHnd( DtMail::Message *);
+    void	showMessageSignature(DtMail::Message *);
     static void attachTransferCallback(Widget, XtPointer, XtPointer );
     void	attachDropRegister();
     void	attachDropEnable();
@@ -100,6 +101,7 @@ class DtMailEditor : public UIComponent {
     AttachArea	*_myAttachArea;
     Widget	_container;
     Widget	_separator;
+    Widget	_signatureLabel;
 
     Boolean	_editable;
     Boolean	_showAttachArea;

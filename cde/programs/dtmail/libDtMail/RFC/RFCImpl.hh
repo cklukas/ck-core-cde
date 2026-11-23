@@ -72,14 +72,10 @@ extern "C" {
 typedef struct waitentry {
         struct waitentry * next;
         int pid;
+        int status;
         void * data;
         SubProcessFinishedProc * proc;
 } waitentry_t;
- 
-typedef struct pipedata {
-        int pid;
-        int status;
-} pipedata_t;
 
 typedef enum { 
   DTMBX_LONGLOCK_FAILED_CANCEL,	   // failed to obtain lock, cancel operation
@@ -849,7 +845,7 @@ class RFCTransport : public DtMail::Transport {
     void closeLogFiles(int * files, int file_cnt);
 
     // These functions are needed to exec sendmail
-    static void childHandler(void);
+    static void childHandler(int);
     void signalRegister(void);
     int startSubprocess(DtMailEnv &error, char * cmd, 
 	Buffer & headers, Buffer & bodies, char **argv);

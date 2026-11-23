@@ -1179,6 +1179,7 @@ MsgScrollingList::display_message(
     DtMail::Message * msg = mbox->getMessage(mail_error, msg_num);
     DtMail::Envelope * env = msg->getEnvelope(mail_error);
 
+    parent()->get_editor()->showMessageSignature(msg);
 
     // There are multiple paths to this place:
     // 1) user has already read this message but is re-reading it;
@@ -1537,6 +1538,7 @@ MsgScrollingList::display_no_message()
     _selected_item_position = 0;
 
     parent()->get_editor()->textEditor()->clear_contents();
+    parent()->get_editor()->showMessageSignature(NULL);
     parent()->get_editor()->attachArea()->removeCurrentAttachments();
 }
 
@@ -1619,6 +1621,7 @@ MsgScrollingList::viewInSeparateWindow(DtMailEnv &mail_error)
 	DtMailEnv error;
 	DtMail::Message * msg = mbox->getMessage(error, msgHandle);
 	DtMail::Envelope * env = msg->getEnvelope(error);
+	newview->get_editor()->showMessageSignature(msg);
 	   
 	DtMailValueSeq title_value;
 	env->getHeader(error, DtMailMessageSubject, DTM_TRUE, title_value);

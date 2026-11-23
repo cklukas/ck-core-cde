@@ -74,8 +74,9 @@
   #define DTMAIL_FORK	fork
 #endif
 
-// pipe between childHandler and XtAppAddInput
-static int _transfds[2];
+// Pipe between childHandler and XtAppAddInput.
+static int _transport_read_fd = -1;
+static volatile sig_atomic_t _transport_write_fd = -1;
 // list of children that have been forked
 static waitentry_t *_waitlist;
 
@@ -122,10 +123,6 @@ RFCTransport::RFCTransport(DtMailEnv & error,
 
     _impl = strdup(impl);
 
-    // Set up the handlers so that we are notified when a child
-    // process exits and do the right thing.
-    signalRegister();
-    
     _error_proc = NULL;
     _smd = NULL;
 }
@@ -711,10 +708,11 @@ void
 RFCTransport::initTransportData(int fds[2], SubProcessFinishedProc proc,
 	void *ptr)
 {
-	_transfds[0] = fds[0];
-	_transfds[1] = fds[1];
+	_transport_read_fd = fds[0];
+	_transport_write_fd = fds[1];
 	_smd = ptr;
 	_error_proc = proc;
+	signalRegister();
 }
 
 void
@@ -860,94 +858,59 @@ RFCTransport::launchSendmail(DtMailEnv & error,
 void
 RFCTransport::processSendmailReturn(void)
 {
-	pipedata_t 	new_pd;
-	waitentry_t 	* ptr, ** prev;
-	int 		status;
-	DtMailEnv	error;
+    if (_transport_read_fd < 0)
+        return;
+    char notifications[128];
+    ssize_t count;
+    do {
+        count = read(_transport_read_fd, notifications, sizeof(notifications));
+    } while (count < 0 && errno == EINTR);
+    if (count <= 0)
+        return;
 
-	// Now that the child process (sendmail) has finished, read
-	// its pid and status from the transfds pipe.
-	if(read(_transfds[0], &new_pd,
-		sizeof(new_pd))!=sizeof(new_pd)) {
-		// ERROR - can't read pipe so just return?
-		error.setError (DTME_NoMemory);
-		error.logError(DTM_TRUE,
-		  "RFCTransport: processSendmailReturn(): Failed to read pipe\n");
-		return; 
-	}
-		
-	ptr =  _waitlist;
-	prev = &_waitlist;
-
-	// Loop through the waitlist which is a list of all the 
-	// child processes (sendmail) that the parent exec'd.  When
-	// the pid in the list matches the child process that has
-	// exited, we've found it.
-	while(ptr) {
-		if(ptr->pid == new_pd.pid) 
-		    break;
-		prev = &(ptr->next);
-		ptr = ptr->next;
-	}
-
-	// We couldn't match the pid so just do nothing.
-	if(!ptr) {
-		// ERROR just return
-		return;
-	}
-	
-	*prev = ptr->next;
-
-	// If the low byte of the status code returned from wait
-	// is 0, then the high byte is the status returned from
-	// the child.  If the low byte is anything else, there
-	// was an error.
-	if (lowByte(new_pd.status) == 0)
-	{
-	    status = highByte(new_pd.status);
-	}
-	else
-	{
-	    status = -1;
-	}
-
-	// Now that we've identified the child process, call the proc
-	// associated with it, pass the child's pid and status and any
-	// extra data.
-	ptr->proc(new_pd.pid, status, ptr->data);
-
-	// Cleanup
-	free((void*)ptr);
+    // Completion callbacks may submit another message. Detach completed
+    // entries before invoking any callback.
+    waitentry_t *completed = nullptr;
+    for (waitentry_t **link = &_waitlist; *link;) {
+        waitentry_t *entry = *link;
+        int status;
+        pid_t child;
+        do {
+            child = waitpid(entry->pid, &status, WNOHANG);
+        } while (child < 0 && errno == EINTR);
+        if (child == 0 || (child < 0 && errno != ECHILD)) {
+            link = &entry->next;
+            continue;
+        }
+        *link = entry->next;
+        entry->status = child == entry->pid && WIFEXITED(status) ? WEXITSTATUS(status) : -1;
+        entry->next = completed;
+        completed = entry;
+    }
+    while (completed) {
+        waitentry_t *entry = completed;
+        completed = entry->next;
+        if (entry->proc)
+            entry->proc(entry->pid, entry->status, entry->data);
+        free(entry);
+    }
 }
 
-//
-// When a child process finishes, child_handler writes its pid
-// and status onto the transfds pipe.  XtAppAddInput calls SendmailReturnProc
-// to read from this pipe.
-//
-// The reason we don't just call SendmailReturnProc directly is twofold.
-// The amount of processing should be kept to a minimum in a
-// signal handler and we don't really know where X is in it's
-// processing.  It may not be appropriate to pop a dialog up.
-void 
-RFCTransport::childHandler(void)
+// Notify Xt without reaping children owned by the spool, desktop keyring,
+// GnuPG or other users of waitpid. A full nonblocking pipe already holds a
+// notification, so there is no need to retry its write.
+void
+RFCTransport::childHandler(int)
 {
-	pipedata_t d;
-
-        // Now that the child is finished, its a zombie process
-        // until we do the wait.  wait for the child and get its
-        // pid and return status.  write these to the transfds pipe.
-	// Be sure to reap all processes so that none get lost.
-        while (d.pid = (int) waitpid ((pid_t) -1, &d.status, WNOHANG))
-        {
-            if (d.pid > 0)
-                SafeWrite(_transfds[1], &d, sizeof(d));
-            else
-            {
-                if (errno == ECHILD)
-                    break;
-            }
-        }
+    int saved_errno = errno;
+    if (_transport_write_fd >= 0) {
+        const char ready = 1;
+        ssize_t result;
+        do {
+            result = write(_transport_write_fd, &ready, sizeof(ready));
+        } while (result < 0 && errno == EINTR);
+    }
+    errno = saved_errno;
 }
 
 //
@@ -963,10 +926,10 @@ RFCTransport::signalRegister(void)
     if (initialized) return;
     initialized = 1;
 
-    act.sa_handler = (void (*)(int))&RFCTransport::childHandler;
+    act.sa_handler = RFCTransport::childHandler;
     sigemptyset(&act.sa_mask);
     sigaddset(&act.sa_mask, SIGCHLD);
-    act.sa_flags = 0;
+    act.sa_flags = SA_NOCLDSTOP;
    
     sigaction(SIGCHLD, &act, NULL);
 

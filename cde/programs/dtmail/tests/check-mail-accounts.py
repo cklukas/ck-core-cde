@@ -87,6 +87,15 @@ int main(int argc, char **argv) {
     assert(dtmail_keyring_lookup("work-gmail", "password", got, sizeof(got)) != 0);
     printf("ok    keyring-store-lookup-clear\n");
 
+    /* The helper may close stdin without consuming any bytes. */
+    char *large_secret = (char *)malloc(1024 * 1024);
+    assert(large_secret);
+    memset(large_secret, 'x', 1024 * 1024 - 1);
+    large_secret[1024 * 1024 - 1] = '\0';
+    assert(dtmail_keyring_store("work-gmail", "closed", large_secret) == -1);
+    free(large_secret);
+    printf("ok    closed-keyring-helper-is-an-error\n");
+
     return 0;
 }
 """
@@ -112,6 +121,8 @@ while i < len(args):
         i += 1
 key = f"{kv.get('service')}:{kv.get('account')}:{kv.get('kind')}"
 if cmd == "store":
+    if kv.get("kind") == "closed":
+        sys.exit(1)
     db[key] = sys.stdin.read()
     with open(db_path, "w") as f:
         json.dump(db, f)

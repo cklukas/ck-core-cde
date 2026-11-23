@@ -12,15 +12,21 @@ dtmail_CXXFLAGS = -I../include -I../include/MotifApp -I../include/utils \
 		  -I$(srcdir)/lib -I../../dthelp -DRELEASE_NOTES \
 		  -I$(top_srcdir)/programs/dthelp \
 		  -DDTMAIL_TOOLTALK -DDTEDITOR \
-		  $(LIBCURL_CFLAGS) -DHAVE_LIBCURL=1
+		  $(LIBCURL_CFLAGS) -DHAVE_LIBCURL=1 \
+		  $(DTMAIL_CARDDAV_CFLAGS) -DDTMAIL_CARDDAV_ENABLED=$(DTMAIL_CARDDAV_ENABLED) \
+		  $(DTMAIL_GMIME_CFLAGS) -DDTMAIL_GMIME_ENABLED=$(DTMAIL_GMIME_ENABLED) \
+		  $(DTMAIL_BODY_INDEX_CFLAGS) -DDTMAIL_BODY_INDEX_ENABLED=$(DTMAIL_BODY_INDEX_ENABLED)
 
 dtmail_LDADD = ../libDtMail/libDtMail.a ../MotifApp/libMotifApp.a \
-		$(DTCLIENTLIBS) $(XTOOLLIB) $(TIRPCLIB) $(LIBCURL_LIBS)
+		$(DTCLIENTLIBS) $(XTOOLLIB) $(TIRPCLIB) $(LIBCURL_LIBS) \
+		$(DTMAIL_CARDDAV_LIBS) $(DTMAIL_GMIME_LIBS) $(DTMAIL_BODY_INDEX_LIBS)
 
 dtmail_SOURCES = AccountSetupDialog.C            AccountSetupDialog.h \
 		 AddressAutocomplete.C           AddressAutocomplete.h \
 		 AliasListUiItem.C               AlternatesListUiItem.C \
+		 CardDavContacts.C               CardDavContacts.h \
 		 AntiCheckBoxUiItem.C            AttachArea.C \
+		 BodySearchDialog.C               BodySearchDialog.h \
 		 Attachment.C			 CheckBoxUiItem.C \
 		 CheckForMailUiItem.C		 ComposeCmds.C \
 		 CurlMailEngine.C                CurlMailEngine.h \
@@ -41,8 +47,10 @@ dtmail_SOURCES = AccountSetupDialog.C            AccountSetupDialog.h \
 		 ItipBanner.C                    ItipBanner.h \
 		 ListUiItem.C			 MailAccountStore.C \
 		 MailAccountStore.h              MailQuickFilter.C \
+		 MailBodyIndex.C                  MailBodyIndex.h \
 		 MailQuickFilter.h               MailRcSource.C \
 		 MailRetrievalOptions.C		 MailSession.C \
+		 MailSignature.C                  MailSignature.h \
 		 MailThreadRules.C               MailThreadRules.h \
 		 MoveMenuListUiItem.C            MsgHndArray.C \
 		 MsgScrollingList.C              NoOpCmd.C \
