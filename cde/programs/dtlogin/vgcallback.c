@@ -295,7 +295,9 @@ CleanupAndExit( Widget w, int exit_code )
     UnsecureDisplay();
     XSync (dpyinfo.dpy, 0);
 
-    XtCloseDisplay(dpyinfo.dpy);
+    /* This is the final display operation. Xt display teardown can
+     * encounter a connection error and replace the selected session status.
+     * Process exit closes the display connection. */
     exit (exit_code);
 }
 

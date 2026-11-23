@@ -323,7 +323,13 @@ lock, and Style Manager controls natively with Wayland:
   (`_DtSvcPamPutenv`) and copies `pam_getenvlist` (`_DtSvcPamGetenvlist`) into
   the user session environment, then starts either the chosen Wayland session or
   a dedicated seat X11 server for X11 sessions and respawns `dtgreet` cleanly on
-  logout.
+  logout. The greeter synchronizes its final display updates before returning
+  the selected session status. Process exit closes the X connection.
+
+The live greeter check uses Wayland keyboard input for authentication and
+`xdotool` on its Xwayland display to select the X11 session. Run it in a
+disposable guest with no active display manager and use the matching
+staged CDE and Motif build.
 
 ## Workstation & laptop status, desktop notifications, and Front Panel integration (`WP-09`)
 

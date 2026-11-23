@@ -863,6 +863,8 @@ def guest_build_and_verify(args: argparse.Namespace) -> int:
     dtl_tmp.mkdir(parents=True, exist_ok=True)
     dtl_env = os.environ.copy()
     dtl_env["TMPDIR"] = str(dtl_tmp)
+    dtl_env["MOTIF_INCLUDE"] = str(motif_pfx / "include")
+    dtl_env["DTLOGIN_CDE_STAGE"] = str(cde_stage / "usr" / "dt")
     dtl_env["LD_LIBRARY_PATH"] = f"{motif_pfx / 'lib'}:{fs_pfx / 'lib'}"
     subprocess.run(["make", "-j4", "-C", str(build_root / "cde-build" / "programs" / "dtlogin"), "check"], env=dtl_env, check=True)
 

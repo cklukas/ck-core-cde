@@ -379,14 +379,14 @@ def run_unit_checks(dtlogin_src: Path, cde_src: Path, cde_build: Path, cc: list[
         harness_c.write_text(UNIT_HARNESS_C, encoding="utf-8")
         exe = work / "unit_harness"
 
-        motif_inc = os.environ.get("MOTIF_INCLUDE", "/var/tmp/ck-wayland-build/wp00/motif-prefix/include")
+        motif_inc = os.environ.get("MOTIF_INCLUDE")
         inc_flags = [
             f"-I{dtlogin_src}",
             f"-I{cde_src / 'include'}",
             f"-I{cde_build / 'include'}",
             "-I/usr/include/tirpc",
         ]
-        if Path(motif_inc).is_dir():
+        if motif_inc and Path(motif_inc).is_dir():
             inc_flags.append(f"-I{motif_inc}")
 
         cmd = (
@@ -425,8 +425,8 @@ def run_unit_checks(dtlogin_src: Path, cde_src: Path, cde_build: Path, cc: list[
             raise SystemExit(f"unit harness failed: {out}")
 
 
-def find_greeter_pids() -> list[tuple[int, int, str, str]]:
-    """Return (pid, uid, comm, cmdline) for running dtwm-wayland / dtgreet processes."""
+def find_greeter_pids(work: Path, greeter_binary: Path) -> list[tuple[int, int, str, str]]:
+    """Return only the compositor and greeter processes started by this fixture."""
     found = []
     for entry in Path("/proc").iterdir():
         if not entry.name.isdigit():
@@ -439,7 +439,21 @@ def find_greeter_pids() -> list[tuple[int, int, str, str]]:
             raw = (entry / "cmdline").read_bytes()
             if not raw:
                 continue
-            cmdline = " ".join(p.decode("utf-8", "replace") for p in raw.rstrip(b"\x00").split(b"\x00"))
+            args = raw.rstrip(b"\x00").decode("utf-8", "surrogateescape").split("\x00")
+            if comm == "dtgreet":
+                executable = subprocess.run(
+                    ["sudo", "-n", "readlink", str(entry / "exe")],
+                    capture_output=True, text=True,
+                )
+                if executable.returncode or executable.stdout.strip() != str(greeter_binary):
+                    continue
+            elif "--status-file" in args:
+                index = args.index("--status-file") + 1
+                if index == len(args) or not Path(args[index]).is_relative_to(work):
+                    continue
+            else:
+                continue
+            cmdline = " ".join(args)
             st_txt = (entry / "status").read_text(encoding="utf-8", errors="replace")
             uid = -1
             for ln in st_txt.splitlines():
@@ -468,7 +482,9 @@ def run_live_daemon_test(
     if not dtgreet_elf.is_file():
         dtgreet_elf = cde_build / "programs" / "dtlogin" / "dtgreet"
 
-    test_user = "ckdtlogintest"
+    if subprocess.run(["pgrep", "-x", "dtlogin"], capture_output=True).returncode == 0:
+        raise SystemExit("Use a guest without an active dtlogin for the live seat check")
+    test_user = f"ckdt{os.getpid()}"
     test_pass = "waylanddt26"
 
     with tempfile.TemporaryDirectory(prefix="dtlogin-wl-live-", dir=tmp_dir) as work_s:
@@ -517,8 +533,7 @@ def run_live_daemon_test(
         # Build library path for uninstalled CDE + Motif ABI 9 + fs-lib
         lib_dirs = []
         for cand in (
-            Path("/var/tmp/ck-wayland-build/wp00/motif-prefix/lib"),
-            Path("/var/tmp/ck-wayland-build/wp00/fs-prefix/lib"),
+            *(Path(path) for path in os.environ.get("LD_LIBRARY_PATH", "").split(":") if path),
             *(cde_build / "lib").glob("*/.libs"),
             cde_build / "lib" / "tt" / "lib" / ".libs",
             Path("/usr/dt/lib"),
@@ -606,7 +621,7 @@ exit 0
         )
 
         # Configure Xresources (using real CDE dtlogin Xresources if present!), Xservers, and Xconfig
-        real_xres = cde_build / "programs" / "dtlogin" / "config" / "Xresources"
+        real_xres = cde_build / "programs" / "localized" / "C" / "config" / "Xresources"
         base_xres = real_xres.read_text(encoding="utf-8", errors="replace") if real_xres.is_file() else ""
         xres = cfg_dir / "Xresources"
         xres.write_text(
@@ -626,7 +641,7 @@ exit 0
         noop_sh.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
         noop_sh.chmod(0o755)
 
-        stage_icons = Path("/var/tmp/ck-wayland-build/wp00/cde-stage/usr/dt/appconfig/icons")
+        stage_icons = Path(os.environ.get("DTLOGIN_CDE_STAGE", "/usr/dt")) / "appconfig" / "icons"
         icon_cfg = ""
         if stage_icons.is_dir():
             icon_cfg = (
@@ -662,6 +677,7 @@ exit 0
         orig_pam_dtlogin = pam_dtlogin.read_text(encoding="utf-8") if pam_dtlogin.exists() else None
         orig_pam_greeter = pam_greeter.read_text(encoding="utf-8") if pam_greeter.exists() else None
         created_greeter_user = False
+        created_test_user = False
         dtlogin_proc: subprocess.Popen[bytes] | None = None
 
         try:
@@ -678,11 +694,11 @@ exit 0
                 created_greeter_user = True
             subprocess.run(["sudo", "-n", "mkdir", "-p", "/var/dt", "/run/dtlogin"], check=True)
 
-            if subprocess.run(["id", "-u", test_user], capture_output=True).returncode != 0:
-                subprocess.run(
-                    ["sudo", "-n", "useradd", "-m", "-s", "/bin/sh", test_user],
-                    check=True,
-                )
+            subprocess.run(
+                ["sudo", "-n", "useradd", "-m", "-s", "/bin/sh", test_user],
+                check=True,
+            )
+            created_test_user = True
             subprocess.run(
                 ["sudo", "-n", "chpasswd"],
                 input=f"{test_user}:{test_pass}\n",
@@ -767,7 +783,7 @@ exit 0
                         wl_s = kv.get("WAYLAND_DISPLAY", "")
                         x11_s = kv.get("DISPLAY", "")
                         if wl_s and x11_s:
-                            procs = find_greeter_pids()
+                            procs = find_greeter_pids(work, bin_dir / "dtgreet")
                             comp_p = [p for p in procs if p[2] == "dtwm-wayland" and "--greeter" in p[3] and p[1] == greeter_uid]
                             greet_p = [p for p in procs if p[2] == "dtgreet"]
                             last_diag = f"procs={procs}"
@@ -921,7 +937,7 @@ exit 0
             opt_candidates.sort()
             opt_btn = (opt_candidates[-1][1], opt_candidates[-1][2])
 
-            # Click Options button -> navigate down to Session cascade -> Right -> Down to slot 2 (CDE X11 / XLibre) -> Return
+            # Open the Options popup and locate its Session cascade.
             wlr_click(greeter_rt2, wl_sock2, opt_btn[0], opt_btn[1])
             time.sleep(0.35)
             # Check popped-up override-redirect Options menu to locate Session cascade item
@@ -939,33 +955,30 @@ exit 0
             if not or_menus:
                 raise SystemExit(f"Options popup menu did not map after clicking {opt_btn}:\n{menu_tree}")
 
-            # Hover/click Session cascade in options_menu (if Language item is present above Session, Session is ~42px down; otherwise ~14px down)
+            # With the fixture's two languages, Options has Language,
+            # Session and Reset Login Screen in that order.
             omx, omy, omw, omh = or_menus[-1]
-            # Try y offsets inside options_menu until second override-redirect submenu (session_menu) appears
-            sess_menu = None
-            for y_off in (16, 38, 52):
-                if y_off >= omh:
-                    continue
-                wlr_click(greeter_rt2, wl_sock2, omx + omw // 2, omy + y_off)
-                time.sleep(0.25)
-                sub_tree = subprocess.check_output(
-                    ["sudo", "-n", "env", f"DISPLAY={x11_dpy2}", str(x11_inspect_bin)],
-                    text=True,
-                )
-                subs = []
-                for ln in sub_tree.splitlines():
-                    m = re.search(r"x=(\d+)\s+y=(\d+)\s+w=(\d+)\s+h=(\d+)\s+or=1", ln)
-                    if m:
-                        sx, sy, sw, sh = (int(m.group(i)) for i in range(1, 5))
-                        if sw >= 60 and sh >= 30 and (sx, sy) != (omx, omy):
-                            subs.append((sx, sy, sw, sh))
-                if subs:
-                    sess_menu = subs[-1]
-                    break
-            if not sess_menu:
-                raise SystemExit(f"session_menu cascade did not open from options_menu {or_menus[-1]}")
+            def x11_input(*args: str):
+                subprocess.run(["sudo", "-n", "env", f"DISPLAY={x11_dpy2}", "xdotool", *args],
+                               check=True)
+            x11_input("mousemove", str(omx + omw - 12), str(omy + omh // 2))
+            time.sleep(0.45)
+            x11_input("click", "1")
+            time.sleep(0.5)
+            sub_tree = subprocess.check_output(
+                ["sudo", "-n", "env", f"DISPLAY={x11_dpy2}", str(x11_inspect_bin)],
+                text=True,
+            )
+            submenus = []
+            for ln in sub_tree.splitlines():
+                match = re.search(r"x=(\d+)\s+y=(\d+)\s+w=(\d+)\s+h=(\d+)\s+or=1", ln)
+                if match:
+                    sx, sy, sw, sh = map(int, match.groups())
+                    if sw >= 60 and sh >= 30 and (sx, sy) != (omx, omy):
+                        submenus.append((sx, sy, sw, sh))
+            if len(submenus) != 1:
+                raise SystemExit(f"Expected one Session submenu from {or_menus[-1]}:\n{sub_tree}")
 
-            # In session_menu, items are: [1] CDE (Wayland) (~14px), [2] CDE (X11 / XLibre) (~38px), [3] Failsafe
             if screenshot_out is not None:
                 menu_shot = work / "shot-menu.png"
                 subprocess.run(
@@ -983,8 +996,9 @@ exit 0
                 subprocess.run(["sudo", "-n", "chmod", "0644", str(menu_shot)], check=True)
                 shutil.copy2(menu_shot, screenshot_out.with_name(screenshot_out.stem + "-menu.png"))
 
-            # In session_menu, item 1 (CDE Wayland) is focused; press Down + Return to select item 2 (CDE X11 / XLibre)!
-            wlr_key(greeter_rt2, wl_sock2, "D")
+            # The Session menu lists Wayland, X11 and Failsafe in that order.
+            sx, sy, sw, sh = submenus[0]
+            x11_input("mousemove", str(sx + sw // 2), str(sy + sh // 2), "click", "1")
             time.sleep(0.35)
 
             # Focus login_text and enter credentials for CDE (X11 / XLibre)
@@ -1024,12 +1038,13 @@ exit 0
             # Stop dtlogin cleanly and verify zero leaked processes
             subprocess.run(["sudo", "-n", "kill", "-TERM", str(dtlogin_proc.pid)], check=False)
             for _ in range(40):
-                if dtlogin_proc.poll() is not None and not find_greeter_pids():
+                if dtlogin_proc.poll() is not None and not find_greeter_pids(work, bin_dir / "dtgreet"):
                     break
                 time.sleep(0.15)
-            dtlogin_proc = None
+            if dtlogin_proc.poll() is None:
+                raise SystemExit("The dtlogin fixture daemon did not exit")
 
-            leaked = find_greeter_pids()
+            leaked = find_greeter_pids(work, bin_dir / "dtgreet")
             if leaked:
                 raise SystemExit(f"Leaked greeter processes after dtlogin shutdown: {leaked}")
 
@@ -1052,7 +1067,8 @@ exit 0
                     subprocess.run(["sudo", "-n", "pkill", "-KILL", "-f", str(bin_dir / "dtlogin")], check=False)
             subprocess.run(["sudo", "-n", "pkill", "-TERM", "-f", str(work)], check=False)
             subprocess.run(["sudo", "-n", "rm", "-rf", str(rt_base), str(user_rt_base), str(rec_dir)], check=False)
-            subprocess.run(["sudo", "-n", "userdel", "-rf", test_user], capture_output=True)
+            if created_test_user:
+                subprocess.run(["sudo", "-n", "userdel", "-rf", test_user], capture_output=True)
             if created_greeter_user:
                 subprocess.run(["sudo", "-n", "userdel", "_dtgreeter"], capture_output=True)
             if orig_pam_dtlogin is None:
@@ -1084,7 +1100,7 @@ def main() -> int:
 
     comp_bin = Path(args.compositor)
     can_sudo = subprocess.run(["sudo", "-n", "true"], capture_output=True).returncode == 0
-    has_tools = all(shutil.which(t) for t in ("wlrctl", "grim", "Xvfb", "xrdb"))
+    has_tools = all(shutil.which(t) for t in ("wlrctl", "grim", "Xvfb", "xrdb", "xdotool"))
 
     live_summary: dict[str, object] = {"executed": False}
     if comp_bin.is_file() and can_sudo and has_tools:

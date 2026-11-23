@@ -57,7 +57,7 @@ provision:
       libfontconfig1-dev libfreetype-dev libharfbuzz-dev libicu-dev \
       librsvg2-dev libdbus-1-dev libjpeg-dev libpng-dev liblmdb-dev libarchive-dev \
       libtirpc-dev libpam0g-dev libutempter-dev tcl-dev ksh93u+m \
-      x11-xserver-utils x11-utils xfonts-utils xfonts-base xfonts-100dpi xbitmaps \
+      x11-xserver-utils x11-utils xfonts-utils xfonts-base xfonts-100dpi xbitmaps xdotool \
       ncompress opensp rpcsvc-proto rpcbind ncurses-bin xvfb \
       libcairo2-dev libasound2-dev libpulse-dev libfluidsynth-dev libcurl4-openssl-dev libxml2-dev \
       libgmime-3.0-dev libsqlite3-dev gpgsm \
