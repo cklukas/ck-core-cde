@@ -43,7 +43,8 @@ CASES=("array-valid","array-negative","array-over-limit","path-valid",
        "file-path-link-absolute","file-path-link-long","time-format-valid","write-done",
        "write-error","write-path","write-position","status-write",
        "timer-valid","timer-truncated-time","timer-truncated-boolean",
-       "timer-invalid-boolean","timer-write")
+       "timer-invalid-boolean","timer-write","worker-disconnect-head",
+       "worker-disconnect-interior","worker-untracked")
 
 def balanced(text,start,opening,closing):
     depth=0;i=start
@@ -95,6 +96,8 @@ def main():
     write_position_callback=extract(texts["Directory.c"],"WritePosInfoPipeCallback")
     timer_process=extract(texts["Directory.c"],"TimerEventProcess")
     timer_callback=extract(texts["Directory.c"],"TimerPipeCallback")
+    scheduler=extract(texts["Directory.c"],"ScheduleDirectoryActivity")
+    fork_error=scheduler.split("if (pid == -1)", 1)[1].split("if (pid == 0)", 1)[0]
     position_initializer=extract(texts["Directory.c"],"InitializePositionFileName")
     producers=read_process+update_all+update_some
     contract={
@@ -148,6 +151,13 @@ def main():
                                   "strcpy(logical_type_buf" not in texts["Directory.c"],
         "timer_malformed_retires_sticky":"StickyProcDiscard(activity" in timer_callback and
                                          "directory->was_up_to_date = False" in timer_callback,
+        "send_failure_retires_before_replacement":scheduler.index(
+            "StickyProcDiscard(activity, p, False);") < scheduler.index("pid = fork();"),
+        "fork_failure_releases_pipes":all(
+            f"close(pipe_{pipe}_fd[{end}]);" in fork_error
+            for pipe in ("s2m", "m2s") for end in range(2)),
+        "only_started_sticky_workers_are_linked":scheduler.index(
+            "ActivityTable[activity].sticky_procs = p;") > scheduler.index("if (pid == 0)"),
     }
     if not all(contract.values()):raise ValueError(f"directory control contract mismatch: {contract}")
     names=(("FileOp.c","PipeRead"),("FileOp.c","PipeReadExact"),
@@ -161,7 +171,8 @@ def main():
            ("Directory.c","DirectoryResolveLinkPath"),
            ("Directory.c","DirectoryFormatFileTime"),
            ("Directory.c","DirectoryWriteStatus"),("Directory.c","DirectoryWriteTimerResult"),
-           ("Directory.c","DirectoryReadTimerResult"),("Directory.c","DirectoryLoadPositionInfo"))
+           ("Directory.c","DirectoryReadTimerResult"),("Directory.c","DirectoryLoadPositionInfo"),
+           ("Directory.c","StickyProcDiscard"))
     functions="\n\n".join(extract(texts[file],name) for file,name in names)
     fixture=(tests/"directory-control-packets.c").read_text().replace("/* PRODUCTION_FUNCTIONS */",functions)
     generated=work/"directory-control-packets.c";generated.write_text(fixture);binary=work/"directory-control-packets"

@@ -67,6 +67,9 @@ Refresh-time child paths and cached modified-subdirectory paths use the same
 bounded join. Attribute view also bounds owner, group and symbolic-link display
 text and shows a placeholder if an unusual timestamp cannot be converted,
 rather than allowing account data or formatting failures to corrupt the row.
+A disconnected background worker is removed from the refresh pool and both
+pipe descriptors are closed before it can be replaced. A failed worker launch
+releases the new pipes and leaves the request queued for a later refresh.
 Copy, move and link dialogs compose their selected-object captions as Motif
 strings, so a translated caption or long object name is not copied through a
 fixed text buffer. Their destination and preview paths are joined with explicit

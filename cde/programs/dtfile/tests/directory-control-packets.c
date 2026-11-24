@@ -1,5 +1,7 @@
 #include <errno.h>
+#include <fcntl.h>
 #include <limits.h>
+#include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,6 +29,20 @@ typedef struct {
     Position y;
     int stacking_order;
 } PositionInfo;
+
+typedef enum { activity_checking_dir } ActivityStatus;
+
+typedef struct StickyProcDesc {
+    pid_t child;
+    int pipe_s2m_fd;
+    int pipe_m2s_fd;
+    Boolean idle;
+    struct StickyProcDesc *next;
+} StickyProcDesc;
+
+static struct {
+    StickyProcDesc *sticky_procs;
+} ActivityTable[1];
 
 static void *test_calloc(size_t n,size_t s){void *p=calloc(n,s);if(!p)abort();return p;}
 static void *test_malloc(size_t s){void *p=malloc(s);if(!p)abort();return p;}
@@ -175,6 +191,51 @@ static void timer_case(const char *name)
     else CHECK(rc==-1&&decoded_status==EPROTO&&decoded_stamp==0&&decoded_changed==False);
 }
 
+static void worker_case(const char *name)
+{
+    int disconnected_pipe[2], active_pipe[2];
+    if (pipe(disconnected_pipe) != 0 || pipe(active_pipe) != 0)
+        abort();
+
+    StickyProcDesc *disconnected = test_calloc(1, sizeof(*disconnected));
+    disconnected->child = getpid();
+    disconnected->pipe_s2m_fd = disconnected_pipe[0];
+    disconnected->pipe_m2s_fd = disconnected_pipe[1];
+    disconnected->idle = True;
+    StickyProcDesc active = {
+        .pipe_s2m_fd = active_pipe[0],
+        .pipe_m2s_fd = active_pipe[1],
+    };
+
+    if (strcmp(name, "worker-untracked") == 0) {
+        ActivityTable[activity_checking_dir].sticky_procs = &active;
+        StickyProcDiscard(activity_checking_dir, disconnected, False);
+        CHECK(fcntl(disconnected_pipe[0], F_GETFD) >= 0);
+        CHECK(fcntl(disconnected_pipe[1], F_GETFD) >= 0);
+        close(disconnected_pipe[0]);
+        close(disconnected_pipe[1]);
+        free(disconnected);
+    } else {
+        if (strcmp(name, "worker-disconnect-head") == 0) {
+            ActivityTable[activity_checking_dir].sticky_procs = disconnected;
+            disconnected->next = &active;
+        } else {
+            ActivityTable[activity_checking_dir].sticky_procs = &active;
+            active.next = disconnected;
+        }
+        StickyProcDiscard(activity_checking_dir, disconnected, False);
+        CHECK(fcntl(disconnected_pipe[0], F_GETFD) == -1 && errno == EBADF);
+        CHECK(fcntl(disconnected_pipe[1], F_GETFD) == -1 && errno == EBADF);
+    }
+    CHECK(ActivityTable[activity_checking_dir].sticky_procs == &active);
+    CHECK(active.next == nullptr);
+    CHECK(fcntl(active_pipe[0], F_GETFD) >= 0);
+    CHECK(fcntl(active_pipe[1], F_GETFD) >= 0);
+    ActivityTable[activity_checking_dir].sticky_procs = nullptr;
+    close(active_pipe[0]);
+    close(active_pipe[1]);
+}
+
 int main(int argc,char **argv)
 {
     const char *name;if(argc!=2)return 2;name=argv[1];
@@ -186,6 +247,7 @@ int main(int argc,char **argv)
     else if(!strcmp(name,"time-format-valid"))time_case();
     else if(!strncmp(name,"write-",6))writer_case(name);
     else if(!strncmp(name,"timer-",6)||!strcmp(name,"status-write"))timer_case(name);
+    else if(!strncmp(name,"worker-",7))worker_case(name);
     else return 2;
     if(!failed)printf("PASS %s\n",name);
     return failed;

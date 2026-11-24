@@ -4900,7 +4900,8 @@ StickyProcIdle(
 }
 
 static void
-StickyProcDiscard(ActivityStatus activity, StickyProcDesc *sticky_proc)
+StickyProcDiscard(ActivityStatus activity, StickyProcDesc *sticky_proc,
+                  Boolean terminate)
 {
    StickyProcDesc **entry;
 
@@ -4908,10 +4909,13 @@ StickyProcDiscard(ActivityStatus activity, StickyProcDesc *sticky_proc)
    entry = &ActivityTable[activity].sticky_procs;
    while (*entry != nullptr && *entry != sticky_proc)
       entry = &(*entry)->next;
-   if (*entry == sticky_proc) *entry = sticky_proc->next;
+   if (*entry == nullptr) return;
+
+   *entry = sticky_proc->next;
    close(sticky_proc->pipe_s2m_fd);
    close(sticky_proc->pipe_m2s_fd);
-   kill(sticky_proc->child, SIGKILL);
+   if (terminate)
+      kill(sticky_proc->child, SIGKILL);
    XtFree((char *)sticky_proc);
 }
 
@@ -4941,7 +4945,7 @@ TimerPipeCallback(
       FileOpProtocolError(toplevel);
       XtRemoveInput(*id);
       if (pipe_data->sticky_proc != nullptr)
-         StickyProcDiscard(activity, pipe_data->sticky_proc);
+         StickyProcDiscard(activity, pipe_data->sticky_proc, True);
       else
       {
          close(*fd);
@@ -5637,26 +5641,11 @@ ScheduleDirectoryActivity(
 
       /* Send the directory name to the sticky proc */
 
-      if (PipeWriteString(p->pipe_m2s_fd, directory->path_name) < 0) {
-        StickyProcDesc *d;
-
-        /* the pipe is broken, remove the old proc then start a new one */
-        for (d = ActivityTable[activity].sticky_procs; d && p; d = d->next) {
-          if (d == p)
-          {
-            /* the proc listed 1st is dead, remove it */
-            ActivityTable[activity].sticky_procs = p->next;
-            XtFree((void *)p);
-            p = nullptr;
-          }
-          else if (d->next == p)
-          {
-            /* the process "p" is dead, remove it */
-            d->next = p->next;
-            XtFree((void *)p);
-            p = nullptr;
-          }
-        }
+      if (PipeWriteString(p->pipe_m2s_fd, directory->path_name) < 0)
+      {
+         /* Retire the disconnected worker before allocating its replacement. */
+         StickyProcDiscard(activity, p, False);
+         p = nullptr;
       }
       else
       {
@@ -5697,15 +5686,6 @@ ScheduleDirectoryActivity(
              directory->last_check = save_last_check;
              return;
          }
-
-         /* add entry to the list of sticky procs */
-         p = (StickyProcDesc *) XtMalloc(sizeof(StickyProcDesc));
-         p->next = ActivityTable[activity].sticky_procs;
-         ActivityTable[activity].sticky_procs = p;
-
-         p->pipe_s2m_fd = pipe_s2m_fd[0];
-         p->pipe_m2s_fd = pipe_m2s_fd[1];
-         p->idle = False;
       }
 
       /* fork a background process */
@@ -5723,18 +5703,15 @@ ScheduleDirectoryActivity(
 	  directory->activity = activity_idle;
           directory->last_check = save_last_check;
 
-          /* close unused pipe connections */
-          close(pipe_s2m_fd[0]);    /* child won't read from this pipe */
-          close(pipe_s2m_fd[1]);    /* parent won't write to this pipe */
+          /* Release both ends because no child was started. */
+          close(pipe_s2m_fd[0]);
+          close(pipe_s2m_fd[1]);
           if (sticky)
-	  {
-             close(pipe_m2s_fd[1]); /* child won't write to this pipe */
-             close(pipe_m2s_fd[0]); /* parent won't read from this pipe */
-             p->pipe_s2m_fd = 0;
-             p->pipe_m2s_fd = 0;
-             p->idle = True;
-	  }
-	  return;
+          {
+             close(pipe_m2s_fd[0]);
+             close(pipe_m2s_fd[1]);
+          }
+          return;
       }
 
       if (pid == 0)
@@ -5783,7 +5760,15 @@ ScheduleDirectoryActivity(
 
       /* parent process */
       if (sticky)
+      {
+         p = (StickyProcDesc *) XtMalloc(sizeof(StickyProcDesc));
+         p->next = ActivityTable[activity].sticky_procs;
+         p->pipe_s2m_fd = pipe_s2m_fd[0];
+         p->pipe_m2s_fd = pipe_m2s_fd[1];
+         p->idle = False;
          p->child = pid;
+         ActivityTable[activity].sticky_procs = p;
+      }
 
       /*
        * If a directory read or update was started:

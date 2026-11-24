@@ -1,4 +1,6 @@
 2026-11-24
+- Retire disconnected File Manager refresh workers and release their pipe
+  descriptors. Register reusable workers only after a successful fork.
 - Record the running X server's executable path and digest for signed
   Ubuntu package verification and live greeter handoffs. Both checks can
   select an XLibre build of Xvfb. Wait for installed Wayland windows before
