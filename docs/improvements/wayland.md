@@ -117,6 +117,15 @@ framing or interaction rules.
   bare `Ctrl+Alt` chord (or `Ctrl+Alt+Escape`) releases both pointer lock and
   shortcut inhibition immediately, and clicking back inside the client area
   cleanly re-engages persistent constraints;
+- **Server-side cursor shapes (`wp_cursor_shape_v1`), touchscreen (`wl_touch`), and graphics tablet / stylus (`zwp_tablet_v2`)**:
+  `libXm` binds `wp_cursor_shape_manager_v1` (requesting crisp server-rendered
+  HiDPI cursor shapes for standard `XC_*` glyph cursors while uploading custom
+  bitmap cursors) and `wl_touch` (mapping single-finger taps/drags to `Button1`
+  and two-finger panning to smooth scrolling), while `dtwm-wayland` attaches
+  touchscreens, `zwp_tablet_v2` styluses (pressure, tilt, distance, rotation,
+  slider, barrel buttons, and `get_tablet_tool_v2` cursor shapes), and
+  ExpressKey tablet pads (buttons, rings, and strips) with automatic pointer and
+  CDE titlebar/border drag fallback for non-tablet windows;
 - Left-clicking the desktop background clears active-window focus, while
   right-clicking opens the 3D-beveled **Workspace Menu** (supporting both
   click-to-post and Motif press-drag-release, plus `Up`/`Down`/`Enter`/`Esc`

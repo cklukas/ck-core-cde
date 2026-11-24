@@ -40,6 +40,9 @@
 #endif
 #endif
 
+#include <wlr/interfaces/wlr_tablet_pad.h>
+#include <wlr/interfaces/wlr_tablet_tool.h>
+#include <wlr/interfaces/wlr_touch.h>
 #include <wlr/util/log.h>
 #include <xcb/xcb_icccm.h>
 #include <xkbcommon/xkbcommon.h>
@@ -97,6 +100,59 @@ typedef struct {
     struct wlr_keyboard_shortcuts_inhibitor_v1 *inhibitor;
     struct wl_listener destroy;
 } DtwmShortcutsInhibitor;
+
+typedef struct {
+    struct wl_list link;
+    DtwmServer *server;
+    struct wlr_touch *wlr_touch;
+    struct wl_listener destroy;
+} DtwmTouch;
+
+typedef struct {
+    struct wl_list link;
+    DtwmServer *server;
+    struct wlr_tablet *wlr_tablet;
+    struct wlr_tablet_v2_tablet *tablet_v2;
+    struct wl_listener destroy;
+} DtwmTablet;
+
+typedef struct {
+    struct wl_list link;
+    DtwmServer *server;
+    struct wlr_tablet_pad *wlr_pad;
+    struct wlr_tablet_v2_tablet_pad *pad_v2;
+    struct wlr_tablet_v2_tablet *attached_tablet_v2;
+    struct wlr_surface *current_surface;
+    struct wl_listener button;
+    struct wl_listener ring;
+    struct wl_listener strip;
+    struct wl_listener attach_tablet;
+    struct wl_listener surface_destroy;
+    struct wl_listener destroy;
+} DtwmTabletPad;
+
+typedef struct {
+    struct wl_list link;
+    DtwmServer *server;
+    struct wlr_tablet_tool *wlr_tool;
+    struct wlr_tablet_v2_tablet_tool *tool_v2;
+    double tilt_x;
+    double tilt_y;
+    bool fallback_btn_down;
+    struct wl_listener set_cursor;
+    struct wl_listener destroy;
+} DtwmTabletTool;
+
+#define DTWM_MAX_TOUCH_SLOTS 16
+typedef struct {
+    bool active;
+    int32_t touch_id;
+    struct wlr_surface *surface;
+    struct wl_listener surface_destroy;
+} DtwmTouchSlot;
+
+static DtwmTouchSlot g_touch_slots[DTWM_MAX_TOUCH_SLOTS];
+static void sync_tablet_pads_for_focused_view(DtwmServer *server);
 
 static uint32_t pointer_button_bit(uint32_t btn) {
     if (btn >= BTN_MOUSE && btn < BTN_MOUSE + 16u) {
@@ -608,6 +664,7 @@ static void clear_active_focus(DtwmServer *server) {
     dtwm_ime_set_focus(server, nullptr);
     dtwm_publish_active_window_box(server);
     sync_input_capture_for_focused_view(server, false);
+    sync_tablet_pads_for_focused_view(server);
 }
 
 static uint64_t dtwm_now_nsec(void) {
@@ -728,6 +785,7 @@ static void focus_view_ex(
     dtwm_a11y_notify_keyboard_enter(server, surface, kbd);
     dtwm_ime_set_focus(server, surface);
     sync_input_capture_for_focused_view(server, true);
+    sync_tablet_pads_for_focused_view(server);
 }
 
 static void focus_view(DtwmServer *server, DtwmView *view, struct wlr_surface *surface) {
@@ -3584,6 +3642,75 @@ static void handle_cursor_motion_absolute(struct wl_listener *listener, void *da
     process_cursor_motion(server, t_ms);
 }
 
+static bool finish_interactive_grab(DtwmServer *server) {
+    if (!server || server->cursor_mode == DTWM_CURSOR_PASSTHROUGH) {
+        return false;
+    }
+    if (server->grab_ignore_next_release) {
+        server->grab_ignore_next_release = false;
+        return true;
+    }
+    bool had_wireframe = server->wireframe_active;
+    struct wlr_box pending = server->pending_grab_box;
+    hide_wireframe_outline(server);
+
+    if (server->cursor_mode == DTWM_CURSOR_MOVE && server->grabbed_view) {
+        if (server->grabbed_view->x != server->grab_orig_box.x ||
+            server->grabbed_view->y != server->grab_orig_box.y) {
+            server->last_title_click_view = nullptr;
+        }
+        if (server->active_snap != DTWM_SNAP_NONE) {
+            struct wlr_box sbox = {0};
+            DtwmSnapZone z = compute_snap_zone(server, server->cursor->x, server->cursor->y, &sbox);
+            update_snap_preview(server, DTWM_SNAP_NONE, nullptr);
+            if (z != DTWM_SNAP_NONE) {
+                DtwmView *v = server->grabbed_view;
+                v->saved_x = server->grab_orig_box.x;
+                v->saved_y = server->grab_orig_box.y;
+                v->saved_w = server->grab_orig_box.width;
+                v->saved_h = server->grab_orig_box.height;
+                v->has_saved_geom = true;
+                int l, t, r, b;
+                dtwm_view_insets(v, &l, &t, &r, &b);
+                view_apply_geometry(v, sbox.x, sbox.y, sbox.width - l - r, sbox.height - t - b);
+            }
+        } else if (had_wireframe) {
+            DtwmView *v = server->grabbed_view;
+            v->x = pending.x;
+            v->y = pending.y;
+            if (v->frame_tree) {
+                wlr_scene_node_set_position(&v->frame_tree->node, v->x, v->y);
+            }
+            sync_xwayland_client_pos(v);
+            dtwm_publish_active_window_box(server);
+        }
+    } else if (server->cursor_mode == DTWM_CURSOR_RESIZE && server->grabbed_view) {
+        DtwmView *rv = server->grabbed_view;
+        if (rv->kind == DTWM_VIEW_XDG && rv->xdg_toplevel &&
+            rv->xdg_toplevel->base->initialized) {
+            wlr_xdg_toplevel_set_resizing(rv->xdg_toplevel, false);
+        }
+        if (had_wireframe) {
+            rv->resize_inflight = true;
+            rv->has_queued_resize = false;
+            rv->resize_sent_ms = dtwm_now_msec();
+            if (rv->kind == DTWM_VIEW_XDG && rv->mapped && rv->xdg_toplevel) {
+                view_send_xdg_interactive_resize(rv, pending.width, pending.height);
+            } else {
+                view_apply_geometry(rv, pending.x, pending.y, pending.width, pending.height);
+            }
+        } else if (!rv->resize_inflight && rv->has_queued_resize) {
+            view_dispatch_queued_resize(rv, true);
+        } else if (!rv->resize_inflight && !rv->has_queued_resize) {
+            rv->active_resize_edges = 0;
+        }
+    }
+    server->cursor_mode = DTWM_CURSOR_PASSTHROUGH;
+    server->grabbed_view = nullptr;
+    update_snap_preview(server, DTWM_SNAP_NONE, nullptr);
+    return true;
+}
+
 static void handle_cursor_button(struct wl_listener *listener, void *data) {
     DtwmServer *server = wl_container_of(listener, server, cursor_button);
     struct wlr_pointer_button_event *ev = data;
@@ -3668,68 +3795,7 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
             }
             return;
         }
-        if (server->cursor_mode != DTWM_CURSOR_PASSTHROUGH && server->grab_ignore_next_release) {
-            server->grab_ignore_next_release = false;
-            return;
-        }
-        bool had_wireframe = server->wireframe_active;
-        struct wlr_box pending = server->pending_grab_box;
-        hide_wireframe_outline(server);
-
-        if (server->cursor_mode == DTWM_CURSOR_MOVE && server->grabbed_view) {
-            if (server->active_snap != DTWM_SNAP_NONE) {
-                struct wlr_box sbox = {0};
-                DtwmSnapZone z = compute_snap_zone(server, server->cursor->x, server->cursor->y, &sbox);
-                update_snap_preview(server, DTWM_SNAP_NONE, nullptr);
-                if (z != DTWM_SNAP_NONE) {
-                    DtwmView *v = server->grabbed_view;
-                    v->saved_x = server->grab_orig_box.x;
-                    v->saved_y = server->grab_orig_box.y;
-                    v->saved_w = server->grab_orig_box.width;
-                    v->saved_h = server->grab_orig_box.height;
-                    v->has_saved_geom = true;
-                    int l, t, r, b;
-                    dtwm_view_insets(v, &l, &t, &r, &b);
-                    view_apply_geometry(v, sbox.x, sbox.y, sbox.width - l - r, sbox.height - t - b);
-                }
-            } else if (had_wireframe) {
-                DtwmView *v = server->grabbed_view;
-                v->x = pending.x;
-                v->y = pending.y;
-                if (v->frame_tree) {
-                    wlr_scene_node_set_position(&v->frame_tree->node, v->x, v->y);
-                }
-                sync_xwayland_client_pos(v);
-                dtwm_publish_active_window_box(server);
-            }
-        } else if (server->cursor_mode == DTWM_CURSOR_RESIZE && server->grabbed_view) {
-            DtwmView *rv = server->grabbed_view;
-            if (rv->kind == DTWM_VIEW_XDG && rv->xdg_toplevel &&
-                rv->xdg_toplevel->base->initialized) {
-                wlr_xdg_toplevel_set_resizing(rv->xdg_toplevel, false);
-            }
-            if (had_wireframe) {
-                rv->resize_inflight = true;
-                rv->has_queued_resize = false;
-                rv->resize_sent_ms = dtwm_now_msec();
-                if (rv->kind == DTWM_VIEW_XDG && rv->mapped && rv->xdg_toplevel) {
-                    view_send_xdg_interactive_resize(rv, pending.width, pending.height);
-                } else {
-                    view_apply_geometry(rv, pending.x, pending.y, pending.width, pending.height);
-                }
-            } else if (!rv->resize_inflight && rv->has_queued_resize) {
-                view_dispatch_queued_resize(rv, true);
-            } else if (!rv->resize_inflight && !rv->has_queued_resize) {
-                rv->active_resize_edges = 0;
-            }
-            /* If rv->resize_inflight is true, leave rv->has_queued_resize and
-             * rv->active_resize_edges set so xdg_toplevel_commit anchors and
-             * dispatches the single final size once the in-flight frame commits. */
-        }
-        if (server->cursor_mode != DTWM_CURSOR_PASSTHROUGH) {
-            server->cursor_mode = DTWM_CURSOR_PASSTHROUGH;
-            server->grabbed_view = nullptr;
-            update_snap_preview(server, DTWM_SNAP_NONE, nullptr);
+        if (finish_interactive_grab(server)) {
             return;
         }
         wlr_seat_pointer_notify_button(server->seat, t_ms, btn, ev->state);
@@ -4074,6 +4140,644 @@ static void handle_cursor_hold_end(struct wl_listener *listener, void *data) {
     if (server->pointer_gestures && !server->session_locked) {
         wlr_pointer_gestures_v1_send_hold_end(server->pointer_gestures, server->seat, ev->time_msec, ev->cancelled);
     }
+}
+
+/* --- Touchscreen (wl_touch) & Graphics Tablet / Stylus (zwp_tablet_v2) --- */
+static void handle_touch_slot_surface_destroy(struct wl_listener *listener, void *data) {
+    (void)data;
+    DtwmTouchSlot *slot = wl_container_of(listener, slot, surface_destroy);
+    wl_list_remove(&slot->surface_destroy.link);
+    wl_list_init(&slot->surface_destroy.link);
+    slot->surface = nullptr;
+}
+
+static DtwmTouchSlot *find_or_alloc_touch_slot(int32_t touch_id, bool create) {
+    DtwmTouchSlot *free_slot = nullptr;
+    for (int i = 0; i < DTWM_MAX_TOUCH_SLOTS; ++i) {
+        if (g_touch_slots[i].active && g_touch_slots[i].touch_id == touch_id) {
+            return &g_touch_slots[i];
+        }
+        if (!g_touch_slots[i].active && !free_slot) {
+            free_slot = &g_touch_slots[i];
+        }
+    }
+    if (create && free_slot) {
+        memset(free_slot, 0, sizeof(*free_slot));
+        free_slot->active = true;
+        free_slot->touch_id = touch_id;
+        wl_list_init(&free_slot->surface_destroy.link);
+        free_slot->surface_destroy.notify = handle_touch_slot_surface_destroy;
+        return free_slot;
+    }
+    return nullptr;
+}
+
+static void release_touch_slot(DtwmTouchSlot *slot) {
+    if (!slot) return;
+    if (slot->surface) {
+        wl_list_remove(&slot->surface_destroy.link);
+        wl_list_init(&slot->surface_destroy.link);
+        slot->surface = nullptr;
+    }
+    slot->active = false;
+}
+
+static bool handle_cde_frame_press(
+    DtwmServer *server, DtwmView *view, DtwmFramePart part, uint32_t t_ms
+) {
+    if (!server || !view || part == DTWM_PART_CLIENT || part == DTWM_PART_NONE) {
+        return false;
+    }
+    switch (part) {
+    case DTWM_PART_BTN_MENU: {
+        uint32_t dc_ms = server->double_click_ms > 0 ? server->double_click_ms : 500u;
+        if (server->last_menu_btn_view == view &&
+            (t_ms - server->last_menu_btn_ms) <= dc_ms) {
+            server->last_menu_btn_view = nullptr;
+            close_window_menu(server);
+            view_close(view);
+            return true;
+        }
+        server->last_menu_btn_view = view;
+        server->last_menu_btn_ms = t_ms;
+        int l, t, r, b;
+        dtwm_view_insets(view, &l, &t, &r, &b);
+        open_window_menu(server, view, view->x + l, view->y + t);
+        return true;
+    }
+    case DTWM_PART_BTN_MINIMIZE:
+        view_set_minimized(view, true);
+        return true;
+    case DTWM_PART_BTN_MAXIMIZE:
+        view_set_maximized(view, !view->maximized);
+        return true;
+    case DTWM_PART_TITLE:
+        if (view->has_max_btn && server->last_title_click_view == view &&
+            (t_ms - server->last_title_click_ms) <=
+                (server->double_click_ms > 0 ? server->double_click_ms : 500u)) {
+            server->last_title_click_view = nullptr;
+            view_set_maximized(view, !view->maximized);
+        } else {
+            server->last_title_click_view = view;
+            server->last_title_click_ms = t_ms;
+            begin_interactive(view, DTWM_CURSOR_MOVE, 0);
+        }
+        return true;
+    default: {
+        uint32_t edges = dtwm_part_to_wlr_edges(part);
+        if (edges != WLR_EDGE_NONE) {
+            begin_interactive(view, DTWM_CURSOR_RESIZE, edges);
+            return true;
+        }
+        break;
+    }
+    }
+    return false;
+}
+
+static void handle_cursor_touch_down(struct wl_listener *listener, void *data) {
+    DtwmServer *server = wl_container_of(listener, server, cursor_touch_down);
+    struct wlr_touch_down_event *ev = data;
+    uint32_t t_ms = ev->time_msec ? ev->time_msec : dtwm_now_msec();
+    dtwm_lock_notify_activity(server);
+    server->super_tap_pending = false;
+
+    double lx = 0.0, ly = 0.0;
+    wlr_cursor_absolute_to_layout_coords(
+        server->cursor, &ev->touch->base, ev->x, ev->y, &lx, &ly
+    );
+
+    if (server->session_locked) {
+        double sx = 0.0, sy = 0.0;
+        struct wlr_surface *ls = dtwm_lock_surface_at(server, lx, ly, &sx, &sy);
+        if (ls) {
+            dtwm_lock_focus_surface(server, ls);
+            DtwmTouchSlot *slot = find_or_alloc_touch_slot(ev->touch_id, true);
+            if (slot) {
+                slot->surface = ls;
+                wl_signal_add(&ls->events.destroy, &slot->surface_destroy);
+            }
+            wlr_seat_touch_notify_down(server->seat, ls, t_ms, ev->touch_id, sx, sy);
+        }
+        return;
+    }
+
+    if (ev->touch_id == 0) {
+        wlr_cursor_warp_closest(server->cursor, nullptr, lx, ly);
+        if (server->switcher_visible) {
+            hide_task_switcher(server, true);
+            return;
+        }
+        if (server->menu_visible) {
+            int idx = menu_item_at(server, lx, ly);
+            if (idx >= 0) {
+                execute_menu_action(server, idx);
+            } else {
+                close_window_menu(server);
+            }
+            return;
+        }
+    }
+
+    double sx = 0.0, sy = 0.0;
+    struct wlr_surface *surface = nullptr;
+    DtwmFramePart part = DTWM_PART_NONE;
+    DtwmView *view = desktop_view_at(server, lx, ly, &surface, &sx, &sy, &part);
+
+    if (!view && !surface) {
+        if (ev->touch_id == 0) {
+            dismiss_open_client_popups(server, t_ms);
+            DtwmView *icon_v = dtwm_icons_view_at(server, lx, ly);
+            if (icon_v) {
+                (void)dtwm_icons_handle_desktop_button(server, icon_v, BTN_LEFT, true);
+                (void)dtwm_icons_handle_desktop_button(server, icon_v, BTN_LEFT, false);
+                return;
+            }
+            clear_active_focus(server);
+        }
+        return;
+    }
+
+    if (view && !(view->kind == DTWM_VIEW_XWAYLAND && view->xwayland_surface &&
+                  view->xwayland_surface->override_redirect)) {
+        if (ev->touch_id == 0) {
+            bool is_popup = surface_is_open_xdg_popup(server, surface);
+            if (part != DTWM_PART_CLIENT) {
+                dismiss_open_client_popups(server, t_ms);
+            } else if (view->kind == DTWM_VIEW_XDG) {
+                const struct wl_client *keep_cli =
+                    (surface && surface->resource) ? wl_resource_get_client(surface->resource) : nullptr;
+                dismiss_open_client_popups_except_client(server, t_ms, keep_cli);
+            }
+            if (part == DTWM_PART_CLIENT && server->input_escaped_view == view) {
+                server->input_escaped_view = nullptr;
+            }
+            if (!is_popup) {
+                focus_view_ex(
+                    server,
+                    view,
+                    surface,
+                    (part == DTWM_PART_CLIENT) ? server->focus_auto_raise : true
+                );
+            }
+            if (part != DTWM_PART_CLIENT) {
+                if (handle_cde_frame_press(server, view, part, t_ms) &&
+                    server->cursor_mode != DTWM_CURSOR_PASSTHROUGH) {
+                    server->touch_grab_active = true;
+                    server->touch_grab_id = ev->touch_id;
+                }
+                return;
+            }
+        }
+    }
+
+    if (surface) {
+        DtwmTouchSlot *slot = find_or_alloc_touch_slot(ev->touch_id, true);
+        if (slot) {
+            if (slot->surface) {
+                wl_list_remove(&slot->surface_destroy.link);
+                wl_list_init(&slot->surface_destroy.link);
+            }
+            slot->surface = surface;
+            wl_signal_add(&surface->events.destroy, &slot->surface_destroy);
+        }
+        wlr_seat_touch_notify_down(server->seat, surface, t_ms, ev->touch_id, sx, sy);
+    }
+}
+
+static void handle_cursor_touch_motion(struct wl_listener *listener, void *data) {
+    DtwmServer *server = wl_container_of(listener, server, cursor_touch_motion);
+    struct wlr_touch_motion_event *ev = data;
+    uint32_t t_ms = ev->time_msec ? ev->time_msec : dtwm_now_msec();
+    dtwm_lock_notify_activity(server);
+
+    double lx = 0.0, ly = 0.0;
+    wlr_cursor_absolute_to_layout_coords(
+        server->cursor, &ev->touch->base, ev->x, ev->y, &lx, &ly
+    );
+
+    if (server->touch_grab_active && ev->touch_id == server->touch_grab_id) {
+        wlr_cursor_warp_closest(server->cursor, nullptr, lx, ly);
+        process_cursor_motion(server, t_ms);
+        return;
+    }
+
+    DtwmTouchSlot *slot = find_or_alloc_touch_slot(ev->touch_id, false);
+    double sx = 0.0, sy = 0.0;
+    if (slot && slot->surface) {
+        double gx = 0.0, gy = 0.0, sc = 1.0;
+        if (surface_global_origin_and_scale(server, slot->surface, &gx, &gy, &sc)) {
+            sx = (lx - gx) / sc;
+            sy = (ly - gy) / sc;
+            wlr_seat_touch_notify_motion(server->seat, t_ms, ev->touch_id, sx, sy);
+            return;
+        }
+    }
+    struct wlr_surface *surf = nullptr;
+    DtwmFramePart part = DTWM_PART_NONE;
+    (void)desktop_view_at(server, lx, ly, &surf, &sx, &sy, &part);
+    if (surf) {
+        wlr_seat_touch_notify_motion(server->seat, t_ms, ev->touch_id, sx, sy);
+    }
+}
+
+static void handle_cursor_touch_up(struct wl_listener *listener, void *data) {
+    DtwmServer *server = wl_container_of(listener, server, cursor_touch_up);
+    struct wlr_touch_up_event *ev = data;
+    uint32_t t_ms = ev->time_msec ? ev->time_msec : dtwm_now_msec();
+    dtwm_lock_notify_activity(server);
+
+    if (server->touch_grab_active && ev->touch_id == server->touch_grab_id) {
+        server->touch_grab_active = false;
+        (void)finish_interactive_grab(server);
+        return;
+    }
+
+    DtwmTouchSlot *slot = find_or_alloc_touch_slot(ev->touch_id, false);
+    release_touch_slot(slot);
+    wlr_seat_touch_notify_up(server->seat, t_ms, ev->touch_id);
+}
+
+static void handle_cursor_touch_cancel(struct wl_listener *listener, void *data) {
+    DtwmServer *server = wl_container_of(listener, server, cursor_touch_cancel);
+    struct wlr_touch_cancel_event *ev = data;
+    (void)ev;
+    if (server->touch_grab_active) {
+        server->touch_grab_active = false;
+        (void)finish_interactive_grab(server);
+    }
+    for (int i = 0; i < DTWM_MAX_TOUCH_SLOTS; ++i) {
+        if (g_touch_slots[i].active && g_touch_slots[i].surface &&
+            g_touch_slots[i].surface->resource) {
+            struct wlr_seat_client *sc = wlr_seat_client_for_wl_client(
+                server->seat, wl_resource_get_client(g_touch_slots[i].surface->resource)
+            );
+            release_touch_slot(&g_touch_slots[i]);
+            if (sc) {
+                wlr_seat_touch_notify_cancel(server->seat, sc);
+            }
+        } else {
+            release_touch_slot(&g_touch_slots[i]);
+        }
+    }
+}
+
+static void handle_cursor_touch_frame(struct wl_listener *listener, void *data) {
+    (void)data;
+    DtwmServer *server = wl_container_of(listener, server, cursor_touch_frame);
+    wlr_seat_touch_notify_frame(server->seat);
+}
+
+static void handle_tablet_tool_set_cursor(struct wl_listener *listener, void *data) {
+    DtwmTabletTool *ttool = wl_container_of(listener, ttool, set_cursor);
+    struct wlr_tablet_v2_event_cursor *ev = data;
+    DtwmServer *server = ttool->server;
+    if (!server || !ev || !ttool->tool_v2 || !ttool->tool_v2->focused_surface) {
+        return;
+    }
+    struct wl_client *focused_cli =
+        ttool->tool_v2->focused_surface->resource
+            ? wl_resource_get_client(ttool->tool_v2->focused_surface->resource)
+            : nullptr;
+    if (ev->seat_client && ev->seat_client->client == focused_cli) {
+        wlr_cursor_set_surface(server->cursor, ev->surface, ev->hotspot_x, ev->hotspot_y);
+    }
+}
+
+static void handle_tablet_tool_destroy(struct wl_listener *listener, void *data) {
+    (void)data;
+    DtwmTabletTool *ttool = wl_container_of(listener, ttool, destroy);
+    wl_list_remove(&ttool->set_cursor.link);
+    wl_list_remove(&ttool->destroy.link);
+    wl_list_remove(&ttool->link);
+    if (ttool->wlr_tool) {
+        ttool->wlr_tool->data = nullptr;
+    }
+    free(ttool);
+}
+
+static DtwmTabletTool *ensure_tablet_tool(DtwmServer *server, struct wlr_tablet_tool *wlr_tool) {
+    if (!server || !wlr_tool || !server->tablet_v2_mgr) {
+        return nullptr;
+    }
+    if (wlr_tool->data) {
+        return wlr_tool->data;
+    }
+    DtwmTabletTool *ttool = calloc(1, sizeof(*ttool));
+    if (!ttool) return nullptr;
+    ttool->server = server;
+    ttool->wlr_tool = wlr_tool;
+    ttool->tool_v2 = wlr_tablet_tool_create(server->tablet_v2_mgr, server->seat, wlr_tool);
+    if (!ttool->tool_v2) {
+        free(ttool);
+        return nullptr;
+    }
+    wlr_tool->data = ttool;
+    ttool->set_cursor.notify = handle_tablet_tool_set_cursor;
+    wl_signal_add(&ttool->tool_v2->events.set_cursor, &ttool->set_cursor);
+    ttool->destroy.notify = handle_tablet_tool_destroy;
+    wl_signal_add(&wlr_tool->events.destroy, &ttool->destroy);
+    wl_list_insert(&server->tablet_tools, &ttool->link);
+    return ttool;
+}
+
+static void sync_tablet_pads_for_focused_view(DtwmServer *server) {
+    if (!server) return;
+    struct wlr_surface *fs =
+        (!server->session_locked && server->focused_view) ? view_wlr_surface(server->focused_view) : nullptr;
+    DtwmTabletPad *pad;
+    wl_list_for_each(pad, &server->tablet_pads, link) {
+        if (!pad->pad_v2) continue;
+        struct wlr_tablet_v2_tablet *tab_v2 = pad->attached_tablet_v2;
+        if (!tab_v2 && !wl_list_empty(&server->tablets)) {
+            DtwmTablet *first_tab = wl_container_of(server->tablets.next, first_tab, link);
+            tab_v2 = first_tab->tablet_v2;
+        }
+        struct wlr_surface *want_surf =
+            (fs && tab_v2 && wlr_surface_accepts_tablet_v2(fs, tab_v2)) ? fs : nullptr;
+        if (pad->current_surface == want_surf) {
+            continue;
+        }
+        if (pad->current_surface) {
+            wlr_tablet_v2_tablet_pad_notify_leave(pad->pad_v2, pad->current_surface);
+            wl_list_remove(&pad->surface_destroy.link);
+            wl_list_init(&pad->surface_destroy.link);
+            pad->current_surface = nullptr;
+        }
+        if (want_surf && tab_v2) {
+            pad->current_surface = want_surf;
+            wl_signal_add(&want_surf->events.destroy, &pad->surface_destroy);
+            wlr_tablet_v2_tablet_pad_notify_enter(pad->pad_v2, tab_v2, want_surf);
+        }
+    }
+}
+
+static void route_tablet_tool_position(
+    DtwmServer *server,
+    DtwmTablet *tab,
+    DtwmTabletTool *ttool,
+    uint32_t t_ms,
+    const struct wlr_tablet_tool_axis_event *axis_ev
+) {
+    if (!server || !ttool || !ttool->tool_v2) return;
+
+    if (server->cursor_mode != DTWM_CURSOR_PASSTHROUGH) {
+        process_cursor_motion(server, t_ms);
+        return;
+    }
+
+    if (wlr_tablet_tool_v2_has_implicit_grab(ttool->tool_v2) &&
+        ttool->tool_v2->focused_surface) {
+        double gx = 0.0, gy = 0.0, sc = 1.0;
+        if (surface_global_origin_and_scale(
+                server, ttool->tool_v2->focused_surface, &gx, &gy, &sc)) {
+            double sx = (server->cursor->x - gx) / sc;
+            double sy = (server->cursor->y - gy) / sc;
+            wlr_tablet_v2_tablet_tool_notify_motion(ttool->tool_v2, sx, sy);
+        }
+    } else {
+        double sx = 0.0, sy = 0.0;
+        struct wlr_surface *surface = nullptr;
+        DtwmFramePart part = DTWM_PART_NONE;
+        (void)desktop_view_at(server, server->cursor->x, server->cursor->y, &surface, &sx, &sy, &part);
+        bool accepts_tab = (surface && part == DTWM_PART_CLIENT && tab && tab->tablet_v2 &&
+                            !server->session_locked &&
+                            wlr_surface_accepts_tablet_v2(surface, tab->tablet_v2));
+        if (accepts_tab) {
+            if (ttool->fallback_btn_down) {
+                ttool->fallback_btn_down = false;
+                wlr_seat_pointer_notify_button(
+                    server->seat, t_ms, BTN_LEFT, WL_POINTER_BUTTON_STATE_RELEASED
+                );
+                wlr_seat_pointer_notify_frame(server->seat);
+            }
+            wlr_seat_pointer_notify_clear_focus(server->seat);
+            wlr_tablet_v2_tablet_tool_notify_proximity_in(ttool->tool_v2, tab->tablet_v2, surface);
+            wlr_tablet_v2_tablet_tool_notify_motion(ttool->tool_v2, sx, sy);
+        } else {
+            if (ttool->tool_v2->focused_surface) {
+                wlr_tablet_v2_tablet_tool_notify_proximity_out(ttool->tool_v2);
+            }
+            process_cursor_motion(server, t_ms);
+            return;
+        }
+    }
+
+    if (axis_ev) {
+        if (axis_ev->updated_axes & WLR_TABLET_TOOL_AXIS_PRESSURE) {
+            wlr_tablet_v2_tablet_tool_notify_pressure(ttool->tool_v2, axis_ev->pressure);
+        }
+        if (axis_ev->updated_axes & WLR_TABLET_TOOL_AXIS_DISTANCE) {
+            wlr_tablet_v2_tablet_tool_notify_distance(ttool->tool_v2, axis_ev->distance);
+        }
+        if (axis_ev->updated_axes & (WLR_TABLET_TOOL_AXIS_TILT_X | WLR_TABLET_TOOL_AXIS_TILT_Y)) {
+            if (axis_ev->updated_axes & WLR_TABLET_TOOL_AXIS_TILT_X) ttool->tilt_x = axis_ev->tilt_x;
+            if (axis_ev->updated_axes & WLR_TABLET_TOOL_AXIS_TILT_Y) ttool->tilt_y = axis_ev->tilt_y;
+            wlr_tablet_v2_tablet_tool_notify_tilt(ttool->tool_v2, ttool->tilt_x, ttool->tilt_y);
+        }
+        if (axis_ev->updated_axes & WLR_TABLET_TOOL_AXIS_ROTATION) {
+            wlr_tablet_v2_tablet_tool_notify_rotation(ttool->tool_v2, axis_ev->rotation);
+        }
+        if (axis_ev->updated_axes & WLR_TABLET_TOOL_AXIS_SLIDER) {
+            wlr_tablet_v2_tablet_tool_notify_slider(ttool->tool_v2, axis_ev->slider);
+        }
+        if (axis_ev->updated_axes & WLR_TABLET_TOOL_AXIS_WHEEL) {
+            wlr_tablet_v2_tablet_tool_notify_wheel(ttool->tool_v2, axis_ev->wheel_delta, 0);
+        }
+    }
+}
+
+static void handle_cursor_tablet_tool_axis(struct wl_listener *listener, void *data) {
+    DtwmServer *server = wl_container_of(listener, server, cursor_tablet_tool_axis);
+    struct wlr_tablet_tool_axis_event *ev = data;
+    uint32_t t_ms = ev->time_msec ? ev->time_msec : dtwm_now_msec();
+    dtwm_lock_notify_activity(server);
+
+    DtwmTabletTool *ttool = ensure_tablet_tool(server, ev->tool);
+    DtwmTablet *tab = ev->tablet ? ev->tablet->data : nullptr;
+
+    uint32_t xy_mask = WLR_TABLET_TOOL_AXIS_X | WLR_TABLET_TOOL_AXIS_Y;
+    if ((ev->updated_axes & xy_mask) == xy_mask) {
+        wlr_cursor_warp_absolute(server->cursor, &ev->tablet->base, ev->x, ev->y);
+    } else if (ev->updated_axes & xy_mask) {
+        double lx = server->cursor->x, ly = server->cursor->y;
+        double ax = 0.0, ay = 0.0;
+        wlr_cursor_absolute_to_layout_coords(
+            server->cursor, &ev->tablet->base, ev->x, ev->y, &ax, &ay
+        );
+        if (ev->updated_axes & WLR_TABLET_TOOL_AXIS_X) lx = ax;
+        if (ev->updated_axes & WLR_TABLET_TOOL_AXIS_Y) ly = ay;
+        wlr_cursor_warp_closest(server->cursor, &ev->tablet->base, lx, ly);
+    } else if (ev->dx != 0.0 || ev->dy != 0.0) {
+        wlr_cursor_move(server->cursor, &ev->tablet->base, ev->dx, ev->dy);
+    }
+
+    route_tablet_tool_position(server, tab, ttool, t_ms, ev);
+}
+
+static void handle_cursor_tablet_tool_proximity(struct wl_listener *listener, void *data) {
+    DtwmServer *server = wl_container_of(listener, server, cursor_tablet_tool_proximity);
+    struct wlr_tablet_tool_proximity_event *ev = data;
+    uint32_t t_ms = ev->time_msec ? ev->time_msec : dtwm_now_msec();
+    dtwm_lock_notify_activity(server);
+
+    DtwmTabletTool *ttool = ensure_tablet_tool(server, ev->tool);
+    DtwmTablet *tab = ev->tablet ? ev->tablet->data : nullptr;
+    if (!ttool || !ttool->tool_v2) return;
+
+    if (ev->state == WLR_TABLET_TOOL_PROXIMITY_OUT) {
+        if (ttool->fallback_btn_down) {
+            ttool->fallback_btn_down = false;
+            wlr_seat_pointer_notify_button(
+                server->seat, t_ms, BTN_LEFT, WL_POINTER_BUTTON_STATE_RELEASED
+            );
+            wlr_seat_pointer_notify_frame(server->seat);
+        }
+        wlr_tablet_v2_tablet_tool_notify_proximity_out(ttool->tool_v2);
+        return;
+    }
+
+    wlr_cursor_warp_absolute(server->cursor, &ev->tablet->base, ev->x, ev->y);
+    route_tablet_tool_position(server, tab, ttool, t_ms, nullptr);
+}
+
+static void handle_cursor_tablet_tool_tip(struct wl_listener *listener, void *data) {
+    DtwmServer *server = wl_container_of(listener, server, cursor_tablet_tool_tip);
+    struct wlr_tablet_tool_tip_event *ev = data;
+    uint32_t t_ms = ev->time_msec ? ev->time_msec : dtwm_now_msec();
+    dtwm_lock_notify_activity(server);
+    server->super_tap_pending = false;
+
+    DtwmTabletTool *ttool = ensure_tablet_tool(server, ev->tool);
+    DtwmTablet *tab = ev->tablet ? ev->tablet->data : nullptr;
+    if (!ttool || !ttool->tool_v2) return;
+
+    wlr_cursor_warp_absolute(server->cursor, &ev->tablet->base, ev->x, ev->y);
+
+    if (ev->state == WLR_TABLET_TOOL_TIP_UP) {
+        if (finish_interactive_grab(server)) {
+            return;
+        }
+        if (ttool->tool_v2->is_down) {
+            wlr_tablet_v2_tablet_tool_notify_up(ttool->tool_v2);
+            return;
+        }
+        if (ttool->fallback_btn_down) {
+            ttool->fallback_btn_down = false;
+            wlr_seat_pointer_notify_button(
+                server->seat, t_ms, BTN_LEFT, WL_POINTER_BUTTON_STATE_RELEASED
+            );
+            wlr_seat_pointer_notify_frame(server->seat);
+        }
+        return;
+    }
+
+    /* Tip down */
+    if (server->switcher_visible) {
+        hide_task_switcher(server, true);
+        return;
+    }
+    if (server->menu_visible) {
+        int idx = menu_item_at(server, server->cursor->x, server->cursor->y);
+        if (idx >= 0) {
+            execute_menu_action(server, idx);
+        } else {
+            close_window_menu(server);
+        }
+        return;
+    }
+
+    double sx = 0.0, sy = 0.0;
+    struct wlr_surface *surface = nullptr;
+    DtwmFramePart part = DTWM_PART_NONE;
+    DtwmView *view = desktop_view_at(server, server->cursor->x, server->cursor->y, &surface, &sx, &sy, &part);
+
+    if (view && !(view->kind == DTWM_VIEW_XWAYLAND && view->xwayland_surface &&
+                  view->xwayland_surface->override_redirect)) {
+        bool is_popup = surface_is_open_xdg_popup(server, surface);
+        if (part != DTWM_PART_CLIENT) {
+            dismiss_open_client_popups(server, t_ms);
+        } else if (view->kind == DTWM_VIEW_XDG) {
+            const struct wl_client *keep_cli =
+                (surface && surface->resource) ? wl_resource_get_client(surface->resource) : nullptr;
+            dismiss_open_client_popups_except_client(server, t_ms, keep_cli);
+        }
+        if (part == DTWM_PART_CLIENT && server->input_escaped_view == view) {
+            server->input_escaped_view = nullptr;
+        }
+        if (!is_popup) {
+            focus_view_ex(
+                server,
+                view,
+                surface,
+                (part == DTWM_PART_CLIENT) ? server->focus_auto_raise : true
+            );
+        }
+        if (part != DTWM_PART_CLIENT) {
+            if (ttool->tool_v2->focused_surface) {
+                wlr_tablet_v2_tablet_tool_notify_proximity_out(ttool->tool_v2);
+            }
+            (void)handle_cde_frame_press(server, view, part, t_ms);
+            return;
+        }
+    } else if (!view && !surface && !server->session_locked) {
+        dismiss_open_client_popups(server, t_ms);
+        clear_active_focus(server);
+        return;
+    }
+
+    if (surface && part == DTWM_PART_CLIENT && tab && tab->tablet_v2 &&
+        !server->session_locked && wlr_surface_accepts_tablet_v2(surface, tab->tablet_v2)) {
+        wlr_seat_pointer_notify_clear_focus(server->seat);
+        wlr_tablet_v2_tablet_tool_notify_proximity_in(ttool->tool_v2, tab->tablet_v2, surface);
+        wlr_tablet_v2_tablet_tool_notify_motion(ttool->tool_v2, sx, sy);
+        wlr_tablet_v2_tablet_tool_notify_down(ttool->tool_v2);
+        wlr_tablet_tool_v2_start_implicit_grab(ttool->tool_v2);
+        return;
+    }
+
+    if (surface) {
+        wlr_seat_pointer_notify_enter(server->seat, surface, sx, sy);
+        wlr_seat_pointer_notify_motion(server->seat, t_ms, sx, sy);
+        wlr_seat_pointer_notify_frame(server->seat);
+        ttool->fallback_btn_down = true;
+        wlr_seat_pointer_notify_button(
+            server->seat, t_ms, BTN_LEFT, WL_POINTER_BUTTON_STATE_PRESSED
+        );
+        wlr_seat_pointer_notify_frame(server->seat);
+    }
+}
+
+static void handle_cursor_tablet_tool_button(struct wl_listener *listener, void *data) {
+    DtwmServer *server = wl_container_of(listener, server, cursor_tablet_tool_button);
+    struct wlr_tablet_tool_button_event *ev = data;
+    uint32_t t_ms = ev->time_msec ? ev->time_msec : dtwm_now_msec();
+    dtwm_lock_notify_activity(server);
+
+    DtwmTabletTool *ttool = ensure_tablet_tool(server, ev->tool);
+    if (!ttool || !ttool->tool_v2) return;
+
+    if (ttool->tool_v2->focused_surface) {
+        enum zwp_tablet_pad_v2_button_state st =
+            (ev->state == WLR_BUTTON_PRESSED)
+                ? ZWP_TABLET_PAD_V2_BUTTON_STATE_PRESSED
+                : ZWP_TABLET_PAD_V2_BUTTON_STATE_RELEASED;
+        wlr_tablet_v2_tablet_tool_notify_button(ttool->tool_v2, ev->button, st);
+        return;
+    }
+
+    uint32_t pbtn = BTN_RIGHT;
+    if (ev->button == BTN_STYLUS) pbtn = BTN_RIGHT;
+    else if (ev->button == BTN_STYLUS2) pbtn = BTN_MIDDLE;
+    else pbtn = ev->button;
+    wlr_seat_pointer_notify_button(
+        server->seat,
+        t_ms,
+        pbtn,
+        (ev->state == WLR_BUTTON_PRESSED) ? WL_POINTER_BUTTON_STATE_PRESSED
+                                          : WL_POINTER_BUTTON_STATE_RELEASED
+    );
+    wlr_seat_pointer_notify_frame(server->seat);
 }
 
 /* --- Keyboard Input & CDE Shortcuts (Alt+Tab, Alt+F4, Alt+Space) --- */
@@ -4708,7 +5412,181 @@ static void server_add_keyboard(DtwmServer *server, struct wlr_keyboard *wlr_kbd
 
 static void update_seat_capabilities(DtwmServer *server) {
     uint32_t caps = WL_SEAT_CAPABILITY_POINTER | WL_SEAT_CAPABILITY_KEYBOARD;
+    if (!wl_list_empty(&server->touches)) {
+        caps |= WL_SEAT_CAPABILITY_TOUCH;
+    }
     wlr_seat_set_capabilities(server->seat, caps);
+}
+
+static void handle_touch_destroy(struct wl_listener *listener, void *data) {
+    (void)data;
+    DtwmTouch *tch = wl_container_of(listener, tch, destroy);
+    DtwmServer *server = tch->server;
+    wl_list_remove(&tch->destroy.link);
+    wl_list_remove(&tch->link);
+    free(tch);
+    if (server && !server->shutting_down && server->seat) {
+        update_seat_capabilities(server);
+    }
+}
+
+static void server_add_touch(DtwmServer *server, struct wlr_touch *wlr_tch) {
+    if (!server || !wlr_tch) return;
+    DtwmTouch *tch = calloc(1, sizeof(*tch));
+    if (!tch) return;
+    tch->server = server;
+    tch->wlr_touch = wlr_tch;
+    tch->destroy.notify = handle_touch_destroy;
+    wl_signal_add(&wlr_tch->base.events.destroy, &tch->destroy);
+    wl_list_insert(&server->touches, &tch->link);
+    if (wlr_tch->output_name && wlr_tch->output_name[0]) {
+        DtwmOutput *out;
+        wl_list_for_each(out, &server->outputs, link) {
+            if (out->wlr_output && strcmp(out->wlr_output->name, wlr_tch->output_name) == 0) {
+                wlr_cursor_map_input_to_output(server->cursor, &wlr_tch->base, out->wlr_output);
+                break;
+            }
+        }
+    }
+}
+
+static void handle_tablet_destroy(struct wl_listener *listener, void *data) {
+    (void)data;
+    DtwmTablet *tab = wl_container_of(listener, tab, destroy);
+    DtwmServer *server = tab->server;
+    if (server) {
+        DtwmTabletPad *pad;
+        wl_list_for_each(pad, &server->tablet_pads, link) {
+            if (pad->attached_tablet_v2 == tab->tablet_v2) {
+                pad->attached_tablet_v2 = nullptr;
+            }
+        }
+    }
+    if (tab->wlr_tablet) {
+        tab->wlr_tablet->data = nullptr;
+    }
+    wl_list_remove(&tab->destroy.link);
+    wl_list_remove(&tab->link);
+    free(tab);
+}
+
+static void server_add_tablet(DtwmServer *server, struct wlr_tablet *wlr_tab) {
+    if (!server || !wlr_tab || !server->tablet_v2_mgr) return;
+    DtwmTablet *tab = calloc(1, sizeof(*tab));
+    if (!tab) return;
+    tab->server = server;
+    tab->wlr_tablet = wlr_tab;
+    tab->tablet_v2 = wlr_tablet_create(server->tablet_v2_mgr, server->seat, &wlr_tab->base);
+    wlr_tab->data = tab;
+    tab->destroy.notify = handle_tablet_destroy;
+    wl_signal_add(&wlr_tab->base.events.destroy, &tab->destroy);
+    wl_list_insert(&server->tablets, &tab->link);
+    sync_tablet_pads_for_focused_view(server);
+}
+
+static void handle_tablet_pad_surface_destroy(struct wl_listener *listener, void *data) {
+    (void)data;
+    DtwmTabletPad *pad = wl_container_of(listener, pad, surface_destroy);
+    wl_list_remove(&pad->surface_destroy.link);
+    wl_list_init(&pad->surface_destroy.link);
+    pad->current_surface = nullptr;
+}
+
+static void handle_tablet_pad_button(struct wl_listener *listener, void *data) {
+    DtwmTabletPad *pad = wl_container_of(listener, pad, button);
+    struct wlr_tablet_pad_button_event *ev = data;
+    dtwm_lock_notify_activity(pad->server);
+    if (!pad->pad_v2 || !pad->current_surface) return;
+    wlr_tablet_v2_tablet_pad_notify_mode(pad->pad_v2, ev->group, ev->mode, ev->time_msec);
+    wlr_tablet_v2_tablet_pad_notify_button(
+        pad->pad_v2,
+        ev->button,
+        ev->time_msec,
+        (ev->state == WLR_BUTTON_PRESSED)
+            ? ZWP_TABLET_PAD_V2_BUTTON_STATE_PRESSED
+            : ZWP_TABLET_PAD_V2_BUTTON_STATE_RELEASED
+    );
+}
+
+static void handle_tablet_pad_ring(struct wl_listener *listener, void *data) {
+    DtwmTabletPad *pad = wl_container_of(listener, pad, ring);
+    struct wlr_tablet_pad_ring_event *ev = data;
+    dtwm_lock_notify_activity(pad->server);
+    if (!pad->pad_v2 || !pad->current_surface) return;
+    wlr_tablet_v2_tablet_pad_notify_ring(
+        pad->pad_v2,
+        ev->ring,
+        ev->position,
+        ev->source == WLR_TABLET_PAD_RING_SOURCE_FINGER,
+        ev->time_msec
+    );
+}
+
+static void handle_tablet_pad_strip(struct wl_listener *listener, void *data) {
+    DtwmTabletPad *pad = wl_container_of(listener, pad, strip);
+    struct wlr_tablet_pad_strip_event *ev = data;
+    dtwm_lock_notify_activity(pad->server);
+    if (!pad->pad_v2 || !pad->current_surface) return;
+    wlr_tablet_v2_tablet_pad_notify_strip(
+        pad->pad_v2,
+        ev->strip,
+        ev->position,
+        ev->source == WLR_TABLET_PAD_STRIP_SOURCE_FINGER,
+        ev->time_msec
+    );
+}
+
+static void handle_tablet_pad_attach(struct wl_listener *listener, void *data) {
+    DtwmTabletPad *pad = wl_container_of(listener, pad, attach_tablet);
+    struct wlr_tablet_tool *wlr_tool = data;
+    if (!wlr_tool) return;
+    DtwmTabletTool *ttool = ensure_tablet_tool(pad->server, wlr_tool);
+    (void)ttool;
+    if (!wl_list_empty(&pad->server->tablets)) {
+        DtwmTablet *tab = wl_container_of(pad->server->tablets.next, tab, link);
+        pad->attached_tablet_v2 = tab->tablet_v2;
+    }
+    sync_tablet_pads_for_focused_view(pad->server);
+}
+
+static void handle_tablet_pad_destroy(struct wl_listener *listener, void *data) {
+    (void)data;
+    DtwmTabletPad *pad = wl_container_of(listener, pad, destroy);
+    if (pad->current_surface) {
+        wl_list_remove(&pad->surface_destroy.link);
+        wl_list_init(&pad->surface_destroy.link);
+        pad->current_surface = nullptr;
+    }
+    wl_list_remove(&pad->button.link);
+    wl_list_remove(&pad->ring.link);
+    wl_list_remove(&pad->strip.link);
+    wl_list_remove(&pad->attach_tablet.link);
+    wl_list_remove(&pad->destroy.link);
+    wl_list_remove(&pad->link);
+    free(pad);
+}
+
+static void server_add_tablet_pad(DtwmServer *server, struct wlr_tablet_pad *wlr_pad) {
+    if (!server || !wlr_pad || !server->tablet_v2_mgr) return;
+    DtwmTabletPad *pad = calloc(1, sizeof(*pad));
+    if (!pad) return;
+    pad->server = server;
+    pad->wlr_pad = wlr_pad;
+    pad->pad_v2 = wlr_tablet_pad_create(server->tablet_v2_mgr, server->seat, &wlr_pad->base);
+    wl_list_init(&pad->surface_destroy.link);
+    pad->surface_destroy.notify = handle_tablet_pad_surface_destroy;
+    pad->button.notify = handle_tablet_pad_button;
+    wl_signal_add(&wlr_pad->events.button, &pad->button);
+    pad->ring.notify = handle_tablet_pad_ring;
+    wl_signal_add(&wlr_pad->events.ring, &pad->ring);
+    pad->strip.notify = handle_tablet_pad_strip;
+    wl_signal_add(&wlr_pad->events.strip, &pad->strip);
+    pad->attach_tablet.notify = handle_tablet_pad_attach;
+    wl_signal_add(&wlr_pad->events.attach_tablet, &pad->attach_tablet);
+    pad->destroy.notify = handle_tablet_pad_destroy;
+    wl_signal_add(&wlr_pad->base.events.destroy, &pad->destroy);
+    wl_list_insert(&server->tablet_pads, &pad->link);
+    sync_tablet_pads_for_focused_view(server);
 }
 
 static void handle_pointer_destroy(struct wl_listener *listener, void *data) {
@@ -4799,6 +5677,17 @@ static void handle_new_input(struct wl_listener *listener, void *data) {
         server_add_pointer(server, wlr_pointer_from_input_device(dev), false);
         dtwm_hw_apply_input_device(server, dev);
         break;
+    case WLR_INPUT_DEVICE_TOUCH:
+        wlr_cursor_attach_input_device(server->cursor, dev);
+        server_add_touch(server, wlr_touch_from_input_device(dev));
+        break;
+    case WLR_INPUT_DEVICE_TABLET:
+        wlr_cursor_attach_input_device(server->cursor, dev);
+        server_add_tablet(server, wlr_tablet_from_input_device(dev));
+        break;
+    case WLR_INPUT_DEVICE_TABLET_PAD:
+        server_add_tablet_pad(server, wlr_tablet_pad_from_input_device(dev));
+        break;
     case WLR_INPUT_DEVICE_SWITCH:
         dtwm_power_display_on_new_input(server, dev);
         break;
@@ -4837,12 +5726,30 @@ static void handle_request_cursor(struct wl_listener *listener, void *data) {
 static void handle_request_cursor_shape(struct wl_listener *listener, void *data) {
     DtwmServer *server = wl_container_of(listener, server, request_cursor_shape);
     struct wlr_cursor_shape_manager_v1_request_set_shape_event *ev = data;
-    if (!ev || ev->device_type != WLR_CURSOR_SHAPE_MANAGER_V1_DEVICE_TYPE_POINTER) {
+    if (!ev || !server->cursor_mgr) {
         return;
     }
-    if (server->seat->pointer_state.focused_client == ev->seat_client && server->cursor_mgr) {
+    bool allowed = false;
+    const char *dev_tag = "pointer";
+    if (ev->device_type == WLR_CURSOR_SHAPE_MANAGER_V1_DEVICE_TYPE_POINTER) {
+        allowed = (server->seat->pointer_state.focused_client == ev->seat_client);
+    } else if (ev->device_type == WLR_CURSOR_SHAPE_MANAGER_V1_DEVICE_TYPE_TABLET_TOOL) {
+        dev_tag = "tablet_tool";
+        if (ev->tablet_tool && ev->tablet_tool->focused_surface &&
+            ev->tablet_tool->focused_surface->resource && ev->seat_client) {
+            allowed = (wl_resource_get_client(ev->tablet_tool->focused_surface->resource) ==
+                       ev->seat_client->client);
+        }
+    }
+    if (allowed) {
         const char *name = wlr_cursor_shape_v1_name(ev->shape);
-        wlr_cursor_set_xcursor(server->cursor, server->cursor_mgr, name ? name : "default");
+        const char *eff = name ? name : "default";
+        wlr_cursor_set_xcursor(server->cursor, server->cursor_mgr, eff);
+        char sbuf[128];
+        int sn = snprintf(sbuf, sizeof(sbuf), "device=%s;shape=%s", dev_tag, eff);
+        if (sn > 0) {
+            dtwm_native_ipc_publish_prop(server, "_DT_WAYLAND_CURSOR_SHAPE", sbuf, (size_t)sn);
+        }
     }
 }
 
@@ -7096,6 +8003,201 @@ static void close_ipc_peer(DtwmIpcPeer *peer) {
     }
 }
 
+typedef struct {
+    bool active;
+    struct wlr_touch touch;
+    struct wlr_tablet tablet;
+    struct wlr_tablet_tool tool;
+    struct wlr_tablet_pad pad;
+    struct wlr_tablet_pad_group pad_group;
+    unsigned int pad_buttons[4];
+    unsigned int pad_rings[1];
+    unsigned int pad_strips[1];
+} DtwmSynthRig;
+
+static DtwmSynthRig g_synth_rig;
+static const struct wlr_touch_impl g_synth_touch_impl = { .name = "dtwm-synth-touch" };
+static const struct wlr_tablet_impl g_synth_tablet_impl = { .name = "dtwm-synth-tablet" };
+static const struct wlr_tablet_pad_impl g_synth_pad_impl = { .name = "dtwm-synth-pad" };
+
+static void synth_input_init(DtwmServer *server) {
+    const char *env = getenv("DTWM_TEST_SYNTH_INPUT");
+    if (!env || strcmp(env, "1") != 0 || g_synth_rig.active) {
+        return;
+    }
+    memset(&g_synth_rig, 0, sizeof(g_synth_rig));
+    g_synth_rig.active = true;
+
+    wlr_touch_init(&g_synth_rig.touch, &g_synth_touch_impl, "dtwm-synth-touch");
+    g_synth_rig.touch.width_mm = 300.0;
+    g_synth_rig.touch.height_mm = 200.0;
+    handle_new_input(&server->new_input, &g_synth_rig.touch.base);
+
+    wlr_tablet_init(&g_synth_rig.tablet, &g_synth_tablet_impl, "dtwm-synth-tablet");
+    g_synth_rig.tablet.width_mm = 216.0;
+    g_synth_rig.tablet.height_mm = 135.0;
+    handle_new_input(&server->new_input, &g_synth_rig.tablet.base);
+
+    g_synth_rig.tool.type = WLR_TABLET_TOOL_TYPE_PEN;
+    g_synth_rig.tool.hardware_serial = 0xCAFE1234ULL;
+    g_synth_rig.tool.hardware_wacom = 0x0822ULL;
+    g_synth_rig.tool.tilt = true;
+    g_synth_rig.tool.pressure = true;
+    g_synth_rig.tool.distance = true;
+    g_synth_rig.tool.rotation = true;
+    g_synth_rig.tool.slider = true;
+    g_synth_rig.tool.wheel = true;
+    wl_signal_init(&g_synth_rig.tool.events.destroy);
+
+    wlr_tablet_pad_init(&g_synth_rig.pad, &g_synth_pad_impl, "dtwm-synth-pad");
+    g_synth_rig.pad.button_count = 4;
+    g_synth_rig.pad.ring_count = 1;
+    g_synth_rig.pad.strip_count = 1;
+    for (unsigned int i = 0; i < 4; ++i) g_synth_rig.pad_buttons[i] = i;
+    g_synth_rig.pad_rings[0] = 0;
+    g_synth_rig.pad_strips[0] = 0;
+    g_synth_rig.pad_group.button_count = 4;
+    g_synth_rig.pad_group.buttons = g_synth_rig.pad_buttons;
+    g_synth_rig.pad_group.ring_count = 1;
+    g_synth_rig.pad_group.rings = g_synth_rig.pad_rings;
+    g_synth_rig.pad_group.strip_count = 1;
+    g_synth_rig.pad_group.strips = g_synth_rig.pad_strips;
+    g_synth_rig.pad_group.mode_count = 1;
+    wl_list_insert(&g_synth_rig.pad.groups, &g_synth_rig.pad_group.link);
+    handle_new_input(&server->new_input, &g_synth_rig.pad.base);
+    wl_signal_emit_mutable(&g_synth_rig.pad.events.attach_tablet, &g_synth_rig.tool);
+}
+
+static void synth_input_finish(void) {
+    if (!g_synth_rig.active) return;
+    g_synth_rig.active = false;
+    wl_signal_emit_mutable(&g_synth_rig.tool.events.destroy, &g_synth_rig.tool);
+    wl_list_remove(&g_synth_rig.pad_group.link);
+    wl_list_init(&g_synth_rig.pad_group.link);
+    wlr_tablet_pad_finish(&g_synth_rig.pad);
+    wlr_tablet_finish(&g_synth_rig.tablet);
+    wlr_touch_finish(&g_synth_rig.touch);
+}
+
+static void handle_synth_input_cmd(DtwmServer *server, const char *line) {
+    (void)server;
+    if (!g_synth_rig.active || !line) return;
+    uint32_t now_ms = dtwm_now_msec();
+    if (!strncmp(line, "SYNTH_TOUCH down ", 17)) {
+        int id = 0;
+        double nx = 0.0, ny = 0.0;
+        if (sscanf(line + 17, "%d %lf %lf", &id, &nx, &ny) == 3) {
+            struct wlr_touch_down_event ev = {
+                .touch = &g_synth_rig.touch, .time_msec = now_ms, .touch_id = id, .x = nx, .y = ny
+            };
+            wl_signal_emit_mutable(&g_synth_rig.touch.events.down, &ev);
+        }
+    } else if (!strncmp(line, "SYNTH_TOUCH motion ", 19)) {
+        int id = 0;
+        double nx = 0.0, ny = 0.0;
+        if (sscanf(line + 19, "%d %lf %lf", &id, &nx, &ny) == 3) {
+            struct wlr_touch_motion_event ev = {
+                .touch = &g_synth_rig.touch, .time_msec = now_ms, .touch_id = id, .x = nx, .y = ny
+            };
+            wl_signal_emit_mutable(&g_synth_rig.touch.events.motion, &ev);
+        }
+    } else if (!strncmp(line, "SYNTH_TOUCH up ", 15)) {
+        int id = 0;
+        if (sscanf(line + 15, "%d", &id) == 1) {
+            struct wlr_touch_up_event ev = {
+                .touch = &g_synth_rig.touch, .time_msec = now_ms, .touch_id = id
+            };
+            wl_signal_emit_mutable(&g_synth_rig.touch.events.up, &ev);
+        }
+    } else if (!strcmp(line, "SYNTH_TOUCH frame")) {
+        wl_signal_emit_mutable(&g_synth_rig.touch.events.frame, nullptr);
+    } else if (!strncmp(line, "SYNTH_TABLET prox ", 18)) {
+        int in_prox = 0;
+        double nx = 0.0, ny = 0.0;
+        if (sscanf(line + 18, "%d %lf %lf", &in_prox, &nx, &ny) == 3) {
+            struct wlr_tablet_tool_proximity_event ev = {
+                .tablet = &g_synth_rig.tablet,
+                .tool = &g_synth_rig.tool,
+                .time_msec = now_ms,
+                .x = nx,
+                .y = ny,
+                .state = in_prox ? WLR_TABLET_TOOL_PROXIMITY_IN : WLR_TABLET_TOOL_PROXIMITY_OUT,
+            };
+            wl_signal_emit_mutable(&g_synth_rig.tablet.events.proximity, &ev);
+        }
+    } else if (!strncmp(line, "SYNTH_TABLET axis ", 18)) {
+        double nx = 0.0, ny = 0.0, press = 0.0, tx = 0.0, ty = 0.0;
+        if (sscanf(line + 18, "%lf %lf %lf %lf %lf", &nx, &ny, &press, &tx, &ty) == 5) {
+            struct wlr_tablet_tool_axis_event ev = {
+                .tablet = &g_synth_rig.tablet,
+                .tool = &g_synth_rig.tool,
+                .time_msec = now_ms,
+                .updated_axes = WLR_TABLET_TOOL_AXIS_X | WLR_TABLET_TOOL_AXIS_Y |
+                                WLR_TABLET_TOOL_AXIS_PRESSURE |
+                                WLR_TABLET_TOOL_AXIS_TILT_X | WLR_TABLET_TOOL_AXIS_TILT_Y,
+                .x = nx,
+                .y = ny,
+                .pressure = press,
+                .tilt_x = tx,
+                .tilt_y = ty,
+            };
+            wl_signal_emit_mutable(&g_synth_rig.tablet.events.axis, &ev);
+        }
+    } else if (!strncmp(line, "SYNTH_TABLET tip ", 17)) {
+        int down = 0;
+        double nx = 0.0, ny = 0.0;
+        if (sscanf(line + 17, "%d %lf %lf", &down, &nx, &ny) == 3) {
+            struct wlr_tablet_tool_tip_event ev = {
+                .tablet = &g_synth_rig.tablet,
+                .tool = &g_synth_rig.tool,
+                .time_msec = now_ms,
+                .x = nx,
+                .y = ny,
+                .state = down ? WLR_TABLET_TOOL_TIP_DOWN : WLR_TABLET_TOOL_TIP_UP,
+            };
+            wl_signal_emit_mutable(&g_synth_rig.tablet.events.tip, &ev);
+        }
+    } else if (!strncmp(line, "SYNTH_TABLET button ", 20)) {
+        unsigned int btn = 0;
+        int pressed = 0;
+        if (sscanf(line + 20, "%u %d", &btn, &pressed) == 2) {
+            struct wlr_tablet_tool_button_event ev = {
+                .tablet = &g_synth_rig.tablet,
+                .tool = &g_synth_rig.tool,
+                .time_msec = now_ms,
+                .button = btn,
+                .state = pressed ? WLR_BUTTON_PRESSED : WLR_BUTTON_RELEASED,
+            };
+            wl_signal_emit_mutable(&g_synth_rig.tablet.events.button, &ev);
+        }
+    } else if (!strncmp(line, "SYNTH_TABLET pad_btn ", 21)) {
+        unsigned int btn = 0;
+        int pressed = 0;
+        if (sscanf(line + 21, "%u %d", &btn, &pressed) == 2) {
+            struct wlr_tablet_pad_button_event ev = {
+                .time_msec = now_ms,
+                .button = btn,
+                .state = pressed ? WLR_BUTTON_PRESSED : WLR_BUTTON_RELEASED,
+                .mode = 0,
+                .group = 0,
+            };
+            wl_signal_emit_mutable(&g_synth_rig.pad.events.button, &ev);
+        }
+    } else if (!strncmp(line, "SYNTH_TABLET pad_ring ", 22)) {
+        double pos = 0.0;
+        if (sscanf(line + 22, "%lf", &pos) == 1) {
+            struct wlr_tablet_pad_ring_event ev = {
+                .time_msec = now_ms,
+                .source = WLR_TABLET_PAD_RING_SOURCE_FINGER,
+                .ring = 0,
+                .position = pos,
+                .mode = 0,
+            };
+            wl_signal_emit_mutable(&g_synth_rig.pad.events.ring, &ev);
+        }
+    }
+}
+
 static int handle_ipc_peer_fd(int fd, uint32_t mask, void *data) {
     DtwmIpcPeer *peer = data;
     if (!peer || peer->fd < 0) return 0;
@@ -7167,6 +8269,8 @@ static int handle_ipc_peer_fd(int fd, uint32_t mask, void *data) {
                 peer->client_pid = (pid_t)cpid;
                 register_native_dpi_pid(peer->server, (pid_t)cpid);
             }
+        } else if (!strncmp(start, "SYNTH_TOUCH ", 12) || !strncmp(start, "SYNTH_TABLET ", 13)) {
+            handle_synth_input_cmd(peer->server, start);
         } else if (!strncmp(start, "SET ", 4)) {
             char *p = start + 4;
             char *sp = strrchr(p, ' ');
@@ -7725,6 +8829,10 @@ int main(int argc, char **argv) {
     wl_list_init(&server.popups);
     wl_list_init(&server.keyboards);
     wl_list_init(&server.pointers);
+    wl_list_init(&server.touches);
+    wl_list_init(&server.tablets);
+    wl_list_init(&server.tablet_pads);
+    wl_list_init(&server.tablet_tools);
     wl_list_init(&server.activation_tokens);
     wl_list_init(&server.tracked_pointer_constraints);
     wl_list_init(&server.tracked_shortcuts_inhibitors);
@@ -7918,7 +9026,28 @@ int main(int argc, char **argv) {
     wl_signal_add(&server.cursor->events.axis, &server.cursor_axis);
     server.cursor_frame.notify = handle_cursor_frame;
     wl_signal_add(&server.cursor->events.frame, &server.cursor_frame);
+    server.cursor_touch_down.notify = handle_cursor_touch_down;
+    wl_signal_add(&server.cursor->events.touch_down, &server.cursor_touch_down);
+    server.cursor_touch_up.notify = handle_cursor_touch_up;
+    wl_signal_add(&server.cursor->events.touch_up, &server.cursor_touch_up);
+    server.cursor_touch_motion.notify = handle_cursor_touch_motion;
+    wl_signal_add(&server.cursor->events.touch_motion, &server.cursor_touch_motion);
+    server.cursor_touch_cancel.notify = handle_cursor_touch_cancel;
+    wl_signal_add(&server.cursor->events.touch_cancel, &server.cursor_touch_cancel);
+    server.cursor_touch_frame.notify = handle_cursor_touch_frame;
+    wl_signal_add(&server.cursor->events.touch_frame, &server.cursor_touch_frame);
+    server.cursor_tablet_tool_axis.notify = handle_cursor_tablet_tool_axis;
+    wl_signal_add(&server.cursor->events.tablet_tool_axis, &server.cursor_tablet_tool_axis);
+    server.cursor_tablet_tool_proximity.notify = handle_cursor_tablet_tool_proximity;
+    wl_signal_add(
+        &server.cursor->events.tablet_tool_proximity, &server.cursor_tablet_tool_proximity
+    );
+    server.cursor_tablet_tool_tip.notify = handle_cursor_tablet_tool_tip;
+    wl_signal_add(&server.cursor->events.tablet_tool_tip, &server.cursor_tablet_tool_tip);
+    server.cursor_tablet_tool_button.notify = handle_cursor_tablet_tool_button;
+    wl_signal_add(&server.cursor->events.tablet_tool_button, &server.cursor_tablet_tool_button);
 
+    server.tablet_v2_mgr = wlr_tablet_v2_create(server.wl_display);
     server.pointer_gestures = wlr_pointer_gestures_v1_create(server.wl_display);
     server.relative_pointer_mgr = wlr_relative_pointer_manager_v1_create(server.wl_display);
     server.pointer_constraints = wlr_pointer_constraints_v1_create(server.wl_display);
@@ -8024,6 +9153,7 @@ int main(int argc, char **argv) {
     }
 
     start_native_ipc_server(&server);
+    synth_input_init(&server);
     if (server.renderer_name[0]) {
         dtwm_native_ipc_publish_prop(
             &server, "_DT_WAYLAND_RENDERER", server.renderer_name, strlen(server.renderer_name)
@@ -8085,6 +9215,10 @@ cleanup:
     if (server.sigint_source) wl_event_source_remove(server.sigint_source);
     if (server.sigterm_source) wl_event_source_remove(server.sigterm_source);
     stop_native_ipc_server(&server);
+    synth_input_finish();
+    for (int i = 0; i < DTWM_MAX_TOUCH_SLOTS; ++i) {
+        release_touch_slot(&g_touch_slots[i]);
+    }
     if (server.xwayland) {
         wl_list_remove(&server.new_xwayland_surface.link);
         wl_list_remove(&server.xwayland_ready.link);
@@ -8105,6 +9239,15 @@ cleanup:
     wl_list_remove(&server.cursor_button.link);
     wl_list_remove(&server.cursor_axis.link);
     wl_list_remove(&server.cursor_frame.link);
+    wl_list_remove(&server.cursor_touch_down.link);
+    wl_list_remove(&server.cursor_touch_up.link);
+    wl_list_remove(&server.cursor_touch_motion.link);
+    wl_list_remove(&server.cursor_touch_cancel.link);
+    wl_list_remove(&server.cursor_touch_frame.link);
+    wl_list_remove(&server.cursor_tablet_tool_axis.link);
+    wl_list_remove(&server.cursor_tablet_tool_proximity.link);
+    wl_list_remove(&server.cursor_tablet_tool_tip.link);
+    wl_list_remove(&server.cursor_tablet_tool_button.link);
     wl_list_remove(&server.cursor_swipe_begin.link);
     wl_list_remove(&server.cursor_swipe_update.link);
     wl_list_remove(&server.cursor_swipe_end.link);
@@ -8168,6 +9311,40 @@ cleanup:
             wl_list_remove(&ptr->destroy.link);
             wl_list_remove(&ptr->link);
             free(ptr);
+        }
+        DtwmTouch *tch, *ttmp;
+        wl_list_for_each_safe(tch, ttmp, &server.touches, link) {
+            wl_list_remove(&tch->destroy.link);
+            wl_list_remove(&tch->link);
+            free(tch);
+        }
+        DtwmTabletTool *ttool, *tooltmp;
+        wl_list_for_each_safe(ttool, tooltmp, &server.tablet_tools, link) {
+            if (ttool->wlr_tool) ttool->wlr_tool->data = nullptr;
+            wl_list_remove(&ttool->set_cursor.link);
+            wl_list_remove(&ttool->destroy.link);
+            wl_list_remove(&ttool->link);
+            free(ttool);
+        }
+        DtwmTabletPad *pad, *padtmp;
+        wl_list_for_each_safe(pad, padtmp, &server.tablet_pads, link) {
+            if (pad->current_surface) {
+                wl_list_remove(&pad->surface_destroy.link);
+            }
+            wl_list_remove(&pad->button.link);
+            wl_list_remove(&pad->ring.link);
+            wl_list_remove(&pad->strip.link);
+            wl_list_remove(&pad->attach_tablet.link);
+            wl_list_remove(&pad->destroy.link);
+            wl_list_remove(&pad->link);
+            free(pad);
+        }
+        DtwmTablet *tab, *tabtmp;
+        wl_list_for_each_safe(tab, tabtmp, &server.tablets, link) {
+            if (tab->wlr_tablet) tab->wlr_tablet->data = nullptr;
+            wl_list_remove(&tab->destroy.link);
+            wl_list_remove(&tab->link);
+            free(tab);
         }
     }
     if (server.backend) {

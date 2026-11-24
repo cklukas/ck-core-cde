@@ -59,6 +59,10 @@
 #include <wlr/types/wlr_seat.h>
 #include <wlr/types/wlr_single_pixel_buffer_v1.h>
 #include <wlr/types/wlr_subcompositor.h>
+#include <wlr/types/wlr_tablet_pad.h>
+#include <wlr/types/wlr_tablet_tool.h>
+#include <wlr/types/wlr_tablet_v2.h>
+#include <wlr/types/wlr_touch.h>
 #include <wlr/types/wlr_viewporter.h>
 #include <wlr/types/wlr_virtual_keyboard_v1.h>
 #include <wlr/types/wlr_virtual_pointer_v1.h>
@@ -465,6 +469,13 @@ struct DtwmServer {
     struct wl_list popups;
     struct wl_list keyboards;
     struct wl_list pointers;
+    struct wl_list touches;
+    struct wl_list tablets;
+    struct wl_list tablet_pads;
+    struct wl_list tablet_tools;
+    struct wlr_tablet_manager_v2 *tablet_v2_mgr;
+    bool touch_grab_active;
+    int32_t touch_grab_id;
 
     DtwmPalette palette;
     DtwmView *focused_view;
@@ -670,6 +681,15 @@ struct DtwmServer {
     struct wl_listener cursor_button;
     struct wl_listener cursor_axis;
     struct wl_listener cursor_frame;
+    struct wl_listener cursor_touch_down;
+    struct wl_listener cursor_touch_up;
+    struct wl_listener cursor_touch_motion;
+    struct wl_listener cursor_touch_cancel;
+    struct wl_listener cursor_touch_frame;
+    struct wl_listener cursor_tablet_tool_axis;
+    struct wl_listener cursor_tablet_tool_proximity;
+    struct wl_listener cursor_tablet_tool_tip;
+    struct wl_listener cursor_tablet_tool_button;
 
     struct wl_listener new_input;
     struct wl_listener backend_destroy;

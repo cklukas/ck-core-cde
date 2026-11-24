@@ -1,4 +1,23 @@
 2026-11-24
+- Add Wayland touchscreen (`wl_touch`), graphics tablet/stylus & ExpressKey pad
+  (`zwp_tablet_v2`), and tablet-tool cursor shapes (`wp_cursor_shape_v1`) in
+  `dtwm-wayland`, and advance the CK Core Motif pin to adopt client
+  `wp-cursor-shape-v1` and `wl_touch`:
+  - Attach `WLR_INPUT_DEVICE_TOUCH`, `WLR_INPUT_DEVICE_TABLET`, and
+    `WLR_INPUT_DEVICE_TABLET_PAD` input devices in `dtwm-wayland`, dynamically
+    advertising `WL_SEAT_CAPABILITY_TOUCH` on `wl_seat` and exposing
+    `zwp_tablet_manager_v2` (`wlr_tablet_v2_create`).
+  - Route multi-touch (`down`, `motion`, `up`, `cancel`, `frame`) in surface-local
+    coordinates with implicit per-finger surface grabs, while allowing
+    single-finger touch gestures on CDE titlebars, buttons, and resize borders
+    to move, snap, minimize, maximize, and resize windows.
+  - Route stylus proximity, high-resolution pressure, distance, X/Y tilt,
+    rotation, slider, wheel, tip down/up, barrel buttons, and ExpressKey pad
+    buttons/rings/strips natively to `zwp_tablet_v2`-capable surfaces (honoring
+    both `zwp_tablet_tool_v2.set_cursor` and `wp_cursor_shape_v1`
+    `get_tablet_tool_v2` requests), with automatic pointer/frame fallback over
+    CDE window chrome and Motif/X11 windows, covered by
+    `check-dtwm-wayland-touch-tablet.py`.
 - Add Wayland pointer lock/confinement, relative pointer motion, and shortcut
   inhibition (`zwp_pointer_constraints_v1`, `zwp_relative_pointer_v1`, and
   `zwp_keyboard_shortcuts_inhibit_v1`) with a `Ctrl+Alt` escape hatch in
