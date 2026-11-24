@@ -481,6 +481,10 @@ def run_live_daemon_test(
         dtlogin_elf = cde_build / "programs" / "dtlogin" / "dtlogin"
     if not dtgreet_elf.is_file():
         dtgreet_elf = cde_build / "programs" / "dtlogin" / "dtgreet"
+    xvfb_command = shutil.which("Xvfb")
+    if xvfb_command is None:
+        raise SystemExit("Xvfb is required for the live X11 handoff")
+    xvfb_path = Path(xvfb_command).absolute()
 
     if subprocess.run(["pgrep", "-x", "dtlogin"], capture_output=True).returncode == 0:
         raise SystemExit("Use a guest without an active dtlogin for the live seat check")
@@ -527,6 +531,7 @@ def run_live_daemon_test(
 
         shutil.copy2(dtlogin_elf, bin_dir / "dtlogin")
         shutil.copy2(dtgreet_elf, bin_dir / "dtgreet")
+        (bin_dir / "Xvfb").symlink_to(xvfb_path)
         os.chmod(bin_dir / "dtlogin", 0o755)
         os.chmod(bin_dir / "dtgreet", 0o755)
 
@@ -1030,6 +1035,18 @@ exit 0
                 raise SystemExit(f"Unexpected X11 session environment: {x11_env}")
             if not x11_env.get("DISPLAY", "").startswith(":") or int(x11_env.get("X11_QUERY_LINES", "0")) < 1:
                 raise SystemExit(f"X11 session could not query seat X server: {x11_env}")
+            # The seat fixture uses a local Xvfb display. Its lock identifies the live server.
+            x11_display = x11_env["DISPLAY"].removeprefix(":")
+            x11_pid = int(Path(f"/tmp/.X{x11_display}-lock").read_text().strip())
+            x11_image = f"/proc/{x11_pid}/exe"
+            x11_server = {
+                "executable": subprocess.check_output(
+                    ["sudo", "-n", "readlink", x11_image], text=True
+                ).strip(),
+                "sha256": subprocess.check_output(
+                    ["sudo", "-n", "sha256sum", x11_image], text=True
+                ).split()[0],
+            }
 
             # Trigger logout from CDE (X11 / XLibre) -> verify respawn back to Wayland greeter #3!
             (rec_dir / "logout-x11").write_text("1\n", encoding="utf-8")
@@ -1055,6 +1072,7 @@ exit 0
                 "dtgreet_pids": [greet_pid1, greet_pid2, greet_pid3],
                 "wayland_session_env": wl_env,
                 "x11_session_env": x11_env,
+                "x11_server": x11_server,
                 "screenshot": str(shot_file),
                 "screenshot_sha256": hashlib.sha256(shot_file.read_bytes()).hexdigest(),
             }

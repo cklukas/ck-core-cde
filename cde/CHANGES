@@ -1,4 +1,8 @@
 2026-11-24
+- Record the running X server's executable path and digest for signed
+  Ubuntu package verification and live greeter handoffs. Both checks can
+  select an XLibre build of Xvfb. Wait for installed Wayland windows before
+  capturing the desktop, including on slower cold starts.
 - Use synchronized absolute pointer input for the two-output workspace
   regression and verify the maximized terminal leaves the Front Panel visible.
   Share the virtual pointer fixture with the drag test, which now waits for

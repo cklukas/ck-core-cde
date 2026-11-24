@@ -23,6 +23,7 @@ import re
 import select
 import shutil
 import signal
+import socket
 import subprocess
 import sys
 import tempfile
@@ -231,7 +232,7 @@ def stop_process_groups(procs: list[subprocess.Popen]) -> None:
 
 
 def wait_for_xvfb_display(read_end: int, log_path: Path) -> str:
-    deadline = time.monotonic() + 20
+    deadline = time.monotonic() + 30
     reply = bytearray()
     while b"\n" not in reply and len(reply) < 16:
         remaining = max(0, deadline - time.monotonic())
@@ -245,6 +246,34 @@ def wait_for_xvfb_display(read_end: int, log_path: Path) -> str:
     if newline and number.isdigit():
         return ":" + number.decode("ascii")
     raise SystemExit(f"Xvfb did not report a ready display; see {log_path}")
+
+
+def wait_for_wayland_windows(ipc: Path, clients: dict[str, subprocess.Popen]) -> list[str]:
+    wanted = set(clients)
+    visible: set[str] = set()
+    deadline = time.monotonic() + 30
+    while time.monotonic() < deadline:
+        for name, proc in clients.items():
+            if proc.poll() is not None:
+                raise SystemExit(f"Installed Wayland {name} exited with {proc.returncode} before mapping")
+        try:
+            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
+                sock.settimeout(1)
+                sock.connect(str(ipc))
+                with sock.makefile("rb") as stream:
+                    for line in stream:
+                        fields = line.split()
+                        if len(fields) == 3 and fields[:2] == [b"PROP", b"_DT_WAYLAND_CLIENT_IDS"]:
+                            ids = bytes.fromhex(fields[2].decode("ascii")).decode("utf-8").split("\0")
+                            visible = {item.casefold().rsplit(".", 1)[-1] for item in ids if item}
+                        if line == b"READY\n":
+                            break
+        except OSError:
+            visible.clear()
+        if wanted <= visible:
+            return sorted(visible)
+        time.sleep(0.15)
+    raise SystemExit(f"Installed Wayland windows missing before capture: {sorted(wanted - visible)} (saw {sorted(visible)})")
 
 
 def verify_signed_repo(repo: Path, out_dir: Path, tmp_dir: Path) -> dict[str, object]:
@@ -413,16 +442,19 @@ def verify_package_sessions(
         x11_shot = out_dir / "wp08-cde-x11-desktop.png"
         try:
             wl_s, native = None, False
-            for _ in range(80):
+            deadline = time.monotonic() + 30
+            while time.monotonic() < deadline:
                 if wl_status.is_file():
                     kv = dict(ln.split("=", 1) for ln in wl_status.read_text().splitlines() if "=" in ln)
                     wl_s = kv.get("WAYLAND_DISPLAY")
                     native = kv.get("NO_XWAYLAND") == "1" and "DISPLAY" not in kv
                     if wl_s and native:
                         break
+                if comp.poll() is not None:
+                    raise SystemExit(f"Installed Wayland compositor exited with {comp.returncode}; see {wl_log_path}")
                 time.sleep(0.15)
             if not wl_s or not native:
-                raise SystemExit("Installed /usr/dt/bin/dtwm-wayland failed to start")
+                raise SystemExit(f"Installed Wayland compositor did not publish native readiness; see {wl_log_path}")
 
             # Wait briefly for genuine dtwm-panel to map its default CDE Front Panel controls
             time.sleep(1.5)
@@ -440,9 +472,10 @@ def verify_package_sessions(
             )
             p_cm = subprocess.Popen(["/usr/dt/bin/dtcm"], env=c_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
             procs.extend([p_pad, p_term, p_calc, p_cm, p_foot])
-            time.sleep(2.5)
+            clients = {"dtpad": p_pad, "dtterm": p_term, "ck-calc": p_calc, "dtcm": p_cm}
+            wayland_windows = wait_for_wayland_windows(xdg_d / f"dtwm-wayland-{wl_s}.ipc", clients)
 
-            for label, proc in [("dtpad", p_pad), ("dtterm", p_term), ("ck-calc", p_calc), ("dtcm", p_cm)]:
+            for label, proc in clients.items():
                 if proc.poll() is not None:
                     raise SystemExit(f"installed Wayland {label} exited with {proc.returncode}")
                 maps = Path(f"/proc/{proc.pid}/maps").read_text(encoding="utf-8", errors="replace")
@@ -463,10 +496,14 @@ def verify_package_sessions(
 
         # 2) Boot installed CDE (X11 / XLibre) desktop session under Xvfb WITHOUT LD_LIBRARY_PATH,
         #    verify libXm.so.9 maps on dtwm + clients, and capture via /usr/bin/ck-grab --capture --full-screen!
+        xvfb_command = shutil.which("Xvfb")
+        if xvfb_command is None:
+            raise SystemExit("Xvfb is required for installed X11 session verification")
+        xvfb_path = Path(xvfb_command).absolute()
         xvfb_log_path = out_dir / "installed-xvfb.log"
         with xvfb_log_path.open("w", encoding="utf-8") as xvfb_log:
             xvfb = subprocess.Popen(
-                ["Xvfb", "-displayfd", "1", "-screen", "0", "1280x900x24",
+                [str(xvfb_path), "-displayfd", "1", "-screen", "0", "1280x900x24",
                  "-nolisten", "tcp", "-noreset"],
                 stdout=subprocess.PIPE,
                 stderr=xvfb_log,
@@ -476,6 +513,11 @@ def verify_package_sessions(
         try:
             with xvfb.stdout as displayfd:
                 x11_dpy = wait_for_xvfb_display(displayfd.fileno(), xvfb_log_path)
+            running_xvfb = Path(f"/proc/{xvfb.pid}/exe")
+            x11_server = {
+                "executable": str(running_xvfb.resolve(strict=True)),
+                "sha256": sha256_file(running_xvfb),
+            }
             x11_env = {
                 **cde_common_env,
                 "DISPLAY": x11_dpy,
@@ -518,6 +560,7 @@ def verify_package_sessions(
             "libXm_sha256": libxm_sha,
             "wayland_maps": mapped_wayland,
             "x11_maps": mapped_x11,
+            "x11_server": x11_server,
             "wayland_screenshot": wl_shot.name,
             "wayland_screenshot_sha256": sha256_file(wl_shot),
             "x11_screenshot": x11_shot.name,
@@ -530,8 +573,10 @@ def verify_package_sessions(
             "signed_apt_repo_verified": True,
             "coexists_with_ubuntu_libxm4": True,
             "wayland_session_maps": mapped_wayland,
+            "wayland_windows": wayland_windows,
             "wayland_compositor_exit": comp.returncode,
             "x11_session_maps": mapped_x11,
+            "x11_server": x11_server,
             "wayland_screenshot_sha256": prov_data["wayland_screenshot_sha256"],
             "x11_screenshot_sha256": prov_data["x11_screenshot_sha256"],
         }

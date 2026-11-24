@@ -767,10 +767,18 @@ python3 scripts/build-ubuntu-debs.py --in-guest --verify-install \
 The verifier uses the repository's signing key for a scoped APT source. It
 checks the installed Motif digest and live library mappings, captures the
 native Wayland and X11 desktops, and verifies clean compositor shutdown.
+The Wayland capture waits for the compositor to report the installed
+applications' windows.
 The X11 check lets Xvfb allocate a display and waits for its readiness
 notification. It keeps the display available between desktop setup and
 window manager startup. Diagnostics are saved in `installed-xvfb.log` and
 `installed-x11.log`.
+To qualify XLibre, put the directory containing its `Xvfb` executable
+first on the guest's `PATH` before running the same command.
+`proc-maps-provenance.json` and `apt-verification.json` record the running
+X server's executable path and SHA-256 digest.
+The live `check-wayland-dtlogin.py` check uses the same `PATH` selection
+for the authenticated X11 handoff and records the server with `--json-out`.
 The guest's `_apt` user needs to be able to traverse `$GUEST_SCRATCH/tmp`
 and its ancestors to read the staged public key.
 The desktop package recommends GNOME Keyring and `secret-tool` for
