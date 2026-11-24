@@ -27,6 +27,7 @@ EXTRA_DIST = tests/check-property-readers.py tests/property-client.c \
              tests/check-dtwm-wayland-busy-light.py \
              tests/check-dtwm-wayland-activation.py \
              tests/check-dtwm-wayland-gpu-protocols.py \
+             tests/check-dtwm-wayland-pointer-lock.py \
              tests/check-dtwm-wayland-panel-dnd.py \
              tests/wayland-test-pointer.c \
              tests/check-dtappintegrate-curated.py \
@@ -71,6 +72,7 @@ if BUILD_DTWM_WAYLAND
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-busy-light.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-activation.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-gpu-protocols.py --compositor ./dtwm-wayland
+	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-pointer-lock.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-panel-dnd.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-exit-session.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-icon-order.py --compositor ./dtwm-wayland --dtwm ./dtwm
@@ -90,7 +92,8 @@ WAYLAND_GEN_HDRS = wayland/xdg-shell-protocol.h \
                    wayland/ext-image-copy-capture-v1-protocol.h \
                    wayland/ext-workspace-v1-protocol.h \
                    wayland/xdg-toplevel-icon-v1-protocol.h \
-                   wayland/xdg-system-bell-v1-protocol.h
+                   wayland/xdg-system-bell-v1-protocol.h \
+                   wayland/pointer-constraints-unstable-v1-protocol.h
 WAYLAND_GEN_SRCS = wayland/xdg-shell-protocol.c \
                    wayland/ext-workspace-v1-protocol.c \
                    wayland/xdg-toplevel-icon-v1-protocol.c \
@@ -146,6 +149,10 @@ wayland/xdg-system-bell-v1-protocol.c: $(WAYLAND_PROTOCOLS_DATADIR)/staging/xdg-
 	@$(MKDIR_P) wayland
 	$(WAYLAND_SCANNER) private-code $< $@
 
+wayland/pointer-constraints-unstable-v1-protocol.h: $(WAYLAND_PROTOCOLS_DATADIR)/unstable/pointer-constraints/pointer-constraints-unstable-v1.xml
+	@$(MKDIR_P) wayland
+	$(WAYLAND_SCANNER) server-header $< $@
+
 dtwm_wayland_SOURCES = wayland/dtwm_wayland.h \
                        wayland/cde_bevel.c \
                        wayland/cde_workspace.c \
@@ -158,6 +165,7 @@ dtwm_wayland_SOURCES = wayland/dtwm_wayland.h \
                        wayland/cde_accessibility.c \
                        wayland/dtwm_wayland_main.c
 nodist_dtwm_wayland_SOURCES = $(WAYLAND_GEN_HDRS) $(WAYLAND_GEN_SRCS)
+$(dtwm_wayland_OBJECTS): $(WAYLAND_GEN_HDRS)
 dtwm_wayland_CPPFLAGS = -I$(builddir)/wayland -I$(srcdir)/wayland -DWLR_USE_UNSTABLE=1 \
                         -DCDE_INSTALLATION_TOP=\"$(CDE_INSTALLATION_TOP)\"
 dtwm_wayland_CFLAGS = $(WAYLAND_COMP_CFLAGS)

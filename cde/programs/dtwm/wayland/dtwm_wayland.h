@@ -41,16 +41,19 @@
 #include <wlr/types/wlr_fractional_scale_v1.h>
 #include <wlr/types/wlr_input_device.h>
 #include <wlr/types/wlr_keyboard.h>
+#include <wlr/types/wlr_keyboard_shortcuts_inhibit_v1.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
 #include <wlr/types/wlr_linux_dmabuf_v1.h>
 #include <wlr/types/wlr_linux_drm_syncobj_v1.h>
 #include <wlr/types/wlr_output.h>
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_pointer.h>
+#include <wlr/types/wlr_pointer_constraints_v1.h>
 #include <wlr/types/wlr_pointer_gestures_v1.h>
 #include <wlr/types/wlr_presentation_time.h>
 #include <wlr/types/wlr_primary_selection.h>
 #include <wlr/types/wlr_primary_selection_v1.h>
+#include <wlr/types/wlr_relative_pointer_v1.h>
 #include <wlr/types/wlr_scene.h>
 #include <wlr/types/wlr_screencopy_v1.h>
 #include <wlr/types/wlr_seat.h>
@@ -66,6 +69,7 @@
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/box.h>
 #include <wlr/util/edges.h>
+#include <wlr/util/region.h>
 #include <wlr/xwayland/xwayland.h>
 
 #include <cairo/cairo.h>
@@ -441,6 +445,17 @@ struct DtwmServer {
 
     struct wlr_cursor *cursor;
     struct wlr_xcursor_manager *cursor_mgr;
+    struct wlr_relative_pointer_manager_v1 *relative_pointer_mgr;
+    struct wlr_pointer_constraints_v1 *pointer_constraints;
+    struct wlr_pointer_constraint_v1 *active_pointer_constraint;
+    struct wl_listener new_pointer_constraint;
+    struct wl_list tracked_pointer_constraints;
+    struct wlr_keyboard_shortcuts_inhibit_manager_v1 *shortcuts_inhibit_mgr;
+    struct wlr_keyboard_shortcuts_inhibitor_v1 *active_shortcuts_inhibitor;
+    struct wl_listener new_shortcuts_inhibitor;
+    struct wl_list tracked_shortcuts_inhibitors;
+    DtwmView *input_escaped_view;
+    bool ctrl_alt_chord_pending;
     struct wlr_seat *seat;
     struct wlr_virtual_pointer_manager_v1 *virtual_pointer_mgr;
     struct wlr_virtual_keyboard_manager_v1 *virtual_keyboard_mgr;
@@ -742,6 +757,7 @@ struct wlr_buffer *dtwm_render_osd_gauge(
 );
 
 bool dtwm_view_wants_opaque_client_bg(const DtwmView *view);
+bool dtwm_view_has_input_capture(const DtwmView *view);
 
 /* cde_workspace.c */
 bool dtwm_view_visible_on_current_ws(const DtwmView *view);

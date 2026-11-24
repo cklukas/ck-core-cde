@@ -1,4 +1,22 @@
 2026-11-24
+- Add Wayland pointer lock/confinement, relative pointer motion, and shortcut
+  inhibition (`zwp_pointer_constraints_v1`, `zwp_relative_pointer_v1`, and
+  `zwp_keyboard_shortcuts_inhibit_v1`) with a `Ctrl+Alt` escape hatch in
+  `dtwm-wayland`:
+  - Forward unobstructed microsecond-timestamped accelerated and unaccelerated
+    relative deltas via `wlr_relative_pointer_manager_v1` across relative and
+    absolute pointer devices.
+  - Activate and track one-shot and persistent `LOCKED` and `CONFINED` pointer
+    constraints (`wlr_region_confine`, sub-surface coordinate scaling, and
+    `set_cursor_position_hint` warp on unlock) alongside
+    `wlr_keyboard_shortcuts_inhibit_v1` for the focused window (suppressing
+    compositor shortcuts such as `Alt+Tab`, `Super`, and `Ctrl+Alt+1..8` for VM
+    guests, remote-desktop viewers, and 3D/CAD viewports).
+  - Show `[Captured — Ctrl+Alt]` in server-side CDE titlebars plus OSD banners
+    and `_DT_WAYLAND_INPUT_CAPTURE` IPC state while captured, release active
+    pointer constraints and shortcut inhibitors on a bare `Ctrl+Alt` tap chord
+    or `Ctrl+Alt+Escape` (re-engaging persistent capture when clicking back
+    inside the client area), covered by `check-dtwm-wayland-pointer-lock.py`.
 - Add smart GPU/`pixman` renderer selection, zero-copy `zwp_linux_dmabuf_v1` /
   `wp_linux_drm_syncobj_v1` scene integration, and modern buffer/presentation
   protocols in `dtwm-wayland`, and advance the CK Core Motif pin to adopt tight

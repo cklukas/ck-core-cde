@@ -107,6 +107,16 @@ framing or interaction rules.
   unauthenticated background window maps and seatless self-activation requests
   are kept beneath the active window without stealing keyboard focus while the
   user is typing;
+- **Pointer lock, relative motion, and shortcut inhibition (`zwp_pointer_constraints_v1`, `zwp_relative_pointer_v1`, `zwp_keyboard_shortcuts_inhibit_v1`)**:
+  `dtwm-wayland` supports unobstructed relative pointer motion, `LOCKED` and
+  region-`CONFINED` pointer constraints (honoring `set_cursor_position_hint`
+  warping on unlock), and keyboard shortcut inhibition for nested VMs
+  (QEMU/`virt-manager`), FreeRDP/VNC clients, 3D/CAD viewports, and games. Active
+  capture appends `[Captured — Ctrl+Alt]` to the window's CDE bevel title bar,
+  displays an OSD banner, and publishes `_DT_WAYLAND_INPUT_CAPTURE`; tapping a
+  bare `Ctrl+Alt` chord (or `Ctrl+Alt+Escape`) releases both pointer lock and
+  shortcut inhibition immediately, and clicking back inside the client area
+  cleanly re-engages persistent constraints;
 - Left-clicking the desktop background clears active-window focus, while
   right-clicking opens the 3D-beveled **Workspace Menu** (supporting both
   click-to-post and Motif press-drag-release, plus `Up`/`Down`/`Enter`/`Esc`
@@ -829,6 +839,9 @@ atomically once the compositor session is ready.
   `check-dtwm-wayland-gpu-protocols.py` (automatic GPU/`pixman` renderer
   selection and fallback, `zwp_linux_dmabuf_v1` v4 feedback, `wp_presentation`
   feedback, `wp_single_pixel_buffer_v1`, and `wp_alpha_modifier_v1` blending),
+  `check-dtwm-wayland-pointer-lock.py` (`zwp_pointer_constraints_v1` lock and
+  region confinement, `zwp_relative_pointer_v1`, `zwp_keyboard_shortcuts_inhibit_v1`,
+  `cursor_position_hint` warp, `Ctrl+Alt` escape hatch, and click recapture),
   `check-dtappintegrate-curated.py` (Application Manager installed vs.
   auto-gray + blue download arrow badge vs. hidden stub curation), and
   `check-dtwm-wayland-exit-session.py` (`f.quit_mwm`, external-compositor

@@ -682,8 +682,20 @@ static void render_frame_strip(
             }
             const char *tfont =
                 (view->server->palette.profile == DTWM_PROFILE_CLASSIC) ? "Serif 10" : "Sans Bold 9.5";
+            const char *base_title = dtwm_view_title(view);
+            char cap_title[384];
+            const char *disp_title = base_title;
+            if (dtwm_view_has_input_capture(view)) {
+                snprintf(
+                    cap_title,
+                    sizeof(cap_title),
+                    "%s  [Captured \xe2\x80\x94 Ctrl+Alt]",
+                    base_title ? base_title : ""
+                );
+                disp_title = cap_title;
+            }
             draw_pango_label_with_font_dpi(
-                cr, tfont, m->dpi, dtwm_view_title(view), title_x, ty, title_w, th, cs->fg, true
+                cr, tfont, m->dpi, disp_title, title_x, ty, title_w, th, cs->fg, true
             );
         }
     }

@@ -83,6 +83,21 @@ typedef struct {
     struct wl_listener destroy;
 } DtwmPointer;
 
+typedef struct {
+    struct wl_list link;
+    DtwmServer *server;
+    struct wlr_pointer_constraint_v1 *constraint;
+    struct wl_listener set_region;
+    struct wl_listener destroy;
+} DtwmPointerConstraint;
+
+typedef struct {
+    struct wl_list link;
+    DtwmServer *server;
+    struct wlr_keyboard_shortcuts_inhibitor_v1 *inhibitor;
+    struct wl_listener destroy;
+} DtwmShortcutsInhibitor;
+
 static uint32_t pointer_button_bit(uint32_t btn) {
     if (btn >= BTN_MOUSE && btn < BTN_MOUSE + 16u) {
         return 1u << (btn - BTN_MOUSE);
@@ -117,6 +132,20 @@ static void view_set_maximized(DtwmView *view, bool maximized);
 static void view_set_minimized(DtwmView *view, bool minimized);
 static void view_close(DtwmView *view);
 static void view_apply_geometry(DtwmView *view, int x, int y, int client_w, int client_h);
+static void process_cursor_motion(DtwmServer *server, uint32_t time_msec);
+static void show_hardware_osd(
+    DtwmServer *server, const char *kind, int level, bool muted, const char *label
+);
+static void sync_input_capture_for_focused_view(DtwmServer *server, bool show_osd);
+static void deactivate_active_pointer_constraint(DtwmServer *server, bool apply_hint);
+static DtwmView *find_view_owning_surface(const DtwmServer *server, struct wlr_surface *surf);
+static DtwmView *surface_global_origin_and_scale(
+    const DtwmServer *server,
+    struct wlr_surface *surf,
+    double *out_gx,
+    double *out_gy,
+    double *out_scale
+);
 
 static uint32_t dtwm_now_msec(void) {
     struct timespec ts = {0};
@@ -578,6 +607,7 @@ static void clear_active_focus(DtwmServer *server) {
     wlr_seat_keyboard_notify_clear_focus(server->seat);
     dtwm_ime_set_focus(server, nullptr);
     dtwm_publish_active_window_box(server);
+    sync_input_capture_for_focused_view(server, false);
 }
 
 static uint64_t dtwm_now_nsec(void) {
@@ -643,6 +673,9 @@ static void focus_view_ex(
     }
 
     DtwmView *prev = server->focused_view;
+    if (prev && prev != view && server->input_escaped_view == prev) {
+        server->input_escaped_view = nullptr;
+    }
     if (prev && prev != view) {
         prev->active = false;
         if (prev->kind == DTWM_VIEW_XDG && prev->xdg_toplevel && prev->xdg_toplevel->base->initialized) {
@@ -694,6 +727,7 @@ static void focus_view_ex(
     struct wlr_keyboard *kbd = wlr_seat_get_keyboard(server->seat);
     dtwm_a11y_notify_keyboard_enter(server, surface, kbd);
     dtwm_ime_set_focus(server, surface);
+    sync_input_capture_for_focused_view(server, true);
 }
 
 static void focus_view(DtwmServer *server, DtwmView *view, struct wlr_surface *surface) {
@@ -3013,10 +3047,482 @@ void dtwm_recheck_cursor_focus(DtwmServer *server) {
     wlr_seat_pointer_notify_frame(server->seat);
 }
 
+static DtwmView *find_view_owning_surface(const DtwmServer *server, struct wlr_surface *surf) {
+    if (!server || !surf) {
+        return nullptr;
+    }
+    struct wlr_surface *root = surf;
+    for (int depth = 0; depth < 16 && root; ++depth) {
+        struct wlr_subsurface *sub = wlr_subsurface_try_from_wlr_surface(root);
+        if (!sub || !sub->parent) {
+            break;
+        }
+        root = sub->parent;
+    }
+    DtwmView *v;
+    wl_list_for_each(v, &server->views, link) {
+        if (v->mapped && view_wlr_surface(v) == root) {
+            return v;
+        }
+    }
+    return nullptr;
+}
+
+static DtwmView *surface_global_origin_and_scale(
+    const DtwmServer *server,
+    struct wlr_surface *surf,
+    double *out_gx,
+    double *out_gy,
+    double *out_scale
+) {
+    DtwmView *v = find_view_owning_surface(server, surf);
+    if (!v) {
+        return nullptr;
+    }
+    int gx = 0, gy = 0;
+    struct wlr_scene_tree *st = v->content_tree ? v->content_tree : v->frame_tree;
+    if (st) {
+        wlr_scene_node_coords(&st->node, &gx, &gy);
+    }
+    double s = (v->kind == DTWM_VIEW_XDG && !v->is_native_dpi && v->external_client_scale > 0.25)
+                   ? v->external_client_scale
+                   : 1.0;
+    double off_x = 0.0, off_y = 0.0;
+    struct wlr_surface *cur = surf;
+    for (int depth = 0; depth < 16 && cur && cur != view_wlr_surface(v); ++depth) {
+        struct wlr_subsurface *sub = wlr_subsurface_try_from_wlr_surface(cur);
+        if (!sub || !sub->parent) {
+            break;
+        }
+        off_x += (double)sub->current.x * s;
+        off_y += (double)sub->current.y * s;
+        cur = sub->parent;
+    }
+    if (out_gx) *out_gx = (double)gx + off_x;
+    if (out_gy) *out_gy = (double)gy + off_y;
+    if (out_scale) *out_scale = s;
+    return v;
+}
+
+bool dtwm_view_has_input_capture(const DtwmView *view) {
+    if (!view || !view->server || view->server->shutting_down) {
+        return false;
+    }
+    const DtwmServer *srv = view->server;
+    if (srv->active_pointer_constraint &&
+        find_view_owning_surface(srv, srv->active_pointer_constraint->surface) == view) {
+        return true;
+    }
+    if (srv->active_shortcuts_inhibitor && srv->active_shortcuts_inhibitor->active &&
+        find_view_owning_surface(srv, srv->active_shortcuts_inhibitor->surface) == view) {
+        return true;
+    }
+    return false;
+}
+
+static void publish_input_capture_ipc(DtwmServer *server) {
+    if (!server || server->shutting_down || server->native_ipc_fd < 0) {
+        return;
+    }
+    int locked = (server->active_pointer_constraint &&
+                  server->active_pointer_constraint->type == WLR_POINTER_CONSTRAINT_V1_LOCKED)
+                     ? 1
+                     : 0;
+    int confined = (server->active_pointer_constraint &&
+                    server->active_pointer_constraint->type == WLR_POINTER_CONSTRAINT_V1_CONFINED)
+                       ? 1
+                       : 0;
+    int shortcuts =
+        (server->active_shortcuts_inhibitor && server->active_shortcuts_inhibitor->active) ? 1 : 0;
+    int escaped = (server->input_escaped_view != nullptr) ? 1 : 0;
+    char msg[128];
+    int n = snprintf(
+        msg,
+        sizeof(msg),
+        "locked=%d confined=%d shortcuts=%d escaped=%d",
+        locked,
+        confined,
+        shortcuts,
+        escaped
+    );
+    if (n > 0) {
+        dtwm_native_ipc_publish_prop(server, "_DT_WAYLAND_INPUT_CAPTURE", msg, (size_t)n);
+    }
+}
+
+static void build_pointer_constraint_region(
+    struct wlr_pointer_constraint_v1 *c, pixman_region32_t *out_reg
+) {
+    int sw = (c && c->surface && c->surface->current.width > 0) ? c->surface->current.width : 1;
+    int sh = (c && c->surface && c->surface->current.height > 0) ? c->surface->current.height : 1;
+    pixman_region32_init_rect(out_reg, 0, 0, (unsigned)sw, (unsigned)sh);
+    if (c && pixman_region32_not_empty(&c->region)) {
+        pixman_region32_intersect(out_reg, out_reg, &c->region);
+    }
+}
+
+static void clamp_point_into_region(const pixman_region32_t *reg, double *io_x, double *io_y) {
+    if (!reg || !io_x || !io_y) return;
+    if (pixman_region32_contains_point(reg, (int)floor(*io_x), (int)floor(*io_y), nullptr)) {
+        return;
+    }
+    int nboxes = 0;
+    const pixman_box32_t *boxes = pixman_region32_rectangles(reg, &nboxes);
+    if (nboxes <= 0 || !boxes) {
+        return;
+    }
+    double best_x = *io_x, best_y = *io_y;
+    double best_d2 = 1e30;
+    for (int i = 0; i < nboxes; ++i) {
+        double min_x = (double)boxes[i].x1;
+        double max_x = (double)boxes[i].x2 > min_x + 1.0 ? (double)boxes[i].x2 - 0.5 : min_x;
+        double min_y = (double)boxes[i].y1;
+        double max_y = (double)boxes[i].y2 > min_y + 1.0 ? (double)boxes[i].y2 - 0.5 : min_y;
+        double cx = *io_x < min_x ? min_x : (*io_x > max_x ? max_x : *io_x);
+        double cy = *io_y < min_y ? min_y : (*io_y > max_y ? max_y : *io_y);
+        double dx = cx - *io_x;
+        double dy = cy - *io_y;
+        double d2 = dx * dx + dy * dy;
+        if (d2 < best_d2) {
+            best_d2 = d2;
+            best_x = cx;
+            best_y = cy;
+        }
+    }
+    *io_x = best_x;
+    *io_y = best_y;
+}
+
+static void deactivate_active_pointer_constraint(DtwmServer *server, bool apply_hint) {
+    if (!server || !server->active_pointer_constraint) {
+        return;
+    }
+    struct wlr_pointer_constraint_v1 *c = server->active_pointer_constraint;
+    server->active_pointer_constraint = nullptr;
+    DtwmView *owner = c->surface ? find_view_owning_surface(server, c->surface) : nullptr;
+    if (apply_hint && !server->shutting_down &&
+        c->type == WLR_POINTER_CONSTRAINT_V1_LOCKED &&
+        c->current.cursor_hint.enabled && c->surface && server->cursor) {
+        double gx = 0.0, gy = 0.0, s = 1.0;
+        if (surface_global_origin_and_scale(server, c->surface, &gx, &gy, &s)) {
+            wlr_cursor_warp_closest(
+                server->cursor,
+                nullptr,
+                gx + c->current.cursor_hint.x * s,
+                gy + c->current.cursor_hint.y * s
+            );
+            process_cursor_motion(server, dtwm_now_msec());
+        }
+    }
+    wlr_pointer_constraint_v1_send_deactivated(c);
+    if (owner && owner->mapped) {
+        dtwm_view_update_frame(owner);
+    }
+    publish_input_capture_ipc(server);
+}
+
+static void activate_pointer_constraint(
+    DtwmServer *server, struct wlr_pointer_constraint_v1 *c, bool show_osd
+) {
+    if (!server || server->active_pointer_constraint == c) {
+        return;
+    }
+    deactivate_active_pointer_constraint(server, true);
+    if (!c || !c->surface) {
+        return;
+    }
+    double gx = 0.0, gy = 0.0, s = 1.0;
+    DtwmView *owner = surface_global_origin_and_scale(server, c->surface, &gx, &gy, &s);
+    if (!owner || !owner->mapped) {
+        return;
+    }
+    double sx = (server->cursor->x - gx) / s;
+    double sy = (server->cursor->y - gy) / s;
+    pixman_region32_t creg;
+    build_pointer_constraint_region(c, &creg);
+    if (!pixman_region32_contains_point(&creg, (int)floor(sx), (int)floor(sy), nullptr)) {
+        clamp_point_into_region(&creg, &sx, &sy);
+        wlr_cursor_warp_closest(server->cursor, nullptr, gx + sx * s, gy + sy * s);
+    }
+    pixman_region32_fini(&creg);
+
+    wlr_seat_pointer_notify_enter(server->seat, c->surface, sx, sy);
+    wlr_seat_pointer_notify_frame(server->seat);
+
+    server->active_pointer_constraint = c;
+    wlr_pointer_constraint_v1_send_activated(c);
+    dtwm_view_update_frame(owner);
+    if (show_osd) {
+        show_hardware_osd(
+            server,
+            "input",
+            100,
+            false,
+            c->type == WLR_POINTER_CONSTRAINT_V1_LOCKED
+                ? "Pointer Locked \xe2\x80\x94 Ctrl+Alt to Release"
+                : "Pointer Confined \xe2\x80\x94 Ctrl+Alt to Release"
+        );
+    }
+    publish_input_capture_ipc(server);
+}
+
+static void sync_input_capture_for_focused_view(DtwmServer *server, bool show_osd) {
+    if (!server || server->shutting_down) {
+        return;
+    }
+    DtwmView *fv = (!server->session_locked && server->focused_view && server->focused_view->mapped)
+                       ? server->focused_view
+                       : nullptr;
+    if (!fv || fv == server->input_escaped_view) {
+        deactivate_active_pointer_constraint(server, true);
+        if (server->active_shortcuts_inhibitor) {
+            struct wlr_keyboard_shortcuts_inhibitor_v1 *inh = server->active_shortcuts_inhibitor;
+            DtwmView *owner =
+                inh->surface ? find_view_owning_surface(server, inh->surface) : nullptr;
+            server->active_shortcuts_inhibitor = nullptr;
+            if (inh->active) {
+                wlr_keyboard_shortcuts_inhibitor_v1_deactivate(inh);
+            }
+            if (owner && owner->mapped) {
+                dtwm_view_update_frame(owner);
+            }
+            publish_input_capture_ipc(server);
+        }
+        return;
+    }
+
+    if (server->active_pointer_constraint &&
+        find_view_owning_surface(server, server->active_pointer_constraint->surface) != fv) {
+        deactivate_active_pointer_constraint(server, true);
+    }
+    if (!server->active_pointer_constraint) {
+        DtwmPointerConstraint *pc;
+        wl_list_for_each(pc, &server->tracked_pointer_constraints, link) {
+            if (pc->constraint && find_view_owning_surface(server, pc->constraint->surface) == fv) {
+                activate_pointer_constraint(server, pc->constraint, show_osd);
+                break;
+            }
+        }
+    }
+
+    if (server->active_shortcuts_inhibitor &&
+        find_view_owning_surface(server, server->active_shortcuts_inhibitor->surface) != fv) {
+        struct wlr_keyboard_shortcuts_inhibitor_v1 *inh = server->active_shortcuts_inhibitor;
+        DtwmView *owner = inh->surface ? find_view_owning_surface(server, inh->surface) : nullptr;
+        server->active_shortcuts_inhibitor = nullptr;
+        if (inh->active) {
+            wlr_keyboard_shortcuts_inhibitor_v1_deactivate(inh);
+        }
+        if (owner && owner->mapped) {
+            dtwm_view_update_frame(owner);
+        }
+        publish_input_capture_ipc(server);
+    }
+    if (!server->active_shortcuts_inhibitor) {
+        DtwmShortcutsInhibitor *si;
+        wl_list_for_each(si, &server->tracked_shortcuts_inhibitors, link) {
+            if (si->inhibitor && find_view_owning_surface(server, si->inhibitor->surface) == fv) {
+                server->active_shortcuts_inhibitor = si->inhibitor;
+                wlr_keyboard_shortcuts_inhibitor_v1_activate(si->inhibitor);
+                dtwm_view_update_frame(fv);
+                if (show_osd && !server->active_pointer_constraint) {
+                    show_hardware_osd(
+                        server, "input", 100, false, "Shortcuts Captured \xe2\x80\x94 Ctrl+Alt to Release"
+                    );
+                }
+                publish_input_capture_ipc(server);
+                break;
+            }
+        }
+    }
+}
+
+static bool release_input_capture_via_escape_hatch(DtwmServer *server) {
+    if (!server || (!server->active_pointer_constraint && !server->active_shortcuts_inhibitor)) {
+        return false;
+    }
+    DtwmView *fv = server->focused_view;
+    server->input_escaped_view = fv;
+    server->ctrl_alt_chord_pending = false;
+    deactivate_active_pointer_constraint(server, true);
+    if (server->active_shortcuts_inhibitor) {
+        struct wlr_keyboard_shortcuts_inhibitor_v1 *inh = server->active_shortcuts_inhibitor;
+        server->active_shortcuts_inhibitor = nullptr;
+        if (inh->active) {
+            wlr_keyboard_shortcuts_inhibitor_v1_deactivate(inh);
+        }
+    }
+    if (fv && fv->mapped) {
+        dtwm_view_update_frame(fv);
+    }
+    show_hardware_osd(server, "input", 0, false, "Input Released (Ctrl+Alt)");
+    publish_input_capture_ipc(server);
+    return true;
+}
+
+static void handle_pointer_constraint_set_region(struct wl_listener *listener, void *data) {
+    (void)data;
+    DtwmPointerConstraint *pc = wl_container_of(listener, pc, set_region);
+    DtwmServer *server = pc->server;
+    if (!server || server->shutting_down || server->active_pointer_constraint != pc->constraint) {
+        return;
+    }
+    if (pc->constraint->type == WLR_POINTER_CONSTRAINT_V1_CONFINED && pc->constraint->surface) {
+        double gx = 0.0, gy = 0.0, s = 1.0;
+        if (surface_global_origin_and_scale(server, pc->constraint->surface, &gx, &gy, &s)) {
+            double sx = (server->cursor->x - gx) / s;
+            double sy = (server->cursor->y - gy) / s;
+            pixman_region32_t creg;
+            build_pointer_constraint_region(pc->constraint, &creg);
+            if (!pixman_region32_contains_point(&creg, (int)floor(sx), (int)floor(sy), nullptr)) {
+                clamp_point_into_region(&creg, &sx, &sy);
+                wlr_cursor_warp_closest(server->cursor, nullptr, gx + sx * s, gy + sy * s);
+                process_cursor_motion(server, dtwm_now_msec());
+            }
+            pixman_region32_fini(&creg);
+        }
+    }
+}
+
+static void handle_pointer_constraint_destroy(struct wl_listener *listener, void *data) {
+    (void)data;
+    DtwmPointerConstraint *pc = wl_container_of(listener, pc, destroy);
+    DtwmServer *server = pc->server;
+    bool was_active = (server && server->active_pointer_constraint == pc->constraint);
+    DtwmView *owner =
+        (server && pc->constraint && pc->constraint->surface)
+            ? find_view_owning_surface(server, pc->constraint->surface)
+            : nullptr;
+    if (was_active) {
+        if (!server->shutting_down &&
+            pc->constraint->type == WLR_POINTER_CONSTRAINT_V1_LOCKED &&
+            pc->constraint->current.cursor_hint.enabled &&
+            pc->constraint->surface && server->cursor) {
+            double gx = 0.0, gy = 0.0, s = 1.0;
+            if (surface_global_origin_and_scale(server, pc->constraint->surface, &gx, &gy, &s)) {
+                wlr_cursor_warp_closest(
+                    server->cursor,
+                    nullptr,
+                    gx + pc->constraint->current.cursor_hint.x * s,
+                    gy + pc->constraint->current.cursor_hint.y * s
+                );
+            }
+        }
+        server->active_pointer_constraint = nullptr;
+    }
+    wl_list_remove(&pc->set_region.link);
+    wl_list_remove(&pc->destroy.link);
+    wl_list_remove(&pc->link);
+    free(pc);
+    if (server && !server->shutting_down) {
+        if (owner && owner->mapped) {
+            dtwm_view_update_frame(owner);
+        }
+        publish_input_capture_ipc(server);
+        if (was_active) {
+            dtwm_recheck_cursor_focus(server);
+        }
+    }
+}
+
+static void handle_new_pointer_constraint(struct wl_listener *listener, void *data) {
+    DtwmServer *server = wl_container_of(listener, server, new_pointer_constraint);
+    struct wlr_pointer_constraint_v1 *constraint = data;
+    DtwmPointerConstraint *pc = calloc(1, sizeof(*pc));
+    if (!pc) return;
+    pc->server = server;
+    pc->constraint = constraint;
+    pc->set_region.notify = handle_pointer_constraint_set_region;
+    wl_signal_add(&constraint->events.set_region, &pc->set_region);
+    pc->destroy.notify = handle_pointer_constraint_destroy;
+    wl_signal_add(&constraint->events.destroy, &pc->destroy);
+    wl_list_insert(&server->tracked_pointer_constraints, &pc->link);
+    sync_input_capture_for_focused_view(server, true);
+}
+
+static void handle_shortcuts_inhibitor_destroy(struct wl_listener *listener, void *data) {
+    (void)data;
+    DtwmShortcutsInhibitor *si = wl_container_of(listener, si, destroy);
+    DtwmServer *server = si->server;
+    DtwmView *owner =
+        (server && si->inhibitor && si->inhibitor->surface)
+            ? find_view_owning_surface(server, si->inhibitor->surface)
+            : nullptr;
+    if (server && server->active_shortcuts_inhibitor == si->inhibitor) {
+        server->active_shortcuts_inhibitor = nullptr;
+    }
+    wl_list_remove(&si->destroy.link);
+    wl_list_remove(&si->link);
+    free(si);
+    if (server && !server->shutting_down) {
+        if (owner && owner->mapped) {
+            dtwm_view_update_frame(owner);
+        }
+        publish_input_capture_ipc(server);
+    }
+}
+
+static void handle_new_shortcuts_inhibitor(struct wl_listener *listener, void *data) {
+    DtwmServer *server = wl_container_of(listener, server, new_shortcuts_inhibitor);
+    struct wlr_keyboard_shortcuts_inhibitor_v1 *inhibitor = data;
+    DtwmShortcutsInhibitor *si = calloc(1, sizeof(*si));
+    if (!si) return;
+    si->server = server;
+    si->inhibitor = inhibitor;
+    si->destroy.notify = handle_shortcuts_inhibitor_destroy;
+    wl_signal_add(&inhibitor->events.destroy, &si->destroy);
+    wl_list_insert(&server->tracked_shortcuts_inhibitors, &si->link);
+    sync_input_capture_for_focused_view(server, true);
+}
+
 static void handle_cursor_motion(struct wl_listener *listener, void *data) {
     DtwmServer *server = wl_container_of(listener, server, cursor_motion);
     struct wlr_pointer_motion_event *ev = data;
     uint32_t t_ms = ev->time_msec ? ev->time_msec : dtwm_now_msec();
+    dtwm_lock_notify_activity(server);
+
+    if (server->relative_pointer_mgr && !server->session_locked) {
+        wlr_relative_pointer_manager_v1_send_relative_motion(
+            server->relative_pointer_mgr,
+            server->seat,
+            (uint64_t)t_ms * 1000ull,
+            ev->delta_x,
+            ev->delta_y,
+            ev->unaccel_dx,
+            ev->unaccel_dy
+        );
+    }
+
+    if (server->active_pointer_constraint && !server->session_locked &&
+        server->cursor_mode == DTWM_CURSOR_PASSTHROUGH &&
+        server->active_pointer_constraint->surface) {
+        struct wlr_pointer_constraint_v1 *c = server->active_pointer_constraint;
+        if (c->type == WLR_POINTER_CONSTRAINT_V1_LOCKED) {
+            return;
+        }
+        if (c->type == WLR_POINTER_CONSTRAINT_V1_CONFINED) {
+            double gx = 0.0, gy = 0.0, s = 1.0;
+            if (surface_global_origin_and_scale(server, c->surface, &gx, &gy, &s)) {
+                double sx1 = (server->cursor->x - gx) / s;
+                double sy1 = (server->cursor->y - gy) / s;
+                pixman_region32_t creg;
+                build_pointer_constraint_region(c, &creg);
+                clamp_point_into_region(&creg, &sx1, &sy1);
+                double sx2 = sx1 + ev->delta_x / s;
+                double sy2 = sy1 + ev->delta_y / s;
+                double cx = sx1, cy = sy1;
+                if (!wlr_region_confine(&creg, sx1, sy1, sx2, sy2, &cx, &cy)) {
+                    cx = sx1;
+                    cy = sy1;
+                }
+                pixman_region32_fini(&creg);
+                wlr_cursor_warp_closest(server->cursor, nullptr, gx + cx * s, gy + cy * s);
+                process_cursor_motion(server, t_ms);
+                return;
+            }
+        }
+    }
+
     wlr_cursor_move(server->cursor, &ev->pointer->base, ev->delta_x, ev->delta_y);
     process_cursor_motion(server, t_ms);
 }
@@ -3025,6 +3531,55 @@ static void handle_cursor_motion_absolute(struct wl_listener *listener, void *da
     DtwmServer *server = wl_container_of(listener, server, cursor_motion_absolute);
     struct wlr_pointer_motion_absolute_event *ev = data;
     uint32_t t_ms = ev->time_msec ? ev->time_msec : dtwm_now_msec();
+    dtwm_lock_notify_activity(server);
+
+    double lx = 0.0, ly = 0.0;
+    wlr_cursor_absolute_to_layout_coords(server->cursor, &ev->pointer->base, ev->x, ev->y, &lx, &ly);
+    double dx = lx - server->cursor->x;
+    double dy = ly - server->cursor->y;
+
+    if (server->relative_pointer_mgr && !server->session_locked && (dx != 0.0 || dy != 0.0)) {
+        wlr_relative_pointer_manager_v1_send_relative_motion(
+            server->relative_pointer_mgr,
+            server->seat,
+            (uint64_t)t_ms * 1000ull,
+            dx,
+            dy,
+            dx,
+            dy
+        );
+    }
+
+    if (server->active_pointer_constraint && !server->session_locked &&
+        server->cursor_mode == DTWM_CURSOR_PASSTHROUGH &&
+        server->active_pointer_constraint->surface) {
+        struct wlr_pointer_constraint_v1 *c = server->active_pointer_constraint;
+        if (c->type == WLR_POINTER_CONSTRAINT_V1_LOCKED) {
+            return;
+        }
+        if (c->type == WLR_POINTER_CONSTRAINT_V1_CONFINED) {
+            double gx = 0.0, gy = 0.0, s = 1.0;
+            if (surface_global_origin_and_scale(server, c->surface, &gx, &gy, &s)) {
+                double sx1 = (server->cursor->x - gx) / s;
+                double sy1 = (server->cursor->y - gy) / s;
+                pixman_region32_t creg;
+                build_pointer_constraint_region(c, &creg);
+                clamp_point_into_region(&creg, &sx1, &sy1);
+                double sx2 = (lx - gx) / s;
+                double sy2 = (ly - gy) / s;
+                double cx = sx1, cy = sy1;
+                if (!wlr_region_confine(&creg, sx1, sy1, sx2, sy2, &cx, &cy)) {
+                    cx = sx1;
+                    cy = sy1;
+                }
+                pixman_region32_fini(&creg);
+                wlr_cursor_warp_closest(server->cursor, nullptr, gx + cx * s, gy + cy * s);
+                process_cursor_motion(server, t_ms);
+                return;
+            }
+        }
+    }
+
     wlr_cursor_warp_absolute(server->cursor, &ev->pointer->base, ev->x, ev->y);
     process_cursor_motion(server, t_ms);
 }
@@ -3186,6 +3741,14 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
     }
 
     /* Button press */
+    if (server->active_pointer_constraint &&
+        server->active_pointer_constraint->type == WLR_POINTER_CONSTRAINT_V1_LOCKED &&
+        server->cursor_mode == DTWM_CURSOR_PASSTHROUGH &&
+        server->active_pointer_constraint->surface) {
+        wlr_seat_pointer_notify_button(server->seat, t_ms, btn, ev->state);
+        wlr_seat_pointer_notify_frame(server->seat);
+        return;
+    }
     if (server->cursor_mode != DTWM_CURSOR_PASSTHROUGH) {
         /* Clicking while in Window Menu Move/Size mode commits on the subsequent release */
         server->grab_ignore_next_release = false;
@@ -3269,6 +3832,9 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
             if (surface) {
                 wlr_seat_pointer_notify_enter(server->seat, surface, sx, sy);
             }
+        }
+        if (part == DTWM_PART_CLIENT && server->input_escaped_view == view) {
+            server->input_escaped_view = nullptr;
         }
         if (!clicked_xdg_popup) {
             focus_view_ex(
@@ -3948,37 +4514,94 @@ static void handle_keyboard_key(struct wl_listener *listener, void *data) {
     bool handled = false;
     uint32_t mods = wlr_keyboard_get_modifiers(kb->wlr_keyboard);
     bool is_super_sym = false;
+    bool is_ctrl_or_alt_sym = false;
+    bool is_escape_sym = false;
+    uint32_t eff_mods = mods;
     for (int i = 0; i < nsyms; ++i) {
-        if (syms[i] == XKB_KEY_Super_L || syms[i] == XKB_KEY_Super_R) {
+        xkb_keysym_t s = syms[i];
+        if (s == XKB_KEY_Super_L || s == XKB_KEY_Super_R) {
             is_super_sym = true;
-            break;
+        }
+        if (s == XKB_KEY_Control_L || s == XKB_KEY_Control_R) {
+            is_ctrl_or_alt_sym = true;
+            if (ev->state == WL_KEYBOARD_KEY_STATE_PRESSED) {
+                eff_mods |= WLR_MODIFIER_CTRL;
+            }
+        } else if (s == XKB_KEY_Alt_L || s == XKB_KEY_Alt_R ||
+                   s == XKB_KEY_Meta_L || s == XKB_KEY_Meta_R) {
+            is_ctrl_or_alt_sym = true;
+            if (ev->state == WL_KEYBOARD_KEY_STATE_PRESSED) {
+                eff_mods |= WLR_MODIFIER_ALT;
+            }
+        }
+        if (s == XKB_KEY_Escape) {
+            is_escape_sym = true;
         }
     }
 
-    if (ev->state == WL_KEYBOARD_KEY_STATE_PRESSED) {
-        if (is_super_sym) {
-            if ((mods & ~(uint32_t)WLR_MODIFIER_LOGO) == 0) {
-                server->super_tap_pending = true;
-                server->super_tap_press_ms = t_ms;
+    bool capture_active =
+        (server->active_pointer_constraint != nullptr) ||
+        (server->active_shortcuts_inhibitor != nullptr &&
+         server->active_shortcuts_inhibitor->active);
+    if (capture_active) {
+        uint32_t ca_mask = WLR_MODIFIER_CTRL | WLR_MODIFIER_ALT;
+        if (ev->state == WL_KEYBOARD_KEY_STATE_PRESSED) {
+            if ((eff_mods & ca_mask) == ca_mask && is_escape_sym) {
+                release_input_capture_via_escape_hatch(server);
+                return;
+            }
+            if (is_ctrl_or_alt_sym && (eff_mods & ca_mask) == ca_mask &&
+                (eff_mods & ~(uint32_t)ca_mask) == 0) {
+                server->ctrl_alt_chord_pending = true;
+            } else if (!is_ctrl_or_alt_sym) {
+                server->ctrl_alt_chord_pending = false;
+            }
+        } else if (ev->state == WL_KEYBOARD_KEY_STATE_RELEASED) {
+            if (is_ctrl_or_alt_sym && server->ctrl_alt_chord_pending) {
+                wlr_seat_set_keyboard(server->seat, kb->wlr_keyboard);
+                if (!dtwm_ime_forward_key(server, kb->wlr_keyboard, ev)) {
+                    wlr_seat_keyboard_notify_key(server->seat, t_ms, ev->keycode, ev->state);
+                }
+                release_input_capture_via_escape_hatch(server);
+                return;
+            }
+        }
+    } else {
+        server->ctrl_alt_chord_pending = false;
+    }
+
+    bool shortcuts_inhibited =
+        (server->active_shortcuts_inhibitor != nullptr &&
+         server->active_shortcuts_inhibitor->active);
+
+    if (!shortcuts_inhibited) {
+        if (ev->state == WL_KEYBOARD_KEY_STATE_PRESSED) {
+            if (is_super_sym) {
+                if ((mods & ~(uint32_t)WLR_MODIFIER_LOGO) == 0) {
+                    server->super_tap_pending = true;
+                    server->super_tap_press_ms = t_ms;
+                } else {
+                    server->super_tap_pending = false;
+                }
             } else {
                 server->super_tap_pending = false;
+                for (int i = 0; i < nsyms; ++i) {
+                    if (handle_compositor_keybinding(server, mods, syms[i])) {
+                        handled = true;
+                        break;
+                    }
+                }
             }
-        } else {
-            server->super_tap_pending = false;
-            for (int i = 0; i < nsyms; ++i) {
-                if (handle_compositor_keybinding(server, mods, syms[i])) {
-                    handled = true;
-                    break;
+        } else if (ev->state == WL_KEYBOARD_KEY_STATE_RELEASED) {
+            if (is_super_sym && server->super_tap_pending) {
+                server->super_tap_pending = false;
+                if ((uint32_t)(t_ms - server->super_tap_press_ms) <= 600u) {
+                    spawn_quick_launcher(server);
                 }
             }
         }
-    } else if (ev->state == WL_KEYBOARD_KEY_STATE_RELEASED) {
-        if (is_super_sym && server->super_tap_pending) {
-            server->super_tap_pending = false;
-            if ((uint32_t)(t_ms - server->super_tap_press_ms) <= 600u) {
-                spawn_quick_launcher(server);
-            }
-        }
+    } else {
+        server->super_tap_pending = false;
     }
     if (!handled) {
         if (ev->state == WL_KEYBOARD_KEY_STATE_PRESSED && server->focused_view &&
@@ -4692,7 +5315,11 @@ static void xdg_toplevel_unmap(struct wl_listener *listener, void *data) {
         view->server->last_typing_view = nullptr;
         view->server->last_typing_ms = 0;
     }
+    if (view == view->server->input_escaped_view) {
+        view->server->input_escaped_view = nullptr;
+    }
     view->mapped = false;
+    sync_input_capture_for_focused_view(view->server, false);
     view->pending_activation = false;
     view->has_pending_geom = false;
     view->pending_pos_set = false;
@@ -7099,6 +7726,8 @@ int main(int argc, char **argv) {
     wl_list_init(&server.keyboards);
     wl_list_init(&server.pointers);
     wl_list_init(&server.activation_tokens);
+    wl_list_init(&server.tracked_pointer_constraints);
+    wl_list_init(&server.tracked_shortcuts_inhibitors);
 
     server.wl_display = wl_display_create();
     if (!server.wl_display) {
@@ -7291,6 +7920,21 @@ int main(int argc, char **argv) {
     wl_signal_add(&server.cursor->events.frame, &server.cursor_frame);
 
     server.pointer_gestures = wlr_pointer_gestures_v1_create(server.wl_display);
+    server.relative_pointer_mgr = wlr_relative_pointer_manager_v1_create(server.wl_display);
+    server.pointer_constraints = wlr_pointer_constraints_v1_create(server.wl_display);
+    if (server.pointer_constraints) {
+        server.new_pointer_constraint.notify = handle_new_pointer_constraint;
+        wl_signal_add(
+            &server.pointer_constraints->events.new_constraint, &server.new_pointer_constraint
+        );
+    }
+    server.shortcuts_inhibit_mgr = wlr_keyboard_shortcuts_inhibit_v1_create(server.wl_display);
+    if (server.shortcuts_inhibit_mgr) {
+        server.new_shortcuts_inhibitor.notify = handle_new_shortcuts_inhibitor;
+        wl_signal_add(
+            &server.shortcuts_inhibit_mgr->events.new_inhibitor, &server.new_shortcuts_inhibitor
+        );
+    }
     server.cursor_swipe_begin.notify = handle_cursor_swipe_begin;
     wl_signal_add(&server.cursor->events.swipe_begin, &server.cursor_swipe_begin);
     server.cursor_swipe_update.notify = handle_cursor_swipe_update;
@@ -7493,6 +8137,29 @@ cleanup:
         wl_list_remove(&server.xdg_activation_new_token.link);
         wl_list_remove(&server.xdg_activation_request_activate.link);
         server.xdg_activation = nullptr;
+    }
+    if (server.pointer_constraints) {
+        DtwmPointerConstraint *pc, *pctmp;
+        wl_list_for_each_safe(pc, pctmp, &server.tracked_pointer_constraints, link) {
+            wl_list_remove(&pc->set_region.link);
+            wl_list_remove(&pc->destroy.link);
+            wl_list_remove(&pc->link);
+            free(pc);
+        }
+        wl_list_remove(&server.new_pointer_constraint.link);
+        server.pointer_constraints = nullptr;
+        server.active_pointer_constraint = nullptr;
+    }
+    if (server.shortcuts_inhibit_mgr) {
+        DtwmShortcutsInhibitor *si, *sitmp;
+        wl_list_for_each_safe(si, sitmp, &server.tracked_shortcuts_inhibitors, link) {
+            wl_list_remove(&si->destroy.link);
+            wl_list_remove(&si->link);
+            free(si);
+        }
+        wl_list_remove(&server.new_shortcuts_inhibitor.link);
+        server.shortcuts_inhibit_mgr = nullptr;
+        server.active_shortcuts_inhibitor = nullptr;
     }
     wl_list_remove(&server.new_layer_surface.link);
     {
