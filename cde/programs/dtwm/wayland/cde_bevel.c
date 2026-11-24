@@ -698,6 +698,26 @@ static void render_frame_strip(
     wlr_buffer_drop(&buf->base);
 }
 
+bool dtwm_view_wants_opaque_client_bg(const DtwmView *view) {
+    if (!view || !view->decorated || view->client_w <= 0 || view->client_h <= 0) {
+        return false;
+    }
+    if (view->kind == DTWM_VIEW_XDG && view->xdg_toplevel &&
+        view->xdg_toplevel->base && view->xdg_toplevel->base->surface) {
+        struct wlr_surface *surf = view->xdg_toplevel->base->surface;
+        const struct wlr_alpha_modifier_surface_v1_state *ast =
+            wlr_alpha_modifier_v1_get_surface_state(surf);
+        if (ast && ast->multiplier < 0.9999) {
+            return false;
+        }
+        if (!view->resize_inflight && wlr_surface_has_buffer(surf) &&
+            !pixman_region32_not_empty(&surf->opaque_region)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 void dtwm_view_update_frame(DtwmView *view) {
     if (!view || !view->frame_tree) {
         return;
@@ -739,12 +759,15 @@ void dtwm_view_update_frame(DtwmView *view) {
         wlr_scene_node_set_position(&view->popup_anchor_tree->node, left, top);
     }
     if (view->client_bg_rect) {
-        const DtwmRgba *wbg = &view->server->palette.window_bg.bg;
-        float bg_col[4] = { (float)wbg->r, (float)wbg->g, (float)wbg->b, 1.0f };
-        wlr_scene_rect_set_color(view->client_bg_rect, bg_col);
-        wlr_scene_rect_set_size(view->client_bg_rect, view->client_w, view->client_h);
-        wlr_scene_node_set_position(&view->client_bg_rect->node, left, top);
-        wlr_scene_node_set_enabled(&view->client_bg_rect->node, true);
+        bool want_bg = dtwm_view_wants_opaque_client_bg(view);
+        if (want_bg) {
+            const DtwmRgba *wbg = &view->server->palette.window_bg.bg;
+            float bg_col[4] = { (float)wbg->r, (float)wbg->g, (float)wbg->b, 1.0f };
+            wlr_scene_rect_set_color(view->client_bg_rect, bg_col);
+            wlr_scene_rect_set_size(view->client_bg_rect, view->client_w, view->client_h);
+            wlr_scene_node_set_position(&view->client_bg_rect->node, left, top);
+        }
+        wlr_scene_node_set_enabled(&view->client_bg_rect->node, want_bg);
     }
 
     int outer_w = view->client_w + left + right;

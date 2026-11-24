@@ -20,7 +20,19 @@
 #include <wlr/backend.h>
 #include <wlr/interfaces/wlr_buffer.h>
 #include <wlr/render/allocator.h>
+#include <wlr/render/pixman.h>
 #include <wlr/render/wlr_renderer.h>
+#if defined(__has_include)
+#if __has_include(<GLES2/gl2.h>)
+#include <wlr/render/gles2.h>
+#define DTWM_HAVE_WLR_GLES2_H 1
+#endif
+#if __has_include(<vulkan/vulkan_core.h>)
+#include <wlr/render/vulkan.h>
+#define DTWM_HAVE_WLR_VULKAN_H 1
+#endif
+#endif
+#include <wlr/types/wlr_alpha_modifier_v1.h>
 #include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_cursor.h>
 #include <wlr/types/wlr_cursor_shape_v1.h>
@@ -30,15 +42,19 @@
 #include <wlr/types/wlr_input_device.h>
 #include <wlr/types/wlr_keyboard.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
+#include <wlr/types/wlr_linux_dmabuf_v1.h>
+#include <wlr/types/wlr_linux_drm_syncobj_v1.h>
 #include <wlr/types/wlr_output.h>
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_pointer.h>
 #include <wlr/types/wlr_pointer_gestures_v1.h>
+#include <wlr/types/wlr_presentation_time.h>
 #include <wlr/types/wlr_primary_selection.h>
 #include <wlr/types/wlr_primary_selection_v1.h>
 #include <wlr/types/wlr_scene.h>
 #include <wlr/types/wlr_screencopy_v1.h>
 #include <wlr/types/wlr_seat.h>
+#include <wlr/types/wlr_single_pixel_buffer_v1.h>
 #include <wlr/types/wlr_subcompositor.h>
 #include <wlr/types/wlr_viewporter.h>
 #include <wlr/types/wlr_virtual_keyboard_v1.h>
@@ -343,6 +359,12 @@ struct DtwmServer {
     struct wlr_renderer *renderer;
     struct wlr_allocator *allocator;
     struct wlr_compositor *compositor;
+    struct wlr_linux_dmabuf_v1 *linux_dmabuf;
+    struct wlr_linux_drm_syncobj_manager_v1 *drm_syncobj_mgr;
+    struct wlr_presentation *presentation;
+    struct wlr_single_pixel_buffer_manager_v1 *single_pixel_mgr;
+    struct wlr_alpha_modifier_v1 *alpha_modifier_mgr;
+    char renderer_name[32];
     struct wlr_scene *scene;
     struct wlr_scene_output_layout *scene_layout;
     struct wlr_output_layout *output_layout;
@@ -718,6 +740,8 @@ struct wlr_buffer *dtwm_render_osd_gauge(
     int *out_w,
     int *out_h
 );
+
+bool dtwm_view_wants_opaque_client_bg(const DtwmView *view);
 
 /* cde_workspace.c */
 bool dtwm_view_visible_on_current_ws(const DtwmView *view);

@@ -702,6 +702,23 @@ companion applications **without starting an `Xwayland` server process**:
   `wp_viewporter`. Embedded GPU/multimedia viewports (such as `ck-browser` CEF
   off-screen rendering) attach synchronized `wl_subsurface` viewports through
   `<Xm/Wayland.h>` (`XmWaylandGetDisplayHandles`, `XmWaylandGetWidgetSurface`).
+- **Smart GPU renderer selection, zero-copy `DMA-BUF`, and modern buffer/presentation protocols:**
+  When `WLR_RENDERER` is unset or `auto`, `dtwm-wayland` inspects kernel DRM
+  render nodes (`drmGetVersion`, plus `VIRTGPU_PARAM_3D_FEATURES` /
+  `VIRTGPU_PARAM_CONTEXT_INIT` on `virtio_gpu`) to select hardware-accelerated
+  `gles2`/`vulkan` on real 3D GPUs while automatically falling back to `pixman`
+  on unaccelerated 2D `virtio_gpu`/software KMS/headless setups (avoiding slow
+  `llvmpipe` GLES2 software emulation), publishing `DTWM_WAYLAND_RENDERER` and
+  `_DT_WAYLAND_RENDERER`. When DMA-BUF import is supported, `dtwm-wayland` wires
+  `zwp_linux_dmabuf_v1` (v4 per-surface scanout feedback via
+  `wlr_scene_set_linux_dmabuf_v1`) and `wp_linux_drm_syncobj_v1` explicit
+  timeline synchronization (when supported by both renderer and backend),
+  alongside `wp_presentation` (v2 vsync presentation timestamps),
+  `wp_single_pixel_buffer_v1` (zero-SHM solid buffers), and
+  `wp_alpha_modifier_v1` (per-surface opacity multipliers for GTK4 and video
+  clients); meanwhile `libXm.so.9` tracks tight `pixman_region32_t` per-slot
+  buffer-age damage across its 4-slot `wl_shm` ring so small cursor/typing/hover
+  updates on 4K displays copy and damage only changed sub-rectangles.
 - **Native Front Panel docking & session IPC bus:** `dtwm-wayland` docks native
   `dtwm-panel` (`dtwm-front-panel`) and slide-up subpanels (`dtwm-subpanel`)
   directly as `DTWM_VIEW_XDG` surfaces and hosts an `0600` UNIX stream bus at
@@ -718,8 +735,8 @@ companion applications **without starting an `Xwayland` server process**:
 ## Readiness reporting, Ubuntu LTS APT packaging, and automated qualification
 
 Passing `--status-file PATH` writes `WAYLAND_DISPLAY`, `DISPLAY` (or
-`NO_XWAYLAND=1` when `--no-xwayland` is active), and `PID` atomically once the
-compositor session is ready.
+`NO_XWAYLAND=1` when `--no-xwayland` is active), `RENDERER`, `DMABUF`, and `PID`
+atomically once the compositor session is ready.
 
 - **Focused Wayland regression suite (`programs/dtwm` and `programs/dtlogin`):**
   `check-dtwm-wayland.py` (`WP-02` bevels, move/resize, grid/snap, `Alt+Tab`,
@@ -806,6 +823,12 @@ compositor session is ready.
   HiDPI two-click + press-drag-release menu activation),
   `check-dtwm-wayland-busy-light.py` (Front Panel `CONTROL Busy` `Fplite` /
   `FpliteY` blink activation and automatic clear on client map),
+  `check-dtwm-wayland-activation.py` (`xdg-activation-v1` startup token minting,
+  Front Panel `Busy` IPC sync, focus-stealing prevention during active typing,
+  and cross-workspace token activation),
+  `check-dtwm-wayland-gpu-protocols.py` (automatic GPU/`pixman` renderer
+  selection and fallback, `zwp_linux_dmabuf_v1` v4 feedback, `wp_presentation`
+  feedback, `wp_single_pixel_buffer_v1`, and `wp_alpha_modifier_v1` blending),
   `check-dtappintegrate-curated.py` (Application Manager installed vs.
   auto-gray + blue download arrow badge vs. hidden stub curation), and
   `check-dtwm-wayland-exit-session.py` (`f.quit_mwm`, external-compositor

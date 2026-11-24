@@ -1,4 +1,21 @@
 2026-11-24
+- Add smart GPU/`pixman` renderer selection, zero-copy `zwp_linux_dmabuf_v1` /
+  `wp_linux_drm_syncobj_v1` scene integration, and modern buffer/presentation
+  protocols in `dtwm-wayland`, and advance the CK Core Motif pin to adopt tight
+  `pixman_region32` buffer-age partial damage:
+  - Probe DRM render nodes (`drmGetVersion` and `VIRTGPU_PARAM_3D_FEATURES` /
+    `VIRTGPU_PARAM_CONTEXT_INIT` on `virtio_gpu`) when `WLR_RENDERER` is unset or
+    `auto`, selecting hardware `gles2`/`vulkan` on 3D-capable GPUs while falling
+    back automatically to `pixman` on unaccelerated 2D virtual/software devices,
+    headless sessions, or failed GPU initialization; publish `RENDERER` /
+    `DMABUF` in `--status-file`, `DTWM_WAYLAND_RENDERER` in session activation,
+    and `_DT_WAYLAND_RENDERER` over native Wayland IPC.
+  - Initialize `wlr_linux_dmabuf_v1_create_with_renderer` +
+    `wlr_scene_set_linux_dmabuf_v1` for per-surface scanout feedback,
+    `wlr_linux_drm_syncobj_manager_v1` when both renderer and backend support
+    explicit sync timelines, `wlr_presentation` (`wp_presentation` v2),
+    `wlr_single_pixel_buffer_manager_v1`, and `wlr_alpha_modifier_v1`, covered by
+    `check-dtwm-wayland-gpu-protocols.py`.
 - Add Wayland `xdg-activation-v1` startup tokens, focus-stealing prevention,
   and Front Panel `Busy` light synchronization across `dtwm-wayland`,
   `dtwm-panel`, `libDtSvc` (`DtActionInvoke`), `dtfile` (*Open With*), and

@@ -8,6 +8,7 @@
 #include "dtwm_wayland.h"
 
 #include <ctype.h>
+#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <getopt.h>
@@ -25,6 +26,19 @@
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
+#if defined(__has_include)
+#if __has_include(<xf86drm.h>)
+#include <xf86drm.h>
+#define DTWM_HAVE_XF86DRM_H 1
+#if __has_include(<virtgpu_drm.h>)
+#include <virtgpu_drm.h>
+#define DTWM_HAVE_VIRTGPU_DRM_H 1
+#elif __has_include(<libdrm/virtgpu_drm.h>)
+#include <libdrm/virtgpu_drm.h>
+#define DTWM_HAVE_VIRTGPU_DRM_H 1
+#endif
+#endif
+#endif
 
 #include <wlr/util/log.h>
 #include <xcb/xcb_icccm.h>
@@ -4322,12 +4336,7 @@ static void handle_output_frame(struct wl_listener *listener, void *data) {
     if (!scene_output) return;
 
     if (!dtwm_a11y_render_output_frame(output, scene_output)) {
-        struct wlr_output_state state;
-        wlr_output_state_init(&state);
-        if (wlr_scene_output_build_state(scene_output, &state, nullptr)) {
-            wlr_output_commit_state(output->wlr_output, &state);
-        }
-        wlr_output_state_finish(&state);
+        wlr_scene_output_commit(scene_output, nullptr);
     }
 
     struct timespec now;
@@ -4779,6 +4788,11 @@ static void xdg_toplevel_commit(struct wl_listener *listener, void *data) {
         } else if (!active_resize && !view->resize_inflight && !view->has_queued_resize &&
                    serial_settled) {
             view->active_resize_edges = 0;
+        }
+        if (view->client_bg_rect) {
+            wlr_scene_node_set_enabled(
+                &view->client_bg_rect->node, dtwm_view_wants_opaque_client_bg(view)
+            );
         }
     }
 }
@@ -6073,6 +6087,10 @@ static void write_status_file(DtwmServer *server) {
     if (tts_env && tts_env[0]) {
         fprintf(fp, "TT_SESSION=%s\n", tts_env);
     }
+    if (server->renderer_name[0]) {
+        fprintf(fp, "RENDERER=%s\n", server->renderer_name);
+    }
+    fprintf(fp, "DMABUF=%d\n", server->linux_dmabuf ? 1 : 0);
     fprintf(fp, "PID=%d\n", (int)getpid());
     fclose(fp);
     rename(tmp_path, server->status_file);
@@ -6785,6 +6803,185 @@ static void handle_xwayland_ready(struct wl_listener *listener, void *data) {
     }
 }
 
+static bool drm_fd_has_hw_3d(int fd) {
+    if (fd < 0) {
+        return false;
+    }
+#ifdef DTWM_HAVE_XF86DRM_H
+    drmVersionPtr ver = drmGetVersion(fd);
+    if (!ver || !ver->name) {
+        if (ver) {
+            drmFreeVersion(ver);
+        }
+        return false;
+    }
+    static const char *const sw_or_2d_drivers[] = {
+        "vkms", "simpledrm", "efidrm", "ofdrm", "vesadrm",
+        "bochs-drm", "qxl", "cirrus", "ast", "mgag200",
+        "udl", "evdi", "gud", "hyperv_drm", nullptr
+    };
+    for (size_t i = 0; sw_or_2d_drivers[i]; ++i) {
+        if (strcmp(ver->name, sw_or_2d_drivers[i]) == 0) {
+            drmFreeVersion(ver);
+            return false;
+        }
+    }
+    if (strcmp(ver->name, "virtio_gpu") == 0) {
+        bool ok3d = false;
+#ifdef DTWM_HAVE_VIRTGPU_DRM_H
+        struct drm_virtgpu_getparam gp3d = { .param = VIRTGPU_PARAM_3D_FEATURES, .value = 0 };
+        struct drm_virtgpu_getparam gpcx = { .param = VIRTGPU_PARAM_CONTEXT_INIT, .value = 0 };
+        if (drmIoctl(fd, DRM_IOCTL_VIRTGPU_GETPARAM, &gp3d) == 0 && gp3d.value != 0) {
+            ok3d = true;
+        } else if (drmIoctl(fd, DRM_IOCTL_VIRTGPU_GETPARAM, &gpcx) == 0 && gpcx.value != 0) {
+            ok3d = true;
+        }
+#endif
+        drmFreeVersion(ver);
+        return ok3d;
+    }
+    drmFreeVersion(ver);
+    return true;
+#else
+    return true;
+#endif
+}
+
+static bool probe_hw_3d_render_support(struct wlr_backend *backend) {
+    const char *explicit_dev = getenv("WLR_RENDER_DRM_DEVICE");
+    if (explicit_dev && explicit_dev[0]) {
+        int fd = open(explicit_dev, O_RDWR | O_CLOEXEC);
+        if (fd < 0) {
+            fd = open(explicit_dev, O_RDONLY | O_CLOEXEC);
+        }
+        if (fd < 0) {
+            return false;
+        }
+        bool ok = drm_fd_has_hw_3d(fd);
+        close(fd);
+        return ok;
+    }
+
+    int bfd = backend ? wlr_backend_get_drm_fd(backend) : -1;
+    if (bfd >= 0) {
+        if (drm_fd_has_hw_3d(bfd)) {
+            return true;
+        }
+        /* Multi-GPU split KMS/render check (e.g. DisplayLink/simpledrm + discrete/iGPU renderD*) */
+    } else {
+        const char *backends_env = getenv("WLR_BACKENDS");
+        if (backends_env && strncasecmp(backends_env, "headless", 8) == 0 &&
+            (backends_env[8] == '\0' || backends_env[8] == ',')) {
+            return false;
+        }
+    }
+
+    DIR *dir = opendir("/dev/dri");
+    if (!dir) {
+        return false;
+    }
+    bool found_hw = false;
+    struct dirent *de;
+    while ((de = readdir(dir)) != nullptr) {
+        if (strncmp(de->d_name, "renderD", 7) != 0) {
+            continue;
+        }
+        char path[256];
+        snprintf(path, sizeof(path), "/dev/dri/%s", de->d_name);
+        int rfd = open(path, O_RDWR | O_CLOEXEC);
+        if (rfd < 0) {
+            rfd = open(path, O_RDONLY | O_CLOEXEC);
+        }
+        if (rfd >= 0) {
+            bool ok = drm_fd_has_hw_3d(rfd);
+            close(rfd);
+            if (ok) {
+                found_hw = true;
+                break;
+            }
+        }
+    }
+    closedir(dir);
+    return found_hw;
+}
+
+static const char *identify_wlr_renderer_name(struct wlr_renderer *r) {
+    if (!r) {
+        return "none";
+    }
+    if (wlr_renderer_is_pixman(r)) {
+        return "pixman";
+    }
+#ifdef DTWM_HAVE_WLR_GLES2_H
+    if (wlr_renderer_is_gles2(r)) {
+        return "gles2";
+    }
+#endif
+#ifdef DTWM_HAVE_WLR_VULKAN_H
+    if (wlr_renderer_is_vk(r)) {
+        return "vulkan";
+    }
+#endif
+    return "gpu";
+}
+
+static struct wlr_renderer *create_smart_wlr_renderer(
+    struct wlr_backend *backend, char *out_name, size_t out_cap
+) {
+    struct wlr_renderer *r = nullptr;
+    const char *req_env = getenv("WLR_RENDERER");
+    bool auto_mode = (!req_env || req_env[0] == '\0' || strcasecmp(req_env, "auto") == 0);
+
+    if (!auto_mode &&
+        strcasecmp(req_env, "pixman") != 0 &&
+        strcasecmp(req_env, "gles2") != 0 &&
+        strcasecmp(req_env, "vulkan") != 0) {
+        fprintf(
+            stderr,
+            "dtwm-wayland: unrecognized WLR_RENDERER=%s; falling back to auto selection\n",
+            req_env
+        );
+        unsetenv("WLR_RENDERER");
+        req_env = nullptr;
+        auto_mode = true;
+    }
+
+    if (!auto_mode) {
+        r = wlr_renderer_autocreate(backend);
+        if (!r && strcasecmp(req_env, "pixman") != 0) {
+            fprintf(
+                stderr,
+                "dtwm-wayland: WLR_RENDERER=%s unavailable; falling back to pixman\n",
+                req_env
+            );
+            setenv("WLR_RENDERER", "pixman", 1);
+            r = wlr_pixman_renderer_create();
+        }
+    } else {
+        if (req_env && strcasecmp(req_env, "auto") == 0) {
+            unsetenv("WLR_RENDERER");
+        }
+        if (probe_hw_3d_render_support(backend)) {
+            r = wlr_renderer_autocreate(backend);
+            if (r && !wlr_renderer_is_pixman(r) && wlr_renderer_get_drm_fd(r) < 0) {
+                /* Reject unaccelerated software EGL/llvmpipe fallback in favor of native pixman */
+                wlr_renderer_destroy(r);
+                r = nullptr;
+            }
+        }
+        if (!r) {
+            setenv("WLR_RENDERER", "pixman", 1);
+            r = wlr_pixman_renderer_create();
+        }
+    }
+
+    const char *rname = identify_wlr_renderer_name(r);
+    if (out_name && out_cap > 0) {
+        snprintf(out_name, out_cap, "%s", rname);
+    }
+    return r;
+}
+
 static int handle_signal_quit(int sig_num, void *data) {
     (void)sig_num;
     struct wl_display *display = data;
@@ -6922,12 +7119,32 @@ int main(int argc, char **argv) {
     server.backend_destroy.notify = handle_backend_destroy;
     wl_signal_add(&server.backend->events.destroy, &server.backend_destroy);
 
-    server.renderer = wlr_renderer_autocreate(server.backend);
+    server.renderer = create_smart_wlr_renderer(
+        server.backend, server.renderer_name, sizeof(server.renderer_name)
+    );
     if (!server.renderer) {
         fprintf(stderr, "dtwm-wayland: failed to create wlroots renderer\n");
         return 1;
     }
-    wlr_renderer_init_wl_display(server.renderer, server.wl_display);
+    if (!wlr_renderer_init_wl_shm(server.renderer, server.wl_display)) {
+        fprintf(stderr, "dtwm-wayland: failed to initialize wl_shm\n");
+        return 1;
+    }
+    if (wlr_renderer_get_texture_formats(server.renderer, WLR_BUFFER_CAP_DMABUF) != nullptr) {
+        server.linux_dmabuf = wlr_linux_dmabuf_v1_create_with_renderer(
+            server.wl_display, 4, server.renderer
+        );
+        if (server.linux_dmabuf) {
+            int r_drm_fd = wlr_renderer_get_drm_fd(server.renderer);
+            if (r_drm_fd >= 0 &&
+                server.renderer->features.timeline &&
+                server.backend->features.timeline) {
+                server.drm_syncobj_mgr = wlr_linux_drm_syncobj_manager_v1_create(
+                    server.wl_display, 1, r_drm_fd
+                );
+            }
+        }
+    }
 
     server.allocator = wlr_allocator_autocreate(server.backend, server.renderer);
     if (!server.allocator) {
@@ -6943,11 +7160,17 @@ int main(int argc, char **argv) {
     wlr_viewporter_create(server.wl_display);
     wlr_fractional_scale_manager_v1_create(server.wl_display, 1);
     wlr_screencopy_manager_v1_create(server.wl_display);
+    server.presentation = wlr_presentation_create(server.wl_display, server.backend, 2);
+    server.single_pixel_mgr = wlr_single_pixel_buffer_manager_v1_create(server.wl_display);
+    server.alpha_modifier_mgr = wlr_alpha_modifier_v1_create(server.wl_display);
 
     server.output_layout = wlr_output_layout_create(server.wl_display);
     wlr_xdg_output_manager_v1_create(server.wl_display, server.output_layout);
 
     server.scene = wlr_scene_create();
+    if (server.linux_dmabuf) {
+        wlr_scene_set_linux_dmabuf_v1(server.scene, server.linux_dmabuf);
+    }
     server.scene_layout = wlr_scene_attach_output_layout(server.scene, server.output_layout);
 
     /* Ordered scene-graph layers */
@@ -7134,9 +7357,8 @@ int main(int argc, char **argv) {
         setenv("CK_MOTIF_BACKEND", "wayland", 1);
     }
     {
-        const char *wlr_rend = getenv("WLR_RENDERER");
-        bool sw_pix = wlr_rend && strcasecmp(wlr_rend, "pixman") == 0;
-        setenv("DTWM_WAYLAND_RENDERER", sw_pix ? "pixman" : "gpu", 1);
+        const char *rname = server.renderer_name[0] ? server.renderer_name : "pixman";
+        setenv("DTWM_WAYLAND_RENDERER", rname, 1);
     }
 
     int exit_code = 0;
@@ -7158,6 +7380,11 @@ int main(int argc, char **argv) {
     }
 
     start_native_ipc_server(&server);
+    if (server.renderer_name[0]) {
+        dtwm_native_ipc_publish_prop(
+            &server, "_DT_WAYLAND_RENDERER", server.renderer_name, strlen(server.renderer_name)
+        );
+    }
     {
         const char *tts = getenv("TT_SESSION");
         if (!tts || !tts[0]) {
@@ -7185,9 +7412,11 @@ int main(int argc, char **argv) {
     }
     fprintf(
         stderr,
-        "dtwm-wayland: running on WAYLAND_DISPLAY=%s DISPLAY=%s%s\n",
+        "dtwm-wayland: running on WAYLAND_DISPLAY=%s DISPLAY=%s RENDERER=%s DMABUF=%d%s\n",
         socket,
         server.xwayland ? server.xwayland->display_name : "(none)",
+        server.renderer_name[0] ? server.renderer_name : "pixman",
+        server.linux_dmabuf ? 1 : 0,
         server.no_xwayland ? " (--no-xwayland)" : ""
     );
 
