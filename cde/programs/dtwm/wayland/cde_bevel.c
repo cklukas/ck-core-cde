@@ -243,9 +243,10 @@ DtwmMetrics dtwm_metrics_for_view(const DtwmView *view) {
     if (!view || !view->server) {
         return dtwm_metrics_for_dpi(96);
     }
-    double cx = (double)view->x + (double)(view->client_w > 0 ? view->client_w : 64) * 0.5;
-    double cy = (double)view->y + (double)(view->client_h > 0 ? view->client_h : 64) * 0.5;
-    return dtwm_metrics_for_dpi(dtwm_output_dpi_at(view->server, cx, cy));
+    if (view->is_native_dpi && view->frame_dpi >= 48) {
+        return dtwm_metrics_for_dpi(view->frame_dpi);
+    }
+    return dtwm_metrics_for_dpi(dtwm_view_target_dpi(view));
 }
 
 DtwmAppearanceProfile dtwm_parse_appearance_profile(const char *name) {

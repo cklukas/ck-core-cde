@@ -20,6 +20,7 @@
 #include <wlr/backend.h>
 #include <wlr/interfaces/wlr_buffer.h>
 #include <wlr/render/allocator.h>
+#include <wlr/render/color.h>
 #include <wlr/render/pixman.h>
 #include <wlr/render/wlr_renderer.h>
 #if defined(__has_include)
@@ -33,6 +34,7 @@
 #endif
 #endif
 #include <wlr/types/wlr_alpha_modifier_v1.h>
+#include <wlr/types/wlr_color_management_v1.h>
 #include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_cursor.h>
 #include <wlr/types/wlr_cursor_shape_v1.h>
@@ -277,6 +279,11 @@ struct DtwmView {
     bool is_swallowed;      /* Front Panel TYPE client swallowed window */
     bool is_lock_dialog;    /* dtsession PAM lock dialog / cover shell */
     bool is_native_dpi;     /* CK Core Motif / CDE client rendering 1:1 physical pixels */
+    int frame_dpi;          /* Committed DPI for native_dpi CDE frame bevels */
+    int pending_native_dpi; /* Target DPI sent via SURFACE_POS while awaiting Motif commit */
+    uint32_t pending_native_dpi_ms;
+    bool has_sent_ipc_pos;
+    int last_ipc_pos_x, last_ipc_pos_y, last_ipc_pos_dpi;
     double external_client_scale; /* Scale S = dpi/96 for external non-Motif Wayland clients */
     uint32_t workspace_mask;
     bool is_sandboxed;
@@ -346,6 +353,8 @@ typedef struct {
     uint32_t output_idx;
     int dpi;
     bool vrr_enabled;
+    struct wlr_color_transform *color_transform;
+    char color_profile_name[256];
     struct wlr_scene_rect *bg_rect;
     struct wlr_scene_rect *lock_bg_rect;
     struct wlr_scene_buffer *backdrop_buf;
@@ -590,6 +599,7 @@ struct DtwmServer {
     struct wl_global *toplevel_icon_global;
     struct wl_global *toplevel_tag_global;
     struct wlr_security_context_manager_v1 *security_context_mgr;
+    struct wlr_color_manager_v1 *color_manager;
 
     /* Interactive move / resize / snap / wireframe state */
     DtwmCursorMode cursor_mode;
@@ -597,6 +607,8 @@ struct DtwmServer {
     DtwmView *subpanel_drag_candidate;
     double subpanel_drag_start_x, subpanel_drag_start_y;
     double grab_x, grab_y;
+    double grab_rx_ratio, grab_ry_ratio;
+    bool grab_in_top_frame;
     struct wlr_box grab_orig_box;
     struct wlr_box pending_grab_box;
     uint32_t resize_edges;
@@ -964,6 +976,7 @@ void dtwm_native_ipc_publish_prop(DtwmServer *server, const char *atom_name, con
 void dtwm_sync_resource_manager_dpi(DtwmServer *server);
 void dtwm_sync_external_view_scene(DtwmView *view);
 void dtwm_sync_all_external_client_scales(DtwmServer *server);
+int dtwm_view_target_dpi(const DtwmView *view);
 void dtwm_workspace_sync_ipc(DtwmServer *server);
 bool dtwm_wayland_session_handle_wm_request(DtwmServer *server, const char *cmd);
 

@@ -126,6 +126,21 @@ framing or interaction rules.
   slider, barrel buttons, and `get_tablet_tool_v2` cursor shapes), and
   ExpressKey tablet pads (buttons, rings, and strips) with automatic pointer and
   CDE titlebar/border drag fallback for non-tablet windows;
+- **Color management (`wp_color_manager_v1` + ICC/sRGB output LUTs) and live mixed-DPI cross-monitor window dragging**:
+  `dtwm-wayland` exposes `wp_color_manager_v1` (`parametric` and
+  `set_mastering_display_primaries` features across `sRGB`, `Display P3`,
+  `DCI-P3`, `Adobe RGB`, and `BT.2020` primaries plus `sRGB`, `Gamma 2.2`,
+  `BT.1886`, `ext-linear`, `ST.2084 PQ`, and `HLG` transfer functions),
+  notifies per-surface preferred image descriptions, tracks client HDR/wide-gamut
+  surface metadata (`_DT_WAYLAND_COLOR_STATE`), and loads per-output `sRGB` or
+  ICC v2/v4 LUT color transforms via `DTWM_ICC_PROFILE` or
+  `f.set_output_color_profile <idx|all> <srgb|none|/path/to/profile.icc>`. When
+  dragging windows live across mixed-DPI monitors (`192 DPI` ↔ `144 DPI` ↔
+  `96 DPI`), `dtwm-wayland` maintains proportional horizontal and titlebar
+  cursor-grab ratios, rescales external `wp_fractional_scale_v1` windows
+  atomically with zero single-frame size jumps, and streams `SURFACE_POS`
+  updates to `CLIENT_CAP native_dpi` Motif windows while locking CDE bevel
+  metric transitions to the client's rescaled buffer commit;
 - Left-clicking the desktop background clears active-window focus, while
   right-clicking opens the 3D-beveled **Workspace Menu** (supporting both
   click-to-post and Motif press-drag-release, plus `Up`/`Down`/`Enter`/`Esc`

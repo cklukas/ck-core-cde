@@ -234,19 +234,97 @@ static bool wl_client_is_native_dpi(const DtwmServer *server, struct wl_client *
     return false;
 }
 
+static void dtwm_notify_native_dpi_view_pos(DtwmView *view, bool during_move);
+
+int dtwm_view_target_dpi(const DtwmView *view) {
+    if (!view || !view->server) {
+        return 96;
+    }
+    const DtwmServer *server = view->server;
+    double rx = 0.0;
+    double ry = 0.0;
+    if (server->cursor_mode == DTWM_CURSOR_MOVE && server->grabbed_view == view && server->cursor) {
+        rx = server->cursor->x;
+        ry = server->cursor->y;
+    } else if (view->mapped) {
+        rx = (double)view->x + (double)(view->client_w > 0 ? view->client_w : 64) * 0.5;
+        ry = (double)view->y + (double)(view->client_h > 0 ? view->client_h : 64) * 0.5;
+    } else if (server->cursor) {
+        rx = server->cursor->x;
+        ry = server->cursor->y;
+    }
+    int dpi = dtwm_output_dpi_at(server, rx, ry);
+    return dpi > 0 ? dpi : 96;
+}
+
 static double external_view_target_scale(const DtwmView *view) {
     if (!view || !view->server || view->kind != DTWM_VIEW_XDG || view->is_native_dpi) {
         return 1.0;
     }
-    double rx = view->mapped ? ((double)view->x + (double)view->client_w * 0.5)
-                             : (view->server->cursor ? view->server->cursor->x : 0.0);
-    double ry = view->mapped ? ((double)view->y + (double)view->client_h * 0.5)
-                             : (view->server->cursor ? view->server->cursor->y : 0.0);
-    int dpi = dtwm_output_dpi_at(view->server, rx, ry);
+    int dpi = dtwm_view_target_dpi(view);
     double s = (double)(dpi > 0 ? dpi : 96) / 96.0;
     if (s < 0.5) s = 0.5;
     if (s > 4.0) s = 4.0;
     return s;
+}
+
+static void notify_one_surface_color_iter(
+    struct wlr_surface *surface, int sx, int sy, void *data
+) {
+    (void)sx;
+    (void)sy;
+    struct wlr_color_manager_v1 *cm = data;
+    if (!surface || !cm) return;
+    struct wlr_image_description_v1_data desc = {
+        .tf_named = WP_COLOR_MANAGER_V1_TRANSFER_FUNCTION_SRGB,
+        .primaries_named = WP_COLOR_MANAGER_V1_PRIMARIES_SRGB,
+    };
+    wlr_color_manager_v1_set_surface_preferred_image_description(cm, surface, &desc);
+}
+
+static void sync_surface_preferred_color_description(
+    DtwmServer *server, struct wlr_surface *root_surf
+) {
+    if (!server || !server->color_manager || !root_surf) return;
+    wlr_surface_for_each_surface(root_surf, notify_one_surface_color_iter, server->color_manager);
+}
+
+static void publish_color_state_ipc(DtwmServer *server, struct wlr_surface *surf) {
+    if (!server) return;
+    uint32_t tf = 0, prim = 0, max_cll = 0, max_fall = 0;
+    bool has_mdp = false;
+    if (surf) {
+        const struct wlr_image_description_v1_data *d =
+            wlr_surface_get_image_description_v1_data(surf);
+        if (d) {
+            tf = d->tf_named;
+            prim = d->primaries_named;
+            max_cll = d->max_cll;
+            max_fall = d->max_fall;
+            has_mdp = d->has_mastering_display_primaries;
+        }
+    }
+    unsigned int out_profiles = 0;
+    const char *first_prof = "default";
+    DtwmOutput *o;
+    wl_list_for_each(o, &server->outputs, link) {
+        if (o->color_transform) {
+            if (out_profiles == 0 && o->color_profile_name[0]) {
+                first_prof = o->color_profile_name;
+            }
+            out_profiles++;
+        }
+    }
+    char buf[256];
+    int n = snprintf(
+        buf, sizeof(buf),
+        "cm=%d;tf=%u;primaries=%u;mdp=%d;max_cll=%u;max_fall=%u;output_transforms=%u;profile=%s",
+        server->color_manager ? 1 : 0,
+        tf, prim, has_mdp ? 1 : 0, max_cll, max_fall, out_profiles, first_prof
+    );
+    if (n > 0) {
+        dtwm_native_ipc_publish_prop(server, "_DT_WAYLAND_COLOR_STATE", buf, (size_t)n);
+    }
 }
 
 static void notify_one_surface_scale_iter(
@@ -1720,6 +1798,85 @@ void dtwm_reload_cursor_theme(DtwmServer *server, const char *theme, int size) {
     }
 }
 
+static void reanchor_grabbed_view_for_cursor(DtwmServer *server, DtwmView *view) {
+    if (!server || !view || server->grabbed_view != view ||
+        server->cursor_mode != DTWM_CURSOR_MOVE || !server->cursor) {
+        return;
+    }
+    int outer_w = 0, outer_h = 0, l = 0, t = 0, r = 0, b = 0;
+    dtwm_view_outer_size(view, &outer_w, &outer_h);
+    dtwm_view_insets(view, &l, &t, &r, &b);
+    if (outer_w < 1) outer_w = 1;
+    if (outer_h < 1) outer_h = 1;
+    int ref_h = (server->grab_in_top_frame && t > 0) ? t : outer_h;
+    view->x = (int)lround(server->cursor->x - server->grab_rx_ratio * (double)outer_w);
+    view->y = (int)lround(server->cursor->y - server->grab_ry_ratio * (double)ref_h);
+    server->grab_x = server->cursor->x;
+    server->grab_y = server->cursor->y;
+    server->grab_orig_box = (struct wlr_box){
+        .x = view->x,
+        .y = view->y,
+        .width = view->client_w,
+        .height = view->client_h,
+    };
+    server->pending_grab_box = server->grab_orig_box;
+    server->last_title_click_view = nullptr;
+}
+
+static bool apply_external_view_scale_transition(DtwmView *view, double new_s) {
+    if (!view || !view->server || view->kind != DTWM_VIEW_XDG || view->is_native_dpi ||
+        !view->xdg_toplevel) {
+        return false;
+    }
+    double old_s = view->external_client_scale > 0.25 ? view->external_client_scale : 1.0;
+    if (fabs(new_s - old_s) <= 1e-4) {
+        return false;
+    }
+
+    int log_w = 0, log_h = 0;
+    if (view->mapped && !view->is_lock_dialog && view->client_w > 0 && view->client_h > 0) {
+        log_w = (int)lround((double)view->client_w / old_s);
+        log_h = (int)lround((double)view->client_h / old_s);
+        if (log_w < 1) log_w = 1;
+        if (log_h < 1) log_h = 1;
+    }
+
+    view->external_client_scale = new_s;
+    notify_surface_tree_scale(view->xdg_toplevel->base->surface, new_s);
+    sync_surface_preferred_color_description(view->server, view->xdg_toplevel->base->surface);
+    DtwmPopup *popup;
+    wl_list_for_each(popup, &view->server->popups, link) {
+        if (popup->owner_view == view && popup->xdg_popup && popup->xdg_popup->base) {
+            notify_surface_tree_scale(popup->xdg_popup->base->surface, new_s);
+        }
+    }
+
+    if (log_w > 0 && log_h > 0) {
+        if (!view->maximized) {
+            int new_cw = (int)lround((double)log_w * new_s);
+            int new_ch = (int)lround((double)log_h * new_s);
+            if (new_cw < 1) new_cw = 1;
+            if (new_ch < 1) new_ch = 1;
+            view->client_w = new_cw;
+            view->client_h = new_ch;
+        }
+        view->pending_resize_serial =
+            send_xdg_toplevel_size_for_view(view, view->client_w, view->client_h);
+    }
+
+    if (view->server->grabbed_view == view && view->server->cursor_mode == DTWM_CURSOR_MOVE) {
+        reanchor_grabbed_view_for_cursor(view->server, view);
+    }
+    if (view->frame_tree) {
+        wlr_scene_node_set_position(&view->frame_tree->node, view->x, view->y);
+    }
+    dtwm_view_update_frame(view);
+    if (view == view->server->focused_view) {
+        dtwm_publish_active_window_box(view->server);
+    }
+    return true;
+}
+
 void dtwm_sync_all_external_client_scales(DtwmServer *server) {
     if (!server) return;
     DtwmView *v;
@@ -1729,23 +1886,18 @@ void dtwm_sync_all_external_client_scales(DtwmServer *server) {
         if (wl_client_is_native_dpi(server, client)) {
             v->is_native_dpi = true;
             v->external_client_scale = 1.0;
+            if (v->mapped) {
+                dtwm_notify_native_dpi_view_pos(
+                    v, server->cursor_mode == DTWM_CURSOR_MOVE && server->grabbed_view == v
+                );
+            }
             continue;
         }
         double new_s = external_view_target_scale(v);
-        bool changed = fabs(new_s - v->external_client_scale) > 1e-4;
-        v->external_client_scale = new_s;
-        notify_surface_tree_scale(v->xdg_toplevel->base->surface, new_s);
-        DtwmPopup *popup;
-        wl_list_for_each(popup, &server->popups, link) {
-            if (popup->owner_view == v && popup->xdg_popup && popup->xdg_popup->base) {
-                notify_surface_tree_scale(popup->xdg_popup->base->surface, new_s);
-            }
+        if (!apply_external_view_scale_transition(v, new_s)) {
+            notify_surface_tree_scale(v->xdg_toplevel->base->surface, new_s);
+            dtwm_sync_external_view_scene(v);
         }
-        if (changed && v->mapped && !v->is_lock_dialog && v->client_w > 0 && v->client_h > 0) {
-            v->pending_resize_serial =
-                send_xdg_toplevel_size_for_view(v, v->client_w, v->client_h);
-        }
-        dtwm_sync_external_view_scene(v);
     }
 }
 
@@ -2169,6 +2321,29 @@ static void begin_interactive(DtwmView *view, DtwmCursorMode mode, uint32_t edge
     server->cursor_mode = mode;
     server->grab_x = server->cursor->x;
     server->grab_y = server->cursor->y;
+    {
+        int ow = 0, oh = 0, l = 0, t = 0, r = 0, b = 0;
+        dtwm_view_outer_size(view, &ow, &oh);
+        dtwm_view_insets(view, &l, &t, &r, &b);
+        double rx = ow > 0 ? (server->cursor->x - (double)view->x) / (double)ow : 0.5;
+        if (rx < 0.0) rx = 0.0;
+        if (rx > 1.0) rx = 1.0;
+        server->grab_rx_ratio = rx;
+        if (t > 0 && server->cursor->y >= (double)view->y &&
+            server->cursor->y <= (double)(view->y + t)) {
+            double ry = (server->cursor->y - (double)view->y) / (double)t;
+            if (ry < 0.0) ry = 0.0;
+            if (ry > 1.0) ry = 1.0;
+            server->grab_in_top_frame = true;
+            server->grab_ry_ratio = ry;
+        } else {
+            double ry = oh > 0 ? (server->cursor->y - (double)view->y) / (double)oh : 0.0;
+            if (ry < 0.0) ry = 0.0;
+            if (ry > 1.0) ry = 1.0;
+            server->grab_in_top_frame = false;
+            server->grab_ry_ratio = ry;
+        }
+    }
     server->grab_orig_box = (struct wlr_box){
         .x = view->x,
         .y = view->y,
@@ -2820,6 +2995,16 @@ static void process_cursor_move(DtwmServer *server) {
     }
     v->x = nx;
     v->y = ny;
+    if (v->kind == DTWM_VIEW_XDG && !v->is_lock_dialog && !v->is_subpanel) {
+        if (v->is_native_dpi) {
+            dtwm_notify_native_dpi_view_pos(v, true);
+        } else {
+            double target_s = external_view_target_scale(v);
+            if (apply_external_view_scale_transition(v, target_s)) {
+                return;
+            }
+        }
+    }
     wlr_scene_node_set_position(&v->frame_tree->node, v->x, v->y);
     sync_xwayland_client_pos(v);
     dtwm_publish_active_window_box(server);
@@ -3685,6 +3870,13 @@ static bool finish_interactive_grab(DtwmServer *server) {
             }
             sync_xwayland_client_pos(v);
             dtwm_publish_active_window_box(server);
+        }
+        if (server->grabbed_view->is_native_dpi) {
+            dtwm_notify_native_dpi_view_pos(server->grabbed_view, false);
+        } else if (server->grabbed_view->kind == DTWM_VIEW_XDG &&
+                   !server->grabbed_view->is_lock_dialog) {
+            double target_s = external_view_target_scale(server->grabbed_view);
+            (void)apply_external_view_scale_transition(server->grabbed_view, target_s);
         }
     } else if (server->cursor_mode == DTWM_CURSOR_RESIZE && server->grabbed_view) {
         DtwmView *rv = server->grabbed_view;
@@ -5836,6 +6028,56 @@ static void handle_request_start_drag(struct wl_listener *listener, void *data) 
 }
 
 /* --- Outputs --- */
+static bool dtwm_apply_output_color_profile(DtwmOutput *output, const char *spec) {
+    if (!output) return false;
+    while (spec && isspace((unsigned char)*spec)) spec++;
+    if (!spec || !spec[0] || strcasecmp(spec, "none") == 0 || strcasecmp(spec, "default") == 0) {
+        if (output->color_transform) {
+            wlr_color_transform_unref(output->color_transform);
+            output->color_transform = nullptr;
+        }
+        output->color_profile_name[0] = '\0';
+        return true;
+    }
+
+    struct wlr_color_transform *nt = nullptr;
+    if (strcasecmp(spec, "srgb") == 0) {
+        nt = wlr_color_transform_init_srgb();
+    } else {
+        int fd = open(spec, O_RDONLY | O_CLOEXEC);
+        if (fd >= 0) {
+            struct stat st;
+            if (fstat(fd, &st) == 0 && st.st_size > 128 && st.st_size <= (8 * 1024 * 1024)) {
+                size_t sz = (size_t)st.st_size;
+                uint8_t *buf = malloc(sz);
+                if (buf) {
+                    size_t off = 0;
+                    while (off < sz) {
+                        ssize_t r = read(fd, buf + off, sz - off);
+                        if (r <= 0) break;
+                        off += (size_t)r;
+                    }
+                    if (off == sz) {
+                        nt = wlr_color_transform_init_linear_to_icc(buf, sz);
+                    }
+                    free(buf);
+                }
+            }
+            close(fd);
+        }
+    }
+    if (!nt) return false;
+    if (output->color_transform) {
+        wlr_color_transform_unref(output->color_transform);
+    }
+    output->color_transform = nt;
+    snprintf(output->color_profile_name, sizeof(output->color_profile_name), "%s", spec);
+    if (output->wlr_output) {
+        wlr_output_schedule_frame(output->wlr_output);
+    }
+    return true;
+}
+
 static void handle_output_frame(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmOutput *output = wl_container_of(listener, output, frame);
@@ -5844,31 +6086,50 @@ static void handle_output_frame(struct wl_listener *listener, void *data) {
         step_window_anim(server, dtwm_now_nsec());
     }
     if (server) {
+        uint32_t now_ms = dtwm_now_msec();
         DtwmView *ev;
         wl_list_for_each(ev, &server->views, link) {
-            if (ev->mapped && ev->kind == DTWM_VIEW_XDG && !ev->is_native_dpi) {
-                if (server->grabbed_view != ev) {
-                    double target_s = external_view_target_scale(ev);
-                    if (fabs(target_s - ev->external_client_scale) > 1e-4) {
-                        ev->external_client_scale = target_s;
-                        notify_surface_tree_scale(ev->xdg_toplevel->base->surface, target_s);
-                        if (!ev->is_lock_dialog && ev->client_w > 0 && ev->client_h > 0) {
-                            ev->pending_resize_serial =
-                                send_xdg_toplevel_size_for_view(ev, ev->client_w, ev->client_h);
-                        }
-                        dtwm_view_update_frame(ev);
-                        continue;
+            if (!ev->mapped || ev->kind != DTWM_VIEW_XDG) continue;
+            if (ev->is_native_dpi) {
+                if (ev->pending_native_dpi >= 48 &&
+                    (now_ms - ev->pending_native_dpi_ms) >= 90u) {
+                    ev->frame_dpi = ev->pending_native_dpi;
+                    ev->pending_native_dpi = 0;
+                    if (server->grabbed_view == ev && server->cursor_mode == DTWM_CURSOR_MOVE) {
+                        reanchor_grabbed_view_for_cursor(server, ev);
+                    }
+                    if (ev->frame_tree) {
+                        wlr_scene_node_set_position(&ev->frame_tree->node, ev->x, ev->y);
+                    }
+                    dtwm_view_update_frame(ev);
+                    if (ev == server->focused_view) {
+                        dtwm_publish_active_window_box(server);
                     }
                 }
-                dtwm_sync_external_view_scene(ev);
+                continue;
             }
+            if (server->grabbed_view != ev) {
+                double target_s = external_view_target_scale(ev);
+                if (apply_external_view_scale_transition(ev, target_s)) {
+                    continue;
+                }
+            }
+            dtwm_sync_external_view_scene(ev);
         }
     }
     struct wlr_scene_output *scene_output = wlr_scene_get_scene_output(server->scene, output->wlr_output);
     if (!scene_output) return;
 
     if (!dtwm_a11y_render_output_frame(output, scene_output)) {
-        wlr_scene_output_commit(scene_output, nullptr);
+        if (output->color_transform && server && server->renderer &&
+            server->renderer->features.output_color_transform) {
+            struct wlr_scene_output_state_options sopts = {
+                .color_transform = output->color_transform,
+            };
+            wlr_scene_output_commit(scene_output, &sopts);
+        } else {
+            wlr_scene_output_commit(scene_output, nullptr);
+        }
     }
 
     struct timespec now;
@@ -5892,6 +6153,10 @@ static void handle_output_destroy(struct wl_listener *listener, void *data) {
     wl_list_remove(&output->link);
     dtwm_power_display_on_output_destroy(server, output);
     dtwm_a11y_on_output_destroy(output);
+    if (output->color_transform) {
+        wlr_color_transform_unref(output->color_transform);
+        output->color_transform = nullptr;
+    }
     if (output->backdrop_buf) {
         wlr_scene_node_destroy(&output->backdrop_buf->node);
     }
@@ -5950,6 +6215,12 @@ static void handle_new_output(struct wl_listener *listener, void *data) {
     output->wlr_output = wlr_output;
     output->output_idx = server->next_output_idx++;
     output->dpi = resolve_initial_output_dpi(server, output->output_idx, wlr_output->name);
+    {
+        const char *icc_env = getenv("DTWM_ICC_PROFILE");
+        if (icc_env && icc_env[0]) {
+            (void)dtwm_apply_output_color_profile(output, icc_env);
+        }
+    }
 
     output->frame.notify = handle_output_frame;
     wl_signal_add(&wlr_output->events.frame, &output->frame);
@@ -6158,6 +6429,12 @@ static void xdg_toplevel_map(struct wl_listener *listener, void *data) {
     view->workspace_mask = 1u << view->server->current_workspace;
     place_initial_view(view);
     try_apply_wayland_session_rule(view);
+    sync_surface_preferred_color_description(view->server, view->xdg_toplevel->base->surface);
+    if (view->is_native_dpi) {
+        view->frame_dpi = dtwm_view_target_dpi(view);
+        view->pending_native_dpi = 0;
+        dtwm_notify_native_dpi_view_pos(view, false);
+    }
     wlr_scene_node_set_enabled(
         &view->frame_tree->node, !view->minimized && dtwm_view_visible_on_current_ws(view)
     );
@@ -6253,10 +6530,13 @@ static void xdg_toplevel_commit(struct wl_listener *listener, void *data) {
         view->external_client_scale = 1.0;
     }
     if (view->xdg_toplevel->base->initial_commit) {
+        sync_surface_preferred_color_description(view->server, view->xdg_toplevel->base->surface);
         if (!view->is_native_dpi) {
             view->external_client_scale = external_view_target_scale(view);
             notify_surface_tree_scale(view->xdg_toplevel->base->surface, view->external_client_scale);
             dtwm_sync_external_view_scene(view);
+        } else {
+            view->frame_dpi = dtwm_view_target_dpi(view);
         }
         wlr_xdg_toplevel_set_wm_capabilities(
             view->xdg_toplevel,
@@ -6269,6 +6549,10 @@ static void xdg_toplevel_commit(struct wl_listener *listener, void *data) {
         return;
     }
     if (view->mapped) {
+        struct wlr_surface *csurf = view->xdg_toplevel->base->surface;
+        if (csurf && wlr_surface_get_image_description_v1_data(csurf)) {
+            publish_color_state_ipc(view->server, csurf);
+        }
         uint32_t acked = view->xdg_toplevel->base->current.configure_serial;
         bool active_resize =
             (view->server->cursor_mode == DTWM_CURSOR_RESIZE &&
@@ -6291,6 +6575,17 @@ static void xdg_toplevel_commit(struct wl_listener *listener, void *data) {
         if (!view->is_lock_dialog && nw > 0 && nh > 0 &&
             (nw != view->client_w || nh != view->client_h) &&
             (active_resize || view->active_resize_edges != 0 || serial_settled)) {
+            bool native_dpi_rescaled = false;
+            if (view->is_native_dpi) {
+                int target_dpi = view->pending_native_dpi >= 48
+                                     ? view->pending_native_dpi
+                                     : dtwm_view_target_dpi(view);
+                if (target_dpi != view->frame_dpi) {
+                    native_dpi_rescaled = true;
+                }
+                view->frame_dpi = target_dpi;
+                view->pending_native_dpi = 0;
+            }
             int nx = view->x;
             int ny = view->y;
             if (view->active_resize_edges & WLR_EDGE_LEFT) {
@@ -6303,6 +6598,11 @@ static void xdg_toplevel_commit(struct wl_listener *listener, void *data) {
             view->y = ny;
             view->client_w = nw;
             view->client_h = nh;
+            if (native_dpi_rescaled &&
+                view->server->grabbed_view == view &&
+                view->server->cursor_mode == DTWM_CURSOR_MOVE) {
+                reanchor_grabbed_view_for_cursor(view->server, view);
+            }
             if (view->frame_tree) {
                 wlr_scene_node_set_position(&view->frame_tree->node, view->x, view->y);
             }
@@ -7974,12 +8274,74 @@ static void register_native_dpi_pid(DtwmServer *server, pid_t pid) {
             if (vpid == pid) {
                 v->is_native_dpi = true;
                 v->external_client_scale = 1.0;
+                v->frame_dpi = dtwm_view_target_dpi(v);
                 notify_surface_tree_scale(v->xdg_toplevel->base->surface, 1.0);
                 if (v->mapped) {
+                    dtwm_notify_native_dpi_view_pos(v, false);
                     dtwm_view_update_frame(v);
                 }
             }
         }
+    }
+}
+
+static void dtwm_notify_native_dpi_view_pos(DtwmView *view, bool during_move) {
+    if (!view || !view->server || view->kind != DTWM_VIEW_XDG || !view->is_native_dpi ||
+        !view->xdg_toplevel || !view->xdg_toplevel->base ||
+        !view->xdg_toplevel->base->surface || !view->xdg_toplevel->base->surface->resource) {
+        return;
+    }
+    DtwmServer *server = view->server;
+    struct wl_client *wcli = wl_resource_get_client(view->xdg_toplevel->resource);
+    pid_t vpid = 0;
+    wl_client_get_credentials(wcli, &vpid, nullptr, nullptr);
+    if (vpid <= 0) return;
+
+    int target_dpi = dtwm_view_target_dpi(view);
+    if (view->frame_dpi < 48) {
+        view->frame_dpi = target_dpi;
+    }
+    if (view->mapped && target_dpi != view->frame_dpi) {
+        view->pending_native_dpi = target_dpi;
+        view->pending_native_dpi_ms = dtwm_now_msec();
+    } else if (target_dpi == view->frame_dpi) {
+        view->pending_native_dpi = 0;
+    }
+
+    int l = 0, t = 0, r = 0, b = 0;
+    dtwm_view_insets(view, &l, &t, &r, &b);
+    int pos_x = view->x + l;
+    int pos_y = view->y + t;
+    if (during_move && server->cursor) {
+        pos_x = (int)lround(server->cursor->x) - (view->client_w > 0 ? view->client_w / 2 : 32);
+        pos_y = (int)lround(server->cursor->y) - (view->client_h > 0 ? view->client_h / 2 : 32);
+    }
+
+    bool should_send = !view->has_sent_ipc_pos ||
+                       (target_dpi != view->last_ipc_pos_dpi) ||
+                       (!during_move && (pos_x != view->last_ipc_pos_x || pos_y != view->last_ipc_pos_y)) ||
+                       (abs(pos_x - view->last_ipc_pos_x) >= 32 || abs(pos_y - view->last_ipc_pos_y) >= 32);
+    if (!should_send) {
+        return;
+    }
+
+    uint32_t sid = wl_resource_get_id(view->xdg_toplevel->base->surface->resource);
+    char line[128];
+    int n = snprintf(line, sizeof(line), "SURFACE_POS %u %d %d\n", sid, pos_x, pos_y);
+    if (n <= 0 || (size_t)n >= sizeof(line)) return;
+
+    bool sent = false;
+    for (int i = 0; i < DTWM_MAX_IPC_PEERS; ++i) {
+        if (g_ipc_peers[i].fd >= 0 && g_ipc_peers[i].client_pid == vpid) {
+            peer_queue_send(&g_ipc_peers[i], line, (size_t)n);
+            sent = true;
+        }
+    }
+    if (sent) {
+        view->has_sent_ipc_pos = true;
+        view->last_ipc_pos_x = pos_x;
+        view->last_ipc_pos_y = pos_y;
+        view->last_ipc_pos_dpi = target_dpi;
     }
 }
 
@@ -9354,6 +9716,31 @@ static size_t dtwm_restore_wayland_session(DtwmServer *server, const char *path,
 
 bool dtwm_wayland_session_handle_wm_request(DtwmServer *server, const char *cmd) {
     if (!server || !cmd) return false;
+    if (strncmp(cmd, "f.set_output_color_profile", 26) == 0 && isspace((unsigned char)cmd[26])) {
+        const char *p = cmd + 27;
+        while (*p && isspace((unsigned char)*p)) p++;
+        char target[32] = {0};
+        size_t ti = 0;
+        while (*p && !isspace((unsigned char)*p) && ti + 1 < sizeof(target)) {
+            target[ti++] = *p++;
+        }
+        target[ti] = '\0';
+        while (*p && isspace((unsigned char)*p)) p++;
+        if (target[0] && *p) {
+            bool all = (strcasecmp(target, "all") == 0);
+            long idx = all ? -1 : strtol(target, nullptr, 10);
+            DtwmOutput *o;
+            wl_list_for_each(o, &server->outputs, link) {
+                if (all || (idx >= 0 && o->output_idx == (uint32_t)idx)) {
+                    (void)dtwm_apply_output_color_profile(o, p);
+                }
+            }
+            publish_color_state_ipc(
+                server, server->focused_view ? view_wlr_surface(server->focused_view) : nullptr
+            );
+        }
+        return true;
+    }
     if (strncmp(cmd, "f.save_wayland_session", 22) == 0 && isspace((unsigned char)cmd[22])) {
         const char *arg = cmd + 23;
         while (*arg && isspace((unsigned char)*arg)) arg++;
@@ -9727,6 +10114,40 @@ int main(int argc, char **argv) {
     wl_signal_add(&server.cursor->events.tablet_tool_button, &server.cursor_tablet_tool_button);
 
     server.tablet_v2_mgr = wlr_tablet_v2_create(server.wl_display);
+    {
+        static const enum wp_color_manager_v1_render_intent k_cm_intents[] = {
+            WP_COLOR_MANAGER_V1_RENDER_INTENT_PERCEPTUAL,
+            WP_COLOR_MANAGER_V1_RENDER_INTENT_RELATIVE,
+        };
+        static const enum wp_color_manager_v1_transfer_function k_cm_tfs[] = {
+            WP_COLOR_MANAGER_V1_TRANSFER_FUNCTION_SRGB,
+            WP_COLOR_MANAGER_V1_TRANSFER_FUNCTION_GAMMA22,
+            WP_COLOR_MANAGER_V1_TRANSFER_FUNCTION_BT1886,
+            WP_COLOR_MANAGER_V1_TRANSFER_FUNCTION_EXT_LINEAR,
+            WP_COLOR_MANAGER_V1_TRANSFER_FUNCTION_ST2084_PQ,
+            WP_COLOR_MANAGER_V1_TRANSFER_FUNCTION_HLG,
+        };
+        static const enum wp_color_manager_v1_primaries k_cm_primaries[] = {
+            WP_COLOR_MANAGER_V1_PRIMARIES_SRGB,
+            WP_COLOR_MANAGER_V1_PRIMARIES_DISPLAY_P3,
+            WP_COLOR_MANAGER_V1_PRIMARIES_DCI_P3,
+            WP_COLOR_MANAGER_V1_PRIMARIES_ADOBE_RGB,
+            WP_COLOR_MANAGER_V1_PRIMARIES_BT2020,
+        };
+        struct wlr_color_manager_v1_options cm_opts = {
+            .features = {
+                .parametric = true,
+                .set_mastering_display_primaries = true,
+            },
+            .render_intents = k_cm_intents,
+            .render_intents_len = sizeof(k_cm_intents) / sizeof(k_cm_intents[0]),
+            .transfer_functions = k_cm_tfs,
+            .transfer_functions_len = sizeof(k_cm_tfs) / sizeof(k_cm_tfs[0]),
+            .primaries = k_cm_primaries,
+            .primaries_len = sizeof(k_cm_primaries) / sizeof(k_cm_primaries[0]),
+        };
+        server.color_manager = wlr_color_manager_v1_create(server.wl_display, 1, &cm_opts);
+    }
     server.pointer_gestures = wlr_pointer_gestures_v1_create(server.wl_display);
     server.relative_pointer_mgr = wlr_relative_pointer_manager_v1_create(server.wl_display);
     server.pointer_constraints = wlr_pointer_constraints_v1_create(server.wl_display);
@@ -9852,6 +10273,7 @@ int main(int argc, char **argv) {
     dtwm_output_mgmt_publish_x11(&server);
     dtwm_sync_resource_manager_dpi(&server);
     dtwm_hw_publish_state(&server);
+    publish_color_state_ipc(&server, nullptr);
     if (wayland_session_db && wayland_session_db[0]) {
         (void)dtwm_restore_wayland_session(&server, wayland_session_db, restore_wayland_clients);
     }
