@@ -18,7 +18,19 @@ FIND_PANEL_ARROWS_C = r"""
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+
+static int inspect_error(Display *dpy, XErrorEvent *event) {
+    /* A window may disappear between XQueryTree and its next query. */
+    if (event->error_code == BadWindow) return 0;
+
+    char error[256];
+    XGetErrorText(dpy, event->error_code, error, sizeof(error));
+    fprintf(stderr, "window inspection failed: %s (request %u)\n",
+            error, (unsigned int)event->request_code);
+    exit(EXIT_FAILURE);
+}
 
 static void walk(Display *dpy, Window root, Window w, int depth) {
     XWindowAttributes a;
@@ -29,8 +41,8 @@ static void walk(Display *dpy, Window root, Window w, int depth) {
     XGetClassHint(dpy, w, &ch);
     int rx = 0, ry = 0;
     Window child = None;
-    XTranslateCoordinates(dpy, w, root, 0, 0, &rx, &ry, &child);
-    if (depth == 1 || (name && name[0]) || (ch.res_name && ch.res_name[0])) {
+    if (XTranslateCoordinates(dpy, w, root, 0, 0, &rx, &ry, &child) &&
+        (depth == 1 || (name && name[0]) || (ch.res_name && ch.res_name[0]))) {
         printf("WIN depth=%d id=0x%lx name=\"%s\" res=\"%s\" x=%d y=%d w=%d h=%d or=%d\n",
                depth, (unsigned long)w, name ? name : "", ch.res_name ? ch.res_name : "",
                rx, ry, a.width, a.height, a.override_redirect);
@@ -50,6 +62,7 @@ static void walk(Display *dpy, Window root, Window w, int depth) {
 int main(void) {
     Display *dpy = XOpenDisplay(NULL);
     if (!dpy) return 1;
+    XSetErrorHandler(inspect_error);
     walk(dpy, DefaultRootWindow(dpy), DefaultRootWindow(dpy), 0);
     XSync(dpy, False);
     XCloseDisplay(dpy);

@@ -1,4 +1,6 @@
 2026-11-24
+- Keep the Front Panel status regression inspecting mapped windows when a
+  transient Xwayland window closes during enumeration.
 - Retire disconnected File Manager refresh workers and release their pipe
   descriptors. Register reusable workers only after a successful fork.
 - Record the running X server's executable path and digest for signed

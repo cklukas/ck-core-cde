@@ -369,6 +369,10 @@ panel instrumentation:
   workstations without a battery), with live `f.restart` reload and client
   re-embedding support in `dtwm-panel` / `dtwm-wayland`.
 
+The integration check enumerates the live Xwayland window tree. It skips
+windows that disappear between queries and still checks that the status
+window and subpanel are mapped after their Front Panel controls are used.
+
 ## Graphical multi-monitor arrangement & WebRTC desktop portals (`WP-10`)
 
 - **Style Manager *Monitors* (`Display.c`):** `dtstyle` includes a dedicated
