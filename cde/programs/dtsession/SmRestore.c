@@ -536,7 +536,10 @@ RestoreState( void )
 
     if (useXrmDB)
     {
-        return (StartXSMPSession (smGD.clientPath));
+        int rc = StartXSMPSession (smGD.clientPath);
+        if (SmWaylandActive())
+            SmWaylandRestoreClients(smGD.clientPath);
+        return (rc);
 
     } else {
 	  /*
@@ -578,6 +581,9 @@ RestoreState( void )
 	      SM_FREE((char *)line);
 	  }
     }
+
+    if (SmWaylandActive())
+        SmWaylandRestoreClients(smGD.clientPath);
 
     return(0);
 }

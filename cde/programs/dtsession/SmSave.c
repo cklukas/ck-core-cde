@@ -91,6 +91,7 @@
 #include "SmProperty.h"
 #include "SmProp.h"
 #include "SmFiles.h"
+#include "SmWayland.h"
 #include "Srv.h"
 #include "SrvFile_io.h"
 
@@ -424,6 +425,14 @@ CompleteSave (void)
       LeaveWaitState();
       SM_FREE(resSpec);
       return (-1);
+  }
+
+  if (SmWaylandActive()) {
+      char wlSaveDir[MAXPATHLEN + 1];
+      if ((size_t)snprintf(wlSaveDir, sizeof(wlSaveDir), "%s/%s",
+                           smGD.savePath, smGD.restoreSession) < sizeof(wlSaveDir)) {
+          SmWaylandSaveClients(wlSaveDir);
+      }
   }
 
   /*

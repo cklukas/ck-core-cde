@@ -6,6 +6,7 @@
  */
 
 #include "dtwm_wayland.h"
+#include "xdg-toplevel-tag-v1-protocol.h"
 
 #include <ctype.h>
 #include <dirent.h>
@@ -153,6 +154,7 @@ typedef struct {
 
 static DtwmTouchSlot g_touch_slots[DTWM_MAX_TOUCH_SLOTS];
 static void sync_tablet_pads_for_focused_view(DtwmServer *server);
+static void try_apply_wayland_session_rule(DtwmView *view);
 
 static uint32_t pointer_button_bit(uint32_t btn) {
     if (btn >= BTN_MOUSE && btn < BTN_MOUSE + 16u) {
@@ -6155,7 +6157,10 @@ static void xdg_toplevel_map(struct wl_listener *listener, void *data) {
 
     view->workspace_mask = 1u << view->server->current_workspace;
     place_initial_view(view);
-    wlr_scene_node_set_enabled(&view->frame_tree->node, dtwm_view_visible_on_current_ws(view));
+    try_apply_wayland_session_rule(view);
+    wlr_scene_node_set_enabled(
+        &view->frame_tree->node, !view->minimized && dtwm_view_visible_on_current_ws(view)
+    );
     dtwm_view_update_frame(view);
     dtwm_icons_on_view_map(view);
     dtwm_foreign_toplevel_sync(view);
@@ -6345,6 +6350,9 @@ static void xdg_toplevel_set_app_id(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmView *view = wl_container_of(listener, view, set_app_id);
     if (view->mapped) {
+        if (!view->session_rule_applied) {
+            try_apply_wayland_session_rule(view);
+        }
         dtwm_icons_update_view(view);
         dtwm_foreign_toplevel_sync(view);
     }
@@ -6438,6 +6446,19 @@ static void handle_new_xdg_toplevel(struct wl_listener *listener, void *data) {
     view->has_max_btn = true;
     view->workspace_mask = 1u << server->current_workspace;
     struct wl_client *client = wl_resource_get_client(toplevel->resource);
+    if (server->security_context_mgr) {
+        const struct wlr_security_context_v1_state *sec =
+            wlr_security_context_manager_v1_lookup_client(server->security_context_mgr, client);
+        if (sec) {
+            view->is_sandboxed = true;
+            if (sec->sandbox_engine) {
+                snprintf(view->sandbox_engine, sizeof(view->sandbox_engine), "%s", sec->sandbox_engine);
+            }
+            if (sec->app_id) {
+                snprintf(view->sandbox_app_id, sizeof(view->sandbox_app_id), "%s", sec->app_id);
+            }
+        }
+    }
     view->is_native_dpi = wl_client_is_native_dpi(server, client);
     view->external_client_scale = view->is_native_dpi ? 1.0 : external_view_target_scale(view);
 
@@ -8713,6 +8734,653 @@ static struct wlr_renderer *create_smart_wlr_renderer(
     return r;
 }
 
+/* --- wp-security-context-v1 Sandbox Filter & xdg-toplevel-tag-v1 Session Persistence --- */
+static bool dtwm_wayland_global_filter(
+    const struct wl_client *client, const struct wl_global *global, void *data
+) {
+    DtwmServer *server = data;
+    if (!server || !server->security_context_mgr) {
+        return true;
+    }
+    const struct wlr_security_context_v1_state *sec =
+        wlr_security_context_manager_v1_lookup_client(server->security_context_mgr, client);
+    if (!sec) {
+        return true;
+    }
+    const struct wl_interface *iface = wl_global_get_interface(global);
+    if (!iface || !iface->name) {
+        return true;
+    }
+    static const char *const blocked_for_sandbox[] = {
+        "wp_security_context_manager_v1",
+        "zwlr_screencopy_manager_v1",
+        "zwlr_export_dmabuf_manager_v1",
+        "ext_image_copy_capture_manager_v1",
+        "ext_output_image_capture_source_manager_v1",
+        "ext_foreign_toplevel_image_capture_source_manager_v1",
+        "zwlr_virtual_pointer_manager_v1",
+        "zwp_virtual_keyboard_manager_v1",
+        "zwp_input_method_manager_v2",
+        "zwlr_data_control_manager_v1",
+        "zwlr_output_manager_v1",
+        "zwlr_output_power_manager_v1",
+        "ext_session_lock_manager_v1",
+        "zwlr_foreign_toplevel_manager_v1",
+        "ext_workspace_manager_v1",
+        "zwlr_layer_shell_v1",
+    };
+    for (size_t i = 0; i < sizeof(blocked_for_sandbox) / sizeof(blocked_for_sandbox[0]); ++i) {
+        if (strcmp(iface->name, blocked_for_sandbox[i]) == 0) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static DtwmView *find_xdg_view_by_toplevel_resource(
+    DtwmServer *server, const struct wl_resource *toplevel_res
+) {
+    if (!server || !toplevel_res) return nullptr;
+    DtwmView *v;
+    wl_list_for_each(v, &server->views, link) {
+        if (v->kind == DTWM_VIEW_XDG && v->xdg_toplevel &&
+            v->xdg_toplevel->resource == toplevel_res) {
+            return v;
+        }
+    }
+    return nullptr;
+}
+
+static void sanitize_single_line_token(const char *src, char *dst, size_t dst_sz) {
+    if (!dst || dst_sz == 0) return;
+    size_t o = 0;
+    if (src) {
+        for (size_t i = 0; src[i] && o + 1 < dst_sz; ++i) {
+            unsigned char ch = (unsigned char)src[i];
+            if (ch == '\r' || ch == '\n' || ch == '\t') {
+                dst[o++] = ' ';
+            } else if (ch >= 0x20u) {
+                dst[o++] = (char)ch;
+            }
+        }
+    }
+    dst[o] = '\0';
+}
+
+static void toplevel_tag_mgr_destroy(struct wl_client *client, struct wl_resource *resource) {
+    (void)client;
+    wl_resource_destroy(resource);
+}
+
+static void toplevel_tag_mgr_set_tag(
+    struct wl_client *client,
+    struct wl_resource *resource,
+    struct wl_resource *toplevel_res,
+    const char *tag
+) {
+    (void)client;
+    DtwmServer *server = wl_resource_get_user_data(resource);
+    DtwmView *view = find_xdg_view_by_toplevel_resource(server, toplevel_res);
+    if (!view) return;
+    sanitize_single_line_token(tag, view->toplevel_tag, sizeof(view->toplevel_tag));
+    if (view->mapped && !view->session_rule_applied) {
+        try_apply_wayland_session_rule(view);
+    }
+}
+
+static void toplevel_tag_mgr_set_description(
+    struct wl_client *client,
+    struct wl_resource *resource,
+    struct wl_resource *toplevel_res,
+    const char *description
+) {
+    (void)client;
+    DtwmServer *server = wl_resource_get_user_data(resource);
+    DtwmView *view = find_xdg_view_by_toplevel_resource(server, toplevel_res);
+    if (!view) return;
+    sanitize_single_line_token(
+        description, view->toplevel_description, sizeof(view->toplevel_description)
+    );
+}
+
+static const struct xdg_toplevel_tag_manager_v1_interface g_toplevel_tag_mgr_impl = {
+    .destroy = toplevel_tag_mgr_destroy,
+    .set_toplevel_tag = toplevel_tag_mgr_set_tag,
+    .set_toplevel_description = toplevel_tag_mgr_set_description,
+};
+
+static void bind_toplevel_tag_manager(
+    struct wl_client *client, void *data, uint32_t version, uint32_t id
+) {
+    struct wl_resource *res = wl_resource_create(
+        client, &xdg_toplevel_tag_manager_v1_interface, version < 1 ? (int)version : 1, id
+    );
+    if (!res) {
+        wl_client_post_no_memory(client);
+        return;
+    }
+    wl_resource_set_implementation(res, &g_toplevel_tag_mgr_impl, data, nullptr);
+}
+
+#define DTWM_MAX_WL_SESSION_ENTRIES 128
+typedef struct {
+    bool valid;
+    bool consumed;
+    char app_id[128];
+    char tag[128];
+    uint32_t workspace_mask;
+    int x, y, w, h;
+    bool maximized;
+    bool minimized;
+    bool sandboxed;
+    char encoded_cmd[2048];
+} DtwmWaylandSessionEntry;
+
+static DtwmWaylandSessionEntry g_wl_session_entries[DTWM_MAX_WL_SESSION_ENTRIES];
+static size_t g_wl_session_count = 0;
+
+static const char *effective_view_app_id(const DtwmView *v) {
+    if (!v) return "";
+    if (v->is_sandboxed && v->sandbox_app_id[0]) {
+        return v->sandbox_app_id;
+    }
+    if (v->kind == DTWM_VIEW_XDG && v->xdg_toplevel && v->xdg_toplevel->app_id &&
+        v->xdg_toplevel->app_id[0]) {
+        return v->xdg_toplevel->app_id;
+    }
+    return "";
+}
+
+static bool is_safe_flatpak_app_id(const char *s) {
+    if (!s || !s[0]) return false;
+    for (size_t i = 0; s[i]; ++i) {
+        unsigned char c = (unsigned char)s[i];
+        if (!(isalnum(c) || c == '.' || c == '_' || c == '-')) {
+            return false;
+        }
+    }
+    return strchr(s, '.') != nullptr;
+}
+
+static bool is_cde_xsmp_managed_binary(const char *argv0) {
+    if (!argv0 || !argv0[0]) return false;
+    const char *base = strrchr(argv0, '/');
+    base = base ? base + 1 : argv0;
+    static const char *const xsmp_bins[] = {
+        "dtsession", "dtwm", "dtwm-panel", "dtstyle", "dtfile",
+        "dtpad", "dtterm", "dtmail", "dtcalc", "dthelpview",
+    };
+    for (size_t i = 0; i < sizeof(xsmp_bins) / sizeof(xsmp_bins[0]); ++i) {
+        if (strcmp(base, xsmp_bins[i]) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool encode_argv_token(const char *tok, char *out, size_t out_cap, size_t *io_pos) {
+    static const char hex[] = "0123456789ABCDEF";
+    size_t pos = *io_pos;
+    if (!tok || !tok[0]) {
+        if (pos + 3 >= out_cap) return false;
+        memcpy(out + pos, "%00", 3);
+        *io_pos = pos + 3;
+        out[*io_pos] = '\0';
+        return true;
+    }
+    for (size_t i = 0; tok[i]; ++i) {
+        unsigned char c = (unsigned char)tok[i];
+        bool safe = isalnum(c) || c == '_' || c == '-' || c == '.' ||
+                    c == '/' || c == ':' || c == '=' || c == '+';
+        if (safe) {
+            if (pos + 1 >= out_cap) return false;
+            out[pos++] = (char)c;
+        } else {
+            if (pos + 3 >= out_cap) return false;
+            out[pos++] = '%';
+            out[pos++] = hex[(c >> 4) & 0xF];
+            out[pos++] = hex[c & 0xF];
+        }
+    }
+    out[pos] = '\0';
+    *io_pos = pos;
+    return true;
+}
+
+static void capture_view_relaunch_cmd(const DtwmView *v, char *out, size_t out_sz) {
+    if (!out || out_sz == 0) return;
+    out[0] = '\0';
+    if (!v || v->kind != DTWM_VIEW_XDG || !v->xdg_toplevel) return;
+
+    if (v->is_sandboxed) {
+        if (strcmp(v->sandbox_engine, "org.flatpak") == 0 &&
+            is_safe_flatpak_app_id(v->sandbox_app_id)) {
+            snprintf(out, out_sz, "flatpak run %s", v->sandbox_app_id);
+        } else {
+            snprintf(out, out_sz, "-");
+        }
+        return;
+    }
+
+    struct wl_client *cli = wl_resource_get_client(v->xdg_toplevel->resource);
+    pid_t pid = 0;
+    uid_t uid = 0;
+    gid_t gid = 0;
+    wl_client_get_credentials(cli, &pid, &uid, &gid);
+    if (pid <= 1) {
+        snprintf(out, out_sz, "-");
+        return;
+    }
+
+    char proc_path[64];
+    snprintf(proc_path, sizeof(proc_path), "/proc/%ld/cmdline", (long)pid);
+    int fd = open(proc_path, O_RDONLY | O_CLOEXEC);
+    if (fd < 0) {
+        snprintf(out, out_sz, "-");
+        return;
+    }
+    char raw[4096];
+    ssize_t nr = read(fd, raw, sizeof(raw) - 1);
+    close(fd);
+    if (nr <= 0) {
+        snprintf(out, out_sz, "-");
+        return;
+    }
+    raw[nr] = '\0';
+
+    /* In hybrid XWayland sessions, classic CDE XSMP clients save/restore via dt.session */
+    if (v->server && v->server->xwayland && is_cde_xsmp_managed_binary(raw)) {
+        snprintf(out, out_sz, "-");
+        return;
+    }
+
+    /* Resolve /proc/<pid>/exe for argv[0] when argv[0] is bare or relative */
+    char exe_buf[PATH_MAX] = {0};
+    if (raw[0] != '/') {
+        char exe_link[64];
+        snprintf(exe_link, sizeof(exe_link), "/proc/%ld/exe", (long)pid);
+        ssize_t el = readlink(exe_link, exe_buf, sizeof(exe_buf) - 1);
+        if (el > 0) exe_buf[el] = '\0';
+    }
+
+    size_t out_pos = 0;
+    ssize_t off = 0;
+    int arg_idx = 0;
+    while (off < nr) {
+        const char *tok = raw + off;
+        size_t tlen = strlen(tok);
+        if (arg_idx == 0 && exe_buf[0] == '/') {
+            tok = exe_buf;
+        }
+        if (arg_idx > 0) {
+            if (out_pos + 1 >= out_sz) break;
+            out[out_pos++] = ' ';
+        }
+        if (!encode_argv_token(tok, out, out_sz, &out_pos)) {
+            break;
+        }
+        arg_idx++;
+        off += (ssize_t)tlen + 1;
+    }
+    if (out_pos == 0) {
+        snprintf(out, out_sz, "-");
+    }
+}
+
+static char *decode_argv_token(const char *enc, size_t len) {
+    if (len == 3 && memcmp(enc, "%00", 3) == 0) {
+        return strdup("");
+    }
+    char *dst = malloc(len + 1);
+    if (!dst) return nullptr;
+    size_t o = 0;
+    for (size_t i = 0; i < len; ++i) {
+        if (enc[i] == '%' && i + 2 < len) {
+            int hi = ipc_hex_nibble(enc[i + 1]);
+            int lo = ipc_hex_nibble(enc[i + 2]);
+            if (hi >= 0 && lo >= 0) {
+                dst[o++] = (char)((hi << 4) | lo);
+                i += 2;
+                continue;
+            }
+        }
+        dst[o++] = enc[i];
+    }
+    dst[o] = '\0';
+    return dst;
+}
+
+static bool spawn_encoded_wayland_cmd(DtwmServer *server, const char *encoded_cmd) {
+    if (!server || !encoded_cmd || !encoded_cmd[0] || strcmp(encoded_cmd, "-") == 0) {
+        return false;
+    }
+    char *argv_exec[64] = {nullptr};
+    int argc_exec = 0;
+    const char *p = encoded_cmd;
+    while (*p && argc_exec < 63) {
+        while (*p == ' ') p++;
+        if (!*p) break;
+        const char *sp = strchr(p, ' ');
+        size_t len = sp ? (size_t)(sp - p) : strlen(p);
+        char *decoded = decode_argv_token(p, len);
+        if (!decoded) break;
+        argv_exec[argc_exec++] = decoded;
+        p += len;
+    }
+    if (argc_exec == 0 || !argv_exec[0] || !argv_exec[0][0]) {
+        for (int i = 0; i < argc_exec; ++i) free(argv_exec[i]);
+        return false;
+    }
+
+    pid_t pid = fork();
+    if (pid == 0) {
+        sigset_t empty_mask;
+        sigemptyset(&empty_mask);
+        sigprocmask(SIG_SETMASK, &empty_mask, nullptr);
+        setsid();
+        pid_t gpid = fork();
+        if (gpid != 0) {
+            _exit(0);
+        }
+        if (server->wayland_socket) {
+            setenv("WAYLAND_DISPLAY", server->wayland_socket, 1);
+        }
+        if (server->xwayland && server->xwayland->display_name) {
+            setenv("DISPLAY", server->xwayland->display_name, 1);
+        } else if (server->no_xwayland) {
+            unsetenv("DISPLAY");
+        }
+        const char *home = getenv("HOME");
+        if (home && home[0]) {
+            (void)chdir(home);
+        }
+        execvp(argv_exec[0], argv_exec);
+        _exit(127);
+    }
+    if (pid > 0) {
+        (void)waitpid(pid, nullptr, 0);
+    }
+    for (int i = 0; i < argc_exec; ++i) {
+        free(argv_exec[i]);
+    }
+    return pid > 0;
+}
+
+static void try_apply_wayland_session_rule(DtwmView *view) {
+    if (!view || view->session_rule_applied || view->kind != DTWM_VIEW_XDG ||
+        view->is_panel || view->is_subpanel || view->is_lock_dialog ||
+        view->is_desktop_pin || view->is_swallowed || g_wl_session_count == 0) {
+        return;
+    }
+    const char *app_id = effective_view_app_id(view);
+    if (!app_id[0]) {
+        return;
+    }
+    const char *tag = view->toplevel_tag;
+    DtwmWaylandSessionEntry *match = nullptr;
+
+    /* 1. Exact (app_id, tag) match first when tag is non-empty */
+    if (tag[0]) {
+        for (size_t i = 0; i < g_wl_session_count; ++i) {
+            DtwmWaylandSessionEntry *e = &g_wl_session_entries[i];
+            if (e->valid && !e->consumed &&
+                strcmp(e->app_id, app_id) == 0 && strcmp(e->tag, tag) == 0) {
+                match = e;
+                break;
+            }
+        }
+        if (!match) {
+            return;
+        }
+    } else {
+        /* If an unconsumed tagged rule exists for this app_id and no untagged rule exists,
+         * wait briefly in case set_toplevel_tag arrives right after set_app_id/map; otherwise
+         * consume an untagged rule immediately. */
+        for (size_t i = 0; i < g_wl_session_count; ++i) {
+            DtwmWaylandSessionEntry *e = &g_wl_session_entries[i];
+            if (e->valid && !e->consumed &&
+                strcmp(e->app_id, app_id) == 0 && e->tag[0] == '\0') {
+                match = e;
+                break;
+            }
+        }
+        if (!match) {
+            return;
+        }
+    }
+
+    match->consumed = true;
+    view->session_rule_applied = true;
+
+    DtwmServer *server = view->server;
+    uint32_t valid_ws_bits = (1u << server->num_workspaces) - 1u;
+    uint32_t mask = match->workspace_mask & valid_ws_bits;
+    if (mask == 0) mask = 1u << server->current_workspace;
+    dtwm_view_set_workspace_mask(view, mask);
+
+    int rw = match->w > 48 ? match->w : view->client_w;
+    int rh = match->h > 48 ? match->h : view->client_h;
+    view_apply_geometry(view, match->x, match->y, rw, rh);
+    if (match->maximized) {
+        view_set_maximized(view, true);
+    }
+    if (match->minimized) {
+        view_set_minimized(view, true);
+    }
+    if (view->frame_tree) {
+        wlr_scene_node_set_enabled(
+            &view->frame_tree->node, !view->minimized && dtwm_view_visible_on_current_ws(view)
+        );
+    }
+}
+
+static size_t dtwm_save_wayland_session(DtwmServer *server, const char *path) {
+    if (!server || !path || !path[0]) return 0;
+    char dir_copy[PATH_MAX];
+    snprintf(dir_copy, sizeof(dir_copy), "%s", path);
+    char *slash = strrchr(dir_copy, '/');
+    if (slash && slash > dir_copy) {
+        *slash = '\0';
+        for (char *p = dir_copy + 1; *p; ++p) {
+            if (*p == '/') {
+                *p = '\0';
+                (void)mkdir(dir_copy, 0700);
+                *p = '/';
+            }
+        }
+        (void)mkdir(dir_copy, 0700);
+    }
+
+    char tmp_path[PATH_MAX];
+    int tn = snprintf(tmp_path, sizeof(tmp_path), "%s.tmp.%ld", path, (long)getpid());
+    if (tn <= 0 || (size_t)tn >= sizeof(tmp_path)) return 0;
+
+    int fd = open(tmp_path, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0600);
+    if (fd < 0) return 0;
+    FILE *fp = fdopen(fd, "w");
+    if (!fp) {
+        close(fd);
+        unlink(tmp_path);
+        return 0;
+    }
+
+    fprintf(fp, "# DTWM_WAYLAND_SESSION_V1\n");
+    size_t saved = 0;
+    DtwmView *v;
+    /* Iterate reverse so bottom-to-top Z-order is preserved when restored */
+    wl_list_for_each_reverse(v, &server->views, link) {
+        if (!v->mapped || v->kind != DTWM_VIEW_XDG || !v->xdg_toplevel ||
+            v->is_panel || v->is_subpanel || v->is_lock_dialog ||
+            v->is_desktop_pin || v->is_swallowed) {
+            continue;
+        }
+        const char *app_id = effective_view_app_id(v);
+        if (!app_id[0]) continue;
+
+        int sx = (v->maximized && v->has_saved_geom) ? v->saved_x : v->x;
+        int sy = (v->maximized && v->has_saved_geom) ? v->saved_y : v->y;
+        int sw = (v->maximized && v->has_saved_geom) ? v->saved_w : v->client_w;
+        int sh = (v->maximized && v->has_saved_geom) ? v->saved_h : v->client_h;
+
+        char cmd_buf[2048];
+        capture_view_relaunch_cmd(v, cmd_buf, sizeof(cmd_buf));
+
+        fprintf(
+            fp,
+            "%s\t%s\t0x%x\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%s\n",
+            app_id,
+            v->toplevel_tag[0] ? v->toplevel_tag : "-",
+            v->workspace_mask,
+            sx, sy, sw, sh,
+            v->maximized ? 1 : 0,
+            v->minimized ? 1 : 0,
+            v->is_sandboxed ? 1 : 0,
+            cmd_buf[0] ? cmd_buf : "-"
+        );
+        saved++;
+    }
+    fflush(fp);
+    fsync(fileno(fp));
+    fclose(fp);
+    if (rename(tmp_path, path) != 0) {
+        unlink(tmp_path);
+        return 0;
+    }
+
+    char status_buf[PATH_MAX + 64];
+    int sn = snprintf(status_buf, sizeof(status_buf), "saved=%zu;path=%s", saved, path);
+    if (sn > 0) {
+        dtwm_native_ipc_publish_prop(
+            server, "_DT_WAYLAND_SESSION_STATUS", status_buf, (size_t)sn
+        );
+    }
+    return saved;
+}
+
+static size_t dtwm_load_wayland_session(const char *path) {
+    g_wl_session_count = 0;
+    if (!path || !path[0]) return 0;
+    FILE *fp = fopen(path, "r");
+    if (!fp) return 0;
+
+    char line[4096];
+    while (g_wl_session_count < DTWM_MAX_WL_SESSION_ENTRIES &&
+           fgets(line, sizeof(line), fp)) {
+        char *nl = strpbrk(line, "\r\n");
+        if (nl) *nl = '\0';
+        if (line[0] == '\0' || line[0] == '#') continue;
+
+        char *fields[11] = {nullptr};
+        int nf = 0;
+        char *p = line;
+        while (nf < 11) {
+            fields[nf++] = p;
+            if (nf == 11) break;
+            char *tab = strchr(p, '\t');
+            if (!tab) break;
+            *tab = '\0';
+            p = tab + 1;
+        }
+        if (nf < 11) continue;
+
+        DtwmWaylandSessionEntry *e = &g_wl_session_entries[g_wl_session_count];
+        memset(e, 0, sizeof(*e));
+        e->valid = true;
+        snprintf(e->app_id, sizeof(e->app_id), "%s", fields[0]);
+        if (strcmp(fields[1], "-") != 0) {
+            snprintf(e->tag, sizeof(e->tag), "%s", fields[1]);
+        }
+        e->workspace_mask = (uint32_t)strtoul(fields[2], nullptr, 0);
+        e->x = atoi(fields[3]);
+        e->y = atoi(fields[4]);
+        e->w = atoi(fields[5]);
+        e->h = atoi(fields[6]);
+        e->maximized = atoi(fields[7]) != 0;
+        e->minimized = atoi(fields[8]) != 0;
+        e->sandboxed = atoi(fields[9]) != 0;
+        snprintf(e->encoded_cmd, sizeof(e->encoded_cmd), "%s", fields[10]);
+        g_wl_session_count++;
+    }
+    fclose(fp);
+    return g_wl_session_count;
+}
+
+static size_t dtwm_restore_wayland_session(DtwmServer *server, const char *path, bool launch_apps) {
+    size_t loaded = dtwm_load_wayland_session(path);
+    size_t spawned = 0;
+
+    /* Apply loaded rules immediately to any already-mapped matching views */
+    DtwmView *v;
+    wl_list_for_each(v, &server->views, link) {
+        if (v->mapped && v->kind == DTWM_VIEW_XDG && !v->session_rule_applied) {
+            try_apply_wayland_session_rule(v);
+        }
+    }
+
+    if (launch_apps) {
+        /* Avoid spawning duplicate instances of identical command lines for multi-window apps
+         * unless the command line itself differs (e.g. separate invocations). */
+        for (size_t i = 0; i < loaded; ++i) {
+            DtwmWaylandSessionEntry *e = &g_wl_session_entries[i];
+            if (!e->valid || e->consumed || strcmp(e->encoded_cmd, "-") == 0) {
+                continue;
+            }
+            bool dup_same_app_cmd = false;
+            for (size_t j = 0; j < i; ++j) {
+                if (g_wl_session_entries[j].valid &&
+                    strcmp(g_wl_session_entries[j].app_id, e->app_id) == 0 &&
+                    strcmp(g_wl_session_entries[j].encoded_cmd, e->encoded_cmd) == 0) {
+                    dup_same_app_cmd = true;
+                    break;
+                }
+            }
+            if (!dup_same_app_cmd && spawn_encoded_wayland_cmd(server, e->encoded_cmd)) {
+                spawned++;
+            }
+        }
+    }
+
+    char status_buf[PATH_MAX + 64];
+    int sn = snprintf(
+        status_buf, sizeof(status_buf), "rules=%zu;spawned=%zu;path=%s", loaded, spawned, path ? path : ""
+    );
+    if (sn > 0) {
+        dtwm_native_ipc_publish_prop(
+            server, "_DT_WAYLAND_SESSION_STATUS", status_buf, (size_t)sn
+        );
+    }
+    return loaded;
+}
+
+bool dtwm_wayland_session_handle_wm_request(DtwmServer *server, const char *cmd) {
+    if (!server || !cmd) return false;
+    if (strncmp(cmd, "f.save_wayland_session", 22) == 0 && isspace((unsigned char)cmd[22])) {
+        const char *arg = cmd + 23;
+        while (*arg && isspace((unsigned char)*arg)) arg++;
+        if (*arg) {
+            (void)dtwm_save_wayland_session(server, arg);
+        }
+        return true;
+    }
+    if (strncmp(cmd, "f.load_wayland_session", 22) == 0 && isspace((unsigned char)cmd[22])) {
+        const char *arg = cmd + 23;
+        while (*arg && isspace((unsigned char)*arg)) arg++;
+        if (*arg) {
+            (void)dtwm_restore_wayland_session(server, arg, false);
+        }
+        return true;
+    }
+    if (strncmp(cmd, "f.restore_wayland_session", 25) == 0 && isspace((unsigned char)cmd[25])) {
+        const char *arg = cmd + 26;
+        while (*arg && isspace((unsigned char)*arg)) arg++;
+        if (*arg) {
+            (void)dtwm_restore_wayland_session(server, arg, true);
+        }
+        return true;
+    }
+    return false;
+}
+
 static int handle_signal_quit(int sig_num, void *data) {
     (void)sig_num;
     struct wl_display *display = data;
@@ -8725,6 +9393,8 @@ int main(int argc, char **argv) {
     const char *status_file = nullptr;
     const char *swallow_client = nullptr;
     const char *profile_arg = nullptr;
+    const char *wayland_session_db = nullptr;
+    bool restore_wayland_clients = false;
     bool greeter_mode = false;
     bool no_panel = false;
     bool no_open_icons = false;
@@ -8752,6 +9422,8 @@ int main(int argc, char **argv) {
         {"no-open-window-icons", no_argument, nullptr, 'I'},
         {"large-icons", no_argument, nullptr, 'L'},
         {"no-xwayland", no_argument, nullptr, 'X'},
+        {"wayland-session-db", required_argument, nullptr, 1001},
+        {"restore-wayland-clients", no_argument, nullptr, 1002},
         {"help", no_argument, nullptr, 'h'},
         {nullptr, 0, nullptr, 0},
     };
@@ -8790,6 +9462,8 @@ int main(int argc, char **argv) {
         case 'I': no_open_icons = true; break;
         case 'L': large_icons = true; break;
         case 'X': no_xwayland = true; break;
+        case 1001: wayland_session_db = optarg; break;
+        case 1002: restore_wayland_clients = true; break;
         case 'h':
             printf(
                 "Usage: %s [--session] [--greeter] [--no-xwayland] [--no-panel] [--no-open-window-icons] "
@@ -8900,6 +9574,11 @@ int main(int argc, char **argv) {
     server.presentation = wlr_presentation_create(server.wl_display, server.backend, 2);
     server.single_pixel_mgr = wlr_single_pixel_buffer_manager_v1_create(server.wl_display);
     server.alpha_modifier_mgr = wlr_alpha_modifier_v1_create(server.wl_display);
+    server.security_context_mgr = wlr_security_context_manager_v1_create(server.wl_display);
+    wl_display_set_global_filter(server.wl_display, dtwm_wayland_global_filter, &server);
+    server.toplevel_tag_global = wl_global_create(
+        server.wl_display, &xdg_toplevel_tag_manager_v1_interface, 1, &server, bind_toplevel_tag_manager
+    );
 
     server.output_layout = wlr_output_layout_create(server.wl_display);
     wlr_xdg_output_manager_v1_create(server.wl_display, server.output_layout);
@@ -9173,6 +9852,9 @@ int main(int argc, char **argv) {
     dtwm_output_mgmt_publish_x11(&server);
     dtwm_sync_resource_manager_dpi(&server);
     dtwm_hw_publish_state(&server);
+    if (wayland_session_db && wayland_session_db[0]) {
+        (void)dtwm_restore_wayland_session(&server, wayland_session_db, restore_wayland_clients);
+    }
     if (!server.xwayland) {
         dtwm_spawn_front_panel(&server);
         if (server.show_front_panel && server.panel_pid > 0 && !server.status_written) {
@@ -9234,6 +9916,10 @@ cleanup:
     dtwm_xdnd_finish();
     dtwm_icons_finish(&server);
     dtwm_workspaces_finish(&server);
+    if (server.toplevel_tag_global) {
+        wl_global_destroy(server.toplevel_tag_global);
+        server.toplevel_tag_global = nullptr;
+    }
     wl_list_remove(&server.cursor_motion.link);
     wl_list_remove(&server.cursor_motion_absolute.link);
     wl_list_remove(&server.cursor_button.link);

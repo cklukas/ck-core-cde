@@ -18,6 +18,8 @@ void SmWaylandMarkLockWindow(Display *dpy, Window win);
 Boolean SmWaylandAcquireSessionLock(void);
 Boolean SmWaylandSessionIsLocked(void);
 void SmWaylandReleaseSessionLock(void);
+void SmWaylandSaveClients(const char *session_dir);
+void SmWaylandRestoreClients(const char *session_path);
 void SmWaylandShutdown(int exit_status);
 
 #endif /* _smwayland_h */

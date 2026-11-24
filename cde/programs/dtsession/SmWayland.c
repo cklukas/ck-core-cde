@@ -21,7 +21,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
+#include <sys/un.h>
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
@@ -936,6 +938,116 @@ static void request_external_compositor_quit(int exit_status) {
     }
 }
 
+static bool send_wayland_wm_request(const char *cmd) {
+    if (!cmd || !*cmd) return false;
+    const char *rt = getenv("XDG_RUNTIME_DIR");
+    const char *wl = getenv("WAYLAND_DISPLAY");
+    if (rt && rt[0] == '/' && wl && wl[0]) {
+        struct sockaddr_un addr;
+        memset(&addr, 0, sizeof(addr));
+        addr.sun_family = AF_UNIX;
+        int n = snprintf(addr.sun_path, sizeof(addr.sun_path), "%s/dtwm-wayland-%s.ipc", rt, wl);
+        if (n > 0 && (size_t)n < sizeof(addr.sun_path)) {
+            int sfd = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
+            if (sfd >= 0) {
+                if (connect(sfd, (const struct sockaddr *)&addr, sizeof(addr)) == 0) {
+                    size_t clen = strlen(cmd) + 1u;
+                    char *line = malloc(32 + clen * 2);
+                    if (line) {
+                        int off = snprintf(line, 32, "SET _DT_WM_REQUEST ");
+                        static const char hex[] = "0123456789abcdef";
+                        for (size_t i = 0; i < clen; ++i) {
+                            unsigned char b = (unsigned char)cmd[i];
+                            line[off++] = hex[(b >> 4) & 0xf];
+                            line[off++] = hex[b & 0xf];
+                        }
+                        line[off++] = '\n';
+                        ssize_t wr = write(sfd, line, (size_t)off);
+                        (void)wr;
+                        free(line);
+                        close(sfd);
+                        return true;
+                    }
+                }
+                close(sfd);
+            }
+        }
+    }
+
+    Display *dpy = g_smwl.x_dpy ? g_smwl.x_dpy : smGD.display;
+    if (!dpy) return false;
+    int (*prev_handler)(Display *, XErrorEvent *) = XSetErrorHandler(ignore_smwl_x_error);
+    Window root = DefaultRootWindow(dpy);
+    Atom mwm_info = XInternAtom(dpy, "_MOTIF_WM_INFO", True);
+    Atom wm_req = XInternAtom(dpy, "_DT_WM_REQUEST", False);
+    Window wm_win = root;
+    if (mwm_info != None) {
+        Atom actual = None;
+        int fmt = 0;
+        unsigned long nitems = 0, after = 0;
+        unsigned char *data = nullptr;
+        if (XGetWindowProperty(dpy, root, mwm_info, 0, 2, False, mwm_info,
+                               &actual, &fmt, &nitems, &after, &data) == Success && data) {
+            if (fmt == 32 && nitems >= 2) {
+                wm_win = (Window)((const long *)data)[1];
+            }
+            XFree(data);
+        }
+    }
+    if (wm_req != None && wm_win != None) {
+        XChangeProperty(dpy, wm_win, wm_req, XA_STRING, 8, PropModeAppend,
+                        (const unsigned char *)cmd, (int)strlen(cmd) + 1);
+        XSync(dpy, False);
+    }
+    XSetErrorHandler(prev_handler);
+    return true;
+}
+
+static bool resolve_wayland_session_file(const char *path_or_dir, char *out, size_t out_sz) {
+    if (!path_or_dir || !*path_or_dir || !out || out_sz == 0) return false;
+    struct stat st;
+    if (stat(path_or_dir, &st) == 0 && S_ISDIR(st.st_mode)) {
+        int n = snprintf(out, out_sz, "%s/dt.wayland.session", path_or_dir);
+        return n > 0 && (size_t)n < out_sz;
+    }
+    const char *slash = strrchr(path_or_dir, '/');
+    if (slash && (!strcmp(slash + 1, "dt.session") || !strcmp(slash + 1, "dt.sessions"))) {
+        size_t dlen = (size_t)(slash - path_or_dir);
+        int n = snprintf(out, out_sz, "%.*s/dt.wayland.session", (int)dlen, path_or_dir);
+        return n > 0 && (size_t)n < out_sz;
+    }
+    int n = snprintf(out, out_sz, "%s", path_or_dir);
+    return n > 0 && (size_t)n < out_sz;
+}
+
+void SmWaylandSaveClients(const char *session_dir) {
+    if (!SmWaylandActive() || !session_dir || !*session_dir) return;
+    char db_file[PATH_MAX];
+    if (!resolve_wayland_session_file(session_dir, db_file, sizeof(db_file))) return;
+    char cmd[PATH_MAX + 64];
+    int n = snprintf(cmd, sizeof(cmd), "f.save_wayland_session %s", db_file);
+    if (n <= 0 || (size_t)n >= sizeof(cmd)) return;
+    if (send_wayland_wm_request(cmd)) {
+        struct timespec slp = {.tv_sec = 0, .tv_nsec = 15000000L};
+        for (int i = 0; i < 25; ++i) {
+            if (access(db_file, R_OK) == 0) break;
+            nanosleep(&slp, nullptr);
+        }
+    }
+}
+
+void SmWaylandRestoreClients(const char *session_path) {
+    if (!SmWaylandActive() || !session_path || !*session_path) return;
+    char db_file[PATH_MAX];
+    if (!resolve_wayland_session_file(session_path, db_file, sizeof(db_file))) return;
+    if (access(db_file, R_OK) != 0) return;
+    char cmd[PATH_MAX + 64];
+    int n = snprintf(cmd, sizeof(cmd), "f.restore_wayland_session %s", db_file);
+    if (n > 0 && (size_t)n < sizeof(cmd)) {
+        (void)send_wayland_wm_request(cmd);
+    }
+}
+
 void SmWaylandShutdown(int exit_status) {
     if (g_smwl.active_lock) {
         SmWaylandReleaseSessionLock();
@@ -1015,6 +1127,8 @@ void SmWaylandMarkLockWindow(Display *dpy, Window win) { (void)dpy; (void)win; }
 Boolean SmWaylandAcquireSessionLock(void) { return False; }
 Boolean SmWaylandSessionIsLocked(void) { return False; }
 void SmWaylandReleaseSessionLock(void) {}
+void SmWaylandSaveClients(const char *session_dir) { (void)session_dir; }
+void SmWaylandRestoreClients(const char *session_path) { (void)session_path; }
 void SmWaylandShutdown(int exit_status) { (void)exit_status; }
 
 #endif /* BUILD_DTWM_WAYLAND */

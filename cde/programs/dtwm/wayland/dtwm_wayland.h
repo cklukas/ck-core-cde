@@ -57,6 +57,7 @@
 #include <wlr/types/wlr_scene.h>
 #include <wlr/types/wlr_screencopy_v1.h>
 #include <wlr/types/wlr_seat.h>
+#include <wlr/types/wlr_security_context_v1.h>
 #include <wlr/types/wlr_single_pixel_buffer_v1.h>
 #include <wlr/types/wlr_subcompositor.h>
 #include <wlr/types/wlr_tablet_pad.h>
@@ -278,6 +279,12 @@ struct DtwmView {
     bool is_native_dpi;     /* CK Core Motif / CDE client rendering 1:1 physical pixels */
     double external_client_scale; /* Scale S = dpi/96 for external non-Motif Wayland clients */
     uint32_t workspace_mask;
+    bool is_sandboxed;
+    char sandbox_engine[64];
+    char sandbox_app_id[128];
+    char toplevel_tag[128];
+    char toplevel_description[256];
+    bool session_rule_applied;
 
     /* Desktop icon state (open-window icon + minimized icon + live pixmap) */
     struct wlr_scene_buffer *desktop_icon_buf;
@@ -581,6 +588,8 @@ struct DtwmServer {
     struct wl_global *ext_ws_global;
     struct wl_list ext_ws_managers;
     struct wl_global *toplevel_icon_global;
+    struct wl_global *toplevel_tag_global;
+    struct wlr_security_context_manager_v1 *security_context_mgr;
 
     /* Interactive move / resize / snap / wireframe state */
     DtwmCursorMode cursor_mode;
@@ -956,5 +965,6 @@ void dtwm_sync_resource_manager_dpi(DtwmServer *server);
 void dtwm_sync_external_view_scene(DtwmView *view);
 void dtwm_sync_all_external_client_scales(DtwmServer *server);
 void dtwm_workspace_sync_ipc(DtwmServer *server);
+bool dtwm_wayland_session_handle_wm_request(DtwmServer *server, const char *cmd);
 
 #endif /* DTWM_WAYLAND_H */

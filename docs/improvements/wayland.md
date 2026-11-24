@@ -308,6 +308,19 @@ lock, and Style Manager controls natively with Wayland:
   Workspace Menu, or `dtaction ExitSession` exits cleanly without
   `TT_ERR_NO_MATCH` even in standalone `dtwm-wayland` sessions or if `dtsession`
   exited prematurely;
+- **Native Wayland session persistence (`xdg-toplevel-tag-v1` + `dt.wayland.session`) and Flatpak sandbox isolation (`wp-security-context-v1`):**
+  `dtwm-wayland` exposes `xdg_toplevel_tag_manager_v1` so multi-window native
+  Wayland applications tag persistent window roles, snapshots non-X11
+  `xdg_toplevel` workspace occupancy, unmaximized geometry, maximized/minimized
+  state, and shell-free percent-encoded `/proc/<pid>/cmdline` (or
+  `flatpak run <app_id>`) entries into `~/.dt/sessions/{current,home}/dt.wayland.session`
+  via `dtsession`'s `SmWaylandSaveClients` / `SmWaylandRestoreClients`
+  (`f.save_wayland_session` / `f.restore_wayland_session`), and re-applies saved
+  per-workspace geometry on reload. Simultaneously, `wlr_security_context_manager_v1`
+  and `wl_display_set_global_filter` hide privileged screen-capture,
+  virtual-input, clipboard-snoop, output-management, session-lock,
+  foreign-toplevel, workspace, and layer-shell globals from sandboxed Flatpak
+  clients while enforcing the verified sandbox `app_id`;
 - **`ext-session-lock-v1` and `ext-idle-notify-v1` screen lock:**
   `dtwm-wayland` implements `ext_session_lock_manager_v1` and
   `ext_idle_notifier_v1`, disabling all non-lock desktop/application/overlay

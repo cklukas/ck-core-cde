@@ -1,4 +1,20 @@
 2026-11-24
+- Add native Wayland session save/restore (`xdg-toplevel-tag-v1` and
+  `dt.wayland.session`) across `dtwm-wayland` and `dtsession`, and enforce
+  `wp-security-context-v1` sandbox isolation for Flatpak/sandboxed clients:
+  - Expose `wlr_security_context_manager_v1` in `dtwm-wayland` with a Wayland
+    global filter hiding privileged screen-capture, virtual-input, session-lock,
+    clipboard-control, output-management, foreign-toplevel, workspace, and
+    layer-shell globals from sandboxed clients while pinning verified
+    `wp_security_context_v1` `app_id` identity against client spoofing.
+  - Implement `xdg_toplevel_tag_manager_v1` (`set_toplevel_tag` and
+    `set_toplevel_description`) and per-workspace native Wayland session
+    persistence (`f.save_wayland_session`, `f.load_wayland_session`,
+    `f.restore_wayland_session`, `--wayland-session-db`, and
+    `--restore-wayland-clients`) with shell-free percent-encoded `execvp`
+    command relaunch and `dtsession` `SmWaylandSaveClients` /
+    `SmWaylandRestoreClients` integration, covered by
+    `check-dtwm-wayland-session-security.py`.
 - Add Wayland touchscreen (`wl_touch`), graphics tablet/stylus & ExpressKey pad
   (`zwp_tablet_v2`), and tablet-tool cursor shapes (`wp_cursor_shape_v1`) in
   `dtwm-wayland`, and advance the CK Core Motif pin to adopt client

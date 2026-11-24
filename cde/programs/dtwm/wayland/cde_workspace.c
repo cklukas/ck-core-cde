@@ -825,6 +825,8 @@ void dtwm_switch_workspace(DtwmServer *server, uint32_t ws_idx) {
     dtwm_update_all_backdrops(server);
     dtwm_update_front_panel(server);
     dtwm_icons_relayout(server);
+    dtwm_icons_refresh_focus_indicators(server);
+    dtwm_publish_active_window_box(server);
     xcb_sync_wm_properties(server);
     ext_ws_broadcast_sync(server);
 }
@@ -1151,6 +1153,7 @@ static void handle_dt_wm_request_item(DtwmServer *server, const char *cmd) {
     if (dtwm_output_mgmt_handle_wm_request(server, cmd)) return;
     if (dtwm_power_display_handle_wm_request(server, cmd)) return;
     if (dtwm_a11y_handle_wm_request(server, cmd)) return;
+    if (dtwm_wayland_session_handle_wm_request(server, cmd)) return;
 
     if (strncmp(cmd, "f.set_minimize_animation", 24) == 0 && isspace((unsigned char)cmd[24])) {
         server->minimize_anim_style = dtwm_parse_anim_style(cmd + 25);
