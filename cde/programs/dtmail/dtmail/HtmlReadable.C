@@ -16,6 +16,13 @@
 
 #include "HtmlReadable.h"
 
+extern "C" {
+int XmWaylandRequestActivationToken(
+    void *display, unsigned long source_window, const char *app_id, char **token_return
+) __attribute__((weak));
+void XtFree(char *ptr) __attribute__((weak));
+}
+
 typedef struct {
     char  *data;
     size_t len;
@@ -431,10 +438,21 @@ dtmail_open_html_in_browser(const char *html, size_t html_len)
             browser = "ck-browser";
     }
 
+    char *wl_tok = NULL;
+    if (XmWaylandRequestActivationToken) {
+        (void)XmWaylandRequestActivationToken(NULL, 0UL, "ck-browser", &wl_tok);
+    }
+
     pid_t pid = fork();
-    if (pid < 0)
+    if (pid < 0) {
+        if (wl_tok && XtFree) XtFree(wl_tok);
         return -1;
+    }
     if (pid == 0) {
+        if (wl_tok && wl_tok[0]) {
+            setenv("XDG_ACTIVATION_TOKEN", wl_tok, 1);
+            setenv("DESKTOP_STARTUP_ID", wl_tok, 1);
+        }
         int devnull = open("/dev/null", O_RDWR);
         if (devnull >= 0) {
             dup2(devnull, STDIN_FILENO);
@@ -449,5 +467,7 @@ dtmail_open_html_in_browser(const char *html, size_t html_len)
         execvp("xdg-open", fb);
         _exit(127);
     }
+    if (wl_tok && XtFree)
+        XtFree(wl_tok);
     return 0;
 }

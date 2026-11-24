@@ -2309,29 +2309,35 @@ void dtwm_workspaces_on_xwayland_view_map(DtwmView *view) {
 }
 
 void dtwm_notify_panel_busy_start(DtwmServer *server) {
-    if (!server || !server->xcb_conn || server->xcb_wm_win == XCB_NONE ||
-        server->atom_panel_busy_start_seq == XCB_NONE) {
+    if (!server) {
         return;
     }
     uint32_t seq = ++server->panel_busy_start_seq;
-    xcb_change_property(
-        server->xcb_conn, XCB_PROP_MODE_REPLACE, server->xcb_wm_win,
-        server->atom_panel_busy_start_seq, XCB_ATOM_CARDINAL, 32, 1, &seq
-    );
-    xcb_flush(server->xcb_conn);
+    dtwm_native_ipc_publish_prop(server, "_DT_PANEL_BUSY_START_SEQ", &seq, sizeof(seq));
+    if (server->xcb_conn && server->xcb_wm_win != XCB_NONE &&
+        server->atom_panel_busy_start_seq != XCB_NONE) {
+        xcb_change_property(
+            server->xcb_conn, XCB_PROP_MODE_REPLACE, server->xcb_wm_win,
+            server->atom_panel_busy_start_seq, XCB_ATOM_CARDINAL, 32, 1, &seq
+        );
+        xcb_flush(server->xcb_conn);
+    }
 }
 
 void dtwm_notify_panel_busy_stop(DtwmServer *server) {
-    if (!server || !server->xcb_conn || server->xcb_wm_win == XCB_NONE ||
-        server->atom_panel_busy_stop_seq == XCB_NONE) {
+    if (!server) {
         return;
     }
     uint32_t seq = ++server->panel_busy_stop_seq;
-    xcb_change_property(
-        server->xcb_conn, XCB_PROP_MODE_REPLACE, server->xcb_wm_win,
-        server->atom_panel_busy_stop_seq, XCB_ATOM_CARDINAL, 32, 1, &seq
-    );
-    xcb_flush(server->xcb_conn);
+    dtwm_native_ipc_publish_prop(server, "_DT_PANEL_BUSY_STOP_SEQ", &seq, sizeof(seq));
+    if (server->xcb_conn && server->xcb_wm_win != XCB_NONE &&
+        server->atom_panel_busy_stop_seq != XCB_NONE) {
+        xcb_change_property(
+            server->xcb_conn, XCB_PROP_MODE_REPLACE, server->xcb_wm_win,
+            server->atom_panel_busy_stop_seq, XCB_ATOM_CARDINAL, 32, 1, &seq
+        );
+        xcb_flush(server->xcb_conn);
+    }
 }
 
 /* --- Native Wayland ext-workspace-v1 Protocol Implementation --- */

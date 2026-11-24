@@ -21,6 +21,7 @@
 #include <Xm/Form.h>
 #include <Xm/Label.h>
 #include <Xm/PushB.h>
+#include <Xm/Wayland.h>
 #endif
 
 static DtMailItipInvite g_cur_invite;
@@ -205,12 +206,24 @@ int dtmail_itip_open_in_dtcm(const char *ics_raw, size_t ics_len,
 #endif
 
     /* Otherwise launch dtcm with --import-ics <path> so the RSVP dialog opens automatically */
+    char *wl_tok = NULL;
+#ifndef DTMAIL_ITIP_NO_GUI
+    (void)XmWaylandRequestActivationToken(g_itip_dpy, None, "dtcm", &wl_tok);
+#endif
     pid_t pid = fork();
     if (pid == 0) {
+        if (wl_tok && wl_tok[0]) {
+            setenv("XDG_ACTIVATION_TOKEN", wl_tok, 1);
+            setenv("DESKTOP_STARTUP_ID", wl_tok, 1);
+        }
         execlp("/usr/dt/bin/dtcm", "dtcm", "--import-ics", path, (char *)NULL);
         execlp("dtcm", "dtcm", "--import-ics", path, (char *)NULL);
         _exit(127);
     }
+#ifndef DTMAIL_ITIP_NO_GUI
+    if (wl_tok)
+        XtFree(wl_tok);
+#endif
     return (pid > 0) ? 0 : -1;
 }
 

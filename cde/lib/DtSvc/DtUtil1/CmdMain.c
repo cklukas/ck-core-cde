@@ -59,6 +59,7 @@
 
 #include <Dt/ActionDb.h>
 #include <Dt/ActionUtilP.h>
+#include <Xm/Wayland.h>
 #include "myassertP.h"
 #include "DtSvcLock.h"
 
@@ -1000,6 +1001,19 @@ _DtCmdCommandInvokerExecute (
       }
 
       /*
+       * Mint a Wayland xdg-activation-v1 startup token before restoring the
+       * pre-DT environment so local actions launched from dtwm-panel, dtfile,
+       * or dtmail cleanly raise/activate the spawned client and light the
+       * Front Panel Busy indicator.
+       */
+      char *wlActToken = nullptr;
+      if (commandArray && commandArray[0]) {
+         const char *appHint = strrchr(commandArray[0], '/');
+         appHint = appHint ? (appHint + 1) : commandArray[0];
+         (void) XmWaylandRequestActivationToken(nullptr, None, appHint, &wlActToken);
+      }
+
+      /*
        * Restore the original environment and remove any DT
        * specific environment variables that were added.
        */
@@ -1018,6 +1032,7 @@ _DtCmdCommandInvokerExecute (
 
       if (commandPid < 0) 
       {
+	 if (wlActToken) XtFree(wlActToken);
 	 Cmd_FreeAllocatedStringVector (commandArray);
 	 if(-1 == chdir (tmpDir)) {
 	     perror(strerror(errno)); 
@@ -1029,6 +1044,10 @@ _DtCmdCommandInvokerExecute (
 
       if (commandPid == 0) 
       {
+         if (wlActToken && wlActToken[0]) {
+            setenv("XDG_ACTIVATION_TOKEN", wlActToken, 1);
+            setenv("DESKTOP_STARTUP_ID", wlActToken, 1);
+         }
 
 #if defined(CSRG_BASED)
          setsid() ;
@@ -1098,6 +1117,8 @@ _DtCmdCommandInvokerExecute (
 	 /* the client keeps the working directory of the child setup */
       }
       (void) _DtEnvControl (DT_ENV_RESTORE_POST_DT);
+      if (wlActToken)
+         XtFree(wlActToken);
    }
 
    Cmd_FreeAllocatedStringVector (commandArray);

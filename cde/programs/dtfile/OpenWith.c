@@ -29,6 +29,7 @@
 #include <Xm/Separator.h>
 #include <Xm/TextF.h>
 #include <Xm/ToggleB.h>
+#include <Xm/Wayland.h>
 
 #include <Dt/Dts.h>
 
@@ -683,11 +684,23 @@ static void ow_execute_and_close(OpenWithDialogCtx *ctx) {
     const char *title = (chosen_idx >= 0 && chosen_idx < ctx->app_count) ? ctx->apps[chosen_idx].name : "Application";
 
     if (cmd_str && cmd_str[0]) {
+        char *wl_tok = nullptr;
+        const char *did = (chosen_idx >= 0 && chosen_idx < ctx->app_count)
+                              ? ctx->apps[chosen_idx].desktop_id
+                              : nullptr;
+        Display *ow_dpy = ctx->shell ? XtDisplay(ctx->shell) : nullptr;
+        Window ow_win = (ctx->shell && XtIsRealized(ctx->shell)) ? XtWindow(ctx->shell) : None;
+        (void)XmWaylandRequestActivationToken(ow_dpy, ow_win, did, &wl_tok);
+
         pid_t pid = fork();
         if (pid == 0) {
             setsid();
             pid_t pid2 = fork();
             if (pid2 == 0) {
+                if (wl_tok && wl_tok[0]) {
+                    setenv("XDG_ACTIVATION_TOKEN", wl_tok, 1);
+                    setenv("DESKTOP_STARTUP_ID", wl_tok, 1);
+                }
                 if (wdir && wdir[0] && chdir(wdir) != 0) {}
                 int dn = open("/dev/null", O_RDONLY);
                 if (dn >= 0) {
@@ -706,6 +719,7 @@ static void ow_execute_and_close(OpenWithDialogCtx *ctx) {
             int st = 0;
             (void)waitpid(pid, &st, 0);
         }
+        if (wl_tok) XtFree(wl_tok);
     }
     if (cmd_str) XtFree(cmd_str);
     if (ctx->shell) XtDestroyWidget(ctx->shell);

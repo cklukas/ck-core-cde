@@ -94,6 +94,19 @@ framing or interaction rules.
   placement and commits on release;
 - Pressing `Alt+Tab` opens and cycles the centered 3D-beveled keyboard task
   switcher, and `Alt+Space` opens the window menu;
+- **Focus-stealing prevention and startup tokens (`xdg_activation_v1`)**:
+  `dtwm-wayland` advertises `xdg_activation_v1` (15-second token lifetime),
+  tying token creation and consumption/expiry directly into `_DT_PANEL_BUSY_START_SEQ`
+  and `_DT_PANEL_BUSY_STOP_SEQ` over both XCB and native Wayland IPC so the
+  Front Panel `CONTROL Busy` indicator blinks during native Wayland application
+  startup even under `--no-xwayland`. Valid tokens unminimize, switch to the
+  target workspace, raise, and focus both newly mapped and already-open
+  single-instance windows (with `libDtSvc` `DtActionInvoke`, `dtwm-panel`,
+  `dtfile` *Open With*, `dtmail` HTML/OAuth/iTIP handoffs, and `ck-launch`
+  minting `XDG_ACTIVATION_TOKEN` via `XmWaylandRequestActivationToken`), while
+  unauthenticated background window maps and seatless self-activation requests
+  are kept beneath the active window without stealing keyboard focus while the
+  user is typing;
 - Left-clicking the desktop background clears active-window focus, while
   right-clicking opens the 3D-beveled **Workspace Menu** (supporting both
   click-to-post and Motif press-drag-release, plus `Up`/`Down`/`Enter`/`Esc`

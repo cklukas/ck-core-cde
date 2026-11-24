@@ -3648,6 +3648,14 @@ static void spawn_session_helper(
     DtwmServer *server, const char *prog, const char *arg1, const char *arg2
 ) {
     if (!server || server->session_locked || server->greeter_mode) return;
+    const char *act_tok_str = nullptr;
+    struct wlr_xdg_activation_token_v1 *act_tok = nullptr;
+    if (server->xdg_activation) {
+        act_tok = wlr_xdg_activation_token_v1_create(server->xdg_activation);
+        if (act_tok) {
+            act_tok_str = wlr_xdg_activation_token_v1_get_name(act_tok);
+        }
+    }
     pid_t pid = fork();
     if (pid == 0) {
         if (fork() == 0) {
@@ -3655,6 +3663,9 @@ static void spawn_session_helper(
             if (server->wayland_socket) setenv("WAYLAND_DISPLAY", server->wayland_socket, 1);
             if (server->xwayland && server->xwayland->display_name) {
                 setenv("DISPLAY", server->xwayland->display_name, 1);
+            }
+            if (act_tok_str && act_tok_str[0]) {
+                setenv("XDG_ACTIVATION_TOKEN", act_tok_str, 1);
             }
             if (arg1 && arg2) {
                 execlp(prog, prog, arg1, arg2, (char *)nullptr);
@@ -3684,6 +3695,14 @@ static void spawn_session_helper(
 
 static void spawn_quick_launcher(DtwmServer *server) {
     if (!server || server->session_locked || server->greeter_mode) return;
+    const char *act_tok_str = nullptr;
+    if (server->xdg_activation) {
+        struct wlr_xdg_activation_token_v1 *act_tok =
+            wlr_xdg_activation_token_v1_create(server->xdg_activation);
+        if (act_tok) {
+            act_tok_str = wlr_xdg_activation_token_v1_get_name(act_tok);
+        }
+    }
     pid_t pid = fork();
     if (pid == 0) {
         if (fork() == 0) {
@@ -3691,6 +3710,9 @@ static void spawn_quick_launcher(DtwmServer *server) {
             if (server->wayland_socket) setenv("WAYLAND_DISPLAY", server->wayland_socket, 1);
             if (server->xwayland && server->xwayland->display_name) {
                 setenv("DISPLAY", server->xwayland->display_name, 1);
+            }
+            if (act_tok_str && act_tok_str[0]) {
+                setenv("XDG_ACTIVATION_TOKEN", act_tok_str, 1);
             }
             execlp("ck-launch", "ck-launch", "--toggle", (char *)nullptr);
             execl("/usr/dt/bin/ck-launch", "ck-launch", "--toggle", (char *)nullptr);
@@ -3945,6 +3967,31 @@ static void handle_keyboard_key(struct wl_listener *listener, void *data) {
         }
     }
     if (!handled) {
+        if (ev->state == WL_KEYBOARD_KEY_STATE_PRESSED && server->focused_view &&
+            server->focused_view->mapped && !server->focused_view->is_panel &&
+            !server->focused_view->is_subpanel && (mods & (WLR_MODIFIER_ALT | WLR_MODIFIER_LOGO)) == 0) {
+            bool is_enter = false;
+            bool is_typing = false;
+            for (int i = 0; i < nsyms; ++i) {
+                xkb_keysym_t s = syms[i];
+                bool is_mod =
+                    (s >= XKB_KEY_Shift_L && s <= XKB_KEY_Hyper_R) ||
+                    (s >= XKB_KEY_ISO_Lock && s <= XKB_KEY_ISO_Last_Group_Lock) ||
+                    s == XKB_KEY_Mode_switch || s == XKB_KEY_Num_Lock;
+                if (s == XKB_KEY_Return || s == XKB_KEY_KP_Enter) {
+                    is_enter = true;
+                } else if (!is_mod && s != XKB_KEY_Escape && s != XKB_KEY_Tab) {
+                    is_typing = true;
+                }
+            }
+            if (is_enter) {
+                server->last_typing_ms = 0;
+                server->last_typing_view = nullptr;
+            } else if (is_typing) {
+                server->last_typing_ms = dtwm_now_msec();
+                server->last_typing_view = server->focused_view;
+            }
+        }
         wlr_seat_set_keyboard(server->seat, kb->wlr_keyboard);
         if (!dtwm_ime_forward_key(server, kb->wlr_keyboard, ev)) {
             wlr_seat_keyboard_notify_key(server->seat, t_ms, ev->keycode, ev->state);
@@ -4573,9 +4620,41 @@ static void xdg_toplevel_map(struct wl_listener *listener, void *data) {
     dtwm_view_update_frame(view);
     dtwm_icons_on_view_map(view);
     dtwm_foreign_toplevel_sync(view);
-    dtwm_notify_panel_busy_stop(view->server);
+    bool had_activation = view->pending_activation;
+    view->pending_activation = false;
+    bool prevent_steal = false;
+    if (!had_activation && view->server->focused_view &&
+        view->server->focused_view != view && view->server->focused_view->mapped &&
+        !view->server->focused_view->is_panel && !view->server->focused_view->is_subpanel &&
+        view->server->last_typing_view == view->server->focused_view &&
+        view->server->last_typing_ms != 0 &&
+        (uint32_t)(dtwm_now_msec() - view->server->last_typing_ms) <= 2500u) {
+        bool is_transient_of_focused =
+            (view->server->focused_view->kind == DTWM_VIEW_XDG &&
+             view->xdg_toplevel->parent != nullptr &&
+             view->xdg_toplevel->parent == view->server->focused_view->xdg_toplevel);
+        struct wl_client *new_cli = wl_resource_get_client(view->xdg_toplevel->resource);
+        struct wl_client *foc_cli =
+            (view->server->focused_view->kind == DTWM_VIEW_XDG &&
+             view->server->focused_view->xdg_toplevel)
+                ? wl_resource_get_client(view->server->focused_view->xdg_toplevel->resource)
+                : nullptr;
+        if (!is_transient_of_focused && new_cli != foc_cli &&
+            strcasecmp(app_id, "ck-launch") != 0) {
+            prevent_steal = true;
+        }
+    }
+    if (view->server->pending_activation_tokens == 0 || had_activation) {
+        dtwm_notify_panel_busy_stop(view->server);
+    }
     if (dtwm_view_visible_on_current_ws(view)) {
-        focus_view(view->server, view, view->xdg_toplevel->base->surface);
+        if (!prevent_steal) {
+            focus_view(view->server, view, view->xdg_toplevel->base->surface);
+        } else if (view->frame_tree && view->server->focused_view->frame_tree) {
+            wlr_scene_node_place_below(
+                &view->frame_tree->node, &view->server->focused_view->frame_tree->node
+            );
+        }
     }
 }
 
@@ -4600,7 +4679,12 @@ static void xdg_toplevel_unmap(struct wl_listener *listener, void *data) {
     if (view == view->server->last_menu_btn_view) {
         view->server->last_menu_btn_view = nullptr;
     }
+    if (view == view->server->last_typing_view) {
+        view->server->last_typing_view = nullptr;
+        view->server->last_typing_ms = 0;
+    }
     view->mapped = false;
+    view->pending_activation = false;
     view->has_pending_geom = false;
     view->pending_pos_set = false;
     view->resize_inflight = false;
@@ -4762,6 +4846,10 @@ static void xdg_toplevel_destroy(struct wl_listener *listener, void *data) {
     }
     if (view == server->last_menu_btn_view) {
         server->last_menu_btn_view = nullptr;
+    }
+    if (view == server->last_typing_view) {
+        server->last_typing_view = nullptr;
+        server->last_typing_ms = 0;
     }
     wl_list_remove(&view->map.link);
     wl_list_remove(&view->unmap.link);
@@ -4992,6 +5080,120 @@ static void handle_new_xdg_decoration(struct wl_listener *listener, void *data) 
             wlr_dec, WLR_XDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE
         );
     }
+}
+
+/* --- Focus-Stealing Prevention & Startup Tokens (xdg-activation-v1) --- */
+typedef struct {
+    struct wl_list link;
+    DtwmServer *server;
+    struct wlr_xdg_activation_token_v1 *token;
+    struct wl_listener destroy;
+} DtwmActivationToken;
+
+static DtwmView *find_view_by_wlr_surface(DtwmServer *server, struct wlr_surface *surf) {
+    if (!server || !surf) {
+        return nullptr;
+    }
+    DtwmView *v;
+    wl_list_for_each(v, &server->views, link) {
+        if (v->kind == DTWM_VIEW_XDG && v->xdg_toplevel &&
+            v->xdg_toplevel->base && v->xdg_toplevel->base->surface == surf) {
+            return v;
+        }
+        if (v->kind == DTWM_VIEW_XWAYLAND && v->xwayland_surface &&
+            v->xwayland_surface->surface == surf) {
+            return v;
+        }
+    }
+    return nullptr;
+}
+
+static void handle_activation_token_destroy(struct wl_listener *listener, void *data) {
+    (void)data;
+    DtwmActivationToken *trk = wl_container_of(listener, trk, destroy);
+    DtwmServer *server = trk->server;
+    wl_list_remove(&trk->destroy.link);
+    wl_list_remove(&trk->link);
+    free(trk);
+    if (server && server->pending_activation_tokens > 0) {
+        server->pending_activation_tokens--;
+        if (!server->shutting_down && server->pending_activation_tokens == 0) {
+            dtwm_notify_panel_busy_stop(server);
+        }
+    }
+}
+
+static void handle_xdg_activation_new_token(struct wl_listener *listener, void *data) {
+    DtwmServer *server = wl_container_of(listener, server, xdg_activation_new_token);
+    struct wlr_xdg_activation_token_v1 *token = data;
+    if (!server || !token || server->shutting_down) {
+        return;
+    }
+    DtwmActivationToken *trk = calloc(1, sizeof(*trk));
+    if (!trk) {
+        return;
+    }
+    trk->server = server;
+    trk->token = token;
+    trk->destroy.notify = handle_activation_token_destroy;
+    wl_signal_add(&token->events.destroy, &trk->destroy);
+    wl_list_insert(&server->activation_tokens, &trk->link);
+    server->pending_activation_tokens++;
+    if (server->pending_activation_tokens == 1) {
+        dtwm_notify_panel_busy_start(server);
+    }
+}
+
+static void handle_xdg_activation_request_activate(struct wl_listener *listener, void *data) {
+    DtwmServer *server = wl_container_of(listener, server, xdg_activation_request_activate);
+    struct wlr_xdg_activation_v1_request_activate_event *ev = data;
+    if (!server || server->shutting_down || server->session_locked || !ev || !ev->surface || !ev->token) {
+        return;
+    }
+
+    DtwmView *target = find_view_by_wlr_surface(server, ev->surface);
+    if (!target || target->is_desktop_pin || target->is_swallowed) {
+        return;
+    }
+
+    const char *tok_app = ev->token->app_id ? ev->token->app_id : "";
+    const char *tgt_app =
+        (target->kind == DTWM_VIEW_XDG && target->xdg_toplevel && target->xdg_toplevel->app_id)
+            ? target->xdg_toplevel->app_id
+            : "";
+    bool is_quick_launcher =
+        (strcasecmp(tok_app, "ck-launch") == 0 || strcasecmp(tgt_app, "ck-launch") == 0 ||
+         strcasecmp(tgt_app, "CkLaunch") == 0);
+
+    /* Reject unauthenticated self-activation from an unfocused background client
+     * that did not provide a valid seat input serial when another window is focused. */
+    if (!is_quick_launcher && ev->token->surface != nullptr && ev->token->seat == nullptr &&
+        server->focused_view != nullptr) {
+        DtwmView *src_view = find_view_by_wlr_surface(server, ev->token->surface);
+        if (src_view && src_view != server->focused_view &&
+            !src_view->is_panel && !src_view->is_subpanel) {
+            return;
+        }
+    }
+
+    if (!target->mapped) {
+        target->pending_activation = true;
+        return;
+    }
+
+    if (target->minimized) {
+        view_set_minimized(target, false);
+    }
+    if ((target->workspace_mask & (1u << server->current_workspace)) == 0) {
+        for (uint32_t ws = 0; ws < server->num_workspaces; ++ws) {
+            if (target->workspace_mask & (1u << ws)) {
+                dtwm_switch_workspace(server, ws);
+                break;
+            }
+        }
+    }
+    focus_view_ex(server, target, ev->surface, true);
+    dtwm_notify_panel_busy_stop(server);
 }
 
 /* --- Layer Shell v1 --- */
@@ -5710,6 +5912,10 @@ static void xwayland_destroy(struct wl_listener *listener, void *data) {
     }
     if (view == server->last_menu_btn_view) {
         server->last_menu_btn_view = nullptr;
+    }
+    if (view == server->last_typing_view) {
+        server->last_typing_view = nullptr;
+        server->last_typing_ms = 0;
     }
     if (view == server->popup_sink_view) {
         server->popup_sink_view = nullptr;
@@ -6695,6 +6901,7 @@ int main(int argc, char **argv) {
     wl_list_init(&server.popups);
     wl_list_init(&server.keyboards);
     wl_list_init(&server.pointers);
+    wl_list_init(&server.activation_tokens);
 
     server.wl_display = wl_display_create();
     if (!server.wl_display) {
@@ -6828,6 +7035,17 @@ int main(int argc, char **argv) {
     server.xdg_decoration_mgr = wlr_xdg_decoration_manager_v1_create(server.wl_display);
     server.new_xdg_decoration.notify = handle_new_xdg_decoration;
     wl_signal_add(&server.xdg_decoration_mgr->events.new_toplevel_decoration, &server.new_xdg_decoration);
+
+    server.xdg_activation = wlr_xdg_activation_v1_create(server.wl_display);
+    if (server.xdg_activation) {
+        server.xdg_activation->token_timeout_msec = 15000;
+        server.xdg_activation_new_token.notify = handle_xdg_activation_new_token;
+        wl_signal_add(&server.xdg_activation->events.new_token, &server.xdg_activation_new_token);
+        server.xdg_activation_request_activate.notify = handle_xdg_activation_request_activate;
+        wl_signal_add(
+            &server.xdg_activation->events.request_activate, &server.xdg_activation_request_activate
+        );
+    }
 
     server.layer_shell = wlr_layer_shell_v1_create(server.wl_display, 4);
     server.new_layer_surface.notify = handle_new_layer_surface;
@@ -7036,6 +7254,17 @@ cleanup:
     wl_list_remove(&server.new_xdg_toplevel.link);
     wl_list_remove(&server.new_xdg_popup.link);
     wl_list_remove(&server.new_xdg_decoration.link);
+    if (server.xdg_activation) {
+        DtwmActivationToken *trk, *ttmp;
+        wl_list_for_each_safe(trk, ttmp, &server.activation_tokens, link) {
+            wl_list_remove(&trk->destroy.link);
+            wl_list_remove(&trk->link);
+            free(trk);
+        }
+        wl_list_remove(&server.xdg_activation_new_token.link);
+        wl_list_remove(&server.xdg_activation_request_activate.link);
+        server.xdg_activation = nullptr;
+    }
     wl_list_remove(&server.new_layer_surface.link);
     {
         DtwmPointer *ptr, *ptmp;

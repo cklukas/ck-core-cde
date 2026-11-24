@@ -1,4 +1,20 @@
 2026-11-24
+- Add Wayland `xdg-activation-v1` startup tokens, focus-stealing prevention,
+  and Front Panel `Busy` light synchronization across `dtwm-wayland`,
+  `dtwm-panel`, `libDtSvc` (`DtActionInvoke`), `dtfile` (*Open With*), and
+  `dtmail` (HTML/OAuth/iTIP handoffs), and advance the CK Core Motif pin:
+  - Expose `xdg_activation_v1` in `dtwm-wayland` with 15-second token expiry,
+    broadcasting `_DT_PANEL_BUSY_START_SEQ` / `_DT_PANEL_BUSY_STOP_SEQ` over
+    both XCB and native Wayland IPC so minting and redeeming startup tokens
+    drive the Front Panel `Busy` indicator in both hybrid and `--no-xwayland`
+    sessions.
+  - Honor valid activation tokens on mapped and unmapped `xdg_toplevel` views
+    (unminimizing, switching to the target workspace, raising, and focusing),
+    while preventing unauthenticated background window maps and seatless
+    self-activation requests from stealing keyboard focus during active typing.
+  - Mint and export `XDG_ACTIVATION_TOKEN` / `DESKTOP_STARTUP_ID` across local
+    `DtActionInvoke` launches, `dtfile` *Open With*, and `dtmail` browser/calendar
+    handoffs, covered by `check-dtwm-wayland-activation.py`.
 - Keep the Front Panel status regression inspecting mapped windows when a
   transient Xwayland window closes during enumeration.
 - Retire disconnected File Manager refresh workers and release their pipe

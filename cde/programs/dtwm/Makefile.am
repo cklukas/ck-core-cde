@@ -25,6 +25,7 @@ EXTRA_DIST = tests/check-property-readers.py tests/property-client.c \
              tests/check-dtwm-wayland-hidpi.py \
              tests/check-dtwm-wayland-menus.py \
              tests/check-dtwm-wayland-busy-light.py \
+             tests/check-dtwm-wayland-activation.py \
              tests/check-dtwm-wayland-panel-dnd.py \
              tests/wayland-test-pointer.c \
              tests/check-dtappintegrate-curated.py \
@@ -67,6 +68,7 @@ if BUILD_DTWM_WAYLAND
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-hidpi.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-menus.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-busy-light.py --compositor ./dtwm-wayland
+	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-activation.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-panel-dnd.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-exit-session.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-icon-order.py --compositor ./dtwm-wayland --dtwm ./dtwm

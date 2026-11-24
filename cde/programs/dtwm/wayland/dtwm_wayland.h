@@ -44,6 +44,7 @@
 #include <wlr/types/wlr_virtual_keyboard_v1.h>
 #include <wlr/types/wlr_virtual_pointer_v1.h>
 #include <wlr/types/wlr_xcursor_manager.h>
+#include <wlr/types/wlr_xdg_activation_v1.h>
 #include <wlr/types/wlr_xdg_decoration_v1.h>
 #include <wlr/types/wlr_xdg_output_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
@@ -241,6 +242,7 @@ struct DtwmView {
 
     bool mapped;
     bool active;
+    bool pending_activation;
     bool maximized;
     bool minimized;
     bool is_panel;          /* Genuine CDE Front Panel (DtWM_BEHAVIOR_PANEL) */
@@ -363,6 +365,13 @@ struct DtwmServer {
 
     struct wlr_xdg_shell *xdg_shell;
     struct wlr_xdg_decoration_manager_v1 *xdg_decoration_mgr;
+    struct wlr_xdg_activation_v1 *xdg_activation;
+    struct wl_listener xdg_activation_new_token;
+    struct wl_listener xdg_activation_request_activate;
+    struct wl_list activation_tokens;
+    uint32_t pending_activation_tokens;
+    uint32_t last_typing_ms;
+    DtwmView *last_typing_view;
     struct wlr_layer_shell_v1 *layer_shell;
     struct wlr_xwayland *xwayland;
     struct wlr_session_lock_manager_v1 *session_lock_mgr;

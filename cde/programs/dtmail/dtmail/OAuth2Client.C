@@ -6,6 +6,13 @@
 
 #include "OAuth2Client.h"
 
+extern "C" {
+int XmWaylandRequestActivationToken(
+    void *display, unsigned long source_window, const char *app_id, char **token_return
+) __attribute__((weak));
+void XtFree(char *ptr) __attribute__((weak));
+}
+
 #include <arpa/inet.h>
 #include <ctype.h>
 #include <errno.h>
@@ -508,9 +515,20 @@ int dtmail_oauth2_ensure_access_token(const DtMailAccount *acct,
 int dtmail_oauth2_open_browser(const char *url)
 {
     if (!url || !url[0]) return -1;
+    char *wl_tok = NULL;
+    if (XmWaylandRequestActivationToken) {
+        (void)XmWaylandRequestActivationToken(NULL, 0UL, "ck-browser", &wl_tok);
+    }
     pid_t pid = fork();
-    if (pid < 0) return -1;
+    if (pid < 0) {
+        if (wl_tok && XtFree) XtFree(wl_tok);
+        return -1;
+    }
     if (pid == 0) {
+        if (wl_tok && wl_tok[0]) {
+            setenv("XDG_ACTIVATION_TOKEN", wl_tok, 1);
+            setenv("DESKTOP_STARTUP_ID", wl_tok, 1);
+        }
         const char *env_b = getenv("BROWSER");
         if (env_b && env_b[0]) {
             execlp(env_b, env_b, url, (char *)NULL);
@@ -519,5 +537,7 @@ int dtmail_oauth2_open_browser(const char *url)
         execlp("xdg-open", "xdg-open", url, (char *)NULL);
         _exit(127);
     }
+    if (wl_tok && XtFree)
+        XtFree(wl_tok);
     return 0;
 }

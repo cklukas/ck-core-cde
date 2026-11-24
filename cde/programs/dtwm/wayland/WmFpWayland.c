@@ -2041,6 +2041,11 @@ int main(int argc, char **argv) {
             if (ev.xproperty.atom == g_atomTrashWin) {
                 watch_trash_window_events(dpy);
             }
+            if (g_mwmWin == None &&
+                (ev.xproperty.atom == g_atomPanelBusyStartSeq ||
+                 ev.xproperty.atom == g_atomPanelBusyStopSeq)) {
+                sync_panel_workspaces_from_x11(dpy, ev.xproperty.atom);
+            }
             Atom a_wl_outputs = XInternAtom(dpy, "_DT_WAYLAND_OUTPUTS", False);
             if (ev.xproperty.atom == a_wl_outputs) {
                 Atom act_t = None;
