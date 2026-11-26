@@ -1,3 +1,26 @@
+2026-11-26
+- Add upstream Wayland dialog modality, tearing-control, and FIFO frame-pacing
+  protocols (`xdg-dialog-v1`, `wp-tearing-control-v1`, and `wp-fifo-v1`) in
+  `dtwm-wayland`, advancing the CK Core Motif pin to `b1829055a603`:
+  - Expose `xdg_wm_dialog_v1` (`wlr_xdg_wm_dialog_v1_create`) in `dtwm-wayland`:
+    automatically center modal `xdg_dialog_v1` children (including CK Core Motif
+    `XmDialogShell` modal dialogs) over their parent window, dim the locked
+    parent window's client interior while a modal child is open, suppress
+    Minimize/Maximize frame buttons on modal dialogs, keep modal children stacked
+    above their parent, and redirect clicks or focus attempts on a modal-locked
+    parent to the active modal child.
+  - Expose `wp_tearing_control_manager_v1` (`wlr_tearing_control_manager_v1_create`)
+    and attempt asynchronous `tearing_page_flip` output commits when a visible
+    surface requests `WP_TEARING_CONTROL_V1_PRESENTATION_HINT_ASYNC`, falling
+    back cleanly to VSync commits when rejected by the backend.
+  - Implement `wp_fifo_manager_v1` and `wp_fifo_v1` (`set_barrier` and
+    `wait_barrier` double-buffered commits via `wlr_surface_synced` and
+    `wlr_surface_lock_pending`, releasing one barrier latch per output refresh
+    cycle with forward-progress timeout protection and spec-compliant
+    `already_exists` / `surface_destroyed` protocol error enforcement), publish
+    `_DT_WAYLAND_PRESENTATION_STATE`, and cover all three protocols in
+    `check-dtwm-wayland-protocols-v2.py`.
+
 2026-11-24
 - Add Wayland color management (`wp-color-management-v1` + ICC/sRGB output
   transforms) and polish live cross-monitor fractional-DPI window dragging in

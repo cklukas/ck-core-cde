@@ -741,6 +741,14 @@ void dtwm_view_update_frame(DtwmView *view) {
         if (view->frame_left_buf) wlr_scene_buffer_set_buffer(view->frame_left_buf, nullptr);
         if (view->frame_right_buf) wlr_scene_buffer_set_buffer(view->frame_right_buf, nullptr);
         if (view->client_bg_rect) wlr_scene_node_set_enabled(&view->client_bg_rect->node, false);
+        if (view->modal_dim_rect) {
+            if (view->client_w > 0 && view->client_h > 0) {
+                wlr_scene_rect_set_size(view->modal_dim_rect, view->client_w, view->client_h);
+                wlr_scene_node_set_position(&view->modal_dim_rect->node, 0, 0);
+            } else {
+                wlr_scene_node_set_enabled(&view->modal_dim_rect->node, false);
+            }
+        }
         if (view->content_tree) {
             wlr_scene_node_set_position(&view->content_tree->node, 0, 0);
             wlr_scene_subsurface_tree_set_clip(&view->content_tree->node, nullptr);
@@ -781,6 +789,10 @@ void dtwm_view_update_frame(DtwmView *view) {
             wlr_scene_node_set_position(&view->client_bg_rect->node, left, top);
         }
         wlr_scene_node_set_enabled(&view->client_bg_rect->node, want_bg);
+    }
+    if (view->modal_dim_rect) {
+        wlr_scene_rect_set_size(view->modal_dim_rect, view->client_w, view->client_h);
+        wlr_scene_node_set_position(&view->modal_dim_rect->node, left, top);
     }
 
     int outer_w = view->client_w + left + right;

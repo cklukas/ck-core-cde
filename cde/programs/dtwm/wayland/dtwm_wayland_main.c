@@ -6,6 +6,7 @@
  */
 
 #include "dtwm_wayland.h"
+#include "fifo-v1-protocol.h"
 #include "xdg-toplevel-tag-v1-protocol.h"
 
 #include <ctype.h>
@@ -204,6 +205,15 @@ static DtwmView *surface_global_origin_and_scale(
     double *out_gy,
     double *out_scale
 );
+static struct wlr_surface *view_wlr_surface(const DtwmView *view);
+static void schedule_all_outputs_frame(DtwmServer *server);
+static DtwmView *find_active_modal_child(DtwmServer *server, DtwmView *parent);
+static void center_modal_view_on_parent(DtwmView *view);
+static void sync_all_modal_dialogs(DtwmServer *server);
+static void publish_presentation_state_ipc(DtwmServer *server);
+static bool output_wants_tearing_flip(DtwmOutput *output);
+static void fifo_latch_output_frame(DtwmServer *server);
+static void fifo_finish_all(DtwmServer *server);
 
 static uint32_t dtwm_now_msec(void) {
     struct timespec ts = {0};
@@ -325,6 +335,681 @@ static void publish_color_state_ipc(DtwmServer *server, struct wlr_surface *surf
     if (n > 0) {
         dtwm_native_ipc_publish_prop(server, "_DT_WAYLAND_COLOR_STATE", buf, (size_t)n);
     }
+}
+
+/* --- xdg-dialog-v1, wp-tearing-control-v1, and wp-fifo-v1 --- */
+
+typedef struct {
+    struct wl_list link;
+    DtwmServer *server;
+    struct wlr_xdg_dialog_v1 *dialog;
+    struct wl_listener set_modal;
+    struct wl_listener destroy;
+} DtwmXdgDialog;
+
+typedef struct {
+    struct wl_list link;
+    DtwmServer *server;
+    struct wlr_tearing_control_v1 *control;
+    struct wl_listener set_hint;
+    struct wl_listener destroy;
+} DtwmTearingControl;
+
+typedef struct {
+    bool set_barrier;
+    bool wait_barrier;
+} DtwmFifoSyncedState;
+
+typedef struct {
+    struct wl_list link;
+    uint32_t seq;
+} DtwmFifoLock;
+
+typedef struct DtwmFifoSurface DtwmFifoSurface;
+
+typedef struct {
+    DtwmFifoSurface *fs;
+    struct wl_resource *resource;
+} DtwmFifoResource;
+
+struct DtwmFifoSurface {
+    struct wl_list link;
+    DtwmServer *server;
+    struct wlr_surface *surface;
+    DtwmFifoResource *active_res;
+    struct wlr_surface_synced synced;
+    DtwmFifoSyncedState pending;
+    DtwmFifoSyncedState current;
+    bool barrier_active;
+    struct wl_list wait_locks; /* DtwmFifoLock.link */
+    struct wl_event_source *progress_timer;
+    struct wl_listener client_commit;
+    struct wl_listener surface_unmap;
+    struct wl_listener surface_destroy;
+};
+
+static bool view_check_xdg_dialog_modal(const DtwmView *view) {
+    if (!view || view->kind != DTWM_VIEW_XDG || !view->xdg_toplevel) {
+        return false;
+    }
+    struct wlr_xdg_dialog_v1 *dlg =
+        wlr_xdg_dialog_v1_try_from_wlr_xdg_toplevel(view->xdg_toplevel);
+    return dlg && dlg->modal;
+}
+
+static DtwmView *find_parent_view_of(const DtwmServer *server, const DtwmView *child) {
+    if (!server || !child) return nullptr;
+    if (child->kind == DTWM_VIEW_XDG && child->xdg_toplevel && child->xdg_toplevel->parent) {
+        struct wlr_xdg_toplevel *ptop = child->xdg_toplevel->parent;
+        DtwmView *cand;
+        wl_list_for_each(cand, &server->views, link) {
+            if (cand != child && cand->kind == DTWM_VIEW_XDG && cand->xdg_toplevel == ptop) {
+                return cand;
+            }
+        }
+    } else if (child->kind == DTWM_VIEW_XWAYLAND && child->xwayland_surface &&
+               child->xwayland_surface->parent) {
+        struct wlr_xwayland_surface *pxw = child->xwayland_surface->parent;
+        DtwmView *cand;
+        wl_list_for_each(cand, &server->views, link) {
+            if (cand != child && cand->kind == DTWM_VIEW_XWAYLAND &&
+                cand->xwayland_surface == pxw) {
+                return cand;
+            }
+        }
+    }
+    return nullptr;
+}
+
+static DtwmView *find_direct_modal_child(DtwmServer *server, DtwmView *parent) {
+    if (!server || !parent) return nullptr;
+    DtwmView *cand;
+    wl_list_for_each(cand, &server->views, link) {
+        if (cand == parent || !cand->mapped || cand->minimized ||
+            !dtwm_view_visible_on_current_ws(cand)) {
+            continue;
+        }
+        if ((cand->is_modal_dialog || view_check_xdg_dialog_modal(cand)) &&
+            find_parent_view_of(server, cand) == parent) {
+            return cand;
+        }
+    }
+    return nullptr;
+}
+
+static DtwmView *find_active_modal_child(DtwmServer *server, DtwmView *parent) {
+    if (!server || !parent) return nullptr;
+    DtwmView *cur = parent;
+    DtwmView *found = nullptr;
+    for (int depth = 0; depth < 8; ++depth) {
+        DtwmView *next = find_direct_modal_child(server, cur);
+        if (!next || next == parent) {
+            break;
+        }
+        found = next;
+        cur = next;
+    }
+    return found;
+}
+
+static void center_modal_view_on_parent(DtwmView *view) {
+    if (!view || !view->server) return;
+    if (!view->is_modal_dialog && !view_check_xdg_dialog_modal(view)) {
+        return;
+    }
+    DtwmView *pv = find_parent_view_of(view->server, view);
+    if (!pv || !pv->mapped) {
+        return;
+    }
+    int p_ow = 0, p_oh = 0, c_ow = 0, c_oh = 0;
+    dtwm_view_outer_size(pv, &p_ow, &p_oh);
+    dtwm_view_outer_size(view, &c_ow, &c_oh);
+    if (p_ow <= 0 || p_oh <= 0 || c_ow <= 0 || c_oh <= 0) {
+        return;
+    }
+    int nx = pv->x + (p_ow - c_ow) / 2;
+    int ny = pv->y + (p_oh - c_oh) / 2;
+    struct wlr_box ubox = {0};
+    dtwm_get_usable_output_box(
+        view->server, pv->x + p_ow * 0.5, pv->y + p_oh * 0.5, &ubox
+    );
+    if (ubox.width > 0 && ubox.height > 0) {
+        if (nx + c_ow > ubox.x + ubox.width) nx = ubox.x + ubox.width - c_ow;
+        if (ny + c_oh > ubox.y + ubox.height) ny = ubox.y + ubox.height - c_oh;
+        if (nx < ubox.x) nx = ubox.x;
+        if (ny < ubox.y) ny = ubox.y;
+    }
+    view->x = nx;
+    view->y = ny;
+    if (view->frame_tree) {
+        wlr_scene_node_set_position(&view->frame_tree->node, view->x, view->y);
+    }
+    if (view->mapped && view->is_native_dpi) {
+        dtwm_notify_native_dpi_view_pos(view, false);
+    }
+}
+
+static void publish_presentation_state_ipc(DtwmServer *server) {
+    if (!server) return;
+    unsigned int modal_views = 0;
+    DtwmView *v;
+    wl_list_for_each(v, &server->views, link) {
+        if (v->mapped && (v->is_modal_dialog || view_check_xdg_dialog_modal(v))) {
+            modal_views++;
+        }
+    }
+    unsigned int tearing_async = 0;
+    if (server->tearing_control_mgr) {
+        DtwmTearingControl *tc;
+        wl_list_for_each(tc, &server->tearing_controls, link) {
+            if (tc->control && tc->control->surface &&
+                wlr_tearing_control_manager_v1_surface_hint_from_surface(
+                    server->tearing_control_mgr, tc->control->surface
+                ) == WP_TEARING_CONTROL_V1_PRESENTATION_HINT_ASYNC) {
+                tearing_async++;
+            }
+        }
+    }
+    char buf[256];
+    int n = snprintf(
+        buf,
+        sizeof(buf),
+        "xdg_dialog=%d;modal_views=%u;tearing_mgr=%d;tearing_async=%u;tearing_flips=%u;"
+        "fifo_mgr=%d;fifo_barriers=%u;fifo_waits=%u",
+        server->xdg_wm_dialog ? 1 : 0,
+        modal_views,
+        server->tearing_control_mgr ? 1 : 0,
+        tearing_async,
+        server->tearing_flip_attempts,
+        server->fifo_mgr_global ? 1 : 0,
+        server->fifo_barrier_total,
+        server->fifo_wait_total
+    );
+    if (n > 0) {
+        dtwm_native_ipc_publish_prop(server, "_DT_WAYLAND_PRESENTATION_STATE", buf, (size_t)n);
+        if (server->xcb_conn && server->xcb_root != XCB_WINDOW_NONE) {
+            xcb_intern_atom_cookie_t ck =
+                xcb_intern_atom(server->xcb_conn, 0, strlen("_DT_WAYLAND_PRESENTATION_STATE"),
+                                "_DT_WAYLAND_PRESENTATION_STATE");
+            xcb_intern_atom_reply_t *rep = xcb_intern_atom_reply(server->xcb_conn, ck, nullptr);
+            if (rep && rep->atom != XCB_ATOM_NONE) {
+                xcb_change_property(
+                    server->xcb_conn,
+                    XCB_PROP_MODE_REPLACE,
+                    server->xcb_root,
+                    rep->atom,
+                    XCB_ATOM_STRING,
+                    8,
+                    (uint32_t)n,
+                    buf
+                );
+                xcb_flush(server->xcb_conn);
+            }
+            free(rep);
+        }
+    }
+}
+
+static void sync_all_modal_dialogs(DtwmServer *server) {
+    if (!server) return;
+    DtwmView *v;
+    wl_list_for_each(v, &server->views, link) {
+        if (v->kind == DTWM_VIEW_XDG && v->xdg_toplevel) {
+            bool want_modal = view_check_xdg_dialog_modal(v);
+            if (want_modal != v->is_modal_dialog) {
+                if (want_modal) {
+                    if (!v->modal_saved_btns_valid) {
+                        v->modal_has_min_saved = v->has_min_btn;
+                        v->modal_has_max_saved = v->has_max_btn;
+                        v->modal_saved_btns_valid = true;
+                    }
+                    v->is_modal_dialog = true;
+                    v->has_min_btn = false;
+                    v->has_max_btn = false;
+                } else {
+                    v->is_modal_dialog = false;
+                    if (v->modal_saved_btns_valid) {
+                        v->has_min_btn = v->modal_has_min_saved;
+                        v->has_max_btn = v->modal_has_max_saved;
+                    }
+                }
+                if (v->mapped) {
+                    dtwm_view_update_frame(v);
+                }
+            }
+        }
+    }
+    wl_list_for_each(v, &server->views, link) {
+        if (!v->frame_tree || !v->modal_dim_rect) continue;
+        DtwmView *mc = (v->mapped && !v->minimized && dtwm_view_visible_on_current_ws(v))
+                           ? find_direct_modal_child(server, v)
+                           : nullptr;
+        bool want_dim = (mc != nullptr && v->client_w > 0 && v->client_h > 0);
+        if (want_dim) {
+            int l = 0, t = 0, r = 0, b = 0;
+            dtwm_view_insets(v, &l, &t, &r, &b);
+            wlr_scene_rect_set_size(v->modal_dim_rect, v->client_w, v->client_h);
+            wlr_scene_node_set_position(&v->modal_dim_rect->node, l, t);
+            if (mc->frame_tree) {
+                wlr_scene_node_raise_to_top(&mc->frame_tree->node);
+            }
+        }
+        wlr_scene_node_set_enabled(&v->modal_dim_rect->node, want_dim);
+    }
+    publish_presentation_state_ipc(server);
+}
+
+static void handle_xdg_dialog_set_modal(struct wl_listener *listener, void *data) {
+    (void)data;
+    DtwmXdgDialog *xd = wl_container_of(listener, xd, set_modal);
+    if (!xd || !xd->server || !xd->dialog) return;
+    DtwmServer *server = xd->server;
+    DtwmView *target = nullptr;
+    DtwmView *v;
+    wl_list_for_each(v, &server->views, link) {
+        if (v->kind == DTWM_VIEW_XDG && v->xdg_toplevel == xd->dialog->xdg_toplevel) {
+            target = v;
+            break;
+        }
+    }
+    sync_all_modal_dialogs(server);
+    if (target && xd->dialog->modal && target->mapped) {
+        center_modal_view_on_parent(target);
+        if (dtwm_view_visible_on_current_ws(target)) {
+            focus_view(server, target, view_wlr_surface(target));
+        }
+    }
+    schedule_all_outputs_frame(server);
+}
+
+static void handle_xdg_dialog_destroy(struct wl_listener *listener, void *data) {
+    (void)data;
+    DtwmXdgDialog *xd = wl_container_of(listener, xd, destroy);
+    DtwmServer *server = xd->server;
+    wl_list_remove(&xd->set_modal.link);
+    wl_list_remove(&xd->destroy.link);
+    wl_list_remove(&xd->link);
+    free(xd);
+    if (server && !server->shutting_down) {
+        sync_all_modal_dialogs(server);
+    }
+}
+
+static void handle_new_xdg_dialog(struct wl_listener *listener, void *data) {
+    DtwmServer *server = wl_container_of(listener, server, new_xdg_dialog);
+    struct wlr_xdg_dialog_v1 *dialog = data;
+    DtwmXdgDialog *xd = calloc(1, sizeof(*xd));
+    if (!xd) return;
+    xd->server = server;
+    xd->dialog = dialog;
+    xd->set_modal.notify = handle_xdg_dialog_set_modal;
+    wl_signal_add(&dialog->events.set_modal, &xd->set_modal);
+    xd->destroy.notify = handle_xdg_dialog_destroy;
+    wl_signal_add(&dialog->events.destroy, &xd->destroy);
+    wl_list_insert(&server->xdg_dialogs, &xd->link);
+    sync_all_modal_dialogs(server);
+}
+
+static void handle_tearing_set_hint(struct wl_listener *listener, void *data) {
+    (void)data;
+    DtwmTearingControl *tc = wl_container_of(listener, tc, set_hint);
+    if (tc && tc->server && !tc->server->shutting_down) {
+        publish_presentation_state_ipc(tc->server);
+        schedule_all_outputs_frame(tc->server);
+    }
+}
+
+static void handle_tearing_destroy(struct wl_listener *listener, void *data) {
+    (void)data;
+    DtwmTearingControl *tc = wl_container_of(listener, tc, destroy);
+    DtwmServer *server = tc->server;
+    wl_list_remove(&tc->set_hint.link);
+    wl_list_remove(&tc->destroy.link);
+    wl_list_remove(&tc->link);
+    free(tc);
+    if (server && !server->shutting_down) {
+        publish_presentation_state_ipc(server);
+    }
+}
+
+static void handle_new_tearing_control(struct wl_listener *listener, void *data) {
+    DtwmServer *server = wl_container_of(listener, server, new_tearing_control);
+    struct wlr_tearing_control_v1 *control = data;
+    DtwmTearingControl *tc = calloc(1, sizeof(*tc));
+    if (!tc) return;
+    tc->server = server;
+    tc->control = control;
+    tc->set_hint.notify = handle_tearing_set_hint;
+    wl_signal_add(&control->events.set_hint, &tc->set_hint);
+    tc->destroy.notify = handle_tearing_destroy;
+    wl_signal_add(&control->events.destroy, &tc->destroy);
+    wl_list_insert(&server->tearing_controls, &tc->link);
+    publish_presentation_state_ipc(server);
+}
+
+static bool output_wants_tearing_flip(DtwmOutput *output) {
+    if (!output || !output->server || !output->server->tearing_control_mgr) {
+        return false;
+    }
+    DtwmServer *server = output->server;
+    DtwmTearingControl *tc;
+    wl_list_for_each(tc, &server->tearing_controls, link) {
+        if (!tc->control || !tc->control->surface || !tc->control->surface->mapped) {
+            continue;
+        }
+        if (wlr_tearing_control_manager_v1_surface_hint_from_surface(
+                server->tearing_control_mgr, tc->control->surface
+            ) == WP_TEARING_CONTROL_V1_PRESENTATION_HINT_ASYNC) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static void fifo_synced_init_state(void *state) {
+    DtwmFifoSyncedState *st = state;
+    st->set_barrier = false;
+    st->wait_barrier = false;
+}
+
+static void fifo_synced_move_state(void *dst_v, void *src_v) {
+    DtwmFifoSyncedState *dst = dst_v;
+    DtwmFifoSyncedState *src = src_v;
+    *dst = *src;
+    src->set_barrier = false;
+    src->wait_barrier = false;
+}
+
+static void fifo_release_one_latch(DtwmFifoSurface *fs) {
+    if (!fs) return;
+    fs->barrier_active = false;
+    while (!fs->barrier_active && !wl_list_empty(&fs->wait_locks)) {
+        DtwmFifoLock *lk = wl_container_of(fs->wait_locks.next, lk, link);
+        wl_list_remove(&lk->link);
+        uint32_t seq = lk->seq;
+        free(lk);
+        if (fs->surface) {
+            wlr_surface_unlock_cached(fs->surface, seq);
+        }
+    }
+    if ((fs->barrier_active || !wl_list_empty(&fs->wait_locks)) && fs->progress_timer) {
+        wl_event_source_timer_update(fs->progress_timer, 32);
+    } else if (fs->progress_timer) {
+        wl_event_source_timer_update(fs->progress_timer, 0);
+    }
+}
+
+static void fifo_synced_commit(struct wlr_surface_synced *synced) {
+    DtwmFifoSurface *fs = wl_container_of(synced, fs, synced);
+    if (!fs || !fs->server) return;
+    if (fs->current.set_barrier) {
+        fs->current.set_barrier = false;
+        fs->barrier_active = true;
+        fs->server->fifo_barrier_total++;
+        if (fs->progress_timer) {
+            wl_event_source_timer_update(fs->progress_timer, 32);
+        }
+        schedule_all_outputs_frame(fs->server);
+        publish_presentation_state_ipc(fs->server);
+    }
+}
+
+static const struct wlr_surface_synced_impl g_fifo_synced_impl = {
+    .state_size = sizeof(DtwmFifoSyncedState),
+    .init_state = fifo_synced_init_state,
+    .move_state = fifo_synced_move_state,
+    .commit = fifo_synced_commit,
+};
+
+static int handle_fifo_progress_timer(void *data) {
+    DtwmFifoSurface *fs = data;
+    if (fs && (fs->barrier_active || !wl_list_empty(&fs->wait_locks))) {
+        fifo_release_one_latch(fs);
+    }
+    return 0;
+}
+
+static void handle_fifo_surface_client_commit(struct wl_listener *listener, void *data) {
+    (void)data;
+    DtwmFifoSurface *fs = wl_container_of(listener, fs, client_commit);
+    if (!fs || !fs->surface || !fs->server) return;
+    if (!fs->pending.wait_barrier) return;
+    struct wlr_subsurface *sub = wlr_subsurface_try_from_wlr_surface(fs->surface);
+    if (sub && sub->synchronized) {
+        /* Spec: constraint must be ignored if subsurface is in synchronized mode */
+        return;
+    }
+    if (!fs->surface->mapped) {
+        /* Unmapped/occluded surface: do not block initial map commits */
+        return;
+    }
+    if (fs->barrier_active || !wl_list_empty(&fs->wait_locks)) {
+        DtwmFifoLock *lk = calloc(1, sizeof(*lk));
+        if (!lk) return;
+        lk->seq = wlr_surface_lock_pending(fs->surface);
+        wl_list_insert(fs->wait_locks.prev, &lk->link);
+        fs->server->fifo_wait_total++;
+        if (fs->progress_timer) {
+            wl_event_source_timer_update(fs->progress_timer, 32);
+        }
+        schedule_all_outputs_frame(fs->server);
+        publish_presentation_state_ipc(fs->server);
+    }
+}
+
+static void handle_fifo_surface_unmap(struct wl_listener *listener, void *data) {
+    (void)data;
+    DtwmFifoSurface *fs = wl_container_of(listener, fs, surface_unmap);
+    if (!fs) return;
+    fs->barrier_active = false;
+    DtwmFifoLock *lk, *tmp;
+    wl_list_for_each_safe(lk, tmp, &fs->wait_locks, link) {
+        wl_list_remove(&lk->link);
+        uint32_t seq = lk->seq;
+        free(lk);
+        if (fs->surface) {
+            wlr_surface_unlock_cached(fs->surface, seq);
+        }
+    }
+    if (fs->progress_timer) {
+        wl_event_source_timer_update(fs->progress_timer, 0);
+    }
+}
+
+static void fifo_surface_destroy_internal(DtwmFifoSurface *fs) {
+    if (!fs) return;
+    if (fs->active_res) {
+        fs->active_res->fs = nullptr;
+        fs->active_res = nullptr;
+    }
+    DtwmFifoLock *lk, *tmp;
+    wl_list_for_each_safe(lk, tmp, &fs->wait_locks, link) {
+        wl_list_remove(&lk->link);
+        free(lk);
+    }
+    if (fs->progress_timer) {
+        wl_event_source_remove(fs->progress_timer);
+        fs->progress_timer = nullptr;
+    }
+    wl_list_remove(&fs->client_commit.link);
+    wl_list_remove(&fs->surface_unmap.link);
+    wl_list_remove(&fs->surface_destroy.link);
+    wlr_surface_synced_finish(&fs->synced);
+    wl_list_remove(&fs->link);
+    free(fs);
+}
+
+static void handle_fifo_surface_destroy(struct wl_listener *listener, void *data) {
+    (void)data;
+    DtwmFifoSurface *fs = wl_container_of(listener, fs, surface_destroy);
+    fifo_surface_destroy_internal(fs);
+}
+
+static void fifo_latch_output_frame(DtwmServer *server) {
+    if (!server) return;
+    DtwmFifoSurface *fs, *tmp;
+    wl_list_for_each_safe(fs, tmp, &server->fifo_surfaces, link) {
+        if (fs->barrier_active || !wl_list_empty(&fs->wait_locks)) {
+            fifo_release_one_latch(fs);
+        }
+    }
+}
+
+static void fifo_finish_all(DtwmServer *server) {
+    if (!server) return;
+    DtwmFifoSurface *fs, *tmp;
+    wl_list_for_each_safe(fs, tmp, &server->fifo_surfaces, link) {
+        fifo_surface_destroy_internal(fs);
+    }
+    if (server->fifo_mgr_global) {
+        wl_global_destroy(server->fifo_mgr_global);
+        server->fifo_mgr_global = nullptr;
+    }
+}
+
+static void wp_fifo_handle_set_barrier(struct wl_client *client, struct wl_resource *resource) {
+    (void)client;
+    DtwmFifoResource *fres = wl_resource_get_user_data(resource);
+    if (!fres || !fres->fs || !fres->fs->surface) {
+        wl_resource_post_error(
+            resource, WP_FIFO_V1_ERROR_SURFACE_DESTROYED, "wl_surface was destroyed"
+        );
+        return;
+    }
+    fres->fs->pending.set_barrier = true;
+}
+
+static void wp_fifo_handle_wait_barrier(struct wl_client *client, struct wl_resource *resource) {
+    (void)client;
+    DtwmFifoResource *fres = wl_resource_get_user_data(resource);
+    if (!fres || !fres->fs || !fres->fs->surface) {
+        wl_resource_post_error(
+            resource, WP_FIFO_V1_ERROR_SURFACE_DESTROYED, "wl_surface was destroyed"
+        );
+        return;
+    }
+    fres->fs->pending.wait_barrier = true;
+}
+
+static void wp_fifo_handle_destroy(struct wl_client *client, struct wl_resource *resource) {
+    (void)client;
+    wl_resource_destroy(resource);
+}
+
+static const struct wp_fifo_v1_interface g_wp_fifo_impl = {
+    .set_barrier = wp_fifo_handle_set_barrier,
+    .wait_barrier = wp_fifo_handle_wait_barrier,
+    .destroy = wp_fifo_handle_destroy,
+};
+
+static void wp_fifo_resource_destroy(struct wl_resource *resource) {
+    DtwmFifoResource *fres = wl_resource_get_user_data(resource);
+    if (!fres) return;
+    if (fres->fs && fres->fs->active_res == fres) {
+        fres->fs->active_res = nullptr;
+    }
+    free(fres);
+}
+
+static DtwmFifoSurface *find_or_create_fifo_surface(
+    DtwmServer *server, struct wlr_surface *surface
+) {
+    DtwmFifoSurface *fs;
+    wl_list_for_each(fs, &server->fifo_surfaces, link) {
+        if (fs->surface == surface) {
+            return fs;
+        }
+    }
+    fs = calloc(1, sizeof(*fs));
+    if (!fs) return nullptr;
+    fs->server = server;
+    fs->surface = surface;
+    wl_list_init(&fs->wait_locks);
+    if (!wlr_surface_synced_init(
+            &fs->synced, surface, &g_fifo_synced_impl, &fs->pending, &fs->current
+        )) {
+        free(fs);
+        return nullptr;
+    }
+    struct wl_event_loop *ev_loop = wl_display_get_event_loop(server->wl_display);
+    if (ev_loop) {
+        fs->progress_timer = wl_event_loop_add_timer(ev_loop, handle_fifo_progress_timer, fs);
+    }
+    fs->client_commit.notify = handle_fifo_surface_client_commit;
+    wl_signal_add(&surface->events.client_commit, &fs->client_commit);
+    fs->surface_unmap.notify = handle_fifo_surface_unmap;
+    wl_signal_add(&surface->events.unmap, &fs->surface_unmap);
+    fs->surface_destroy.notify = handle_fifo_surface_destroy;
+    wl_signal_add(&surface->events.destroy, &fs->surface_destroy);
+    wl_list_insert(&server->fifo_surfaces, &fs->link);
+    return fs;
+}
+
+static void wp_fifo_mgr_handle_destroy(struct wl_client *client, struct wl_resource *resource) {
+    (void)client;
+    wl_resource_destroy(resource);
+}
+
+static void wp_fifo_mgr_handle_get_fifo(
+    struct wl_client *client,
+    struct wl_resource *mgr_resource,
+    uint32_t id,
+    struct wl_resource *surface_resource
+) {
+    DtwmServer *server = wl_resource_get_user_data(mgr_resource);
+    struct wlr_surface *surface = wlr_surface_from_resource(surface_resource);
+    if (!server || !surface) {
+        wl_client_post_no_memory(client);
+        return;
+    }
+    DtwmFifoSurface *fs = find_or_create_fifo_surface(server, surface);
+    if (!fs) {
+        wl_client_post_no_memory(client);
+        return;
+    }
+    if (fs->active_res != nullptr) {
+        wl_resource_post_error(
+            mgr_resource,
+            WP_FIFO_MANAGER_V1_ERROR_ALREADY_EXISTS,
+            "wp_fifo_v1 already exists for wl_surface"
+        );
+        return;
+    }
+    DtwmFifoResource *fres = calloc(1, sizeof(*fres));
+    if (!fres) {
+        wl_client_post_no_memory(client);
+        return;
+    }
+    struct wl_resource *res =
+        wl_resource_create(client, &wp_fifo_v1_interface, wl_resource_get_version(mgr_resource), id);
+    if (!res) {
+        free(fres);
+        wl_client_post_no_memory(client);
+        return;
+    }
+    fres->fs = fs;
+    fres->resource = res;
+    fs->active_res = fres;
+    wl_resource_set_implementation(res, &g_wp_fifo_impl, fres, wp_fifo_resource_destroy);
+}
+
+static const struct wp_fifo_manager_v1_interface g_wp_fifo_mgr_impl = {
+    .destroy = wp_fifo_mgr_handle_destroy,
+    .get_fifo = wp_fifo_mgr_handle_get_fifo,
+};
+
+static void bind_fifo_manager(
+    struct wl_client *client, void *data, uint32_t version, uint32_t id
+) {
+    DtwmServer *server = data;
+    struct wl_resource *res = wl_resource_create(
+        client, &wp_fifo_manager_v1_interface, version < 1 ? version : 1, id
+    );
+    if (!res) {
+        wl_client_post_no_memory(client);
+        return;
+    }
+    wl_resource_set_implementation(res, &g_wp_fifo_mgr_impl, server, nullptr);
 }
 
 static void notify_one_surface_scale_iter(
@@ -754,12 +1439,16 @@ static uint64_t dtwm_now_nsec(void) {
 }
 
 static void raise_transient_children_above(DtwmServer *server, DtwmView *parent) {
-    if (!server || !parent || server->allow_primary_on_top) {
+    if (!server || !parent) {
         return;
     }
     DtwmView *cand;
     wl_list_for_each(cand, &server->views, link) {
         if (cand == parent || !cand->mapped || !dtwm_view_visible_on_current_ws(cand)) {
+            continue;
+        }
+        bool is_modal_child = cand->is_modal_dialog || view_check_xdg_dialog_modal(cand);
+        if (server->allow_primary_on_top && !is_modal_child) {
             continue;
         }
         bool is_child = false;
@@ -790,6 +1479,14 @@ static void focus_view_ex(
     if (!view) {
         clear_active_focus(server);
         return;
+    }
+    {
+        DtwmView *modal_child = find_active_modal_child(server, view);
+        if (modal_child && modal_child != view) {
+            view = modal_child;
+            surface = view_wlr_surface(modal_child);
+            raise_window = true;
+        }
     }
     dtwm_icon_box_deactivate(server);
     if (!surface) {
@@ -1685,6 +2382,7 @@ static void view_set_minimized(DtwmView *view, bool minimized) {
     }
     dtwm_icons_relayout(server);
     dtwm_foreign_toplevel_sync(view);
+    sync_all_modal_dialogs(server);
 
     if (minimized && server->focused_view == view) {
         clear_active_focus(server);
@@ -2287,6 +2985,11 @@ static void view_init_frame_scene_nodes(
     }
     if (view->content_tree) {
         view->content_tree->node.data = view;
+    }
+    {
+        float dim_col[4] = { 0.0f, 0.0f, 0.0f, 0.32f };
+        view->modal_dim_rect = wlr_scene_rect_create(view->frame_tree, 1, 1, dim_col);
+        wlr_scene_node_set_enabled(&view->modal_dim_rect->node, false);
     }
 
     view->frame_top_buf = wlr_scene_buffer_create(view->frame_tree, nullptr);
@@ -4083,6 +4786,14 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
 
     if (view && !(view->kind == DTWM_VIEW_XWAYLAND && view->xwayland_surface &&
                   view->xwayland_surface->override_redirect)) {
+        if (!clicked_xdg_popup) {
+            DtwmView *modal_child = find_active_modal_child(server, view);
+            if (modal_child && modal_child != view) {
+                dismiss_open_client_popups(server, t_ms);
+                focus_view(server, modal_child, view_wlr_surface(modal_child));
+                return;
+            }
+        }
         if (part != DTWM_PART_CLIENT) {
             dismiss_open_client_popups(server, t_ms);
         } else if (view->kind == DTWM_VIEW_XDG) {
@@ -6121,16 +6832,31 @@ static void handle_output_frame(struct wl_listener *listener, void *data) {
     if (!scene_output) return;
 
     if (!dtwm_a11y_render_output_frame(output, scene_output)) {
-        if (output->color_transform && server && server->renderer &&
-            server->renderer->features.output_color_transform) {
-            struct wlr_scene_output_state_options sopts = {
-                .color_transform = output->color_transform,
-            };
-            wlr_scene_output_commit(scene_output, &sopts);
-        } else {
-            wlr_scene_output_commit(scene_output, nullptr);
+        struct wlr_scene_output_state_options sopts = {
+            .color_transform = output->color_transform,
+        };
+        const struct wlr_scene_output_state_options *sopts_ptr =
+            (output->color_transform && server && server->renderer &&
+             server->renderer->features.output_color_transform)
+                ? &sopts
+                : nullptr;
+        bool committed = false;
+        if (output_wants_tearing_flip(output)) {
+            struct wlr_output_state out_state;
+            wlr_output_state_init(&out_state);
+            if (wlr_scene_output_build_state(scene_output, &out_state, sopts_ptr)) {
+                out_state.tearing_page_flip = true;
+                server->tearing_flip_attempts++;
+                committed = wlr_output_commit_state(output->wlr_output, &out_state);
+            }
+            wlr_output_state_finish(&out_state);
+            publish_presentation_state_ipc(server);
+        }
+        if (!committed) {
+            wlr_scene_output_commit(scene_output, sopts_ptr);
         }
     }
+    fifo_latch_output_frame(server);
 
     struct timespec now;
     clock_gettime(CLOCK_MONOTONIC, &now);
@@ -6429,6 +7155,17 @@ static void xdg_toplevel_map(struct wl_listener *listener, void *data) {
     view->workspace_mask = 1u << view->server->current_workspace;
     place_initial_view(view);
     try_apply_wayland_session_rule(view);
+    if (view_check_xdg_dialog_modal(view)) {
+        if (!view->modal_saved_btns_valid) {
+            view->modal_has_min_saved = view->has_min_btn;
+            view->modal_has_max_saved = view->has_max_btn;
+            view->modal_saved_btns_valid = true;
+        }
+        view->is_modal_dialog = true;
+        view->has_min_btn = false;
+        view->has_max_btn = false;
+        center_modal_view_on_parent(view);
+    }
     sync_surface_preferred_color_description(view->server, view->xdg_toplevel->base->surface);
     if (view->is_native_dpi) {
         view->frame_dpi = dtwm_view_target_dpi(view);
@@ -6439,6 +7176,7 @@ static void xdg_toplevel_map(struct wl_listener *listener, void *data) {
         &view->frame_tree->node, !view->minimized && dtwm_view_visible_on_current_ws(view)
     );
     dtwm_view_update_frame(view);
+    sync_all_modal_dialogs(view->server);
     dtwm_icons_on_view_map(view);
     dtwm_foreign_toplevel_sync(view);
     bool had_activation = view->pending_activation;
@@ -6517,6 +7255,7 @@ static void xdg_toplevel_unmap(struct wl_listener *listener, void *data) {
     view->active_resize_edges = 0;
     view->pending_resize_serial = 0;
     wlr_scene_node_set_enabled(&view->frame_tree->node, false);
+    sync_all_modal_dialogs(view->server);
     dtwm_foreign_toplevel_destroy(view);
     dtwm_icons_on_view_unmap_or_destroy(view, false);
 }
@@ -6685,6 +7424,18 @@ static void xdg_toplevel_request_minimize(struct wl_listener *listener, void *da
     view_set_minimized(view, true);
 }
 
+static void xdg_toplevel_set_parent(struct wl_listener *listener, void *data) {
+    (void)data;
+    DtwmView *view = wl_container_of(listener, view, set_parent);
+    if (!view || !view->server) return;
+    if (view->is_modal_dialog || view_check_xdg_dialog_modal(view)) {
+        if (view->mapped) {
+            center_modal_view_on_parent(view);
+        }
+        sync_all_modal_dialogs(view->server);
+    }
+}
+
 static void xdg_toplevel_destroy(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmView *view = wl_container_of(listener, view, destroy);
@@ -6717,7 +7468,9 @@ static void xdg_toplevel_destroy(struct wl_listener *listener, void *data) {
     wl_list_remove(&view->request_minimize.link);
     wl_list_remove(&view->set_title.link);
     wl_list_remove(&view->set_app_id.link);
+    wl_list_remove(&view->set_parent.link);
     wl_list_remove(&view->link);
+    sync_all_modal_dialogs(server);
     dtwm_foreign_toplevel_destroy(view);
     dtwm_icons_on_view_unmap_or_destroy(view, true);
     if (view->frame_tree) {
@@ -6791,6 +7544,8 @@ static void handle_new_xdg_toplevel(struct wl_listener *listener, void *data) {
     wl_signal_add(&toplevel->events.set_title, &view->set_title);
     view->set_app_id.notify = xdg_toplevel_set_app_id;
     wl_signal_add(&toplevel->events.set_app_id, &view->set_app_id);
+    view->set_parent.notify = xdg_toplevel_set_parent;
+    wl_signal_add(&toplevel->events.set_parent, &view->set_parent);
 
     wl_list_insert(&server->views, &view->link);
 }
@@ -7483,6 +8238,7 @@ static void xwayland_unmap(struct wl_listener *listener, void *data) {
         view->frame_tree = nullptr;
         view->client_bg_rect = nullptr;
         view->content_tree = nullptr;
+        view->modal_dim_rect = nullptr;
         view->frame_top_buf = nullptr;
         view->frame_bottom_buf = nullptr;
         view->frame_left_buf = nullptr;
@@ -9897,6 +10653,9 @@ int main(int argc, char **argv) {
     wl_list_init(&server.activation_tokens);
     wl_list_init(&server.tracked_pointer_constraints);
     wl_list_init(&server.tracked_shortcuts_inhibitors);
+    wl_list_init(&server.xdg_dialogs);
+    wl_list_init(&server.tearing_controls);
+    wl_list_init(&server.fifo_surfaces);
 
     server.wl_display = wl_display_create();
     if (!server.wl_display) {
@@ -10061,6 +10820,22 @@ int main(int argc, char **argv) {
     server.xdg_decoration_mgr = wlr_xdg_decoration_manager_v1_create(server.wl_display);
     server.new_xdg_decoration.notify = handle_new_xdg_decoration;
     wl_signal_add(&server.xdg_decoration_mgr->events.new_toplevel_decoration, &server.new_xdg_decoration);
+
+    server.xdg_wm_dialog = wlr_xdg_wm_dialog_v1_create(server.wl_display, 1);
+    if (server.xdg_wm_dialog) {
+        server.new_xdg_dialog.notify = handle_new_xdg_dialog;
+        wl_signal_add(&server.xdg_wm_dialog->events.new_dialog, &server.new_xdg_dialog);
+    }
+    server.tearing_control_mgr = wlr_tearing_control_manager_v1_create(server.wl_display, 1);
+    if (server.tearing_control_mgr) {
+        server.new_tearing_control.notify = handle_new_tearing_control;
+        wl_signal_add(
+            &server.tearing_control_mgr->events.new_object, &server.new_tearing_control
+        );
+    }
+    server.fifo_mgr_global = wl_global_create(
+        server.wl_display, &wp_fifo_manager_v1_interface, 1, &server, bind_fifo_manager
+    );
 
     server.xdg_activation = wlr_xdg_activation_v1_create(server.wl_display);
     if (server.xdg_activation) {
@@ -10274,6 +11049,7 @@ int main(int argc, char **argv) {
     dtwm_sync_resource_manager_dpi(&server);
     dtwm_hw_publish_state(&server);
     publish_color_state_ipc(&server, nullptr);
+    publish_presentation_state_ipc(&server);
     if (wayland_session_db && wayland_session_db[0]) {
         (void)dtwm_restore_wayland_session(&server, wayland_session_db, restore_wayland_clients);
     }
@@ -10338,6 +11114,7 @@ cleanup:
     dtwm_xdnd_finish();
     dtwm_icons_finish(&server);
     dtwm_workspaces_finish(&server);
+    fifo_finish_all(&server);
     if (server.toplevel_tag_global) {
         wl_global_destroy(server.toplevel_tag_global);
         server.toplevel_tag_global = nullptr;
@@ -10378,6 +11155,28 @@ cleanup:
     wl_list_remove(&server.new_xdg_toplevel.link);
     wl_list_remove(&server.new_xdg_popup.link);
     wl_list_remove(&server.new_xdg_decoration.link);
+    if (server.xdg_wm_dialog) {
+        DtwmXdgDialog *xd, *xdtmp;
+        wl_list_for_each_safe(xd, xdtmp, &server.xdg_dialogs, link) {
+            wl_list_remove(&xd->set_modal.link);
+            wl_list_remove(&xd->destroy.link);
+            wl_list_remove(&xd->link);
+            free(xd);
+        }
+        wl_list_remove(&server.new_xdg_dialog.link);
+        server.xdg_wm_dialog = nullptr;
+    }
+    if (server.tearing_control_mgr) {
+        DtwmTearingControl *tc, *tctmp;
+        wl_list_for_each_safe(tc, tctmp, &server.tearing_controls, link) {
+            wl_list_remove(&tc->set_hint.link);
+            wl_list_remove(&tc->destroy.link);
+            wl_list_remove(&tc->link);
+            free(tc);
+        }
+        wl_list_remove(&server.new_tearing_control.link);
+        server.tearing_control_mgr = nullptr;
+    }
     if (server.xdg_activation) {
         DtwmActivationToken *trk, *ttmp;
         wl_list_for_each_safe(trk, ttmp, &server.activation_tokens, link) {

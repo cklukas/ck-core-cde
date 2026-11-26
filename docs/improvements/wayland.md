@@ -761,11 +761,16 @@ companion applications **without starting an `Xwayland` server process**:
   `wlr_scene_set_linux_dmabuf_v1`) and `wp_linux_drm_syncobj_v1` explicit
   timeline synchronization (when supported by both renderer and backend),
   alongside `wp_presentation` (v2 vsync presentation timestamps),
-  `wp_single_pixel_buffer_v1` (zero-SHM solid buffers), and
+  `wp_single_pixel_buffer_v1` (zero-SHM solid buffers),
   `wp_alpha_modifier_v1` (per-surface opacity multipliers for GTK4 and video
-  clients); meanwhile `libXm.so.9` tracks tight `pixman_region32_t` per-slot
-  buffer-age damage across its 4-slot `wl_shm` ring so small cursor/typing/hover
-  updates on 4K displays copy and damage only changed sub-rectangles.
+  clients), `xdg_wm_dialog_v1` (automatic modal `XmDialogShell` / Wayland dialog
+  parent centering, parent interior dimming, and click/focus modal locking),
+  `wp_tearing_control_v1` (low-latency `ASYNC` `tearing_page_flip` commits with
+  automatic VSync fallback), and `wp_fifo_v1` (`set_barrier` / `wait_barrier`
+  display-refresh commit queues); meanwhile `libXm.so.9` tracks tight
+  `pixman_region32_t` per-slot buffer-age damage across its 4-slot `wl_shm` ring
+  so small cursor/typing/hover updates on 4K displays copy and damage only
+  changed sub-rectangles.
 - **Native Front Panel docking & session IPC bus:** `dtwm-wayland` docks native
   `dtwm-panel` (`dtwm-front-panel`) and slide-up subpanels (`dtwm-subpanel`)
   directly as `DTWM_VIEW_XDG` surfaces and hosts an `0600` UNIX stream bus at
@@ -876,6 +881,10 @@ atomically once the compositor session is ready.
   `check-dtwm-wayland-gpu-protocols.py` (automatic GPU/`pixman` renderer
   selection and fallback, `zwp_linux_dmabuf_v1` v4 feedback, `wp_presentation`
   feedback, `wp_single_pixel_buffer_v1`, and `wp_alpha_modifier_v1` blending),
+  `check-dtwm-wayland-protocols-v2.py` (`xdg-dialog-v1` Motif modal centering,
+  parent interior dimming, and click/focus locking, `wp-tearing-control-v1`
+  `ASYNC` page-flip commits, and `wp-fifo-v1` `set_barrier`/`wait_barrier`
+  frame-pacing queues and protocol error guards),
   `check-dtwm-wayland-pointer-lock.py` (`zwp_pointer_constraints_v1` lock and
   region confinement, `zwp_relative_pointer_v1`, `zwp_keyboard_shortcuts_inhibit_v1`,
   `cursor_position_hint` warp, `Ctrl+Alt` escape hatch, and click recapture),

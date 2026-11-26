@@ -65,6 +65,7 @@
 #include <wlr/types/wlr_tablet_pad.h>
 #include <wlr/types/wlr_tablet_tool.h>
 #include <wlr/types/wlr_tablet_v2.h>
+#include <wlr/types/wlr_tearing_control_v1.h>
 #include <wlr/types/wlr_touch.h>
 #include <wlr/types/wlr_viewporter.h>
 #include <wlr/types/wlr_virtual_keyboard_v1.h>
@@ -72,6 +73,7 @@
 #include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/types/wlr_xdg_activation_v1.h>
 #include <wlr/types/wlr_xdg_decoration_v1.h>
+#include <wlr/types/wlr_xdg_dialog_v1.h>
 #include <wlr/types/wlr_xdg_output_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/box.h>
@@ -243,6 +245,7 @@ struct DtwmView {
     struct wlr_scene_tree *frame_tree;
     struct wlr_scene_rect *client_bg_rect;
     struct wlr_scene_tree *content_tree;
+    struct wlr_scene_rect *modal_dim_rect;
     struct wlr_scene_buffer *frame_top_buf;
     struct wlr_scene_buffer *frame_bottom_buf;
     struct wlr_scene_buffer *frame_left_buf;
@@ -292,6 +295,10 @@ struct DtwmView {
     char toplevel_tag[128];
     char toplevel_description[256];
     bool session_rule_applied;
+    bool is_modal_dialog;
+    bool modal_has_min_saved;
+    bool modal_has_max_saved;
+    bool modal_saved_btns_valid;
 
     /* Desktop icon state (open-window icon + minimized icon + live pixmap) */
     struct wlr_scene_buffer *desktop_icon_buf;
@@ -328,6 +335,7 @@ struct DtwmView {
     struct wl_listener request_configure;
     struct wl_listener set_title;
     struct wl_listener set_app_id;
+    struct wl_listener set_parent;
     struct wl_listener set_decorations;
     struct wl_listener set_hints;
     struct wl_listener set_geometry;
@@ -600,6 +608,17 @@ struct DtwmServer {
     struct wl_global *toplevel_tag_global;
     struct wlr_security_context_manager_v1 *security_context_mgr;
     struct wlr_color_manager_v1 *color_manager;
+    struct wlr_xdg_wm_dialog_v1 *xdg_wm_dialog;
+    struct wl_listener new_xdg_dialog;
+    struct wl_list xdg_dialogs;
+    struct wlr_tearing_control_manager_v1 *tearing_control_mgr;
+    struct wl_listener new_tearing_control;
+    struct wl_list tearing_controls;
+    struct wl_global *fifo_mgr_global;
+    struct wl_list fifo_surfaces;
+    uint32_t fifo_barrier_total;
+    uint32_t fifo_wait_total;
+    uint32_t tearing_flip_attempts;
 
     /* Interactive move / resize / snap / wireframe state */
     DtwmCursorMode cursor_mode;

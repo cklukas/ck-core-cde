@@ -31,6 +31,7 @@ EXTRA_DIST = tests/check-property-readers.py tests/property-client.c \
              tests/check-dtwm-wayland-touch-tablet.py \
              tests/check-dtwm-wayland-session-security.py \
              tests/check-dtwm-wayland-color-multidpi.py \
+             tests/check-dtwm-wayland-protocols-v2.py \
              tests/check-dtwm-wayland-panel-dnd.py \
              tests/wayland-test-pointer.c \
              tests/check-dtappintegrate-curated.py \
@@ -79,6 +80,7 @@ if BUILD_DTWM_WAYLAND
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-touch-tablet.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-session-security.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-color-multidpi.py --compositor ./dtwm-wayland
+	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-protocols-v2.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-panel-dnd.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-exit-session.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-icon-order.py --compositor ./dtwm-wayland --dtwm ./dtwm
@@ -102,12 +104,15 @@ WAYLAND_GEN_HDRS = wayland/xdg-shell-protocol.h \
                    wayland/pointer-constraints-unstable-v1-protocol.h \
                    wayland/tablet-v2-protocol.h \
                    wayland/xdg-toplevel-tag-v1-protocol.h \
-                   wayland/color-management-v1-protocol.h
+                   wayland/color-management-v1-protocol.h \
+                   wayland/tearing-control-v1-protocol.h \
+                   wayland/fifo-v1-protocol.h
 WAYLAND_GEN_SRCS = wayland/xdg-shell-protocol.c \
                    wayland/ext-workspace-v1-protocol.c \
                    wayland/xdg-toplevel-icon-v1-protocol.c \
                    wayland/xdg-system-bell-v1-protocol.c \
-                   wayland/xdg-toplevel-tag-v1-protocol.c
+                   wayland/xdg-toplevel-tag-v1-protocol.c \
+                   wayland/fifo-v1-protocol.c
 BUILT_SOURCES += $(WAYLAND_GEN_HDRS) $(WAYLAND_GEN_SRCS)
 CLEANFILES += $(WAYLAND_GEN_HDRS) $(WAYLAND_GEN_SRCS)
 
@@ -178,6 +183,18 @@ wayland/xdg-toplevel-tag-v1-protocol.c: $(WAYLAND_PROTOCOLS_DATADIR)/staging/xdg
 wayland/color-management-v1-protocol.h: $(WAYLAND_PROTOCOLS_DATADIR)/staging/color-management/color-management-v1.xml
 	@$(MKDIR_P) wayland
 	$(WAYLAND_SCANNER) server-header $< $@
+
+wayland/tearing-control-v1-protocol.h: $(WAYLAND_PROTOCOLS_DATADIR)/staging/tearing-control/tearing-control-v1.xml
+	@$(MKDIR_P) wayland
+	$(WAYLAND_SCANNER) server-header $< $@
+
+wayland/fifo-v1-protocol.h: $(WAYLAND_PROTOCOLS_DATADIR)/staging/fifo/fifo-v1.xml
+	@$(MKDIR_P) wayland
+	$(WAYLAND_SCANNER) server-header $< $@
+
+wayland/fifo-v1-protocol.c: $(WAYLAND_PROTOCOLS_DATADIR)/staging/fifo/fifo-v1.xml
+	@$(MKDIR_P) wayland
+	$(WAYLAND_SCANNER) private-code $< $@
 
 dtwm_wayland_SOURCES = wayland/dtwm_wayland.h \
                        wayland/cde_bevel.c \
