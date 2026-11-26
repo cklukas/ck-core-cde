@@ -609,11 +609,22 @@ def resolve_real_elf(p: Path) -> Path:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--compositor", default="./dtwm-wayland")
-    ap.add_argument("--dtwm", default="./dtwm")
+    ap.add_argument("--dtwm", default=None)
     args = ap.parse_args()
 
     comp_bin = resolve_real_elf(Path(args.compositor).resolve())
-    dtwm_bin = resolve_real_elf(Path(args.dtwm).resolve())
+    if args.dtwm:
+        dtwm_bin = resolve_real_elf(Path(args.dtwm).resolve())
+    else:
+        dtwm_cands = [
+            comp_bin.parent / "dtwm",
+            comp_bin.parent.parent / "dtwm",
+            Path("./dtwm"),
+        ]
+        dtwm_bin = next(
+            (resolve_real_elf(c.resolve()) for c in dtwm_cands if resolve_real_elf(c.resolve()).is_file()),
+            resolve_real_elf(Path("./dtwm").resolve()),
+        )
     tests_dir = Path(__file__).resolve().parent
     ptr_c = tests_dir / "wayland-test-pointer.c"
     if not comp_bin.is_file():
@@ -933,7 +944,12 @@ def main() -> int:
                 x_home = work / "xhome"
                 (x_home / ".dt").mkdir(parents=True)
                 dtwmrc = x_home / ".dt/dtwmrc"
-                for cand_rc in (comp_bin.parent / "sys.dtwmrc", comp_bin.parent.parent / "sys.dtwmrc"):
+                for cand_rc in (
+                    comp_bin.parent / "sys.dtwmrc",
+                    comp_bin.parent.parent / "sys.dtwmrc",
+                    comp_bin.parent.parent / "config/C/sys.dtwmrc",
+                    Path("/usr/dt/config/C/sys.dtwmrc"),
+                ):
                     if cand_rc.is_file():
                         shutil.copy2(cand_rc, dtwmrc)
                         break

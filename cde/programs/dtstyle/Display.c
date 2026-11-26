@@ -1293,6 +1293,12 @@ static void sync_monitor_identify_overlays(bool show) {
 static void cleanup_ident_on_exit(void) {
     if (style.display) {
         sync_monitor_identify_overlays(false);
+        if (style.root != None) {
+            Atom ready_a = XInternAtom(style.display, "_DT_STYLE_DISPLAY_READY", False);
+            XChangeProperty(style.display, style.root, ready_a, XA_STRING, 8,
+                            PropModeReplace, (const unsigned char *)"0", 1);
+            XFlush(style.display);
+        }
     }
 }
 
@@ -2031,7 +2037,7 @@ static void dialog_button_cb(Widget w, XtPointer client_data, XtPointer call_dat
     }
 }
 
-static void handle_display_ipc_cmd(const char *cmd) {
+static void handle_display_ipc_one(const char *cmd) {
     if (!cmd || !cmd[0]) return;
     if (strncmp(cmd, "set-ergonomics", 14) == 0) {
         int en = 1, tk = 3400, vrr = 1;
@@ -2097,6 +2103,32 @@ static void handle_display_ipc_cmd(const char *cmd) {
     }
 }
 
+static void handle_display_ipc_cmd(const char *cmd) {
+    if (!cmd || !cmd[0]) return;
+    const char *cur = cmd;
+    while (*cur) {
+        const char *nl = strchr(cur, '\n');
+        size_t len = nl ? (size_t)(nl - cur) : strlen(cur);
+        const char *seg = cur;
+        while (len > 0 && (seg[0] == ' ' || seg[0] == '\t' || seg[0] == '\r')) {
+            seg++;
+            len--;
+        }
+        while (len > 0 && (seg[len - 1] == ' ' || seg[len - 1] == '\t' || seg[len - 1] == '\r')) {
+            len--;
+        }
+        if (len > 0) {
+            char line[1024];
+            if (len >= sizeof(line)) len = sizeof(line) - 1;
+            memcpy(line, seg, len);
+            line[len] = '\0';
+            handle_display_ipc_one(line);
+        }
+        if (!nl) break;
+        cur = nl + 1;
+    }
+}
+
 static void display_ipc_prop_eh(Widget w, XtPointer client_data, XEvent *ev, Boolean *cont) {
     (void)client_data;
     (void)cont;
@@ -2113,13 +2145,20 @@ static void display_ipc_prop_eh(Widget w, XtPointer client_data, XEvent *ev, Boo
     unsigned long ni = 0, rem = 0;
     unsigned char *data = nullptr;
     Window src_win = ev->xproperty.window ? ev->xproperty.window : XtWindow(w);
-    if (XGetWindowProperty(style.display, src_win, ev->xproperty.atom, 0, 512, True,
+    if (XGetWindowProperty(style.display, src_win, ev->xproperty.atom, 0, 1024, True,
                            AnyPropertyType, &act, &fmt, &ni, &rem, &data) != Success || !data) {
         return;
     }
-    char cmd[512];
+    if (act == None || ni == 0) {
+        XFree(data);
+        return;
+    }
+    char cmd[4096];
     size_t cl = ni < sizeof(cmd) - 1 ? (size_t)ni : sizeof(cmd) - 1;
     memcpy(cmd, data, cl);
+    for (size_t i = 0; i < cl; ++i) {
+        if (cmd[i] == '\0') cmd[i] = '\n';
+    }
     cmd[cl] = '\0';
     XFree(data);
     handle_display_ipc_cmd(cmd);
@@ -2514,6 +2553,8 @@ static void build_display_dialog(Widget shell) {
         display_ipc_prop_eh, nullptr
     );
     if (g_disp.is_wayland && style.display && style.root != None) {
+        Atom stale_ipc = XInternAtom(style.display, "_DT_STYLE_DISPLAY_IPC", False);
+        XDeleteProperty(style.display, style.root, stale_ipc);
         XWindowAttributes wa;
         if (XGetWindowAttributes(style.display, style.root, &wa)) {
             XSelectInput(style.display, style.root, wa.your_event_mask | PropertyChangeMask);
@@ -2529,11 +2570,21 @@ static void build_display_dialog(Widget shell) {
     XtManageChild(form);
 }
 
+static void publish_display_ipc_ready(bool ready) {
+    if (!style.display || style.root == None) return;
+    Atom ready_a = XInternAtom(style.display, "_DT_STYLE_DISPLAY_READY", False);
+    const char *val = ready ? "1" : "0";
+    XChangeProperty(style.display, style.root, ready_a, XA_STRING, 8,
+                    PropModeReplace, (const unsigned char *)val, 1);
+    XSync(style.display, False);
+}
+
 static void display_unmap_cb(Widget w, XtPointer client_data, XtPointer call_data) {
     (void)w;
     (void)client_data;
     (void)call_data;
     sync_monitor_identify_overlays(false);
+    publish_display_ipc_ready(false);
 }
 
 static void display_shell_structure_eh(Widget w, XtPointer client_data, XEvent *ev, Boolean *cont) {
@@ -2542,6 +2593,7 @@ static void display_shell_structure_eh(Widget w, XtPointer client_data, XEvent *
     (void)cont;
     if (ev && (ev->type == UnmapNotify || ev->type == DestroyNotify)) {
         sync_monitor_identify_overlays(false);
+        publish_display_ipc_ready(false);
     }
 }
 
@@ -2554,9 +2606,6 @@ static void publish_display_dlg_window(void) {
     Atom a = XInternAtom(style.display, "_DTSTYLE_DISPLAY_DLG_WIN", False);
     XChangeProperty(style.display, style.root, a, XA_WINDOW, 32,
                     PropModeReplace, (const unsigned char *)&w, 1);
-    Atom ready_a = XInternAtom(style.display, "_DT_STYLE_DISPLAY_READY", False);
-    XChangeProperty(style.display, style.root, ready_a, XA_STRING, 8,
-                    PropModeReplace, (const unsigned char *)"1", 1);
     XFlush(style.display);
 }
 
@@ -2595,6 +2644,7 @@ void popup_displayBB(Widget shell) {
         publish_display_dlg_window();
         sync_monitor_identify_overlays(true);
         _DtTurnOffHourGlass(shell);
+        publish_display_ipc_ready(true);
     } else {
         query_outputs();
         update_controls_from_selected();
@@ -2604,6 +2654,7 @@ void popup_displayBB(Widget shell) {
             raiseWindow(XtWindow(XtParent(style.displayDialog)));
             draw_canvas_cb(g_disp.canvas, nullptr, nullptr);
             sync_monitor_identify_overlays(true);
+            publish_display_ipc_ready(true);
         }
     }
 }

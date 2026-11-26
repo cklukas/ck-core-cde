@@ -1,4 +1,11 @@
 2026-11-26
+- Support newline- and NUL-delimited `_DT_STYLE_DISPLAY_IPC` /
+  `_DTSTYLE_DISPLAY_IPC` command batches in `dtstyle` (*Display & Monitors*),
+  publish `_DT_STYLE_DISPLAY_READY` only after initial monitor-identification
+  overlays finish realizing (clearing it on dialog close/exit), and add
+  installed-prefix `--dtstyle` / `--dtwm` binary resolution to
+  `check-dtwm-wayland-hdr-dtstyle.py` and
+  `check-dtwm-wayland-overview-tiling.py`.
 - Harden GLES2 HDR10 tone mapping (`GL_TEXTURE_EXTERNAL_OES`, VBO state, and
   subsurface color descriptions), resize-increment/`max_size` split-tile
   clamping, and overview mixed-DPI metrics in `dtwm-wayland` and `dtwm`,

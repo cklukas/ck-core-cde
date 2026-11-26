@@ -622,26 +622,31 @@ def run_renderer_lane(
             ):
                 raise RuntimeError("dtstyle -monitors did not publish _DT_STYLE_DISPLAY_READY")
 
-            # 1. Assign Display P3 via dtstyle GUI IPC + Apply
+            # 1. Assign Display P3 via dtstyle GUI IPC live preview, then Apply
+            ergo_conf = home_dir / ".dt/display_ergonomics.conf"
             ipc_props_and_set(ipc_path, "_DT_STYLE_DISPLAY_IPC", b"set-color-profile HEADLESS-1 display-p3")
-            ipc_props_and_set(ipc_path, "_DT_STYLE_DISPLAY_IPC", b"apply")
             if not wait_until(
                 lambda: "HEADLESS-1=display-p3" in profile_state()
                 and color_state().get("output_transforms") == "1",
                 timeout=6.0,
             ):
-                raise AssertionError(f"dtstyle display-p3 apply failed: {profile_state()} / {color_state()}")
-            ergo_conf = home_dir / ".dt/display_ergonomics.conf"
-            assert "color_profile.HEADLESS-1=display-p3" in ergo_conf.read_text(encoding="utf-8"), (
-                f"missing persisted display-p3 in {ergo_conf}: {ergo_conf.read_text(encoding='utf-8')}"
-            )
-
-            # 2. Switch monitor to HDR10 (BT.2020 PQ) passthrough via dtstyle
-            ipc_props_and_set(ipc_path, "_DT_STYLE_DISPLAY_IPC", b"set-color-profile HEADLESS-1 hdr10")
+                raise AssertionError(f"dtstyle display-p3 live preview failed: {profile_state()} / {color_state()}")
             ipc_props_and_set(ipc_path, "_DT_STYLE_DISPLAY_IPC", b"apply")
             if not wait_until(
+                lambda: "HEADLESS-1=display-p3" in profile_state()
+                and ergo_conf.is_file()
+                and "color_profile.HEADLESS-1=display-p3" in ergo_conf.read_text(encoding="utf-8"),
+                timeout=6.0,
+            ):
+                raise AssertionError(f"dtstyle display-p3 apply failed: {profile_state()} / {color_state()}")
+
+            # 2. Switch monitor to HDR10 (BT.2020 PQ) passthrough via newline-batched dtstyle IPC
+            ipc_props_and_set(ipc_path, "_DT_STYLE_DISPLAY_IPC", b"set-color-profile HEADLESS-1 hdr10\napply")
+            if not wait_until(
                 lambda: "HEADLESS-1=hdr10" in profile_state()
-                and color_state().get("tonemapped_surfaces") == "0",
+                and color_state().get("tonemapped_surfaces") == "0"
+                and ergo_conf.is_file()
+                and "color_profile.HEADLESS-1=hdr10" in ergo_conf.read_text(encoding="utf-8"),
                 timeout=6.0,
             ):
                 raise AssertionError(f"dtstyle hdr10 passthrough failed: {profile_state()} / {color_state()}")
@@ -657,19 +662,20 @@ def run_renderer_lane(
                 f"expected raw PQ passthrough (65 / 192) on hdr10 output, got {pl_r} / {pr_r}"
             )
 
-            # 3. Assign Custom ICC Profile file via dtstyle + OK (closes dialog & persists)
+            # 3. Assign Custom ICC Profile file + OK atomically (closes dialog & persists)
             ipc_props_and_set(
-                ipc_path, "_DT_STYLE_DISPLAY_IPC", f"set-color-profile HEADLESS-1 {custom_icc}".encode("utf-8")
+                ipc_path, "_DT_STYLE_DISPLAY_IPC", f"set-color-profile HEADLESS-1 {custom_icc}\nok".encode("utf-8")
             )
-            ipc_props_and_set(ipc_path, "_DT_STYLE_DISPLAY_IPC", b"ok")
             if not wait_until(
                 lambda: str(custom_icc) in profile_state()
                 and color_state().get("output_transforms") == "1"
-                and color_state().get("tonemapped_surfaces") == "1",
+                and color_state().get("tonemapped_surfaces") == "1"
+                and ipc_props_and_set(ipc_path).get("_DT_STYLE_DISPLAY_READY") == b"0"
+                and ergo_conf.is_file()
+                and f"color_profile.HEADLESS-1={custom_icc}" in ergo_conf.read_text(encoding="utf-8"),
                 timeout=6.0,
             ):
                 raise AssertionError(f"dtstyle custom ICC apply failed: {profile_state()} / {color_state()}")
-            assert f"color_profile.HEADLESS-1={custom_icc}" in ergo_conf.read_text(encoding="utf-8")
 
             for p in (dtstyle_proc, hdr_proc, sdr_proc, comp_proc):
                 if p and p.poll() is None:
@@ -712,12 +718,24 @@ def run_renderer_lane(
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--compositor", required=True)
+    ap.add_argument("--dtstyle", default=None)
     args = ap.parse_args()
 
     comp_path = Path(args.compositor).resolve()
     if not comp_path.is_file():
         raise SystemExit(f"missing compositor: {comp_path}")
-    dtstyle_bin = (comp_path.parent.parent / "dtstyle/dtstyle").resolve()
+    if args.dtstyle:
+        dtstyle_bin = Path(args.dtstyle).resolve()
+    else:
+        dtstyle_candidates = [
+            comp_path.parent.parent / "dtstyle/dtstyle",
+            comp_path.parent / "dtstyle",
+            comp_path.parent.parent.parent / "dtstyle/dtstyle",
+        ]
+        dtstyle_bin = next(
+            (cand.resolve() for cand in dtstyle_candidates if cand.is_file()),
+            dtstyle_candidates[0].resolve(),
+        )
     if not dtstyle_bin.is_file():
         raise SystemExit(f"missing dtstyle binary: {dtstyle_bin}")
     motif_prefix = resolve_motif_prefix(comp_path)
