@@ -556,12 +556,21 @@ void dtwm_hw_publish_state(DtwmServer *server) {
 }
 
 void dtwm_handle_touchpad_swipe(DtwmServer *server, uint32_t fingers, double dx, double dy) {
-    if (!server || server->session_locked || server->greeter_mode || server->num_workspaces <= 1) {
+    if (!server || server->session_locked || server->greeter_mode) {
         return;
     }
     if (fingers != 3) return;
     double adx = dx < 0.0 ? -dx : dx;
     double ady = dy < 0.0 ? -dy : dy;
+    if (ady >= 50.0 && ady >= adx * 1.3) {
+        if (dy < 0.0) {
+            dtwm_overview_set_visible(server, true);
+        } else {
+            dtwm_overview_set_visible(server, false);
+        }
+        return;
+    }
+    if (server->num_workspaces <= 1) return;
     if (adx < 60.0 || adx < ady * 1.3) return;
 
     if (dx < 0.0) {

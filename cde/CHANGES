@@ -1,4 +1,23 @@
 2026-11-26
+- Add a live spatial workspace/window overview (`Super`, `Super+Tab` /
+  `Super+W`, `f.toggle_overview`, and 3-finger touchpad swipe-up) in
+  `dtwm-wayland` and linked split-tile divider resizing in both `dtwm-wayland`
+  and classic X11 `dtwm`:
+  - Dragging the shared inner border between adjacent tiled or edge-snapped
+    windows (`Left`/`Right` halves or `NW`/`NE`/`SW`/`SE` quadrants) resizes all
+    paired split peers together in lockstep on both Wayland (`dtwm-wayland`,
+    live 60 Hz configure dispatch with Escape rollback) and X11 (`dtwm`,
+    `CompleteFrameConfig`), clamping against each neighbor's minimum size so
+    neither window crushes its tiled peer.
+  - Add an interactive 3D-beveled spatial overview overlay in `dtwm-wayland`
+    displaying top CDE workspace switcher pills and scaled live client surface
+    thumbnails (updating in real time as clients commit new buffers), supporting
+    pointer hover/click selection, workspace switching, arrow/`Tab`/`Return`/
+    `Escape` keyboard navigation, 3-finger vertical swipe-up/down gestures, and
+    `_DT_WAYLAND_OVERVIEW_STATE` introspection (`DTWM_SUPER_ACTION=launcher`
+    preserves optional bare-`Super` launcher binding while `Super+Space` and
+    `Alt+F2` always invoke `ck-launch`), covered by
+    `check-dtwm-wayland-overview-tiling.py`.
 - Add per-monitor GUI color profile management in `dtstyle` (*Display &
   Monitors*) and mixed SDR + HDR10 (`BT.2020 PQ` / `HLG`) per-surface tone
   mapping in `dtwm-wayland`:

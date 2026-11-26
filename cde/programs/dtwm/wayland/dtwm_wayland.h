@@ -105,6 +105,8 @@
 #define DTWM_PANEL_HEIGHT 74
 #define DTWM_PANEL_STRUT 76
 #define DTWM_MAX_NATIVE_DPI_PIDS 256
+#define DTWM_OVERVIEW_MAX_CARDS 16
+#define DTWM_MAX_SPLIT_PEERS 4
 
 typedef struct {
     int dpi;
@@ -646,6 +648,10 @@ struct DtwmServer {
     bool grab_ignore_next_release;
     int wireframe_w, wireframe_h;
     struct wlr_scene_buffer *wireframe_buf;
+    DtwmView *split_peers[DTWM_MAX_SPLIT_PEERS];
+    struct wlr_box split_peer_orig_boxes[DTWM_MAX_SPLIT_PEERS];
+    uint32_t split_peer_edges[DTWM_MAX_SPLIT_PEERS];
+    int split_peer_count;
 
     /* Window minimize / restore & maximize / unmaximize vsync animation engine */
     struct wl_event_source *anim_timer;
@@ -690,10 +696,22 @@ struct DtwmServer {
     bool menu_drag_moved;
     struct wlr_scene_buffer *menu_buf;
 
-    /* CDE Keyboard Task Switcher & Hardware OSD overlays */
+    /* CDE Keyboard Task Switcher, Live Spatial Window Overview & Hardware OSD overlays */
     bool switcher_visible;
     int switcher_index;
     struct wlr_scene_buffer *switcher_buf;
+
+    bool overview_visible;
+    int overview_count;
+    int overview_selected;
+    DtwmView *overview_views[DTWM_OVERVIEW_MAX_CARDS];
+    struct wlr_box overview_card_boxes[DTWM_OVERVIEW_MAX_CARDS];
+    struct wlr_box overview_ws_boxes[DTWM_MAX_WORKSPACES];
+    struct wlr_scene_tree *overview_tree;
+    struct wlr_scene_rect *overview_bg_rect;
+    struct wlr_scene_buffer *overview_ws_buf;
+    struct wlr_scene_buffer *overview_card_buf[DTWM_OVERVIEW_MAX_CARDS];
+    struct wlr_scene_buffer *overview_thumb_buf[DTWM_OVERVIEW_MAX_CARDS];
 
     bool osd_visible;
     char osd_kind[32];
@@ -1009,5 +1027,8 @@ void dtwm_sync_all_external_client_scales(DtwmServer *server);
 int dtwm_view_target_dpi(const DtwmView *view);
 void dtwm_workspace_sync_ipc(DtwmServer *server);
 bool dtwm_wayland_session_handle_wm_request(DtwmServer *server, const char *cmd);
+void dtwm_overview_set_visible(DtwmServer *server, bool visible);
+void dtwm_overview_toggle(DtwmServer *server);
+void dtwm_overview_refresh(DtwmServer *server);
 
 #endif /* DTWM_WAYLAND_H */

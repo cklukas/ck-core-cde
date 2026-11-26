@@ -568,6 +568,8 @@ void HandleClientFrameMove (ClientData *pcd, XEvent *pev)
 		    pcd->snapRestoreHeight = pcd->clientHeight;
 		    pcd->snapRestoreValid = True;
 		}
+		if (pcd->tileState == 0)
+		    pcd->tileState = 1;
 		moveX = snapX;
 		moveY = snapY;
 		moveWidth = snapW;
@@ -1492,13 +1494,191 @@ void CompleteFrameConfig (ClientData *pcd, XEvent *pev)
         AdjustPos (&resizeX, &resizeY,
 		   resizeWidth, resizeHeight, tmpWidth, tmpHeight);
 
+	int oldFrameX = pcd ? (pcd->clientX - pcd->clientOffset.x) : 0;
+	int oldFrameY = pcd ? (pcd->clientY - pcd->clientOffset.y) : 0;
+	int oldFrameW = pcd ? ((int)pcd->clientWidth + 2 * pcd->clientOffset.x) : 0;
+	int oldFrameH = pcd ? ((int)pcd->clientHeight + pcd->clientOffset.x + pcd->clientOffset.y) : 0;
+	int savedTileState = pcd ? pcd->tileState : 0;
+	Boolean savedSnapValid = pcd ? pcd->snapRestoreValid : False;
+	int activePart = wmGD.configPart;
+
+	/* Clamp linked split-divider drag against adjacent tiled peers' min sizes */
+	if (pcd && (savedTileState != 0 || savedSnapValid) &&
+	    ACTIVE_WS && ACTIVE_WS->ppClients &&
+	    (activePart == FRAME_RESIZE_E || activePart == FRAME_RESIZE_W ||
+	     activePart == FRAME_RESIZE_S || activePart == FRAME_RESIZE_N))
+	{
+	    int newFrameX = resizeX;
+	    int newFrameY = resizeY;
+	    int newFrameW = (int)tmpWidth + 2 * pcd->clientOffset.x;
+	    int newFrameH = (int)tmpHeight + pcd->clientOffset.x + pcd->clientOffset.y;
+	    unsigned int ci;
+	    for (ci = 0; ci < ACTIVE_WS->numClients; ++ci)
+	    {
+		ClientData *cand = ACTIVE_WS->ppClients[ci];
+		int cfx, cfy, cfw, cfh, minCW, minCH;
+		if (!cand || cand == pcd || cand->clientState != NORMAL_STATE ||
+		    (!cand->tileState && !cand->snapRestoreValid) ||
+		    (cand->clientFlags & (CLIENT_WM_CLIENTS | FRONT_PANEL_BOX)) ||
+		    !(cand->clientFunctions & MWM_FUNC_RESIZE))
+		    continue;
+		cfx = cand->clientX - cand->clientOffset.x;
+		cfy = cand->clientY - cand->clientOffset.y;
+		cfw = (int)cand->clientWidth + 2 * cand->clientOffset.x;
+		cfh = (int)cand->clientHeight + cand->clientOffset.x + cand->clientOffset.y;
+		minCW = (cand->minWidth > 64) ? cand->minWidth : 64;
+		minCH = (cand->minHeight > 48) ? cand->minHeight : 48;
+
+		if (activePart == FRAME_RESIZE_E &&
+		    ABS(cfx - (oldFrameX + oldFrameW)) <= 12 &&
+		    (cfy < oldFrameY + oldFrameH - 24 && cfy + cfh > oldFrameY + 24))
+		{
+		    int maxRight = (cfx + cfw) - (minCW + 2 * cand->clientOffset.x);
+		    if (newFrameX + newFrameW > maxRight && maxRight > newFrameX + 64)
+		    {
+			tmpWidth = (unsigned int)(maxRight - newFrameX - 2 * pcd->clientOffset.x);
+			resizeWidth = tmpWidth;
+			newFrameW = (int)tmpWidth + 2 * pcd->clientOffset.x;
+		    }
+		}
+		else if (activePart == FRAME_RESIZE_W &&
+			 ABS((cfx + cfw) - oldFrameX) <= 12 &&
+			 (cfy < oldFrameY + oldFrameH - 24 && cfy + cfh > oldFrameY + 24))
+		{
+		    int minLeft = cfx + minCW + 2 * cand->clientOffset.x;
+		    if (newFrameX < minLeft && (oldFrameX + oldFrameW) - minLeft > 64)
+		    {
+			newFrameW = (oldFrameX + oldFrameW) - minLeft;
+			newFrameX = minLeft;
+			resizeX = newFrameX;
+			tmpWidth = (unsigned int)(newFrameW - 2 * pcd->clientOffset.x);
+			resizeWidth = tmpWidth;
+		    }
+		}
+		else if (activePart == FRAME_RESIZE_S &&
+			 ABS(cfy - (oldFrameY + oldFrameH)) <= 12 &&
+			 (cfx < oldFrameX + oldFrameW - 24 && cfx + cfw > oldFrameX + 24))
+		{
+		    int maxBottom = (cfy + cfh) - (minCH + cand->clientOffset.x + cand->clientOffset.y);
+		    if (newFrameY + newFrameH > maxBottom && maxBottom > newFrameY + 48)
+		    {
+			tmpHeight = (unsigned int)(maxBottom - newFrameY - pcd->clientOffset.x - pcd->clientOffset.y);
+			resizeHeight = tmpHeight;
+			newFrameH = (int)tmpHeight + pcd->clientOffset.x + pcd->clientOffset.y;
+		    }
+		}
+		else if (activePart == FRAME_RESIZE_N &&
+			 ABS((cfy + cfh) - oldFrameY) <= 12 &&
+			 (cfx < oldFrameX + oldFrameW - 24 && cfx + cfw > oldFrameX + 24))
+		{
+		    int minTop = cfy + minCH + cand->clientOffset.x + cand->clientOffset.y;
+		    if (newFrameY < minTop && (oldFrameY + oldFrameH) - minTop > 48)
+		    {
+			newFrameH = (oldFrameY + oldFrameH) - minTop;
+			newFrameY = minTop;
+			resizeY = newFrameY;
+			tmpHeight = (unsigned int)(newFrameH - pcd->clientOffset.x - pcd->clientOffset.y);
+			resizeHeight = tmpHeight;
+		    }
+		}
+	    }
+	}
+
 	/* reconfigure the window(s) */
 	ProcessNewConfiguration (pcd, resizeX, resizeY, 
 				 resizeWidth, resizeHeight, FALSE);
 	if (pcd)
 	{
-	    pcd->snapRestoreValid = False;
-	    pcd->tileState = 0;
+	    Boolean resizedSplitPeer = False;
+	    if ((savedTileState != 0 || savedSnapValid) &&
+		ACTIVE_WS && ACTIVE_WS->ppClients &&
+		(activePart == FRAME_RESIZE_E || activePart == FRAME_RESIZE_W ||
+		 activePart == FRAME_RESIZE_S || activePart == FRAME_RESIZE_N))
+	    {
+		int curFX = pcd->clientX - pcd->clientOffset.x;
+		int curFY = pcd->clientY - pcd->clientOffset.y;
+		int curFW = (int)pcd->clientWidth + 2 * pcd->clientOffset.x;
+		int curFH = (int)pcd->clientHeight + pcd->clientOffset.x + pcd->clientOffset.y;
+		unsigned int ci;
+		for (ci = 0; ci < ACTIVE_WS->numClients; ++ci)
+		{
+		    ClientData *cand = ACTIVE_WS->ppClients[ci];
+		    int cfx, cfy, cfw, cfh;
+		    if (!cand || cand == pcd || cand->clientState != NORMAL_STATE ||
+			(!cand->tileState && !cand->snapRestoreValid) ||
+			(cand->clientFlags & (CLIENT_WM_CLIENTS | FRONT_PANEL_BOX)) ||
+			!(cand->clientFunctions & MWM_FUNC_RESIZE))
+			continue;
+		    cfx = cand->clientX - cand->clientOffset.x;
+		    cfy = cand->clientY - cand->clientOffset.y;
+		    cfw = (int)cand->clientWidth + 2 * cand->clientOffset.x;
+		    cfh = (int)cand->clientHeight + cand->clientOffset.x + cand->clientOffset.y;
+
+		    if (activePart == FRAME_RESIZE_E &&
+			ABS(cfx - (oldFrameX + oldFrameW)) <= 12 &&
+			(cfy < oldFrameY + oldFrameH - 24 && cfy + cfh > oldFrameY + 24))
+		    {
+			int nfx = curFX + curFW;
+			int nfw = (cfx + cfw) - nfx;
+			int ncw = nfw - 2 * cand->clientOffset.x;
+			if (ncw >= 64)
+			{
+			    ProcessNewConfiguration (cand, nfx, cfy,
+						     (unsigned int)ncw,
+						     cand->clientHeight, FALSE);
+			    resizedSplitPeer = True;
+			}
+		    }
+		    else if (activePart == FRAME_RESIZE_W &&
+			     ABS((cfx + cfw) - oldFrameX) <= 12 &&
+			     (cfy < oldFrameY + oldFrameH - 24 && cfy + cfh > oldFrameY + 24))
+		    {
+			int nfw = curFX - cfx;
+			int ncw = nfw - 2 * cand->clientOffset.x;
+			if (ncw >= 64)
+			{
+			    ProcessNewConfiguration (cand, cfx, cfy,
+						     (unsigned int)ncw,
+						     cand->clientHeight, FALSE);
+			    resizedSplitPeer = True;
+			}
+		    }
+		    else if (activePart == FRAME_RESIZE_S &&
+			     ABS(cfy - (oldFrameY + oldFrameH)) <= 12 &&
+			     (cfx < oldFrameX + oldFrameW - 24 && cfx + cfw > oldFrameX + 24))
+		    {
+			int nfy = curFY + curFH;
+			int nfh = (cfy + cfh) - nfy;
+			int nch = nfh - cand->clientOffset.x - cand->clientOffset.y;
+			if (nch >= 48)
+			{
+			    ProcessNewConfiguration (cand, cfx, nfy,
+						     cand->clientWidth,
+						     (unsigned int)nch, FALSE);
+			    resizedSplitPeer = True;
+			}
+		    }
+		    else if (activePart == FRAME_RESIZE_N &&
+			     ABS((cfy + cfh) - oldFrameY) <= 12 &&
+			     (cfx < oldFrameX + oldFrameW - 24 && cfx + cfw > oldFrameX + 24))
+		    {
+			int nfh = curFY - cfy;
+			int nch = nfh - cand->clientOffset.x - cand->clientOffset.y;
+			if (nch >= 48)
+			{
+			    ProcessNewConfiguration (cand, cfx, cfy,
+						     cand->clientWidth,
+						     (unsigned int)nch, FALSE);
+			    resizedSplitPeer = True;
+			}
+		    }
+		}
+	    }
+	    if (!resizedSplitPeer)
+	    {
+		pcd->snapRestoreValid = False;
+		pcd->tileState = 0;
+	    }
 	}
 
     }

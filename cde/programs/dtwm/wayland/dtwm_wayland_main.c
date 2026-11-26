@@ -220,6 +220,10 @@ static void fifo_finish_all(DtwmServer *server);
 static void update_view_hdr_tonemap(DtwmView *view);
 static void refresh_all_views_hdr_tonemap(DtwmServer *server);
 static void publish_color_profile_state_all(DtwmServer *server);
+static void dtwm_overview_update_live_thumb_for_view(DtwmView *view);
+static void dtwm_overview_on_view_gone(DtwmServer *server, DtwmView *view);
+static void discover_split_resize_peers(DtwmView *view, uint32_t edges);
+static void finish_split_resize_peers(DtwmServer *server);
 
 static uint32_t dtwm_now_msec(void) {
     struct timespec ts = {0};
@@ -3119,13 +3123,52 @@ static void view_init_frame_scene_nodes(
     }
 }
 
+static void discover_split_resize_peers(DtwmView *view, uint32_t edges);
+
+static bool view_in_active_resize(const DtwmServer *server, const DtwmView *view) {
+    if (!server || !view || server->cursor_mode != DTWM_CURSOR_RESIZE) {
+        return false;
+    }
+    if (server->grabbed_view == view) {
+        return true;
+    }
+    for (int i = 0; i < server->split_peer_count; ++i) {
+        if (server->split_peers[i] == view) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static void clear_split_resize_peer(DtwmServer *server, DtwmView *view) {
+    if (!server || !view) {
+        return;
+    }
+    for (int i = 0; i < server->split_peer_count; ++i) {
+        if (server->split_peers[i] == view) {
+            server->split_peers[i] = nullptr;
+        }
+    }
+}
+
 static void begin_interactive(DtwmView *view, DtwmCursorMode mode, uint32_t edges) {
     DtwmServer *server = view->server;
+    if (server->overview_visible) {
+        dtwm_overview_set_visible(server, false);
+    }
     dtwm_anim_cancel_for_view(server, view);
     close_window_menu(server);
     dismiss_open_client_popups(server, dtwm_now_msec());
     hide_wireframe_outline(server);
-    view->tile_state = 0;
+    server->split_peer_count = 0;
+    if (mode == DTWM_CURSOR_RESIZE) {
+        discover_split_resize_peers(view, edges);
+        if (server->split_peer_count == 0) {
+            view->tile_state = 0;
+        }
+    } else {
+        view->tile_state = 0;
+    }
     view->resize_inflight = false;
     view->has_queued_resize = false;
     view->resize_anchor_right = view->x + view->client_w;
@@ -3828,6 +3871,520 @@ static void process_cursor_move(DtwmServer *server) {
     dtwm_publish_active_window_box(server);
 }
 
+static void discover_split_resize_peers(DtwmView *view, uint32_t edges) {
+    if (!view || !view->server || view->tile_state == 0 || view->maximized) {
+        return;
+    }
+    /* Only single inner divider edges participate in linked split resizing */
+    if (edges != WLR_EDGE_LEFT && edges != WLR_EDGE_RIGHT &&
+        edges != WLR_EDGE_TOP && edges != WLR_EDGE_BOTTOM) {
+        return;
+    }
+    DtwmServer *server = view->server;
+    server->split_peer_count = 0;
+    int vow = 0, voh = 0;
+    dtwm_view_outer_size(view, &vow, &voh);
+    int vx1 = view->x, vy1 = view->y, vx2 = view->x + vow, vy2 = view->y + voh;
+
+    DtwmView *cand;
+    wl_list_for_each(cand, &server->views, link) {
+        if (server->split_peer_count >= DTWM_MAX_SPLIT_PEERS) break;
+        if (cand == view || !cand->mapped || cand->minimized || cand->maximized ||
+            cand->tile_state == 0 || !cand->has_resize_handles ||
+            cand->is_panel || cand->is_subpanel || cand->is_desktop_pin ||
+            !dtwm_view_visible_on_current_ws(cand)) {
+            continue;
+        }
+        int cow = 0, coh = 0;
+        dtwm_view_outer_size(cand, &cow, &coh);
+        int cx1 = cand->x, cy1 = cand->y, cx2 = cand->x + cow, cy2 = cand->y + coh;
+        uint32_t pedge = 0;
+
+        if (edges == WLR_EDGE_RIGHT) {
+            bool y_ov = (cy1 < vy2 - 24 && cy2 > vy1 + 24);
+            if (y_ov && abs(cx1 - vx2) <= 12) pedge = WLR_EDGE_LEFT;
+        } else if (edges == WLR_EDGE_LEFT) {
+            bool y_ov = (cy1 < vy2 - 24 && cy2 > vy1 + 24);
+            if (y_ov && abs(cx2 - vx1) <= 12) pedge = WLR_EDGE_RIGHT;
+        } else if (edges == WLR_EDGE_BOTTOM) {
+            bool x_ov = (cx1 < vx2 - 24 && cx2 > vx1 + 24);
+            if (x_ov && abs(cy1 - vy2) <= 12) pedge = WLR_EDGE_TOP;
+        } else if (edges == WLR_EDGE_TOP) {
+            bool x_ov = (cx1 < vx2 - 24 && cx2 > vx1 + 24);
+            if (x_ov && abs(cy2 - vy1) <= 12) pedge = WLR_EDGE_BOTTOM;
+        }
+        if (pedge != 0) {
+            int idx = server->split_peer_count++;
+            server->split_peers[idx] = cand;
+            server->split_peer_edges[idx] = pedge;
+            server->split_peer_orig_boxes[idx] = (struct wlr_box){
+                .x = cand->x,
+                .y = cand->y,
+                .width = cand->client_w,
+                .height = cand->client_h,
+            };
+            cand->resize_inflight = false;
+            cand->has_queued_resize = false;
+            cand->resize_anchor_right = cand->x + cand->client_w;
+            cand->resize_anchor_bottom = cand->y + cand->client_h;
+            cand->active_resize_edges = pedge;
+            if (cand->kind == DTWM_VIEW_XDG && cand->xdg_toplevel &&
+                cand->xdg_toplevel->base->initialized) {
+                wlr_xdg_toplevel_set_resizing(cand->xdg_toplevel, true);
+            }
+        }
+    }
+}
+
+static void dispatch_view_live_resize(DtwmView *pv, int nx, int ny, int nw, int nh, uint32_t now_ms) {
+    if (!pv || !pv->mapped) return;
+    if (nx == pv->x && ny == pv->y && nw == pv->client_w && nh == pv->client_h &&
+        !pv->has_queued_resize) {
+        return;
+    }
+    if (pv->resize_inflight && (now_ms - pv->resize_sent_ms) < 250u) {
+        pv->has_queued_resize = true;
+        pv->queued_x = nx;
+        pv->queued_y = ny;
+        pv->queued_w = nw;
+        pv->queued_h = nh;
+        if (pv->server && pv->server->resize_flush_timer) {
+            wl_event_source_timer_update(pv->server->resize_flush_timer, 250);
+        }
+        return;
+    }
+    pv->resize_inflight = true;
+    pv->has_queued_resize = false;
+    pv->resize_sent_ms = now_ms;
+    if (pv->kind == DTWM_VIEW_XDG && pv->xdg_toplevel) {
+        view_send_xdg_interactive_resize(pv, nw, nh);
+    } else {
+        view_apply_geometry(pv, nx, ny, nw, nh);
+    }
+}
+
+static void finish_split_resize_peers(DtwmServer *server) {
+    if (!server) return;
+    for (int i = 0; i < server->split_peer_count; ++i) {
+        DtwmView *pv = server->split_peers[i];
+        server->split_peers[i] = nullptr;
+        if (!pv || !pv->mapped) continue;
+        if (pv->kind == DTWM_VIEW_XDG && pv->xdg_toplevel &&
+            pv->xdg_toplevel->base->initialized) {
+            wlr_xdg_toplevel_set_resizing(pv->xdg_toplevel, false);
+        }
+        if (!pv->resize_inflight && pv->has_queued_resize) {
+            view_dispatch_queued_resize(pv, true);
+        } else if (!pv->resize_inflight && !pv->has_queued_resize) {
+            pv->active_resize_edges = 0;
+        }
+    }
+    server->split_peer_count = 0;
+}
+
+/* --- Live Spatial Window Overview (Super / 3-finger swipe-up / f.toggle_overview) --- */
+
+static bool overview_reject_input(struct wlr_scene_buffer *buf, double *sx, double *sy) {
+    (void)buf; (void)sx; (void)sy;
+    return false;
+}
+
+static bool view_eligible_for_overview(const DtwmView *v) {
+    if (!v || !v->mapped || v->is_panel || v->is_subpanel || v->is_desktop_pin ||
+        v->is_swallowed || v->is_lock_dialog) {
+        return false;
+    }
+    if (v->kind == DTWM_VIEW_XWAYLAND && v->xwayland_surface &&
+        v->xwayland_surface->override_redirect) {
+        return false;
+    }
+    return dtwm_view_visible_on_current_ws(v) ||
+           ((v->workspace_mask & (1u << v->server->current_workspace)) != 0);
+}
+
+static void publish_overview_state_ipc(DtwmServer *server) {
+    if (!server) return;
+    char buf[2048];
+    int pos = snprintf(
+        buf,
+        sizeof(buf),
+        "visible=%d;count=%d;selected=%d;ws=%u;cards=",
+        server->overview_visible ? 1 : 0,
+        server->overview_count,
+        server->overview_selected,
+        server->current_workspace
+    );
+    if (pos < 0) pos = 0;
+    for (int i = 0; i < server->overview_count && pos + 64 < (int)sizeof(buf); ++i) {
+        const DtwmView *v = server->overview_views[i];
+        const struct wlr_box *cb = &server->overview_card_boxes[i];
+        const char *raw_t = v ? dtwm_view_title(v) : "";
+        char clean_t[48];
+        size_t ti = 0;
+        while (raw_t && *raw_t && ti + 1 < sizeof(clean_t)) {
+            char c = *raw_t++;
+            if (c == ';' || c == '|' || c == '@' || c == ':') c = '_';
+            clean_t[ti++] = c;
+        }
+        clean_t[ti] = '\0';
+        int n = snprintf(
+            buf + pos,
+            sizeof(buf) - (size_t)pos,
+            "%s%d:%s@%d,%d,%d,%d",
+            i > 0 ? "|" : "",
+            i,
+            clean_t,
+            cb->x,
+            cb->y,
+            cb->width,
+            cb->height
+        );
+        if (n > 0 && pos + n < (int)sizeof(buf)) pos += n;
+    }
+    dtwm_native_ipc_publish_prop(server, "_DT_WAYLAND_OVERVIEW_STATE", buf, (size_t)pos);
+    if (server->xcb_conn && server->xcb_root != XCB_WINDOW_NONE) {
+        xcb_intern_atom_cookie_t ck = xcb_intern_atom(
+            server->xcb_conn, 0, strlen("_DT_WAYLAND_OVERVIEW_STATE"), "_DT_WAYLAND_OVERVIEW_STATE"
+        );
+        xcb_intern_atom_reply_t *rep = xcb_intern_atom_reply(server->xcb_conn, ck, nullptr);
+        if (rep && rep->atom != XCB_ATOM_NONE) {
+            xcb_change_property(
+                server->xcb_conn, XCB_PROP_MODE_REPLACE, server->xcb_root,
+                rep->atom, XCB_ATOM_STRING, 8, (uint32_t)pos, buf
+            );
+            xcb_flush(server->xcb_conn);
+        }
+        free(rep);
+    }
+}
+
+static void bind_overview_thumb_slot(DtwmServer *server, int slot) {
+    if (!server || slot < 0 || slot >= DTWM_OVERVIEW_MAX_CARDS) return;
+    struct wlr_scene_buffer *tbuf = server->overview_thumb_buf[slot];
+    if (!tbuf) return;
+    DtwmView *v = (slot < server->overview_count) ? server->overview_views[slot] : nullptr;
+    if (!server->overview_visible || !v || !v->mapped) {
+        wlr_scene_buffer_set_buffer(tbuf, nullptr);
+        wlr_scene_node_set_enabled(&tbuf->node, false);
+        return;
+    }
+
+    struct wlr_buffer *src = nullptr;
+    if (v->tonemap_active && v->tonemap_buf && v->tonemap_buf->buffer) {
+        src = wlr_buffer_lock(v->tonemap_buf->buffer);
+    } else {
+        src = lock_view_client_buffer(v);
+    }
+    if (!src || src->width <= 0 || src->height <= 0) {
+        if (src) wlr_buffer_unlock(src);
+        wlr_scene_buffer_set_buffer(tbuf, nullptr);
+        wlr_scene_node_set_enabled(&tbuf->node, false);
+        return;
+    }
+
+    int dpi = dtwm_primary_output_dpi(server);
+    double sc = (double)(dpi > 0 ? dpi : 96) / 96.0;
+    int pad = (int)lround(10.0 * sc);
+    int cap_h = (int)lround(28.0 * sc);
+    struct wlr_box cb = server->overview_card_boxes[slot];
+    int avail_w = cb.width - 2 * pad;
+    int avail_h = cb.height - 2 * pad - cap_h;
+    if (avail_w < 16) avail_w = 16;
+    if (avail_h < 16) avail_h = 16;
+
+    double sx = (double)avail_w / (double)src->width;
+    double sy = (double)avail_h / (double)src->height;
+    double k = sx < sy ? sx : sy;
+    int dw = (int)lround((double)src->width * k);
+    int dh = (int)lround((double)src->height * k);
+    if (dw < 1) dw = 1;
+    if (dh < 1) dh = 1;
+    int tx = cb.x + pad + (avail_w - dw) / 2;
+    int ty = cb.y + pad + (avail_h - dh) / 2;
+
+    wlr_scene_node_set_position(&tbuf->node, tx, ty);
+    wlr_scene_buffer_set_filter_mode(tbuf, WLR_SCALE_FILTER_BILINEAR);
+    wlr_scene_buffer_set_buffer(tbuf, src);
+    wlr_scene_buffer_set_dest_size(tbuf, dw, dh);
+    wlr_scene_node_set_enabled(&tbuf->node, true);
+    wlr_buffer_unlock(src);
+}
+
+static void render_overview_card_chrome(DtwmServer *server, int slot) {
+    if (!server || slot < 0 || slot >= DTWM_OVERVIEW_MAX_CARDS) return;
+    struct wlr_scene_buffer *cbuf = server->overview_card_buf[slot];
+    if (!cbuf) return;
+    if (!server->overview_visible || slot >= server->overview_count) {
+        wlr_scene_buffer_set_buffer(cbuf, nullptr);
+        wlr_scene_node_set_enabled(&cbuf->node, false);
+        return;
+    }
+
+    DtwmView *v = server->overview_views[slot];
+    struct wlr_box cb = server->overview_card_boxes[slot];
+    bool sel = (slot == server->overview_selected);
+    int dpi = dtwm_primary_output_dpi(server);
+    double sc = (double)(dpi > 0 ? dpi : 96) / 96.0;
+    int cap_h = (int)lround(28.0 * sc);
+    double bev = fmax(2.0, round(2.0 * sc));
+
+    cairo_t *cr = nullptr;
+    cairo_surface_t *surf = nullptr;
+    struct wlr_buffer *buf = dtwm_cairo_buffer_begin(cb.width, cb.height, &cr, &surf);
+    if (!buf) return;
+
+    const DtwmColorSet *cs = sel ? &server->palette.active : &server->palette.inactive;
+    cairo_set_source_rgba(cr, cs->bg.r * 0.45, cs->bg.g * 0.45, cs->bg.b * 0.45, 0.92);
+    cairo_rectangle(cr, 0, 0, cb.width, cb.height);
+    cairo_fill(cr);
+
+    /* Caption strip at bottom of card */
+    cairo_set_source_rgba(cr, cs->bg.r, cs->bg.g, cs->bg.b, 0.98);
+    cairo_rectangle(cr, bev, cb.height - cap_h - bev, cb.width - 2.0 * bev, cap_h);
+    cairo_fill(cr);
+
+    dtwm_draw_bevel(cr, 0, 0, cb.width, cb.height, bev, cs->top_shadow, cs->bottom_shadow);
+    if (sel) {
+        cairo_set_source_rgba(cr, 0.98, 0.80, 0.28, 0.95);
+        cairo_set_line_width(cr, fmax(2.0, round(2.0 * sc)));
+        cairo_rectangle(cr, bev + 1.0, bev + 1.0, cb.width - 2.0 * (bev + 1.0), cb.height - 2.0 * (bev + 1.0));
+        cairo_stroke(cr);
+    }
+
+    const char *title = v ? dtwm_view_title(v) : "Window";
+    dtwm_draw_label_dpi(
+        cr, dpi, title, bev + 6.0, cb.height - cap_h - bev,
+        cb.width - 2.0 * (bev + 6.0), cap_h, cs->fg, true, sel
+    );
+
+    dtwm_cairo_buffer_finish(cr, surf);
+    wlr_scene_node_set_position(&cbuf->node, cb.x, cb.y);
+    wlr_scene_buffer_set_buffer(cbuf, buf);
+    wlr_scene_buffer_set_dest_size(cbuf, cb.width, cb.height);
+    wlr_scene_node_set_enabled(&cbuf->node, true);
+    wlr_buffer_drop(buf);
+}
+
+void dtwm_overview_refresh(DtwmServer *server) {
+    if (!server || !server->overview_tree) return;
+    if (!server->overview_visible) {
+        wlr_scene_node_set_enabled(&server->overview_tree->node, false);
+        for (int i = 0; i < DTWM_OVERVIEW_MAX_CARDS; ++i) {
+            if (server->overview_card_buf[i]) {
+                wlr_scene_buffer_set_buffer(server->overview_card_buf[i], nullptr);
+                wlr_scene_node_set_enabled(&server->overview_card_buf[i]->node, false);
+            }
+            if (server->overview_thumb_buf[i]) {
+                wlr_scene_buffer_set_buffer(server->overview_thumb_buf[i], nullptr);
+                wlr_scene_node_set_enabled(&server->overview_thumb_buf[i]->node, false);
+            }
+            server->overview_views[i] = nullptr;
+        }
+        server->overview_count = 0;
+        publish_overview_state_ipc(server);
+        schedule_all_outputs_frame(server);
+        return;
+    }
+
+    struct wlr_box obox = {0};
+    double rx = server->cursor ? server->cursor->x : 0.0;
+    double ry = server->cursor ? server->cursor->y : 0.0;
+    get_primary_output_box(server, rx, ry, &obox);
+    if (obox.width < 160 || obox.height < 120) {
+        obox = (struct wlr_box){0, 0, 1280, 900};
+    }
+
+    if (server->overview_bg_rect) {
+        wlr_scene_node_set_position(&server->overview_bg_rect->node, obox.x, obox.y);
+        wlr_scene_rect_set_size(server->overview_bg_rect, obox.width, obox.height);
+        wlr_scene_node_set_enabled(&server->overview_bg_rect->node, true);
+    }
+
+    int dpi = dtwm_output_dpi_at(server, obox.x + obox.width * 0.5, obox.y + obox.height * 0.5);
+    double sc = (double)(dpi > 0 ? dpi : 96) / 96.0;
+    int ws_bar_h = (int)lround(46.0 * sc);
+    int top_pad = (int)lround(18.0 * sc);
+
+    /* Render top CDE Workspace Switcher pills */
+    uint32_t nws = server->num_workspaces > 0 ? server->num_workspaces : 1u;
+    if (nws > DTWM_MAX_WORKSPACES) nws = DTWM_MAX_WORKSPACES;
+    int pill_w = (int)lround(132.0 * sc);
+    int pill_gap = (int)lround(10.0 * sc);
+    int total_ws_w = (int)nws * pill_w + ((int)nws - 1) * pill_gap + (int)lround(24.0 * sc);
+    if (total_ws_w > obox.width - 32) {
+        total_ws_w = obox.width - 32;
+        pill_w = (total_ws_w - (int)lround(24.0 * sc) - ((int)nws - 1) * pill_gap) / (int)nws;
+        if (pill_w < 48) pill_w = 48;
+    }
+    int ws_x = obox.x + (obox.width - total_ws_w) / 2;
+    int ws_y = obox.y + top_pad;
+
+    if (server->overview_ws_buf && total_ws_w > 16 && ws_bar_h > 16) {
+        cairo_t *cr = nullptr;
+        cairo_surface_t *surf = nullptr;
+        struct wlr_buffer *wbuf = dtwm_cairo_buffer_begin(total_ws_w, ws_bar_h, &cr, &surf);
+        if (wbuf) {
+            const DtwmColorSet *mcs = &server->palette.menu;
+            double bev = fmax(2.0, round(2.0 * sc));
+            cairo_set_source_rgba(cr, mcs->bg.r, mcs->bg.g, mcs->bg.b, 0.95);
+            cairo_rectangle(cr, 0, 0, total_ws_w, ws_bar_h);
+            cairo_fill(cr);
+            dtwm_draw_bevel(cr, 0, 0, total_ws_w, ws_bar_h, bev, mcs->top_shadow, mcs->bottom_shadow);
+
+            int px = (int)lround(12.0 * sc);
+            int py = (int)lround(6.0 * sc);
+            int ph = ws_bar_h - 2 * py;
+            for (uint32_t wi = 0; wi < nws; ++wi) {
+                bool cur = (wi == server->current_workspace);
+                const DtwmColorSet *pcs = cur ? &server->palette.active : &server->palette.inactive;
+                cairo_set_source_rgba(cr, pcs->bg.r, pcs->bg.g, pcs->bg.b, 1.0);
+                cairo_rectangle(cr, px, py, pill_w, ph);
+                cairo_fill(cr);
+                if (cur) {
+                    dtwm_draw_bevel(cr, px, py, pill_w, ph, bev, pcs->bottom_shadow, pcs->top_shadow);
+                } else {
+                    dtwm_draw_bevel(cr, px, py, pill_w, ph, bev, pcs->top_shadow, pcs->bottom_shadow);
+                }
+                char wlbl[96];
+                const char *wt = server->workspaces[wi].title[0] ? server->workspaces[wi].title : "WS";
+                snprintf(wlbl, sizeof(wlbl), "%u: %s", wi + 1u, wt);
+                dtwm_draw_label_dpi(cr, dpi, wlbl, px + 4, py, pill_w - 8, ph, pcs->fg, true, cur);
+                server->overview_ws_boxes[wi] = (struct wlr_box){
+                    .x = ws_x + px,
+                    .y = ws_y + py,
+                    .width = pill_w,
+                    .height = ph,
+                };
+                px += pill_w + pill_gap;
+            }
+            dtwm_cairo_buffer_finish(cr, surf);
+            wlr_scene_node_set_position(&server->overview_ws_buf->node, ws_x, ws_y);
+            wlr_scene_buffer_set_buffer(server->overview_ws_buf, wbuf);
+            wlr_scene_buffer_set_dest_size(server->overview_ws_buf, total_ws_w, ws_bar_h);
+            wlr_scene_node_set_enabled(&server->overview_ws_buf->node, true);
+            wlr_buffer_drop(wbuf);
+        }
+    }
+
+    /* Gather current-workspace windows */
+    int count = 0;
+    DtwmView *v;
+    wl_list_for_each(v, &server->views, link) {
+        if (count >= DTWM_OVERVIEW_MAX_CARDS) break;
+        if (view_eligible_for_overview(v)) {
+            server->overview_views[count++] = v;
+        }
+    }
+    for (int i = count; i < DTWM_OVERVIEW_MAX_CARDS; ++i) {
+        server->overview_views[i] = nullptr;
+    }
+    server->overview_count = count;
+    if (server->overview_selected >= count) {
+        server->overview_selected = count > 0 ? (count - 1) : 0;
+    }
+    if (server->overview_selected < 0) {
+        server->overview_selected = 0;
+    }
+
+    int grid_x = obox.x + (int)lround(36.0 * sc);
+    int grid_y = ws_y + ws_bar_h + (int)lround(22.0 * sc);
+    int grid_w = obox.width - 2 * (int)lround(36.0 * sc);
+    int grid_h = (obox.y + obox.height) - grid_y - (int)lround(32.0 * sc);
+    if (grid_w < 120) grid_w = 120;
+    if (grid_h < 100) grid_h = 100;
+
+    if (count > 0) {
+        int cols = (int)ceil(sqrt((double)count));
+        if (cols < 1) cols = 1;
+        int rows = (count + cols - 1) / cols;
+        if (rows < 1) rows = 1;
+        int gap = (int)lround(20.0 * sc);
+        int cell_w = (grid_w - (cols - 1) * gap) / cols;
+        int cell_h = (grid_h - (rows - 1) * gap) / rows;
+        if (cell_w > (int)lround(520.0 * sc)) cell_w = (int)lround(520.0 * sc);
+        if (cell_h > (int)lround(380.0 * sc)) cell_h = (int)lround(380.0 * sc);
+        if (cell_w < 96) cell_w = 96;
+        if (cell_h < 80) cell_h = 80;
+
+        int used_h = rows * cell_h + (rows - 1) * gap;
+        int start_y = grid_y + (grid_h - used_h) / 2;
+        if (start_y < grid_y) start_y = grid_y;
+
+        for (int i = 0; i < count; ++i) {
+            int r_idx = i / cols;
+            int c_idx = i % cols;
+            int row_items = (r_idx == rows - 1) ? (count - r_idx * cols) : cols;
+            int row_w = row_items * cell_w + (row_items - 1) * gap;
+            int start_x = grid_x + (grid_w - row_w) / 2;
+            server->overview_card_boxes[i] = (struct wlr_box){
+                .x = start_x + c_idx * (cell_w + gap),
+                .y = start_y + r_idx * (cell_h + gap),
+                .width = cell_w,
+                .height = cell_h,
+            };
+        }
+    }
+
+    for (int i = 0; i < DTWM_OVERVIEW_MAX_CARDS; ++i) {
+        render_overview_card_chrome(server, i);
+        bind_overview_thumb_slot(server, i);
+    }
+
+    wlr_scene_node_set_enabled(&server->overview_tree->node, true);
+    wlr_scene_node_raise_to_top(&server->overview_tree->node);
+    publish_overview_state_ipc(server);
+    schedule_all_outputs_frame(server);
+}
+
+static void dtwm_overview_update_live_thumb_for_view(DtwmView *view) {
+    if (!view || !view->server || !view->server->overview_visible) return;
+    DtwmServer *server = view->server;
+    for (int i = 0; i < server->overview_count; ++i) {
+        if (server->overview_views[i] == view) {
+            bind_overview_thumb_slot(server, i);
+            break;
+        }
+    }
+}
+
+static void dtwm_overview_on_view_gone(DtwmServer *server, DtwmView *view) {
+    if (!server) return;
+    for (int i = 0; i < server->overview_count; ++i) {
+        if (server->overview_views[i] == view) {
+            if (server->overview_visible) {
+                dtwm_overview_refresh(server);
+            } else {
+                server->overview_views[i] = nullptr;
+            }
+            return;
+        }
+    }
+}
+
+void dtwm_overview_set_visible(DtwmServer *server, bool visible) {
+    if (!server || server->session_locked || server->greeter_mode) return;
+    if (server->overview_visible == visible) return;
+    if (visible) {
+        close_window_menu(server);
+        if (server->switcher_visible) {
+            hide_task_switcher(server, false);
+        }
+        dismiss_open_client_popups(server, dtwm_now_msec());
+        server->overview_selected = 0;
+        wlr_seat_pointer_notify_clear_focus(server->seat);
+    }
+    server->overview_visible = visible;
+    dtwm_overview_refresh(server);
+    if (!visible && server->pointer_buttons_down == 0 && server->seat && !server->seat->drag) {
+        dtwm_recheck_cursor_focus(server);
+    }
+}
+
+void dtwm_overview_toggle(DtwmServer *server) {
+    if (!server) return;
+    dtwm_overview_set_visible(server, !server->overview_visible);
+}
+
 static void process_cursor_resize(DtwmServer *server) {
     DtwmView *v = server->grabbed_view;
     if (!v) return;
@@ -3885,6 +4442,54 @@ static void process_cursor_resize(DtwmServer *server) {
         if (max_h > 0 && new_h > max_h) new_h = max_h;
     }
 
+    /* Clamp against adjacent tiled split peers so neither side crushes its neighbor */
+    if (server->split_peer_count > 0) {
+        int vl = 0, vt = 0, vr = 0, vb = 0;
+        dtwm_view_insets(v, &vl, &vt, &vr, &vb);
+        for (int i = 0; i < server->split_peer_count; ++i) {
+            DtwmView *pv = server->split_peers[i];
+            if (!pv || !pv->mapped) continue;
+            struct wlr_box pob = server->split_peer_orig_boxes[i];
+            uint32_t pedge = server->split_peer_edges[i];
+            int pmin_w = 64, pmin_h = 48, pmax_w = 0, pmax_h = 0;
+            view_size_limits(pv, &pmin_w, &pmin_h, &pmax_w, &pmax_h);
+            int pl = 0, pt = 0, pr = 0, pb = 0;
+            dtwm_view_insets(pv, &pl, &pt, &pr, &pb);
+            int p_orig_right = pob.x + pob.width + pl + pr;
+            int p_orig_bottom = pob.y + pob.height + pt + pb;
+
+            if (pedge == WLR_EDGE_LEFT && (server->resize_edges & WLR_EDGE_RIGHT)) {
+                int max_seam_x = p_orig_right - (pmin_w + pl + pr);
+                if (new_x + new_w + vl + vr > max_seam_x) {
+                    new_w = max_seam_x - new_x - vl - vr;
+                    if (new_w < min_w) new_w = min_w;
+                }
+            } else if (pedge == WLR_EDGE_RIGHT && (server->resize_edges & WLR_EDGE_LEFT)) {
+                int min_seam_x = pob.x + pmin_w + pl + pr;
+                if (new_x < min_seam_x) {
+                    int orig_right = server->grab_orig_box.x + server->grab_orig_box.width;
+                    new_x = min_seam_x;
+                    new_w = orig_right - new_x;
+                    if (new_w < min_w) new_w = min_w;
+                }
+            } else if (pedge == WLR_EDGE_TOP && (server->resize_edges & WLR_EDGE_BOTTOM)) {
+                int max_seam_y = p_orig_bottom - (pmin_h + pt + pb);
+                if (new_y + new_h + vt + vb > max_seam_y) {
+                    new_h = max_seam_y - new_y - vt - vb;
+                    if (new_h < min_h) new_h = min_h;
+                }
+            } else if (pedge == WLR_EDGE_BOTTOM && (server->resize_edges & WLR_EDGE_TOP)) {
+                int min_seam_y = pob.y + pmin_h + pt + pb;
+                if (new_y < min_seam_y) {
+                    int orig_bottom = server->grab_orig_box.y + server->grab_orig_box.height;
+                    new_y = min_seam_y;
+                    new_h = orig_bottom - new_y;
+                    if (new_h < min_h) new_h = min_h;
+                }
+            }
+        }
+    }
+
     if (!server->move_opaque) {
         int l = 0, t = 0, r = 0, b = 0;
         dtwm_view_insets(v, &l, &t, &r, &b);
@@ -3899,11 +4504,44 @@ static void process_cursor_resize(DtwmServer *server) {
     }
 
     hide_wireframe_outline(server);
+    uint32_t now_ms = dtwm_now_msec();
+    if (server->split_peer_count > 0) {
+        int vl = 0, vt = 0, vr = 0, vb = 0;
+        dtwm_view_insets(v, &vl, &vt, &vr, &vb);
+        int seam_right = new_x + new_w + vl + vr;
+        int seam_left = new_x;
+        int seam_bottom = new_y + new_h + vt + vb;
+        int seam_top = new_y;
+        for (int i = 0; i < server->split_peer_count; ++i) {
+            DtwmView *pv = server->split_peers[i];
+            if (!pv || !pv->mapped) continue;
+            struct wlr_box pob = server->split_peer_orig_boxes[i];
+            uint32_t pedge = server->split_peer_edges[i];
+            int pl = 0, pt = 0, pr = 0, pb = 0;
+            dtwm_view_insets(pv, &pl, &pt, &pr, &pb);
+            int pnx = pob.x, pny = pob.y, pnw = pob.width, pnh = pob.height;
+            if (pedge == WLR_EDGE_LEFT) {
+                int p_orig_r = pob.x + pob.width + pl + pr;
+                pnx = seam_right;
+                pnw = p_orig_r - pnx - pl - pr;
+            } else if (pedge == WLR_EDGE_RIGHT) {
+                pnw = seam_left - pob.x - pl - pr;
+            } else if (pedge == WLR_EDGE_TOP) {
+                int p_orig_b = pob.y + pob.height + pt + pb;
+                pny = seam_bottom;
+                pnh = p_orig_b - pny - pt - pb;
+            } else if (pedge == WLR_EDGE_BOTTOM) {
+                pnh = seam_top - pob.y - pt - pb;
+            }
+            if (pnw >= 64 && pnh >= 48) {
+                dispatch_view_live_resize(pv, pnx, pny, pnw, pnh, now_ms);
+            }
+        }
+    }
     if (new_x == v->x && new_y == v->y &&
         new_w == v->client_w && new_h == v->client_h && !v->has_queued_resize) {
         return;
     }
-    uint32_t now_ms = dtwm_now_msec();
     if (v->resize_inflight && (now_ms - v->resize_sent_ms) < 250u) {
         /* Overwrite in-place so ONLY the single latest resize target is kept */
         v->has_queued_resize = true;
@@ -3975,6 +4613,33 @@ static void process_cursor_motion(DtwmServer *server, uint32_t time_msec) {
             update_window_menu_buffer(server);
         }
         wlr_cursor_set_xcursor(server->cursor, server->cursor_mgr, "default");
+        return;
+    }
+
+    if (server->overview_visible) {
+        int cx = (int)lround(server->cursor->x);
+        int cy = (int)lround(server->cursor->y);
+        int hovered = -1;
+        for (int i = 0; i < server->overview_count; ++i) {
+            struct wlr_box cb = server->overview_card_boxes[i];
+            if (cx >= cb.x && cx < cb.x + cb.width &&
+                cy >= cb.y && cy < cb.y + cb.height) {
+                hovered = i;
+                break;
+            }
+        }
+        if (hovered >= 0 && hovered != server->overview_selected) {
+            int prev = server->overview_selected;
+            server->overview_selected = hovered;
+            if (prev >= 0 && prev < server->overview_count) {
+                render_overview_card_chrome(server, prev);
+            }
+            render_overview_card_chrome(server, hovered);
+            publish_overview_state_ipc(server);
+            schedule_all_outputs_frame(server);
+        }
+        wlr_cursor_set_xcursor(server->cursor, server->cursor_mgr, "default");
+        wlr_seat_pointer_notify_clear_focus(server->seat);
         return;
     }
 
@@ -4675,6 +5340,15 @@ static bool finish_interactive_grab(DtwmServer *server) {
                 v->saved_w = server->grab_orig_box.width;
                 v->saved_h = server->grab_orig_box.height;
                 v->has_saved_geom = true;
+                switch (z) {
+                case DTWM_SNAP_LEFT:  v->tile_state = 1; break;
+                case DTWM_SNAP_RIGHT: v->tile_state = 2; break;
+                case DTWM_SNAP_NW:    v->tile_state = 5; break;
+                case DTWM_SNAP_NE:    v->tile_state = 6; break;
+                case DTWM_SNAP_SW:    v->tile_state = 7; break;
+                case DTWM_SNAP_SE:    v->tile_state = 8; break;
+                default:              v->tile_state = 1; break;
+                }
                 int l, t, r, b;
                 dtwm_view_insets(v, &l, &t, &r, &b);
                 view_apply_geometry(v, sbox.x, sbox.y, sbox.width - l - r, sbox.height - t - b);
@@ -4703,6 +5377,40 @@ static bool finish_interactive_grab(DtwmServer *server) {
             wlr_xdg_toplevel_set_resizing(rv->xdg_toplevel, false);
         }
         if (had_wireframe) {
+            if (server->split_peer_count > 0) {
+                int vl = 0, vt = 0, vr = 0, vb = 0;
+                dtwm_view_insets(rv, &vl, &vt, &vr, &vb);
+                int seam_right = pending.x + pending.width + vl + vr;
+                int seam_left = pending.x;
+                int seam_bottom = pending.y + pending.height + vt + vb;
+                int seam_top = pending.y;
+                uint32_t now_ms = dtwm_now_msec();
+                for (int i = 0; i < server->split_peer_count; ++i) {
+                    DtwmView *pv = server->split_peers[i];
+                    if (!pv || !pv->mapped) continue;
+                    struct wlr_box pob = server->split_peer_orig_boxes[i];
+                    uint32_t pedge = server->split_peer_edges[i];
+                    int pl = 0, pt = 0, pr = 0, pb = 0;
+                    dtwm_view_insets(pv, &pl, &pt, &pr, &pb);
+                    int pnx = pob.x, pny = pob.y, pnw = pob.width, pnh = pob.height;
+                    if (pedge == WLR_EDGE_LEFT) {
+                        int p_orig_r = pob.x + pob.width + pl + pr;
+                        pnx = seam_right;
+                        pnw = p_orig_r - pnx - pl - pr;
+                    } else if (pedge == WLR_EDGE_RIGHT) {
+                        pnw = seam_left - pob.x - pl - pr;
+                    } else if (pedge == WLR_EDGE_TOP) {
+                        int p_orig_b = pob.y + pob.height + pt + pb;
+                        pny = seam_bottom;
+                        pnh = p_orig_b - pny - pt - pb;
+                    } else if (pedge == WLR_EDGE_BOTTOM) {
+                        pnh = seam_top - pob.y - pt - pb;
+                    }
+                    if (pnw >= 64 && pnh >= 48) {
+                        dispatch_view_live_resize(pv, pnx, pny, pnw, pnh, now_ms);
+                    }
+                }
+            }
             rv->resize_inflight = true;
             rv->has_queued_resize = false;
             rv->resize_sent_ms = dtwm_now_msec();
@@ -4716,6 +5424,7 @@ static bool finish_interactive_grab(DtwmServer *server) {
         } else if (!rv->resize_inflight && !rv->has_queued_resize) {
             rv->active_resize_edges = 0;
         }
+        finish_split_resize_peers(server);
     }
     server->cursor_mode = DTWM_CURSOR_PASSTHROUGH;
     server->grabbed_view = nullptr;
@@ -4788,6 +5497,9 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
     }
 
     if (ev->state == WL_POINTER_BUTTON_STATE_RELEASED) {
+        if (server->overview_visible) {
+            return;
+        }
         server->subpanel_drag_candidate = nullptr;
         if (dtwm_icons_handle_desktop_button(server, nullptr, btn, false)) {
             return;
@@ -4834,6 +5546,41 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
     }
     if (server->switcher_visible) {
         hide_task_switcher(server, true);
+        return;
+    }
+    if (server->overview_visible) {
+        int cx = (int)lround(server->cursor->x);
+        int cy = (int)lround(server->cursor->y);
+        if (btn == BTN_LEFT) {
+            uint32_t nws = server->num_workspaces > 0 ? server->num_workspaces : 1u;
+            if (nws > DTWM_MAX_WORKSPACES) nws = DTWM_MAX_WORKSPACES;
+            for (uint32_t wi = 0; wi < nws; ++wi) {
+                struct wlr_box wb = server->overview_ws_boxes[wi];
+                if (cx >= wb.x && cx < wb.x + wb.width &&
+                    cy >= wb.y && cy < wb.y + wb.height) {
+                    if (wi != server->current_workspace) {
+                        dtwm_switch_workspace(server, wi);
+                    }
+                    return;
+                }
+            }
+            for (int i = 0; i < server->overview_count; ++i) {
+                struct wlr_box cb = server->overview_card_boxes[i];
+                if (cx >= cb.x && cx < cb.x + cb.width &&
+                    cy >= cb.y && cy < cb.y + cb.height) {
+                    DtwmView *picked = server->overview_views[i];
+                    dtwm_overview_set_visible(server, false);
+                    if (picked && picked->mapped) {
+                        if (picked->minimized) {
+                            view_set_minimized(picked, false);
+                        }
+                        focus_view(server, picked, view_wlr_surface(picked));
+                    }
+                    return;
+                }
+            }
+        }
+        dtwm_overview_set_visible(server, false);
         return;
     }
 
@@ -5697,6 +6444,39 @@ static void handle_cursor_tablet_tool_tip(struct wl_listener *listener, void *da
         hide_task_switcher(server, true);
         return;
     }
+    if (server->overview_visible) {
+        int cx = (int)lround(server->cursor->x);
+        int cy = (int)lround(server->cursor->y);
+        uint32_t nws = server->num_workspaces > 0 ? server->num_workspaces : 1u;
+        if (nws > DTWM_MAX_WORKSPACES) nws = DTWM_MAX_WORKSPACES;
+        for (uint32_t wi = 0; wi < nws; ++wi) {
+            struct wlr_box wb = server->overview_ws_boxes[wi];
+            if (cx >= wb.x && cx < wb.x + wb.width &&
+                cy >= wb.y && cy < wb.y + wb.height) {
+                if (wi != server->current_workspace) {
+                    dtwm_switch_workspace(server, wi);
+                }
+                return;
+            }
+        }
+        for (int i = 0; i < server->overview_count; ++i) {
+            struct wlr_box cb = server->overview_card_boxes[i];
+            if (cx >= cb.x && cx < cb.x + cb.width &&
+                cy >= cb.y && cy < cb.y + cb.height) {
+                DtwmView *picked = server->overview_views[i];
+                dtwm_overview_set_visible(server, false);
+                if (picked && picked->mapped) {
+                    if (picked->minimized) {
+                        view_set_minimized(picked, false);
+                    }
+                    focus_view(server, picked, view_wlr_surface(picked));
+                }
+                return;
+            }
+        }
+        dtwm_overview_set_visible(server, false);
+        return;
+    }
     if (server->menu_visible) {
         int idx = menu_item_at(server, server->cursor->x, server->cursor->y);
         if (idx >= 0) {
@@ -6102,6 +6882,60 @@ static bool handle_compositor_keybinding(DtwmServer *server, uint32_t mods, xkb_
         spawn_quick_launcher(server);
         return true;
     }
+    if ((mods & WLR_MODIFIER_LOGO) &&
+        (sym == XKB_KEY_Tab || sym == XKB_KEY_ISO_Left_Tab ||
+         sym == XKB_KEY_w || sym == XKB_KEY_W)) {
+        dtwm_overview_toggle(server);
+        return true;
+    }
+    if (server->overview_visible) {
+        if (sym == XKB_KEY_Escape) {
+            dtwm_overview_set_visible(server, false);
+            return true;
+        }
+        if ((sym == XKB_KEY_Return || sym == XKB_KEY_KP_Enter) &&
+            server->overview_count > 0 &&
+            server->overview_selected >= 0 &&
+            server->overview_selected < server->overview_count) {
+            DtwmView *picked = server->overview_views[server->overview_selected];
+            dtwm_overview_set_visible(server, false);
+            if (picked && picked->mapped) {
+                if (picked->minimized) {
+                    view_set_minimized(picked, false);
+                }
+                focus_view(server, picked, view_wlr_surface(picked));
+            }
+            return true;
+        }
+        if (server->overview_count > 0 &&
+            (sym == XKB_KEY_Right || sym == XKB_KEY_Left ||
+             sym == XKB_KEY_Down || sym == XKB_KEY_Up ||
+             sym == XKB_KEY_Tab || sym == XKB_KEY_ISO_Left_Tab)) {
+            int cols = (int)ceil(sqrt((double)server->overview_count));
+            if (cols < 1) cols = 1;
+            int prev = server->overview_selected;
+            int next = prev;
+            if (sym == XKB_KEY_Right || sym == XKB_KEY_Tab) {
+                next = (prev + 1) % server->overview_count;
+            } else if (sym == XKB_KEY_Left || sym == XKB_KEY_ISO_Left_Tab) {
+                next = (prev - 1 + server->overview_count) % server->overview_count;
+            } else if (sym == XKB_KEY_Down) {
+                next = (prev + cols < server->overview_count) ? (prev + cols) : (server->overview_count - 1);
+            } else if (sym == XKB_KEY_Up) {
+                next = (prev - cols >= 0) ? (prev - cols) : 0;
+            }
+            if (next != prev) {
+                server->overview_selected = next;
+                if (prev >= 0 && prev < server->overview_count) {
+                    render_overview_card_chrome(server, prev);
+                }
+                render_overview_card_chrome(server, next);
+                publish_overview_state_ipc(server);
+                schedule_all_outputs_frame(server);
+            }
+            return true;
+        }
+    }
     if ((mods & WLR_MODIFIER_CTRL) && (mods & WLR_MODIFIER_ALT)) {
         if (sym >= XKB_KEY_1 && sym <= XKB_KEY_8) {
             uint32_t ws = (uint32_t)(sym - XKB_KEY_1);
@@ -6171,7 +7005,20 @@ static bool handle_compositor_keybinding(DtwmServer *server, uint32_t mods, xkb_
                     server->grab_orig_box.width,
                     server->grab_orig_box.height
                 );
+                if (server->cursor_mode == DTWM_CURSOR_RESIZE) {
+                    for (int i = 0; i < server->split_peer_count; ++i) {
+                        DtwmView *pv = server->split_peers[i];
+                        if (pv && pv->mapped) {
+                            struct wlr_box pob = server->split_peer_orig_boxes[i];
+                            pv->resize_inflight = false;
+                            pv->has_queued_resize = false;
+                            pv->active_resize_edges = 0;
+                            view_apply_geometry(pv, pob.x, pob.y, pob.width, pob.height);
+                        }
+                    }
+                }
             }
+            finish_split_resize_peers(server);
             server->cursor_mode = DTWM_CURSOR_PASSTHROUGH;
             server->grabbed_view = nullptr;
             return true;
@@ -6320,7 +7167,12 @@ static void handle_keyboard_key(struct wl_listener *listener, void *data) {
             if (is_super_sym && server->super_tap_pending) {
                 server->super_tap_pending = false;
                 if ((uint32_t)(t_ms - server->super_tap_press_ms) <= 600u) {
-                    spawn_quick_launcher(server);
+                    const char *super_act = getenv("DTWM_SUPER_ACTION");
+                    if (super_act && strcasecmp(super_act, "launcher") == 0) {
+                        spawn_quick_launcher(server);
+                    } else {
+                        dtwm_overview_toggle(server);
+                    }
                 }
             }
         }
@@ -8205,12 +9057,17 @@ static void xdg_toplevel_map(struct wl_listener *listener, void *data) {
             );
         }
     }
+    if (view->server->overview_visible) {
+        dtwm_overview_refresh(view->server);
+    }
 }
 
 static void xdg_toplevel_unmap(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmView *view = wl_container_of(listener, view, unmap);
+    clear_split_resize_peer(view->server, view);
     if (view == view->server->grabbed_view) {
+        finish_split_resize_peers(view->server);
         hide_wireframe_outline(view->server);
         update_snap_preview(view->server, DTWM_SNAP_NONE, nullptr);
         view->server->cursor_mode = DTWM_CURSOR_PASSTHROUGH;
@@ -8251,6 +9108,7 @@ static void xdg_toplevel_unmap(struct wl_listener *listener, void *data) {
     view->pending_resize_serial = 0;
     wlr_scene_node_set_enabled(&view->frame_tree->node, false);
     sync_all_modal_dialogs(view->server);
+    dtwm_overview_on_view_gone(view->server, view);
     dtwm_foreign_toplevel_destroy(view);
     dtwm_icons_on_view_unmap_or_destroy(view, false);
 }
@@ -8288,9 +9146,7 @@ static void xdg_toplevel_commit(struct wl_listener *listener, void *data) {
             publish_color_state_ipc(view->server, csurf);
         }
         uint32_t acked = view->xdg_toplevel->base->current.configure_serial;
-        bool active_resize =
-            (view->server->cursor_mode == DTWM_CURSOR_RESIZE &&
-             view->server->grabbed_view == view);
+        bool active_resize = view_in_active_resize(view->server, view);
         bool serial_settled =
             (view->pending_resize_serial == 0 || acked >= view->pending_resize_serial);
 
@@ -8368,6 +9224,7 @@ static void xdg_toplevel_commit(struct wl_listener *listener, void *data) {
             );
         }
         update_view_hdr_tonemap(view);
+        dtwm_overview_update_live_thumb_for_view(view);
         if (csurf && wlr_surface_get_image_description_v1_data(csurf)) {
             publish_color_state_ipc(view->server, csurf);
         }
@@ -8446,6 +9303,8 @@ static void xdg_toplevel_destroy(struct wl_listener *listener, void *data) {
         wlr_scene_node_set_enabled(&view->tonemap_buf->node, false);
     }
     dtwm_anim_cancel_for_view(server, view);
+    clear_split_resize_peer(server, view);
+    dtwm_overview_on_view_gone(server, view);
     if (view == server->focused_view) {
         server->focused_view = nullptr;
     }
@@ -9182,12 +10041,17 @@ static void xwayland_map(struct wl_listener *listener, void *data) {
     if (dtwm_view_visible_on_current_ws(view)) {
         focus_view(view->server, view, xs->surface);
     }
+    if (view->server->overview_visible) {
+        dtwm_overview_refresh(view->server);
+    }
 }
 
 static void xwayland_unmap(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmView *view = wl_container_of(listener, view, unmap);
+    clear_split_resize_peer(view->server, view);
     if (view == view->server->grabbed_view) {
+        finish_split_resize_peers(view->server);
         hide_wireframe_outline(view->server);
         update_snap_preview(view->server, DTWM_SNAP_NONE, nullptr);
         view->server->cursor_mode = DTWM_CURSOR_PASSTHROUGH;
@@ -9240,6 +10104,7 @@ static void xwayland_unmap(struct wl_listener *listener, void *data) {
     view->subpanel_torn_off = false;
     view->is_desktop_pin = false;
     view->is_swallowed = false;
+    dtwm_overview_on_view_gone(view->server, view);
     dtwm_foreign_toplevel_destroy(view);
     dtwm_icons_on_view_unmap_or_destroy(view, false);
     if (view->frame_tree) {
@@ -9263,12 +10128,13 @@ static void xwayland_unmap(struct wl_listener *listener, void *data) {
 static void xwayland_surface_commit(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmView *view = wl_container_of(listener, view, commit);
+    if (view->mapped) {
+        dtwm_overview_update_live_thumb_for_view(view);
+    }
     if (!view->mapped || !view->resize_inflight) {
         return;
     }
-    bool active_resize =
-        (view->server->cursor_mode == DTWM_CURSOR_RESIZE &&
-         view->server->grabbed_view == view);
+    bool active_resize = view_in_active_resize(view->server, view);
     view->resize_inflight = false;
     if (view->has_queued_resize) {
         view_dispatch_queued_resize(view, active_resize);
@@ -9534,7 +10400,10 @@ static void xwayland_destroy(struct wl_listener *listener, void *data) {
         wlr_scene_node_set_enabled(&view->tonemap_buf->node, false);
     }
     dtwm_anim_cancel_for_view(server, view);
+    clear_split_resize_peer(server, view);
+    dtwm_overview_on_view_gone(server, view);
     if (view == server->grabbed_view) {
+        finish_split_resize_peers(server);
         server->cursor_mode = DTWM_CURSOR_PASSTHROUGH;
         server->grabbed_view = nullptr;
     }
@@ -10664,6 +11533,7 @@ static void handle_xwayland_ready(struct wl_listener *listener, void *data) {
     dtwm_sync_resource_manager_dpi(server);
     dtwm_power_display_on_xwayland_ready(server);
     dtwm_a11y_on_xwayland_ready(server);
+    publish_overview_state_ipc(server);
     if (server->greeter_mode && server->xcb_conn) {
         /* Grant local root (dtlogin session manager, xrdb, dtgreet) access via
          * ServerInterpreted SI:localuser:root without opening XWayland to other users. */
@@ -11487,6 +12357,21 @@ static size_t dtwm_restore_wayland_session(DtwmServer *server, const char *path,
 
 bool dtwm_wayland_session_handle_wm_request(DtwmServer *server, const char *cmd) {
     if (!server || !cmd) return false;
+    if (strcmp(cmd, "f.toggle_overview") == 0 ||
+        (strncmp(cmd, "f.toggle_overview", 17) == 0 && isspace((unsigned char)cmd[17]))) {
+        dtwm_overview_toggle(server);
+        return true;
+    }
+    if (strcmp(cmd, "f.show_overview") == 0 ||
+        (strncmp(cmd, "f.show_overview", 15) == 0 && isspace((unsigned char)cmd[15]))) {
+        dtwm_overview_set_visible(server, true);
+        return true;
+    }
+    if (strcmp(cmd, "f.hide_overview") == 0 ||
+        (strncmp(cmd, "f.hide_overview", 15) == 0 && isspace((unsigned char)cmd[15]))) {
+        dtwm_overview_set_visible(server, false);
+        return true;
+    }
     if (strncmp(cmd, "f.set_output_color_profile", 26) == 0 && isspace((unsigned char)cmd[26])) {
         const char *p = cmd + 27;
         while (*p && isspace((unsigned char)*p)) p++;
@@ -11797,6 +12682,31 @@ int main(int argc, char **argv) {
     wlr_scene_node_set_enabled(&server.osd_buf->node, false);
     server.osd_timer = wl_event_loop_add_timer(ev_loop, handle_osd_timer, &server);
 
+    server.overview_tree = wlr_scene_tree_create(server.overlay_tree);
+    wlr_scene_node_set_enabled(&server.overview_tree->node, false);
+    {
+        float ov_bg[4] = { 0.08f, 0.11f, 0.16f, 0.86f };
+        server.overview_bg_rect = wlr_scene_rect_create(server.overview_tree, 1, 1, ov_bg);
+        wlr_scene_node_set_enabled(&server.overview_bg_rect->node, false);
+    }
+    server.overview_ws_buf = wlr_scene_buffer_create(server.overview_tree, nullptr);
+    if (server.overview_ws_buf) {
+        server.overview_ws_buf->point_accepts_input = overview_reject_input;
+        wlr_scene_node_set_enabled(&server.overview_ws_buf->node, false);
+    }
+    for (int i = 0; i < DTWM_OVERVIEW_MAX_CARDS; ++i) {
+        server.overview_card_buf[i] = wlr_scene_buffer_create(server.overview_tree, nullptr);
+        if (server.overview_card_buf[i]) {
+            server.overview_card_buf[i]->point_accepts_input = overview_reject_input;
+            wlr_scene_node_set_enabled(&server.overview_card_buf[i]->node, false);
+        }
+        server.overview_thumb_buf[i] = wlr_scene_buffer_create(server.overview_tree, nullptr);
+        if (server.overview_thumb_buf[i]) {
+            server.overview_thumb_buf[i]->point_accepts_input = overview_reject_input;
+            wlr_scene_node_set_enabled(&server.overview_thumb_buf[i]->node, false);
+        }
+    }
+
     server.move_opaque = true;
     server.focus_follows_mouse = false;
     server.focus_auto_raise = true;
@@ -12075,6 +12985,7 @@ int main(int argc, char **argv) {
     dtwm_hw_publish_state(&server);
     publish_color_state_ipc(&server, nullptr);
     publish_presentation_state_ipc(&server);
+    publish_overview_state_ipc(&server);
     if (wayland_session_db && wayland_session_db[0]) {
         (void)dtwm_restore_wayland_session(&server, wayland_session_db, restore_wayland_clients);
     }

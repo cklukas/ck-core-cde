@@ -829,6 +829,9 @@ void dtwm_switch_workspace(DtwmServer *server, uint32_t ws_idx) {
     dtwm_publish_active_window_box(server);
     xcb_sync_wm_properties(server);
     ext_ws_broadcast_sync(server);
+    if (server->overview_visible) {
+        dtwm_overview_refresh(server);
+    }
 }
 
 /* --- XCB Helper Intern & Property Sync --- */

@@ -24,7 +24,17 @@ selection visible and supports pointer hover and pinning. It is enabled by the
 - `Super+Left` / `Super+Right` / `Super+Up` / `Super+Down` (`f.tile_window
   left|right|up|down`) tiles the active window to halves and quadrants of the
   usable workarea (honoring the Front Panel strut), maximizes on repeated
-  `Super+Up`, and restores the saved pre-tile geometry on `Super+Down`;
+  `Super+Up`, restores the saved pre-tile geometry on `Super+Down`, and links
+  shared inner borders between adjacent tiled or edge-snapped windows so
+  dragging the split divider resizes both neighbors together in lockstep while
+  clamping against each window's minimum size on both X11 `dtwm` and
+  `dtwm-wayland`;
+- tapping bare `Super`, pressing `Super+Tab` / `Super+W` (`f.toggle_overview`),
+  or performing a three-finger touchpad swipe-up on `dtwm-wayland` opens a live
+  spatial workspace and window overview displaying clickable CDE workspace pills
+  and scaled real-time window thumbnails (`Super+Space` and `Alt+F2` remain
+  bound to `ck-launch`, or set `DTWM_SUPER_ACTION=launcher` for bare-`Super`
+  launcher activation);
 - holding Shift aligns movement and resize to the desktop grid;
 - double-clicking a title bar maximizes or restores the window;
 - clicking the desktop clears the active-window focus;

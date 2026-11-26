@@ -91,7 +91,19 @@ framing or interaction rules.
 - Holding `Shift` during pointer move or resize aligns geometry to the 16-pixel
   desktop grid;
 - Dragging toward output edges or corners previews half-screen and quadrant snap
-  placement and commits on release;
+  placement and commits on release, and dragging the shared inner border between
+  adjacent tiled or edge-snapped windows resizes all paired split peers together
+  in lockstep while clamping against each neighbor's minimum dimensions;
+- Tapping bare `Super`, pressing `Super+Tab` / `Super+W` (`f.toggle_overview` /
+  `f.show_overview` / `f.hide_overview`), or performing a three-finger vertical
+  touchpad swipe-up opens the **Live Spatial Window Overview**, rendering top
+  3D-beveled CDE workspace switcher pills above a spatial grid of live scaled
+  client surface thumbnails that update dynamically on every client commit, with
+  pointer click-to-activate, arrow/`Tab`/`Return`/`Escape` keyboard navigation,
+  three-finger swipe-down dismissal, and `_DT_WAYLAND_OVERVIEW_STATE` status
+  reporting (`Super+Space` and `Alt+F2` invoke `ck-launch`, and
+  `DTWM_SUPER_ACTION=launcher` restores bare-`Super` launcher activation if
+  preferred);
 - Pressing `Alt+Tab` opens and cycles the centered 3D-beveled keyboard task
   switcher, and `Alt+Space` opens the window menu;
 - **Focus-stealing prevention and startup tokens (`xdg_activation_v1`)**:
