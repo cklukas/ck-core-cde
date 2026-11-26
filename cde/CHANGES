@@ -1,4 +1,16 @@
 2026-11-26
+- Harden GLES2 HDR10 tone mapping (`GL_TEXTURE_EXTERNAL_OES`, VBO state, and
+  subsurface color descriptions), resize-increment/`max_size` split-tile
+  clamping, and overview mixed-DPI metrics in `dtwm-wayland` and `dtwm`,
+  advancing the CK Core Motif pin to `0c30fff09b1c`:
+  - Support `GL_TEXTURE_EXTERNAL_OES` (`samplerExternalOES`) DMA-BUF textures,
+    save/restore `GL_ARRAY_BUFFER` bindings, preserve alpha channels, and detect
+    HDR/wide-gamut `wp_image_description_v1` metadata on embedded `wl_subsurface`
+    children in `dtwm-wayland`.
+  - Honor `WM_NORMAL_HINTS` `width_inc`/`height_inc` seam tolerances and
+    `max_width`/`max_height` bounds during linked split-divider drags in both
+    `dtwm-wayland` and X11 `dtwm`, and resolve spatial overview card/thumbnail
+    metrics from the target output's DPI.
 - Add a live spatial workspace/window overview (`Super`, `Super+Tab` /
   `Super+W`, `f.toggle_overview`, and 3-finger touchpad swipe-up) in
   `dtwm-wayland` and linked split-tile divider resizing in both `dtwm-wayland`

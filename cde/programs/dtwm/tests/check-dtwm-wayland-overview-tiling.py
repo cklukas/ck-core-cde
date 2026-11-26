@@ -363,6 +363,8 @@ int main(int argc, char **argv) {
     } else if (!strcmp(argv[1], "client") && argc >= 4) {
         const char *title = argv[2];
         int min_w = atoi(argv[3]);
+        int w_inc = (argc >= 5) ? atoi(argv[4]) : 0;
+        int max_w = (argc >= 6) ? atoi(argv[5]) : 0;
         int init_x = (strstr(title, "Right") != NULL) ? 560 : 60;
         int init_y = 90, init_w = 420, init_h = 340;
         Window w = XCreateSimpleWindow(dpy, root, init_x, init_y, init_w, init_h, 0, 0, 0x336699UL);
@@ -380,6 +382,18 @@ int main(int argc, char **argv) {
         sh.height = init_h;
         sh.min_width = min_w;
         sh.min_height = 100;
+        if (w_inc > 1) {
+            sh.flags |= PResizeInc | PBaseSize;
+            sh.width_inc = w_inc;
+            sh.height_inc = 1;
+            sh.base_width = 5;
+            sh.base_height = 0;
+        }
+        if (max_w > 0) {
+            sh.flags |= PMaxSize;
+            sh.max_width = max_w;
+            sh.max_height = 2000;
+        }
         XSetWMNormalHints(dpy, w, &sh);
         XWMHints wh;
         memset(&wh, 0, sizeof(wh));
@@ -1075,7 +1089,46 @@ def main() -> int:
                 gr2 = x11_geom("X11SplitRight")
                 if gr2["CW"] < 340 or gr2["CW"] > 390:
                     raise RuntimeError(f"Expected X11SplitRight CW clamped near 340, got {gr2}")
-                x11_summary = f"X11 split resize OK (FW {gl0['FW']}->{gl1['FW']} / {gr0['FW']}->{gr1['FW']}, minCW={gr2['CW']})"
+
+                # Verify WM_NORMAL_HINTS width_inc=20 (>12px snapped gap) + max_width=700 clamp
+                xl_p.terminate()
+                xr_p.terminate()
+                time.sleep(0.2)
+                gxl_p = subprocess.Popen([str(x11_helper_bin), "client", "X11GridLeft", "205", "20", "0"], env=x_env)
+                gxr_p = subprocess.Popen([str(x11_helper_bin), "client", "X11GridRight", "220", "1", "700"], env=x_env)
+                procs.extend([gxl_p, gxr_p])
+                wait_until(lambda: x11_geom("X11GridLeft")["READY"] == 1, desc="X11GridLeft ready")
+                wait_until(lambda: x11_geom("X11GridRight")["READY"] == 1, desc="X11GridRight ready")
+                time.sleep(0.2)
+                subprocess.run([str(x11_helper_bin), "focus_and_tile", "X11GridLeft", "left"], env=x_env, check=True)
+                ggl0 = wait_until(
+                    lambda: g if (g := x11_geom("X11GridLeft"))["FX"] <= 8 and 600 <= g["FW"] <= 650 else None,
+                    desc="X11GridLeft Super+Left half tile (snapped to width_inc=20)",
+                )
+                subprocess.run([str(x11_helper_bin), "focus_and_tile", "X11GridRight", "right"], env=x_env, check=True)
+                wait_until(
+                    lambda: g if 630 <= (g := x11_geom("X11GridRight"))["FX"] <= 650 else None,
+                    desc="X11GridRight Super+Right half tile",
+                )
+                # Drag X11GridLeft's right border FAR left (x=280) so X11GridRight tries to exceed max_width=700!
+                gseam0 = ggl0["FX"] + ggl0["FW"] - 3
+                subprocess.run(
+                    [str(x11_helper_bin), "drag", str(gseam0), "350", "280", "350"],
+                    env=x_env,
+                    check=True,
+                )
+                time.sleep(0.25)
+                ggl1 = x11_geom("X11GridLeft")
+                ggr1 = x11_geom("X11GridRight")
+                if (ggl1["CW"] - 5) % 20 != 0:
+                    raise RuntimeError(f"Expected X11GridLeft CW on 5+20*k grid after clamp, got {ggl1}")
+                if ggr1["CW"] > 700 or ggr1["CW"] < 660:
+                    raise RuntimeError(f"Expected X11GridRight CW clamped to max_width=700, got {ggr1}")
+
+                x11_summary = (
+                    f"X11 split resize OK (FW {gl0['FW']}->{gl1['FW']} / {gr0['FW']}->{gr1['FW']}, "
+                    f"minCW={gr2['CW']}, gridCW={ggl1['CW']}, maxCW={ggr1['CW']})"
+                )
 
             print(
                 f"PASS: Wayland split-resize (W={left_kv1['W']}/{right_kv1['W']}, clamped={right_w_clamped}), "

@@ -1502,7 +1502,7 @@ void CompleteFrameConfig (ClientData *pcd, XEvent *pev)
 	Boolean savedSnapValid = pcd ? pcd->snapRestoreValid : False;
 	int activePart = wmGD.configPart;
 
-	/* Clamp linked split-divider drag against adjacent tiled peers' min sizes */
+	/* Clamp linked split-divider drag against adjacent tiled peers' min/max sizes */
 	if (pcd && (savedTileState != 0 || savedSnapValid) &&
 	    ACTIVE_WS && ACTIVE_WS->ppClients &&
 	    (activePart == FRAME_RESIZE_E || activePart == FRAME_RESIZE_W ||
@@ -1512,11 +1512,14 @@ void CompleteFrameConfig (ClientData *pcd, XEvent *pev)
 	    int newFrameY = resizeY;
 	    int newFrameW = (int)tmpWidth + 2 * pcd->clientOffset.x;
 	    int newFrameH = (int)tmpHeight + pcd->clientOffset.x + pcd->clientOffset.y;
+	    int pIncX = (pcd->widthInc > 1 && pcd->widthInc <= 256) ? pcd->widthInc : 0;
+	    int pIncY = (pcd->heightInc > 1 && pcd->heightInc <= 256) ? pcd->heightInc : 0;
+	    Boolean clampedSplit = False;
 	    unsigned int ci;
 	    for (ci = 0; ci < ACTIVE_WS->numClients; ++ci)
 	    {
 		ClientData *cand = ACTIVE_WS->ppClients[ci];
-		int cfx, cfy, cfw, cfh, minCW, minCH;
+		int cfx, cfy, cfw, cfh, minCW, minCH, maxCW, maxCH, cIncX, cIncY, tolX, tolY;
 		if (!cand || cand == pcd || cand->clientState != NORMAL_STATE ||
 		    (!cand->tileState && !cand->snapRestoreValid) ||
 		    (cand->clientFlags & (CLIENT_WM_CLIENTS | FRONT_PANEL_BOX)) ||
@@ -1528,9 +1531,15 @@ void CompleteFrameConfig (ClientData *pcd, XEvent *pev)
 		cfh = (int)cand->clientHeight + cand->clientOffset.x + cand->clientOffset.y;
 		minCW = (cand->minWidth > 64) ? cand->minWidth : 64;
 		minCH = (cand->minHeight > 48) ? cand->minHeight : 48;
+		maxCW = (cand->maxWidth > 0 && cand->maxWidth < 30000) ? cand->maxWidth : 0;
+		maxCH = (cand->maxHeight > 0 && cand->maxHeight < 30000) ? cand->maxHeight : 0;
+		cIncX = (cand->widthInc > 1 && cand->widthInc <= 256) ? cand->widthInc : 0;
+		cIncY = (cand->heightInc > 1 && cand->heightInc <= 256) ? cand->heightInc : 0;
+		tolX = 12 + pIncX + cIncX;
+		tolY = 12 + pIncY + cIncY;
 
 		if (activePart == FRAME_RESIZE_E &&
-		    ABS(cfx - (oldFrameX + oldFrameW)) <= 12 &&
+		    ABS(cfx - (oldFrameX + oldFrameW)) <= tolX &&
 		    (cfy < oldFrameY + oldFrameH - 24 && cfy + cfh > oldFrameY + 24))
 		{
 		    int maxRight = (cfx + cfw) - (minCW + 2 * cand->clientOffset.x);
@@ -1539,10 +1548,22 @@ void CompleteFrameConfig (ClientData *pcd, XEvent *pev)
 			tmpWidth = (unsigned int)(maxRight - newFrameX - 2 * pcd->clientOffset.x);
 			resizeWidth = tmpWidth;
 			newFrameW = (int)tmpWidth + 2 * pcd->clientOffset.x;
+			clampedSplit = True;
+		    }
+		    if (maxCW > 0)
+		    {
+			int minRight = (cfx + cfw) - (maxCW + 2 * cand->clientOffset.x);
+			if (newFrameX + newFrameW < minRight && minRight > newFrameX + 64)
+			{
+			    tmpWidth = (unsigned int)(minRight - newFrameX - 2 * pcd->clientOffset.x);
+			    resizeWidth = tmpWidth;
+			    newFrameW = (int)tmpWidth + 2 * pcd->clientOffset.x;
+			    clampedSplit = True;
+			}
 		    }
 		}
 		else if (activePart == FRAME_RESIZE_W &&
-			 ABS((cfx + cfw) - oldFrameX) <= 12 &&
+			 ABS((cfx + cfw) - oldFrameX) <= tolX &&
 			 (cfy < oldFrameY + oldFrameH - 24 && cfy + cfh > oldFrameY + 24))
 		{
 		    int minLeft = cfx + minCW + 2 * cand->clientOffset.x;
@@ -1553,10 +1574,24 @@ void CompleteFrameConfig (ClientData *pcd, XEvent *pev)
 			resizeX = newFrameX;
 			tmpWidth = (unsigned int)(newFrameW - 2 * pcd->clientOffset.x);
 			resizeWidth = tmpWidth;
+			clampedSplit = True;
+		    }
+		    if (maxCW > 0)
+		    {
+			int maxLeft = cfx + maxCW + 2 * cand->clientOffset.x;
+			if (newFrameX > maxLeft && (oldFrameX + oldFrameW) - maxLeft > 64)
+			{
+			    newFrameW = (oldFrameX + oldFrameW) - maxLeft;
+			    newFrameX = maxLeft;
+			    resizeX = newFrameX;
+			    tmpWidth = (unsigned int)(newFrameW - 2 * pcd->clientOffset.x);
+			    resizeWidth = tmpWidth;
+			    clampedSplit = True;
+			}
 		    }
 		}
 		else if (activePart == FRAME_RESIZE_S &&
-			 ABS(cfy - (oldFrameY + oldFrameH)) <= 12 &&
+			 ABS(cfy - (oldFrameY + oldFrameH)) <= tolY &&
 			 (cfx < oldFrameX + oldFrameW - 24 && cfx + cfw > oldFrameX + 24))
 		{
 		    int maxBottom = (cfy + cfh) - (minCH + cand->clientOffset.x + cand->clientOffset.y);
@@ -1565,10 +1600,22 @@ void CompleteFrameConfig (ClientData *pcd, XEvent *pev)
 			tmpHeight = (unsigned int)(maxBottom - newFrameY - pcd->clientOffset.x - pcd->clientOffset.y);
 			resizeHeight = tmpHeight;
 			newFrameH = (int)tmpHeight + pcd->clientOffset.x + pcd->clientOffset.y;
+			clampedSplit = True;
+		    }
+		    if (maxCH > 0)
+		    {
+			int minBottom = (cfy + cfh) - (maxCH + cand->clientOffset.x + cand->clientOffset.y);
+			if (newFrameY + newFrameH < minBottom && minBottom > newFrameY + 48)
+			{
+			    tmpHeight = (unsigned int)(minBottom - newFrameY - pcd->clientOffset.x - pcd->clientOffset.y);
+			    resizeHeight = tmpHeight;
+			    newFrameH = (int)tmpHeight + pcd->clientOffset.x + pcd->clientOffset.y;
+			    clampedSplit = True;
+			}
 		    }
 		}
 		else if (activePart == FRAME_RESIZE_N &&
-			 ABS((cfy + cfh) - oldFrameY) <= 12 &&
+			 ABS((cfy + cfh) - oldFrameY) <= tolY &&
 			 (cfx < oldFrameX + oldFrameW - 24 && cfx + cfw > oldFrameX + 24))
 		{
 		    int minTop = cfy + minCH + cand->clientOffset.x + cand->clientOffset.y;
@@ -1579,8 +1626,32 @@ void CompleteFrameConfig (ClientData *pcd, XEvent *pev)
 			resizeY = newFrameY;
 			tmpHeight = (unsigned int)(newFrameH - pcd->clientOffset.x - pcd->clientOffset.y);
 			resizeHeight = tmpHeight;
+			clampedSplit = True;
+		    }
+		    if (maxCH > 0)
+		    {
+			int maxTop = cfy + maxCH + cand->clientOffset.x + cand->clientOffset.y;
+			if (newFrameY > maxTop && (oldFrameY + oldFrameH) - maxTop > 48)
+			{
+			    newFrameH = (oldFrameY + oldFrameH) - maxTop;
+			    newFrameY = maxTop;
+			    resizeY = newFrameY;
+			    tmpHeight = (unsigned int)(newFrameH - pcd->clientOffset.x - pcd->clientOffset.y);
+			    resizeHeight = tmpHeight;
+			    clampedSplit = True;
+			}
 		    }
 		}
+	    }
+	    if (clampedSplit)
+	    {
+		unsigned int rawW = tmpWidth, rawH = tmpHeight;
+		FixWindowConfiguration (pcd, &tmpWidth, &tmpHeight,
+					(unsigned int) pcd->widthInc,
+					(unsigned int) pcd->heightInc);
+		AdjustPos (&resizeX, &resizeY, rawW, rawH, tmpWidth, tmpHeight);
+		resizeWidth = tmpWidth;
+		resizeHeight = tmpHeight;
 	    }
 	}
 
@@ -1599,11 +1670,13 @@ void CompleteFrameConfig (ClientData *pcd, XEvent *pev)
 		int curFY = pcd->clientY - pcd->clientOffset.y;
 		int curFW = (int)pcd->clientWidth + 2 * pcd->clientOffset.x;
 		int curFH = (int)pcd->clientHeight + pcd->clientOffset.x + pcd->clientOffset.y;
+		int pIncX = (pcd->widthInc > 1 && pcd->widthInc <= 256) ? pcd->widthInc : 0;
+		int pIncY = (pcd->heightInc > 1 && pcd->heightInc <= 256) ? pcd->heightInc : 0;
 		unsigned int ci;
 		for (ci = 0; ci < ACTIVE_WS->numClients; ++ci)
 		{
 		    ClientData *cand = ACTIVE_WS->ppClients[ci];
-		    int cfx, cfy, cfw, cfh;
+		    int cfx, cfy, cfw, cfh, cIncX, cIncY, tolX, tolY;
 		    if (!cand || cand == pcd || cand->clientState != NORMAL_STATE ||
 			(!cand->tileState && !cand->snapRestoreValid) ||
 			(cand->clientFlags & (CLIENT_WM_CLIENTS | FRONT_PANEL_BOX)) ||
@@ -1613,9 +1686,13 @@ void CompleteFrameConfig (ClientData *pcd, XEvent *pev)
 		    cfy = cand->clientY - cand->clientOffset.y;
 		    cfw = (int)cand->clientWidth + 2 * cand->clientOffset.x;
 		    cfh = (int)cand->clientHeight + cand->clientOffset.x + cand->clientOffset.y;
+		    cIncX = (cand->widthInc > 1 && cand->widthInc <= 256) ? cand->widthInc : 0;
+		    cIncY = (cand->heightInc > 1 && cand->heightInc <= 256) ? cand->heightInc : 0;
+		    tolX = 12 + pIncX + cIncX;
+		    tolY = 12 + pIncY + cIncY;
 
 		    if (activePart == FRAME_RESIZE_E &&
-			ABS(cfx - (oldFrameX + oldFrameW)) <= 12 &&
+			ABS(cfx - (oldFrameX + oldFrameW)) <= tolX &&
 			(cfy < oldFrameY + oldFrameH - 24 && cfy + cfh > oldFrameY + 24))
 		    {
 			int nfx = curFX + curFW;
@@ -1630,7 +1707,7 @@ void CompleteFrameConfig (ClientData *pcd, XEvent *pev)
 			}
 		    }
 		    else if (activePart == FRAME_RESIZE_W &&
-			     ABS((cfx + cfw) - oldFrameX) <= 12 &&
+			     ABS((cfx + cfw) - oldFrameX) <= tolX &&
 			     (cfy < oldFrameY + oldFrameH - 24 && cfy + cfh > oldFrameY + 24))
 		    {
 			int nfw = curFX - cfx;
@@ -1644,7 +1721,7 @@ void CompleteFrameConfig (ClientData *pcd, XEvent *pev)
 			}
 		    }
 		    else if (activePart == FRAME_RESIZE_S &&
-			     ABS(cfy - (oldFrameY + oldFrameH)) <= 12 &&
+			     ABS(cfy - (oldFrameY + oldFrameH)) <= tolY &&
 			     (cfx < oldFrameX + oldFrameW - 24 && cfx + cfw > oldFrameX + 24))
 		    {
 			int nfy = curFY + curFH;
@@ -1659,7 +1736,7 @@ void CompleteFrameConfig (ClientData *pcd, XEvent *pev)
 			}
 		    }
 		    else if (activePart == FRAME_RESIZE_N &&
-			     ABS((cfy + cfh) - oldFrameY) <= 12 &&
+			     ABS((cfy + cfh) - oldFrameY) <= tolY &&
 			     (cfx < oldFrameX + oldFrameW - 24 && cfx + cfw > oldFrameX + 24))
 		    {
 			int nfh = curFY - cfy;

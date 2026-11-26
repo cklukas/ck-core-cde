@@ -3871,6 +3871,19 @@ static void process_cursor_move(DtwmServer *server) {
     dtwm_publish_active_window_box(server);
 }
 
+static void view_resize_increments(const DtwmView *v, int *out_inc_w, int *out_inc_h) {
+    int iw = 1, ih = 1;
+    if (v && v->kind == DTWM_VIEW_XWAYLAND && v->xwayland_surface && v->xwayland_surface->size_hints) {
+        const xcb_size_hints_t *sh = v->xwayland_surface->size_hints;
+        if ((sh->flags & XCB_ICCCM_SIZE_HINT_P_RESIZE_INC) != 0) {
+            if (sh->width_inc > 1 && sh->width_inc <= 256) iw = sh->width_inc;
+            if (sh->height_inc > 1 && sh->height_inc <= 256) ih = sh->height_inc;
+        }
+    }
+    *out_inc_w = iw;
+    *out_inc_h = ih;
+}
+
 static void discover_split_resize_peers(DtwmView *view, uint32_t edges) {
     if (!view || !view->server || view->tile_state == 0 || view->maximized) {
         return;
@@ -3885,6 +3898,8 @@ static void discover_split_resize_peers(DtwmView *view, uint32_t edges) {
     int vow = 0, voh = 0;
     dtwm_view_outer_size(view, &vow, &voh);
     int vx1 = view->x, vy1 = view->y, vx2 = view->x + vow, vy2 = view->y + voh;
+    int vinc_w = 1, vinc_h = 1;
+    view_resize_increments(view, &vinc_w, &vinc_h);
 
     DtwmView *cand;
     wl_list_for_each(cand, &server->views, link) {
@@ -3898,20 +3913,24 @@ static void discover_split_resize_peers(DtwmView *view, uint32_t edges) {
         int cow = 0, coh = 0;
         dtwm_view_outer_size(cand, &cow, &coh);
         int cx1 = cand->x, cy1 = cand->y, cx2 = cand->x + cow, cy2 = cand->y + coh;
+        int cinc_w = 1, cinc_h = 1;
+        view_resize_increments(cand, &cinc_w, &cinc_h);
+        int tol_x = 12 + (vinc_w > 1 ? vinc_w : 0) + (cinc_w > 1 ? cinc_w : 0);
+        int tol_y = 12 + (vinc_h > 1 ? vinc_h : 0) + (cinc_h > 1 ? cinc_h : 0);
         uint32_t pedge = 0;
 
         if (edges == WLR_EDGE_RIGHT) {
             bool y_ov = (cy1 < vy2 - 24 && cy2 > vy1 + 24);
-            if (y_ov && abs(cx1 - vx2) <= 12) pedge = WLR_EDGE_LEFT;
+            if (y_ov && abs(cx1 - vx2) <= tol_x) pedge = WLR_EDGE_LEFT;
         } else if (edges == WLR_EDGE_LEFT) {
             bool y_ov = (cy1 < vy2 - 24 && cy2 > vy1 + 24);
-            if (y_ov && abs(cx2 - vx1) <= 12) pedge = WLR_EDGE_RIGHT;
+            if (y_ov && abs(cx2 - vx1) <= tol_x) pedge = WLR_EDGE_RIGHT;
         } else if (edges == WLR_EDGE_BOTTOM) {
             bool x_ov = (cx1 < vx2 - 24 && cx2 > vx1 + 24);
-            if (x_ov && abs(cy1 - vy2) <= 12) pedge = WLR_EDGE_TOP;
+            if (x_ov && abs(cy1 - vy2) <= tol_y) pedge = WLR_EDGE_TOP;
         } else if (edges == WLR_EDGE_TOP) {
             bool x_ov = (cx1 < vx2 - 24 && cx2 > vx1 + 24);
-            if (x_ov && abs(cy2 - vy1) <= 12) pedge = WLR_EDGE_BOTTOM;
+            if (x_ov && abs(cy2 - vy1) <= tol_y) pedge = WLR_EDGE_BOTTOM;
         }
         if (pedge != 0) {
             int idx = server->split_peer_count++;
@@ -4082,11 +4101,11 @@ static void bind_overview_thumb_slot(DtwmServer *server, int slot) {
         return;
     }
 
-    int dpi = dtwm_primary_output_dpi(server);
+    struct wlr_box cb = server->overview_card_boxes[slot];
+    int dpi = dtwm_output_dpi_at(server, cb.x + cb.width * 0.5, cb.y + cb.height * 0.5);
     double sc = (double)(dpi > 0 ? dpi : 96) / 96.0;
     int pad = (int)lround(10.0 * sc);
     int cap_h = (int)lround(28.0 * sc);
-    struct wlr_box cb = server->overview_card_boxes[slot];
     int avail_w = cb.width - 2 * pad;
     int avail_h = cb.height - 2 * pad - cap_h;
     if (avail_w < 16) avail_w = 16;
@@ -4123,7 +4142,7 @@ static void render_overview_card_chrome(DtwmServer *server, int slot) {
     DtwmView *v = server->overview_views[slot];
     struct wlr_box cb = server->overview_card_boxes[slot];
     bool sel = (slot == server->overview_selected);
-    int dpi = dtwm_primary_output_dpi(server);
+    int dpi = dtwm_output_dpi_at(server, cb.x + cb.width * 0.5, cb.y + cb.height * 0.5);
     double sc = (double)(dpi > 0 ? dpi : 96) / 96.0;
     int cap_h = (int)lround(28.0 * sc);
     double bev = fmax(2.0, round(2.0 * sc));
@@ -4464,6 +4483,13 @@ static void process_cursor_resize(DtwmServer *server) {
                     new_w = max_seam_x - new_x - vl - vr;
                     if (new_w < min_w) new_w = min_w;
                 }
+                if (pmax_w > 0) {
+                    int min_seam_x = p_orig_right - (pmax_w + pl + pr);
+                    if (new_x + new_w + vl + vr < min_seam_x) {
+                        new_w = min_seam_x - new_x - vl - vr;
+                        if (max_w > 0 && new_w > max_w) new_w = max_w;
+                    }
+                }
             } else if (pedge == WLR_EDGE_RIGHT && (server->resize_edges & WLR_EDGE_LEFT)) {
                 int min_seam_x = pob.x + pmin_w + pl + pr;
                 if (new_x < min_seam_x) {
@@ -4472,11 +4498,27 @@ static void process_cursor_resize(DtwmServer *server) {
                     new_w = orig_right - new_x;
                     if (new_w < min_w) new_w = min_w;
                 }
+                if (pmax_w > 0) {
+                    int max_seam_x = pob.x + pmax_w + pl + pr;
+                    if (new_x > max_seam_x) {
+                        int orig_right = server->grab_orig_box.x + server->grab_orig_box.width;
+                        new_x = max_seam_x;
+                        new_w = orig_right - new_x;
+                        if (max_w > 0 && new_w > max_w) new_w = max_w;
+                    }
+                }
             } else if (pedge == WLR_EDGE_TOP && (server->resize_edges & WLR_EDGE_BOTTOM)) {
                 int max_seam_y = p_orig_bottom - (pmin_h + pt + pb);
                 if (new_y + new_h + vt + vb > max_seam_y) {
                     new_h = max_seam_y - new_y - vt - vb;
                     if (new_h < min_h) new_h = min_h;
+                }
+                if (pmax_h > 0) {
+                    int min_seam_y = p_orig_bottom - (pmax_h + pt + pb);
+                    if (new_y + new_h + vt + vb < min_seam_y) {
+                        new_h = min_seam_y - new_y - vt - vb;
+                        if (max_h > 0 && new_h > max_h) new_h = max_h;
+                    }
                 }
             } else if (pedge == WLR_EDGE_BOTTOM && (server->resize_edges & WLR_EDGE_TOP)) {
                 int min_seam_y = pob.y + pmin_h + pt + pb;
@@ -4485,6 +4527,15 @@ static void process_cursor_resize(DtwmServer *server) {
                     new_y = min_seam_y;
                     new_h = orig_bottom - new_y;
                     if (new_h < min_h) new_h = min_h;
+                }
+                if (pmax_h > 0) {
+                    int max_seam_y = pob.y + pmax_h + pt + pb;
+                    if (new_y > max_seam_y) {
+                        int orig_bottom = server->grab_orig_box.y + server->grab_orig_box.height;
+                        new_y = max_seam_y;
+                        new_h = orig_bottom - new_y;
+                        if (max_h > 0 && new_h > max_h) new_h = max_h;
+                    }
                 }
             }
         }
@@ -7955,12 +8006,29 @@ typedef struct {
     void (*p_glDeleteTextures)(GLsizei, const GLuint *);
     void (*p_glTexImage2D)(GLenum, GLint, GLint, GLsizei, GLsizei, GLint, GLenum, GLenum, const void *);
     void (*p_glReadPixels)(GLint, GLint, GLsizei, GLsizei, GLenum, GLenum, void *);
-    GLuint prog;
-    GLint u_tex;
-    GLint u_tf_mode;
-    GLint u_prim_mode;
-    GLint u_peak_rel;
+    void (*p_glBindBuffer)(GLenum, GLuint);
+    EGLContext ctx;
+    GLuint prog_2d;
+    GLint u2d_tex;
+    GLint u2d_tf_mode;
+    GLint u2d_prim_mode;
+    GLint u2d_peak_rel;
+    GLint u2d_opaque;
+    GLuint prog_ext;
+    GLint uext_tex;
+    GLint uext_tf_mode;
+    GLint uext_prim_mode;
+    GLint uext_peak_rel;
+    GLint uext_opaque;
+    bool ext_tried;
 } DtwmGles2TonemapCtx;
+
+#ifndef GL_TEXTURE_EXTERNAL_OES
+#define GL_TEXTURE_EXTERNAL_OES 0x8D65
+#endif
+#ifndef GL_TEXTURE_BINDING_EXTERNAL_OES
+#define GL_TEXTURE_BINDING_EXTERNAL_OES 0x8D67
+#endif
 
 static DtwmGles2TonemapCtx g_gl_tm = {0};
 
@@ -8012,6 +8080,7 @@ static bool ensure_gles2_symbols(void) {
         RESOLVE_SYM(hgl, glDeleteTextures);
         RESOLVE_SYM(hgl, glTexImage2D);
         RESOLVE_SYM(hgl, glReadPixels);
+        RESOLVE_SYM(hgl, glBindBuffer);
 #undef RESOLVE_SYM
         g_gl_tm.ok = g_gl_tm.p_eglGetCurrentDisplay && g_gl_tm.p_eglMakeCurrent &&
                      g_gl_tm.p_glCreateShader && g_gl_tm.p_glCreateProgram &&
@@ -8020,10 +8089,14 @@ static bool ensure_gles2_symbols(void) {
     return g_gl_tm.ok;
 }
 
-static bool ensure_gles2_tonemap_program_current_ctx(void) {
-    if (!ensure_gles2_symbols()) return false;
-    if (g_gl_tm.prog != 0) return true;
-
+static GLuint compile_gles2_tonemap_variant(
+    bool external_oes,
+    GLint *out_u_tex,
+    GLint *out_u_tf,
+    GLint *out_u_prim,
+    GLint *out_u_peak,
+    GLint *out_u_opaque
+) {
     static const char *vs_src =
         "attribute vec2 a_pos;\n"
         "varying vec2 v_uv;\n"
@@ -8031,13 +8104,20 @@ static bool ensure_gles2_tonemap_program_current_ctx(void) {
         "    v_uv = a_pos * 0.5 + 0.5;\n"
         "    gl_Position = vec4(a_pos, 0.0, 1.0);\n"
         "}\n";
-    static const char *fs_src =
+    static const char *fs_hdr_2d =
         "precision highp float;\n"
         "varying vec2 v_uv;\n"
-        "uniform sampler2D u_tex;\n"
+        "uniform sampler2D u_tex;\n";
+    static const char *fs_hdr_ext =
+        "#extension GL_OES_EGL_image_external : require\n"
+        "precision highp float;\n"
+        "varying vec2 v_uv;\n"
+        "uniform samplerExternalOES u_tex;\n";
+    static const char *fs_body =
         "uniform int u_tf_mode;\n"
         "uniform int u_prim_mode;\n"
         "uniform float u_peak_rel;\n"
+        "uniform int u_opaque;\n"
         "vec3 pq_eotf_rel(vec3 e) {\n"
         "    e = clamp(e, 0.0, 1.0);\n"
         "    vec3 np = pow(e, vec3(1.0 / 78.84375));\n"
@@ -8094,7 +8174,7 @@ static bool ensure_gles2_tonemap_program_current_ctx(void) {
         "            lin *= (y_tm / y);\n"
         "        }\n"
         "    }\n"
-        "    gl_FragColor = vec4(srgb_oetf(lin), 1.0);\n"
+        "    gl_FragColor = vec4(srgb_oetf(lin), (u_opaque != 0) ? 1.0 : src.a);\n"
         "}\n";
 
     GLuint vs = g_gl_tm.p_glCreateShader(GL_VERTEX_SHADER);
@@ -8103,8 +8183,9 @@ static bool ensure_gles2_tonemap_program_current_ctx(void) {
     GLint ok_v = 0;
     g_gl_tm.p_glGetShaderiv(vs, GL_COMPILE_STATUS, &ok_v);
 
+    const char *fs_parts[2] = { external_oes ? fs_hdr_ext : fs_hdr_2d, fs_body };
     GLuint fs = g_gl_tm.p_glCreateShader(GL_FRAGMENT_SHADER);
-    g_gl_tm.p_glShaderSource(fs, 1, &fs_src, nullptr);
+    g_gl_tm.p_glShaderSource(fs, 2, fs_parts, nullptr);
     g_gl_tm.p_glCompileShader(fs);
     GLint ok_f = 0;
     g_gl_tm.p_glGetShaderiv(fs, GL_COMPILE_STATUS, &ok_f);
@@ -8112,7 +8193,7 @@ static bool ensure_gles2_tonemap_program_current_ctx(void) {
     if (!ok_v || !ok_f) {
         g_gl_tm.p_glDeleteShader(vs);
         g_gl_tm.p_glDeleteShader(fs);
-        return false;
+        return 0;
     }
     GLuint prog = g_gl_tm.p_glCreateProgram();
     g_gl_tm.p_glAttachShader(prog, vs);
@@ -8123,14 +8204,39 @@ static bool ensure_gles2_tonemap_program_current_ctx(void) {
     g_gl_tm.p_glDeleteShader(fs);
     GLint linked = 0;
     g_gl_tm.p_glGetProgramiv(prog, GL_LINK_STATUS, &linked);
-    if (!linked) return false;
+    if (!linked) return 0;
 
-    g_gl_tm.prog = prog;
-    g_gl_tm.u_tex = g_gl_tm.p_glGetUniformLocation(prog, "u_tex");
-    g_gl_tm.u_tf_mode = g_gl_tm.p_glGetUniformLocation(prog, "u_tf_mode");
-    g_gl_tm.u_prim_mode = g_gl_tm.p_glGetUniformLocation(prog, "u_prim_mode");
-    g_gl_tm.u_peak_rel = g_gl_tm.p_glGetUniformLocation(prog, "u_peak_rel");
-    return true;
+    *out_u_tex = g_gl_tm.p_glGetUniformLocation(prog, "u_tex");
+    *out_u_tf = g_gl_tm.p_glGetUniformLocation(prog, "u_tf_mode");
+    *out_u_prim = g_gl_tm.p_glGetUniformLocation(prog, "u_prim_mode");
+    *out_u_peak = g_gl_tm.p_glGetUniformLocation(prog, "u_peak_rel");
+    *out_u_opaque = g_gl_tm.p_glGetUniformLocation(prog, "u_opaque");
+    return prog;
+}
+
+static bool ensure_gles2_tonemap_program_current_ctx(EGLContext ectx, bool external_oes) {
+    if (!ensure_gles2_symbols()) return false;
+    if (g_gl_tm.ctx != ectx) {
+        g_gl_tm.ctx = ectx;
+        g_gl_tm.prog_2d = 0;
+        g_gl_tm.prog_ext = 0;
+        g_gl_tm.ext_tried = false;
+    }
+    if (!external_oes) {
+        if (g_gl_tm.prog_2d == 0) {
+            g_gl_tm.prog_2d = compile_gles2_tonemap_variant(
+                false, &g_gl_tm.u2d_tex, &g_gl_tm.u2d_tf_mode,
+                &g_gl_tm.u2d_prim_mode, &g_gl_tm.u2d_peak_rel, &g_gl_tm.u2d_opaque);
+        }
+        return g_gl_tm.prog_2d != 0;
+    }
+    if (!g_gl_tm.ext_tried) {
+        g_gl_tm.ext_tried = true;
+        g_gl_tm.prog_ext = compile_gles2_tonemap_variant(
+            true, &g_gl_tm.uext_tex, &g_gl_tm.uext_tf_mode,
+            &g_gl_tm.uext_prim_mode, &g_gl_tm.uext_peak_rel, &g_gl_tm.uext_opaque);
+    }
+    return g_gl_tm.prog_ext != 0;
 }
 
 static struct wlr_buffer *tonemap_via_gles2_shader(
@@ -8146,7 +8252,8 @@ static struct wlr_buffer *tonemap_via_gles2_shader(
     }
     struct wlr_gles2_texture_attribs attribs = {0};
     wlr_gles2_texture_get_attribs(src_tex, &attribs);
-    if (attribs.target != GL_TEXTURE_2D || attribs.tex == 0) {
+    bool is_ext = (attribs.target == GL_TEXTURE_EXTERNAL_OES);
+    if ((attribs.target != GL_TEXTURE_2D && !is_ext) || attribs.tex == 0) {
         return nullptr;
     }
     struct wlr_egl *egl = wlr_gles2_renderer_get_egl(server->renderer);
@@ -8167,8 +8274,13 @@ static struct wlr_buffer *tonemap_via_gles2_shader(
     GLuint fbo = 0;
     const struct wlr_drm_format_set *fmts =
         wlr_renderer_get_texture_formats(server->renderer, server->allocator->buffer_caps);
-    const struct wlr_drm_format *fmt = fmts ? wlr_drm_format_set_get(fmts, DRM_FORMAT_XRGB8888) : nullptr;
-    if (!fmt && fmts) fmt = wlr_drm_format_set_get(fmts, DRM_FORMAT_ARGB8888);
+    const struct wlr_drm_format *fmt = nullptr;
+    if (fmts) {
+        fmt = attribs.has_alpha ? wlr_drm_format_set_get(fmts, DRM_FORMAT_ARGB8888)
+                                : wlr_drm_format_set_get(fmts, DRM_FORMAT_XRGB8888);
+        if (!fmt) fmt = wlr_drm_format_set_get(fmts, DRM_FORMAT_XRGB8888);
+        if (!fmt) fmt = wlr_drm_format_set_get(fmts, DRM_FORMAT_ARGB8888);
+    }
     if (fmt && (server->allocator->buffer_caps & server->renderer->render_buffer_caps) != 0) {
         dst_buf = wlr_allocator_create_buffer(server->allocator, w, h, fmt);
         if (dst_buf) {
@@ -8193,7 +8305,7 @@ static struct wlr_buffer *tonemap_via_gles2_shader(
         return nullptr;
     }
 
-    if (!ensure_gles2_tonemap_program_current_ctx()) {
+    if (!ensure_gles2_tonemap_program_current_ctx(ectx, is_ext)) {
         if (prev_dpy != EGL_NO_DISPLAY) {
             g_gl_tm.p_eglMakeCurrent(prev_dpy, prev_draw, prev_read, prev_ctx);
         } else {
@@ -8203,7 +8315,7 @@ static struct wlr_buffer *tonemap_via_gles2_shader(
         return nullptr;
     }
 
-    GLint prev_fbo = 0, prev_prog = 0, prev_vp[4] = {0}, prev_act = 0, prev_tex = 0;
+    GLint prev_fbo = 0, prev_prog = 0, prev_vp[4] = {0}, prev_act = 0, prev_tex = 0, prev_vbo = 0;
     GLboolean prev_blend = g_gl_tm.p_glIsEnabled(GL_BLEND);
     GLboolean prev_scis = g_gl_tm.p_glIsEnabled(GL_SCISSOR_TEST);
     g_gl_tm.p_glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prev_fbo);
@@ -8211,7 +8323,11 @@ static struct wlr_buffer *tonemap_via_gles2_shader(
     g_gl_tm.p_glGetIntegerv(GL_VIEWPORT, prev_vp);
     g_gl_tm.p_glGetIntegerv(GL_ACTIVE_TEXTURE, &prev_act);
     g_gl_tm.p_glActiveTexture(GL_TEXTURE0);
-    g_gl_tm.p_glGetIntegerv(GL_TEXTURE_BINDING_2D, &prev_tex);
+    g_gl_tm.p_glGetIntegerv(is_ext ? GL_TEXTURE_BINDING_EXTERNAL_OES : GL_TEXTURE_BINDING_2D, &prev_tex);
+    if (g_gl_tm.p_glBindBuffer) {
+        g_gl_tm.p_glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &prev_vbo);
+        g_gl_tm.p_glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
 
     GLuint temp_fbo = 0, temp_tex = 0;
     if (fbo == 0) {
@@ -8241,14 +8357,17 @@ static struct wlr_buffer *tonemap_via_gles2_shader(
     g_gl_tm.p_glViewport(0, 0, w, h);
     g_gl_tm.p_glDisable(GL_BLEND);
     g_gl_tm.p_glDisable(GL_SCISSOR_TEST);
-    g_gl_tm.p_glUseProgram(g_gl_tm.prog);
-    g_gl_tm.p_glBindTexture(GL_TEXTURE_2D, attribs.tex);
-    g_gl_tm.p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    g_gl_tm.p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    g_gl_tm.p_glUniform1i(g_gl_tm.u_tex, 0);
-    g_gl_tm.p_glUniform1i(g_gl_tm.u_tf_mode, tf_mode);
-    g_gl_tm.p_glUniform1i(g_gl_tm.u_prim_mode, prim_mode);
-    g_gl_tm.p_glUniform1f(g_gl_tm.u_peak_rel, peak_rel);
+    g_gl_tm.p_glUseProgram(is_ext ? g_gl_tm.prog_ext : g_gl_tm.prog_2d);
+    g_gl_tm.p_glBindTexture(attribs.target, attribs.tex);
+    g_gl_tm.p_glTexParameteri(attribs.target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    g_gl_tm.p_glTexParameteri(attribs.target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    g_gl_tm.p_glUniform1i(is_ext ? g_gl_tm.uext_tex : g_gl_tm.u2d_tex, 0);
+    g_gl_tm.p_glUniform1i(is_ext ? g_gl_tm.uext_tf_mode : g_gl_tm.u2d_tf_mode, tf_mode);
+    g_gl_tm.p_glUniform1i(is_ext ? g_gl_tm.uext_prim_mode : g_gl_tm.u2d_prim_mode, prim_mode);
+    g_gl_tm.p_glUniform1f(is_ext ? g_gl_tm.uext_peak_rel : g_gl_tm.u2d_peak_rel, peak_rel);
+    g_gl_tm.p_glUniform1i(
+        is_ext ? g_gl_tm.uext_opaque : g_gl_tm.u2d_opaque, attribs.has_alpha ? 0 : 1
+    );
 
     static const float quad_verts[8] = {
         -1.0f, -1.0f,
@@ -8262,7 +8381,8 @@ static struct wlr_buffer *tonemap_via_gles2_shader(
     g_gl_tm.p_glDisableVertexAttribArray(0);
     g_gl_tm.p_glFlush();
 
-    if (g_gl_tm.p_glReadPixels && w >= 4 && h >= 2) {
+    if (dst_buf && g_gl_tm.p_glReadPixels && w >= 4 && h >= 2 &&
+        (w <= 1024 && h <= 1024)) {
         uint8_t spx[4] = {0};
         g_gl_tm.p_glReadPixels(w / 4, h / 2, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, spx);
         server->last_tonemap_sample_l =
@@ -8291,8 +8411,15 @@ static struct wlr_buffer *tonemap_via_gles2_shader(
                         uint32_t r = px & 0xffu;
                         uint32_t g = (px >> 8) & 0xffu;
                         uint32_t b = (px >> 16) & 0xffu;
-                        drow[x] = 0xff000000u | (r << 16) | (g << 8) | b;
+                        uint32_t a = attribs.has_alpha ? ((px >> 24) & 0xffu) : 0xffu;
+                        drow[x] = (a << 24) | (r << 16) | (g << 8) | b;
                     }
+                }
+                if (w >= 4 && h >= 2) {
+                    const uint32_t *mrow =
+                        (const uint32_t *)(dbase + (size_t)(h / 2) * (size_t)dstride);
+                    server->last_tonemap_sample_l = mrow[w / 4] & 0xffffffu;
+                    server->last_tonemap_sample_r = mrow[(w * 3) / 4] & 0xffffffu;
                 }
                 free(rgba);
             }
@@ -8310,7 +8437,10 @@ out_restore:
         g_gl_tm.p_glBindTexture(GL_TEXTURE_2D, 0);
         g_gl_tm.p_glDeleteTextures(1, &temp_tex);
     }
-    g_gl_tm.p_glBindTexture(GL_TEXTURE_2D, (GLuint)prev_tex);
+    if (g_gl_tm.p_glBindBuffer) {
+        g_gl_tm.p_glBindBuffer(GL_ARRAY_BUFFER, (GLuint)prev_vbo);
+    }
+    g_gl_tm.p_glBindTexture(attribs.target, (GLuint)prev_tex);
     g_gl_tm.p_glActiveTexture((GLenum)prev_act);
     g_gl_tm.p_glUseProgram((GLuint)prev_prog);
     g_gl_tm.p_glBindFramebuffer(GL_FRAMEBUFFER, (GLuint)prev_fbo);
@@ -8435,6 +8565,31 @@ static DtwmOutput *output_for_view_center(const DtwmView *view) {
     return primary_or_first_output(view->server);
 }
 
+typedef struct {
+    struct wlr_surface *surf;
+    const struct wlr_image_description_v1_data *desc;
+    int sx;
+    int sy;
+} DtwmHdrSurfProbe;
+
+static void find_hdr_surface_iter(struct wlr_surface *surface, int sx, int sy, void *data) {
+    if (!surface || !data) return;
+    DtwmHdrSurfProbe *p = data;
+    const struct wlr_image_description_v1_data *d =
+        wlr_surface_get_image_description_v1_data(surface);
+    if (!d) return;
+    if (d->tf_named == WP_COLOR_MANAGER_V1_TRANSFER_FUNCTION_ST2084_PQ ||
+        d->tf_named == WP_COLOR_MANAGER_V1_TRANSFER_FUNCTION_HLG ||
+        d->primaries_named == WP_COLOR_MANAGER_V1_PRIMARIES_BT2020 ||
+        d->primaries_named == WP_COLOR_MANAGER_V1_PRIMARIES_DISPLAY_P3 ||
+        d->primaries_named == WP_COLOR_MANAGER_V1_PRIMARIES_DCI_P3) {
+        p->surf = surface;
+        p->desc = d;
+        p->sx = sx;
+        p->sy = sy;
+    }
+}
+
 static void update_view_hdr_tonemap(DtwmView *view) {
     if (!view || !view->server || !view->tonemap_buf) return;
     view->tonemap_buf->point_accepts_input = tonemap_reject_input;
@@ -8447,9 +8602,21 @@ static void update_view_hdr_tonemap(DtwmView *view) {
         return;
     }
 
-    struct wlr_surface *csurf = view->xdg_toplevel->base->surface;
+    struct wlr_surface *root_surf = view->xdg_toplevel->base->surface;
+    struct wlr_surface *csurf = root_surf;
+    int sub_sx = 0, sub_sy = 0;
     const struct wlr_image_description_v1_data *d =
         csurf ? wlr_surface_get_image_description_v1_data(csurf) : nullptr;
+    if (root_surf && !d) {
+        DtwmHdrSurfProbe probe = {0};
+        wlr_surface_for_each_surface(root_surf, find_hdr_surface_iter, &probe);
+        if (probe.surf && probe.desc) {
+            csurf = probe.surf;
+            d = probe.desc;
+            sub_sx = probe.sx;
+            sub_sy = probe.sy;
+        }
+    }
     DtwmOutput *out = output_for_view_center(view);
     bool out_is_hdr10 = out && profile_spec_is_hdr10(out->color_profile_name);
     bool out_is_p3 = out && profile_spec_is_display_p3(out->color_profile_name);
@@ -8530,10 +8697,24 @@ static void update_view_hdr_tonemap(DtwmView *view) {
     if (view->decorated) {
         dtwm_view_insets(view, &l, &t, &r, &b);
     }
+    int tm_x = l, tm_y = t, tm_w = view->client_w, tm_h = view->client_h;
+    if (csurf != root_surf) {
+        double ext_s = (!view->is_native_dpi && view->external_client_scale > 0.25)
+                           ? view->external_client_scale
+                           : 1.0;
+        tm_x = l + (int)lround((double)sub_sx * ext_s);
+        tm_y = t + (int)lround((double)sub_sy * ext_s);
+        if (csurf->current.width > 0 && csurf->current.height > 0) {
+            tm_w = (int)lround((double)csurf->current.width * ext_s);
+            tm_h = (int)lround((double)csurf->current.height * ext_s);
+            if (tm_w < 1) tm_w = 1;
+            if (tm_h < 1) tm_h = 1;
+        }
+    }
     view->tonemap_active = true;
-    wlr_scene_node_set_position(&view->tonemap_buf->node, l, t);
+    wlr_scene_node_set_position(&view->tonemap_buf->node, tm_x, tm_y);
     wlr_scene_buffer_set_buffer(view->tonemap_buf, tm_buf);
-    wlr_scene_buffer_set_dest_size(view->tonemap_buf, view->client_w, view->client_h);
+    wlr_scene_buffer_set_dest_size(view->tonemap_buf, tm_w, tm_h);
     wlr_scene_node_set_enabled(&view->tonemap_buf->node, true);
     wlr_buffer_drop(tm_buf);
     publish_color_state_ipc(view->server, csurf);

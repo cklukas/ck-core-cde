@@ -7,7 +7,7 @@ sisters:
     # ckdocs v0.11.0
     ref: fbe21b49d6c5d5afebffa3d3de745351e07c6b5e
   - name: ck-core-motif
-    ref: b1829055a6031eeebd98015ce1eede0ce7f3e4fa
+    ref: 0c30fff09b1cbb644e673ffe4965f782b7b11506
   - name: ck-core-fs-lib
     ref: edd7db6a2bcbf3ea15cfc0d32be31ddc837321e8
 jobs:
