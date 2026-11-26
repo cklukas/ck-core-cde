@@ -1,4 +1,11 @@
 2026-11-26
+- Harden `_DT_STYLE_DISPLAY_IPC` / `_DTSTYLE_DISPLAY_IPC` batch handling and
+  long ICC profile paths in `dtstyle` and `dtwm-wayland`: read multi-kilobyte
+  command properties dynamically without 4 KiB truncation or undeleted
+  leftovers, ignore IPC commands once *Display & Monitors* is closed, avoid
+  caching transient `_DT_STYLE_DISPLAY_IPC` RPC payloads in `dtwm-wayland`,
+  and support 1024-byte ICC paths cleanly across `_DT_WAYLAND_COLOR_STATE`
+  and `display_ergonomics.conf`.
 - Support newline- and NUL-delimited `_DT_STYLE_DISPLAY_IPC` /
   `_DTSTYLE_DISPLAY_IPC` command batches in `dtstyle` (*Display & Monitors*),
   publish `_DT_STYLE_DISPLAY_READY` only after initial monitor-identification

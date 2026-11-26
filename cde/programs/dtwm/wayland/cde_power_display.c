@@ -63,7 +63,7 @@ typedef struct {
 
 typedef struct {
     char name[64];
-    char spec[256];
+    char spec[1024];
 } DtwmColorProfileRule;
 
 struct DtwmPowerDisplayState {
@@ -324,7 +324,7 @@ static void load_ergonomics_conf(DtwmPowerDisplayState *st) {
     ergonomics_conf_path(path, sizeof(path));
     FILE *fp = fopen(path, "r");
     if (!fp) return;
-    char line[256];
+    char line[2048];
     while (fgets(line, sizeof(line), fp)) {
         char *nl = strpbrk(line, "\r\n");
         if (nl) *nl = '\0';
@@ -631,7 +631,7 @@ static void reload_power_policy_if_changed(DtwmPowerDisplayState *st, bool force
 
     FILE *fp = fopen(path, "r");
     if (!fp) return;
-    char line[256];
+    char line[2048];
     while (fgets(line, sizeof(line), fp)) {
         char *nl = strpbrk(line, "\r\n");
         if (nl) *nl = '\0';

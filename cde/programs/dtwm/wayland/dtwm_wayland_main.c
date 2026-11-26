@@ -363,7 +363,7 @@ static void sync_surface_preferred_color_description(
 
 static void publish_color_profile_state_all(DtwmServer *server) {
     if (!server) return;
-    char buf[1024];
+    char buf[4096];
     int pos = 0;
     buf[0] = '\0';
     DtwmOutput *o;
@@ -433,7 +433,7 @@ static void publish_color_state_ipc(DtwmServer *server, struct wlr_surface *surf
     const char *tm_backend = server->last_tonemap_backend[0]
                                  ? server->last_tonemap_backend
                                  : "none";
-    char buf[448];
+    char buf[2048];
     int n = snprintf(
         buf, sizeof(buf),
         "cm=%d;tf=%u;primaries=%u;mdp=%d;max_cll=%u;max_fall=%u;"
@@ -446,7 +446,8 @@ static void publish_color_state_ipc(DtwmServer *server, struct wlr_surface *surf
         server->last_tonemap_sample_r & 0xffffffu
     );
     if (n > 0) {
-        dtwm_native_ipc_publish_prop(server, "_DT_WAYLAND_COLOR_STATE", buf, (size_t)n);
+        size_t len = (size_t)n < sizeof(buf) ? (size_t)n : sizeof(buf) - 1;
+        dtwm_native_ipc_publish_prop(server, "_DT_WAYLAND_COLOR_STATE", buf, len);
     }
     publish_color_profile_state_all(server);
 }
@@ -11500,7 +11501,10 @@ static int handle_ipc_peer_fd(int fd, uint32_t mask, void *data) {
                         cache_ipc_prop(aname, payload, dlen);
                         dtwm_sync_resource_manager_dpi(peer->server);
                     } else {
-                        cache_ipc_prop(aname, payload, dlen);
+                        if (strcmp(aname, "_DT_STYLE_DISPLAY_IPC") != 0 &&
+                            strcmp(aname, "_DTSTYLE_DISPLAY_IPC") != 0) {
+                            cache_ipc_prop(aname, payload, dlen);
+                        }
                         for (int i = 0; i < DTWM_MAX_IPC_PEERS; ++i) {
                             if (g_ipc_peers[i].fd >= 0 && &g_ipc_peers[i] != peer) {
                                 send_ipc_frame_peer(&g_ipc_peers[i], aname, payload, dlen);

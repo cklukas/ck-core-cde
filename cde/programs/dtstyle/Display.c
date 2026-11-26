@@ -76,7 +76,7 @@ typedef struct {
     int rotation;        /* 0, 90, 180, 270 */
     int dpi;             /* 96, 120, 144, 168, 192 */
     bool vrr_enabled;    /* Per-output Variable Refresh Rate / Adaptive Sync */
-    char color_profile[256]; /* "default", "srgb", "display-p3", "hdr10", or .icc path */
+    char color_profile[1024]; /* "default", "srgb", "display-p3", "hdr10", or .icc path */
     int mode_count;
     DispMode modes[MAX_DISP_MODES];
 #ifdef HAVE_XRANDR
@@ -301,7 +301,7 @@ static void load_ergonomics_into_state(void) {
     ergonomics_file_path(path, sizeof(path));
     FILE *fp = fopen(path, "r");
     if (fp) {
-        char line[256];
+        char line[2048];
         while (fgets(line, sizeof(line), fp)) {
             char *nl = strpbrk(line, "\r\n");
             if (nl) *nl = '\0';
@@ -409,9 +409,9 @@ static void load_ergonomics_into_state(void) {
             int af = 0;
             unsigned long ni = 0, rem = 0;
             unsigned char *data = nullptr;
-            if (XGetWindowProperty(style.display, style.root, cp_a, 0, 1024, False,
+            if (XGetWindowProperty(style.display, style.root, cp_a, 0, 4096, False,
                                    AnyPropertyType, &at, &af, &ni, &rem, &data) == Success && data) {
-                char buf[1024];
+                char buf[4096];
                 size_t cl = ni < sizeof(buf) - 1 ? (size_t)ni : sizeof(buf) - 1;
                 memcpy(buf, data, cl);
                 buf[cl] = '\0';
@@ -714,7 +714,7 @@ static void apply_ergonomics(
     }
 
     if (g_disp.is_wayland) {
-        char cmd[512];
+        char cmd[1280];
         snprintf(cmd, sizeof(cmd), "f.set_night_light %d %s %d %d %d",
                  nl_enabled ? 1 : 0, mode_str, temp_k, nl_start_min, nl_end_min);
         send_wayland_wm_request(cmd);
@@ -808,8 +808,9 @@ static void apply_ergonomics(
         nl_enabled ? 1 : 0, active ? 1 : 0, mode_str, temp_k, r_pm, g_pm, b_pm, any_vrr ? 1 : 0
     );
     if (sn > 0) {
+        int slen = sn < (int)sizeof(state_buf) ? sn : (int)sizeof(state_buf) - 1;
         XChangeProperty(style.display, style.root, nl_state_atom, XA_STRING, 8,
-                        PropModeReplace, (const unsigned char *)state_buf, sn);
+                        PropModeReplace, (const unsigned char *)state_buf, slen);
     }
 
     Atom vrr_state_atom = XInternAtom(style.display, "_DT_VRR_STATE", False);
@@ -826,7 +827,7 @@ static void apply_ergonomics(
 
     Atom cp_state_atom = XInternAtom(style.display, "_DT_COLOR_PROFILE_STATE", False);
     Atom icc_atom = XInternAtom(style.display, "_ICC_PROFILE", False);
-    char cp_buf[1024];
+    char cp_buf[4096];
     int cpp = 0;
     cp_buf[0] = '\0';
     bool uploaded_icc = false;
@@ -1294,6 +1295,8 @@ static void cleanup_ident_on_exit(void) {
     if (style.display) {
         sync_monitor_identify_overlays(false);
         if (style.root != None) {
+            Atom dlg_a = XInternAtom(style.display, "_DTSTYLE_DISPLAY_DLG_WIN", False);
+            XDeleteProperty(style.display, style.root, dlg_a);
             Atom ready_a = XInternAtom(style.display, "_DT_STYLE_DISPLAY_READY", False);
             XChangeProperty(style.display, style.root, ready_a, XA_STRING, 8,
                             PropModeReplace, (const unsigned char *)"0", 1);
@@ -2070,9 +2073,12 @@ static void handle_display_ipc_one(const char *cmd) {
         while (*p && isspace((unsigned char)*p)) p++;
         if (target[0] && *p) {
             bool all = (strcasecmp(target, "all") == 0);
+            char *endp = nullptr;
+            long tidx = all ? -1 : strtol(target, &endp, 10);
+            bool numeric = (!all && endp && *endp == '\0' && tidx >= 0);
             for (int i = 0; i < g_disp.count; ++i) {
                 if (all || strcmp(g_disp.outs[i].name, target) == 0 ||
-                    (isdigit((unsigned char)target[0]) && atoi(target) == i)) {
+                    (numeric && tidx == i)) {
                     snprintf(
                         g_disp.outs[i].color_profile,
                         sizeof(g_disp.outs[i].color_profile),
@@ -2103,26 +2109,24 @@ static void handle_display_ipc_one(const char *cmd) {
     }
 }
 
-static void handle_display_ipc_cmd(const char *cmd) {
+static void handle_display_ipc_cmd(char *cmd) {
     if (!cmd || !cmd[0]) return;
-    const char *cur = cmd;
+    char *cur = cmd;
     while (*cur) {
-        const char *nl = strchr(cur, '\n');
-        size_t len = nl ? (size_t)(nl - cur) : strlen(cur);
-        const char *seg = cur;
-        while (len > 0 && (seg[0] == ' ' || seg[0] == '\t' || seg[0] == '\r')) {
+        if (!style.displayDialog || !XtIsManaged(style.displayDialog)) break;
+        char *nl = strchr(cur, '\n');
+        if (nl) *nl = '\0';
+        char *seg = cur;
+        while (*seg == ' ' || *seg == '\t' || *seg == '\r') {
             seg++;
-            len--;
         }
+        size_t len = strlen(seg);
         while (len > 0 && (seg[len - 1] == ' ' || seg[len - 1] == '\t' || seg[len - 1] == '\r')) {
             len--;
         }
+        seg[len] = '\0';
         if (len > 0) {
-            char line[1024];
-            if (len >= sizeof(line)) len = sizeof(line) - 1;
-            memcpy(line, seg, len);
-            line[len] = '\0';
-            handle_display_ipc_one(line);
+            handle_display_ipc_one(seg);
         }
         if (!nl) break;
         cur = nl + 1;
@@ -2145,23 +2149,32 @@ static void display_ipc_prop_eh(Widget w, XtPointer client_data, XEvent *ev, Boo
     unsigned long ni = 0, rem = 0;
     unsigned char *data = nullptr;
     Window src_win = ev->xproperty.window ? ev->xproperty.window : XtWindow(w);
-    if (XGetWindowProperty(style.display, src_win, ev->xproperty.atom, 0, 1024, True,
+    if (src_win == None) return;
+    if (XGetWindowProperty(style.display, src_win, ev->xproperty.atom, 0, 65536L, True,
                            AnyPropertyType, &act, &fmt, &ni, &rem, &data) != Success || !data) {
         return;
     }
-    if (act == None || ni == 0) {
+    if (rem > 0) {
+        XDeleteProperty(style.display, src_win, ev->xproperty.atom);
+    }
+    if (act == None || fmt != 8 || ni == 0 ||
+        !style.displayDialog || !XtIsManaged(style.displayDialog)) {
         XFree(data);
         return;
     }
-    char cmd[4096];
-    size_t cl = ni < sizeof(cmd) - 1 ? (size_t)ni : sizeof(cmd) - 1;
-    memcpy(cmd, data, cl);
-    for (size_t i = 0; i < cl; ++i) {
+    char *cmd = malloc((size_t)ni + 1);
+    if (!cmd) {
+        XFree(data);
+        return;
+    }
+    memcpy(cmd, data, (size_t)ni);
+    for (size_t i = 0; i < (size_t)ni; ++i) {
         if (cmd[i] == '\0') cmd[i] = '\n';
     }
-    cmd[cl] = '\0';
+    cmd[ni] = '\0';
     XFree(data);
     handle_display_ipc_cmd(cmd);
+    free(cmd);
 }
 
 static void build_display_dialog(Widget shell) {
@@ -2572,6 +2585,10 @@ static void build_display_dialog(Widget shell) {
 
 static void publish_display_ipc_ready(bool ready) {
     if (!style.display || style.root == None) return;
+    if (!ready) {
+        Atom dlg_a = XInternAtom(style.display, "_DTSTYLE_DISPLAY_DLG_WIN", False);
+        XDeleteProperty(style.display, style.root, dlg_a);
+    }
     Atom ready_a = XInternAtom(style.display, "_DT_STYLE_DISPLAY_READY", False);
     const char *val = ready ? "1" : "0";
     XChangeProperty(style.display, style.root, ready_a, XA_STRING, 8,
@@ -2641,19 +2658,30 @@ void popup_displayBB(Widget shell) {
             XtVaSetValues(dsh, XmNx, nx, XmNy, ny, NULL);
         }
         XtRealizeWidget(XtParent(style.displayDialog));
-        publish_display_dlg_window();
         sync_monitor_identify_overlays(true);
         _DtTurnOffHourGlass(shell);
+        publish_display_dlg_window();
         publish_display_ipc_ready(true);
     } else {
         query_outputs();
         update_controls_from_selected();
+        if (style.display) {
+            if (g_disp.is_wayland && style.root != None) {
+                Atom stale_ipc = XInternAtom(style.display, "_DT_STYLE_DISPLAY_IPC", False);
+                XDeleteProperty(style.display, style.root, stale_ipc);
+            }
+            Widget dsh = XtParent(style.displayDialog);
+            if (dsh && XtIsRealized(dsh) && XtWindow(dsh) != None) {
+                Atom stale_xipc = XInternAtom(style.display, "_DTSTYLE_DISPLAY_IPC", False);
+                XDeleteProperty(style.display, XtWindow(dsh), stale_xipc);
+            }
+        }
         XtManageChild(style.displayDialog);
         if (XtIsRealized(style.displayDialog)) {
-            publish_display_dlg_window();
             raiseWindow(XtWindow(XtParent(style.displayDialog)));
             draw_canvas_cb(g_disp.canvas, nullptr, nullptr);
             sync_monitor_identify_overlays(true);
+            publish_display_dlg_window();
             publish_display_ipc_ready(true);
         }
     }

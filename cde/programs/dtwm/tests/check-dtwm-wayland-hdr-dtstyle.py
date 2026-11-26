@@ -485,7 +485,9 @@ def run_renderer_lane(
         home_dir = tmp / "home"
         rt_dir.mkdir(mode=0o700)
         (home_dir / ".dt").mkdir(parents=True)
-        custom_icc = tmp / "custom_gamma18.icc"
+        icc_dir = tmp / ("icc_profiles_" + "x" * 230)
+        icc_dir.mkdir(parents=True)
+        custom_icc = icc_dir / "My Custom Gamma 18.icc"
         make_test_icc_profile(custom_icc)
 
         status_file = tmp / "comp.status"
@@ -501,10 +503,11 @@ def run_renderer_lane(
         for k in ("DISPLAY", "WAYLAND_DISPLAY", "DTWM_ICC_PROFILE"):
             env.pop(k, None)
 
+        comp_log = (tmp / "comp.log").open("w", encoding="utf-8")
         comp_proc = subprocess.Popen(
             [str(comp_path), "--no-xwayland", "--no-panel", "--status-file", str(status_file)],
             env=env,
-            stdout=subprocess.PIPE,
+            stdout=comp_log,
             stderr=subprocess.STDOUT,
             text=True,
         )
@@ -640,8 +643,13 @@ def run_renderer_lane(
             ):
                 raise AssertionError(f"dtstyle display-p3 apply failed: {profile_state()} / {color_state()}")
 
-            # 2. Switch monitor to HDR10 (BT.2020 PQ) passthrough via newline-batched dtstyle IPC
-            ipc_props_and_set(ipc_path, "_DT_STYLE_DISPLAY_IPC", b"set-color-profile HEADLESS-1 hdr10\napply")
+            # 2. Switch monitor to HDR10 (BT.2020 PQ) passthrough via >4096B newline-batched dtstyle IPC
+            pad_lines = (b"noop-padding-" + b"x" * 64 + b"\r\n") * 58  # >4.5 KiB batch
+            ipc_props_and_set(
+                ipc_path,
+                "_DT_STYLE_DISPLAY_IPC",
+                pad_lines + b"set-color-profile HEADLESS-1 hdr10\napply\n",
+            )
             if not wait_until(
                 lambda: "HEADLESS-1=hdr10" in profile_state()
                 and color_state().get("tonemapped_surfaces") == "0"
@@ -662,9 +670,13 @@ def run_renderer_lane(
                 f"expected raw PQ passthrough (65 / 192) on hdr10 output, got {pl_r} / {pr_r}"
             )
 
-            # 3. Assign Custom ICC Profile file + OK atomically (closes dialog & persists)
+            # 3. Assign Custom ICC Profile file (with spaces + >256B path) + OK atomically,
+            #    verifying commands after OK or while dialog is closed are ignored and
+            #    transient _DT_STYLE_DISPLAY_IPC is not cached in compositor state.
             ipc_props_and_set(
-                ipc_path, "_DT_STYLE_DISPLAY_IPC", f"set-color-profile HEADLESS-1 {custom_icc}\nok".encode("utf-8")
+                ipc_path,
+                "_DT_STYLE_DISPLAY_IPC",
+                f"set-color-profile HEADLESS-1 {custom_icc}\nok\nset-color-profile HEADLESS-1 srgb\napply".encode("utf-8"),
             )
             if not wait_until(
                 lambda: str(custom_icc) in profile_state()
@@ -676,19 +688,36 @@ def run_renderer_lane(
                 timeout=6.0,
             ):
                 raise AssertionError(f"dtstyle custom ICC apply failed: {profile_state()} / {color_state()}")
+            assert ipc_props_and_set(ipc_path).get("_DT_STYLE_DISPLAY_IPC") is None, (
+                "compositor must not cache transient _DT_STYLE_DISPLAY_IPC RPC commands"
+            )
+            ipc_props_and_set(ipc_path, "_DT_STYLE_DISPLAY_IPC", b"set-color-profile HEADLESS-1 default\napply")
+            time.sleep(0.15)
+            assert str(custom_icc) in profile_state() and f"color_profile.HEADLESS-1={custom_icc}" in ergo_conf.read_text(encoding="utf-8"), (
+                f"closed dtstyle dialog must ignore _DT_STYLE_DISPLAY_IPC: {profile_state()}"
+            )
 
-            for p in (dtstyle_proc, hdr_proc, sdr_proc, comp_proc):
-                if p and p.poll() is None:
+            procs_step1 = [p for p in (dtstyle_proc, hdr_proc, sdr_proc, comp_proc) if p and p.poll() is None]
+            for p in procs_step1:
+                with suppress(Exception):
                     p.terminate()
-                    p.wait(timeout=4.0)
+            for p in procs_step1:
+                try:
+                    p.wait(timeout=8.0)
+                except subprocess.TimeoutExpired:
+                    with suppress(Exception):
+                        p.kill()
+                        p.wait(timeout=4.0)
+            comp_log.close()
             dtstyle_proc = hdr_proc = sdr_proc = comp_proc = None
 
             # 4. Restart dtwm-wayland and verify persisted custom ICC profile reloads automatically!
             status_file.unlink(missing_ok=True)
+            comp_log2 = (tmp / "comp2.log").open("w", encoding="utf-8")
             comp_proc = subprocess.Popen(
                 [str(comp_path), "--no-xwayland", "--no-panel", "--status-file", str(status_file)],
                 env={k: v for k, v in env.items() if k != "WAYLAND_DISPLAY"},
-                stdout=subprocess.PIPE,
+                stdout=comp_log2,
                 stderr=subprocess.STDOUT,
                 text=True,
             )
@@ -709,10 +738,15 @@ def run_renderer_lane(
                 if p and p.poll() is None:
                     with suppress(Exception):
                         p.terminate()
-                        p.wait(timeout=4.0)
+                        p.wait(timeout=8.0)
                     if p.poll() is None:
                         with suppress(Exception):
                             p.kill()
+                            p.wait(timeout=4.0)
+            for lf in (locals().get("comp_log"), locals().get("comp_log2")):
+                if lf and not lf.closed:
+                    with suppress(Exception):
+                        lf.close()
 
 
 def main() -> int:

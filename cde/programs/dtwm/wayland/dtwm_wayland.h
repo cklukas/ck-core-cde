@@ -370,7 +370,7 @@ typedef struct {
     int dpi;
     bool vrr_enabled;
     struct wlr_color_transform *color_transform;
-    char color_profile_name[256];
+    char color_profile_name[1024];
     struct wlr_scene_rect *bg_rect;
     struct wlr_scene_rect *lock_bg_rect;
     struct wlr_scene_buffer *backdrop_buf;

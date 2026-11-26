@@ -1847,7 +1847,7 @@ void dtwm_dispatch_wm_request_bytes(DtwmServer *server, const char *data, size_t
     while (pos < len) {
         size_t slen = strnlen(data + pos, len - pos);
         if (slen > 0) {
-            char item[1024];
+            char item[2048];
             size_t cp = slen < sizeof(item) - 1 ? slen : sizeof(item) - 1;
             memcpy(item, data + pos, cp);
             item[cp] = '\0';
