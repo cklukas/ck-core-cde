@@ -126,15 +126,22 @@ framing or interaction rules.
   slider, barrel buttons, and `get_tablet_tool_v2` cursor shapes), and
   ExpressKey tablet pads (buttons, rings, and strips) with automatic pointer and
   CDE titlebar/border drag fallback for non-tablet windows;
-- **Color management (`wp_color_manager_v1` + ICC/sRGB output LUTs) and live mixed-DPI cross-monitor window dragging**:
+- **Color management (`wp_color_manager_v1` + `dtstyle` GUI profile picker + per-surface HDR10 tone mapping) and live mixed-DPI cross-monitor window dragging**:
   `dtwm-wayland` exposes `wp_color_manager_v1` (`parametric` and
   `set_mastering_display_primaries` features across `sRGB`, `Display P3`,
   `DCI-P3`, `Adobe RGB`, and `BT.2020` primaries plus `sRGB`, `Gamma 2.2`,
   `BT.1886`, `ext-linear`, `ST.2084 PQ`, and `HLG` transfer functions),
-  notifies per-surface preferred image descriptions, tracks client HDR/wide-gamut
-  surface metadata (`_DT_WAYLAND_COLOR_STATE`), and loads per-output `sRGB` or
-  ICC v2/v4 LUT color transforms via `DTWM_ICC_PROFILE` or
-  `f.set_output_color_profile <idx|all> <srgb|none|/path/to/profile.icc>`. When
+  dynamically updates per-surface preferred image descriptions to match the
+  active monitor profile, tracks client HDR/wide-gamut surface metadata
+  (`_DT_WAYLAND_COLOR_STATE` and `_DT_COLOR_PROFILE_STATE`), loads per-output
+  `sRGB`, `Display P3`, `HDR10 (BT.2020 PQ)`, or custom `.icc`/`.icm` LUT
+  transforms via **Style Manager → Display & Monitors** (**Color Profile**
+  picker, persisted in `~/.dt/display_ergonomics.conf`), `DTWM_ICC_PROFILE`, or
+  `f.set_output_color_profile <name|idx|all> <default|srgb|display-p3|hdr10|/path/to/profile.icc>`,
+  and tone-maps `ST.2084 PQ` / `HLG` / `BT.2020` / `Display P3` surfaces onto
+  SDR outputs via a GLES2 fragment shader (`gles2_shader`) or LUT-accelerated
+  CPU pass (`cpu_lut`) while leaving adjacent SDR windows untouched and
+  switching to passthrough on `HDR10` outputs. When
   dragging windows live across mixed-DPI monitors (`192 DPI` ↔ `144 DPI` ↔
   `96 DPI`), `dtwm-wayland` maintains proportional horizontal and titlebar
   cursor-grab ratios, rescales external `wp_fractional_scale_v1` windows
@@ -885,6 +892,9 @@ atomically once the compositor session is ready.
   parent interior dimming, and click/focus locking, `wp-tearing-control-v1`
   `ASYNC` page-flip commits, and `wp-fifo-v1` `set_barrier`/`wait_barrier`
   frame-pacing queues and protocol error guards),
+  `check-dtwm-wayland-hdr-dtstyle.py` (`dtstyle -monitors` per-monitor Color
+  Profile picker + `~/.dt/display_ergonomics.conf` persistence + GLES2 shader
+  and CPU LUT mixed SDR + HDR10 `BT.2020 PQ` per-surface tone mapping),
   `check-dtwm-wayland-pointer-lock.py` (`zwp_pointer_constraints_v1` lock and
   region confinement, `zwp_relative_pointer_v1`, `zwp_keyboard_shortcuts_inhibit_v1`,
   `cursor_position_hint` warp, `Ctrl+Alt` escape hatch, and click recapture),

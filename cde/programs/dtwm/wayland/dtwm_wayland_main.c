@@ -11,6 +11,8 @@
 
 #include <ctype.h>
 #include <dirent.h>
+#include <dlfcn.h>
+#include <drm_fourcc.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <getopt.h>
@@ -45,6 +47,7 @@
 #include <wlr/interfaces/wlr_tablet_pad.h>
 #include <wlr/interfaces/wlr_tablet_tool.h>
 #include <wlr/interfaces/wlr_touch.h>
+#include <wlr/render/drm_format_set.h>
 #include <wlr/util/log.h>
 #include <xcb/xcb_icccm.h>
 #include <xkbcommon/xkbcommon.h>
@@ -214,6 +217,9 @@ static void publish_presentation_state_ipc(DtwmServer *server);
 static bool output_wants_tearing_flip(DtwmOutput *output);
 static void fifo_latch_output_frame(DtwmServer *server);
 static void fifo_finish_all(DtwmServer *server);
+static void update_view_hdr_tonemap(DtwmView *view);
+static void refresh_all_views_hdr_tonemap(DtwmServer *server);
+static void publish_color_profile_state_all(DtwmServer *server);
 
 static uint32_t dtwm_now_msec(void) {
     struct timespec ts = {0};
@@ -278,25 +284,111 @@ static double external_view_target_scale(const DtwmView *view) {
     return s;
 }
 
+typedef struct {
+    struct wlr_color_manager_v1 *cm;
+    enum wp_color_manager_v1_transfer_function tf;
+    enum wp_color_manager_v1_primaries prim;
+} DtwmPrefColorCtx;
+
 static void notify_one_surface_color_iter(
     struct wlr_surface *surface, int sx, int sy, void *data
 ) {
     (void)sx;
     (void)sy;
-    struct wlr_color_manager_v1 *cm = data;
-    if (!surface || !cm) return;
+    const DtwmPrefColorCtx *ctx = data;
+    if (!surface || !ctx || !ctx->cm) return;
     struct wlr_image_description_v1_data desc = {
-        .tf_named = WP_COLOR_MANAGER_V1_TRANSFER_FUNCTION_SRGB,
-        .primaries_named = WP_COLOR_MANAGER_V1_PRIMARIES_SRGB,
+        .tf_named = ctx->tf,
+        .primaries_named = ctx->prim,
     };
-    wlr_color_manager_v1_set_surface_preferred_image_description(cm, surface, &desc);
+    wlr_color_manager_v1_set_surface_preferred_image_description(ctx->cm, surface, &desc);
+}
+
+static bool profile_spec_is_hdr10(const char *spec) {
+    if (!spec || !spec[0]) return false;
+    return strcasecmp(spec, "hdr10") == 0 ||
+           strcasecmp(spec, "bt2020-pq") == 0 ||
+           strcasecmp(spec, "bt2020") == 0;
+}
+
+static bool profile_spec_is_display_p3(const char *spec) {
+    if (!spec || !spec[0]) return false;
+    return strcasecmp(spec, "display-p3") == 0 || strcasecmp(spec, "p3") == 0;
+}
+
+static bool profile_spec_is_adobe_rgb(const char *spec) {
+    if (!spec || !spec[0]) return false;
+    return strcasecmp(spec, "adobe-rgb") == 0 || strcasecmp(spec, "adobergb") == 0;
+}
+
+static DtwmOutput *primary_or_first_output(const DtwmServer *server) {
+    if (!server) return nullptr;
+    DtwmOutput *o;
+    wl_list_for_each(o, &server->outputs, link) {
+        if (o->wlr_output && o->wlr_output->enabled) {
+            return o;
+        }
+    }
+    wl_list_for_each(o, &server->outputs, link) {
+        return o;
+    }
+    return nullptr;
 }
 
 static void sync_surface_preferred_color_description(
     DtwmServer *server, struct wlr_surface *root_surf
 ) {
     if (!server || !server->color_manager || !root_surf) return;
-    wlr_surface_for_each_surface(root_surf, notify_one_surface_color_iter, server->color_manager);
+    DtwmPrefColorCtx ctx = {
+        .cm = server->color_manager,
+        .tf = WP_COLOR_MANAGER_V1_TRANSFER_FUNCTION_SRGB,
+        .prim = WP_COLOR_MANAGER_V1_PRIMARIES_SRGB,
+    };
+    /* Note: wlroots-0.19's get_information serializer only implements SRGB and
+     * BT2020/ST2084_PQ in wlr_color_named_primaries / wlr_color_transfer_function
+     * (aborting on DISPLAY_P3/GAMMA22 if a client calls get_information on the
+     * preferred description), so advertise ST2084_PQ + BT2020 on HDR10 outputs
+     * and SRGB + SRGB on SDR / ICC-LUT outputs. */
+    const DtwmOutput *out = primary_or_first_output(server);
+    if (out && out->color_profile_name[0] && profile_spec_is_hdr10(out->color_profile_name)) {
+        ctx.tf = WP_COLOR_MANAGER_V1_TRANSFER_FUNCTION_ST2084_PQ;
+        ctx.prim = WP_COLOR_MANAGER_V1_PRIMARIES_BT2020;
+    }
+    wlr_surface_for_each_surface(root_surf, notify_one_surface_color_iter, &ctx);
+}
+
+static void publish_color_profile_state_all(DtwmServer *server) {
+    if (!server) return;
+    char buf[1024];
+    int pos = 0;
+    buf[0] = '\0';
+    DtwmOutput *o;
+    wl_list_for_each(o, &server->outputs, link) {
+        if (!o->wlr_output || !o->wlr_output->name) continue;
+        const char *prof = o->color_profile_name[0] ? o->color_profile_name : "default";
+        int n = snprintf(
+            buf + pos, sizeof(buf) - (size_t)pos, "%s%s=%s",
+            pos > 0 ? "," : "", o->wlr_output->name, prof
+        );
+        if (n > 0 && pos + n < (int)sizeof(buf)) {
+            pos += n;
+        }
+    }
+    dtwm_native_ipc_publish_prop(server, "_DT_COLOR_PROFILE_STATE", buf, (size_t)pos);
+    if (server->xcb_conn && server->xcb_root != XCB_WINDOW_NONE) {
+        xcb_intern_atom_cookie_t ck = xcb_intern_atom(
+            server->xcb_conn, 0, strlen("_DT_COLOR_PROFILE_STATE"), "_DT_COLOR_PROFILE_STATE"
+        );
+        xcb_intern_atom_reply_t *rep = xcb_intern_atom_reply(server->xcb_conn, ck, nullptr);
+        if (rep && rep->atom != XCB_ATOM_NONE) {
+            xcb_change_property(
+                server->xcb_conn, XCB_PROP_MODE_REPLACE, server->xcb_root,
+                rep->atom, XCB_ATOM_STRING, 8, (uint32_t)pos, buf
+            );
+            xcb_flush(server->xcb_conn);
+        }
+        free(rep);
+    }
 }
 
 static void publish_color_state_ipc(DtwmServer *server, struct wlr_surface *surf) {
@@ -318,23 +410,41 @@ static void publish_color_state_ipc(DtwmServer *server, struct wlr_surface *surf
     const char *first_prof = "default";
     DtwmOutput *o;
     wl_list_for_each(o, &server->outputs, link) {
-        if (o->color_transform) {
+        if (o->color_transform || o->color_profile_name[0]) {
             if (out_profiles == 0 && o->color_profile_name[0]) {
                 first_prof = o->color_profile_name;
             }
-            out_profiles++;
+            if (o->color_transform) {
+                out_profiles++;
+            }
         }
     }
-    char buf[256];
+    unsigned int tm_surfaces = 0;
+    DtwmView *v;
+    wl_list_for_each(v, &server->views, link) {
+        if (v->mapped && v->tonemap_active) {
+            tm_surfaces++;
+        }
+    }
+    const char *tm_backend = server->last_tonemap_backend[0]
+                                 ? server->last_tonemap_backend
+                                 : "none";
+    char buf[448];
     int n = snprintf(
         buf, sizeof(buf),
-        "cm=%d;tf=%u;primaries=%u;mdp=%d;max_cll=%u;max_fall=%u;output_transforms=%u;profile=%s",
+        "cm=%d;tf=%u;primaries=%u;mdp=%d;max_cll=%u;max_fall=%u;"
+        "output_transforms=%u;profile=%s;tonemapped_surfaces=%u;tonemap_backend=%s;"
+        "tm_sample_l=%06x;tm_sample_r=%06x",
         server->color_manager ? 1 : 0,
-        tf, prim, has_mdp ? 1 : 0, max_cll, max_fall, out_profiles, first_prof
+        tf, prim, has_mdp ? 1 : 0, max_cll, max_fall,
+        out_profiles, first_prof, tm_surfaces, tm_backend,
+        server->last_tonemap_sample_l & 0xffffffu,
+        server->last_tonemap_sample_r & 0xffffffu
     );
     if (n > 0) {
         dtwm_native_ipc_publish_prop(server, "_DT_WAYLAND_COLOR_STATE", buf, (size_t)n);
     }
+    publish_color_profile_state_all(server);
 }
 
 /* --- xdg-dialog-v1, wp-tearing-control-v1, and wp-fifo-v1 --- */
@@ -2985,6 +3095,11 @@ static void view_init_frame_scene_nodes(
     }
     if (view->content_tree) {
         view->content_tree->node.data = view;
+    }
+    view->tonemap_buf = wlr_scene_buffer_create(view->frame_tree, nullptr);
+    if (view->tonemap_buf) {
+        view->tonemap_buf->point_accepts_input = nullptr;
+        wlr_scene_node_set_enabled(&view->tonemap_buf->node, false);
     }
     {
         float dim_col[4] = { 0.0f, 0.0f, 0.0f, 0.32f };
@@ -6738,7 +6853,852 @@ static void handle_request_start_drag(struct wl_listener *listener, void *data) 
     }
 }
 
-/* --- Outputs --- */
+/* --- Outputs, ICC Synthesis & Per-Surface HDR10 / Wide-Gamut Tone Mapping --- */
+
+static bool tonemap_reject_input(struct wlr_scene_buffer *buf, double *sx, double *sy) {
+    (void)buf;
+    (void)sx;
+    (void)sy;
+    return false;
+}
+
+static void put_be16(uint8_t *dst, uint16_t v) {
+    dst[0] = (uint8_t)(v >> 8);
+    dst[1] = (uint8_t)(v & 0xffu);
+}
+
+static void put_be32(uint8_t *dst, uint32_t v) {
+    dst[0] = (uint8_t)(v >> 24);
+    dst[1] = (uint8_t)((v >> 16) & 0xffu);
+    dst[2] = (uint8_t)((v >> 8) & 0xffu);
+    dst[3] = (uint8_t)(v & 0xffu);
+}
+
+static void put_icc_xyz_tag(uint8_t *dst, double x, double y, double z) {
+    memcpy(dst, "XYZ \0\0\0\0", 8);
+    int32_t xi = (int32_t)llround(x * 65536.0);
+    int32_t yi = (int32_t)llround(y * 65536.0);
+    int32_t zi = (int32_t)llround(z * 65536.0);
+    put_be32(dst + 8, (uint32_t)xi);
+    put_be32(dst + 12, (uint32_t)yi);
+    put_be32(dst + 16, (uint32_t)zi);
+}
+
+static uint8_t *synthesize_builtin_icc_profile(const char *spec, size_t *out_sz) {
+    if (out_sz) *out_sz = 0;
+    if (!spec || !spec[0]) return nullptr;
+
+    /* D65 -> D50 Bradford-adapted XYZ primaries */
+    double rx = 0, ry = 0, rz = 0;
+    double gx = 0, gy = 0, gz = 0;
+    double bx = 0, by = 0, bz = 0;
+    bool is_pq = false;
+    const char *desc_txt = nullptr;
+
+    if (profile_spec_is_display_p3(spec)) {
+        rx = 0.51512; ry = 0.24120; rz = -0.00105;
+        gx = 0.29198; gy = 0.69225; gz = 0.04189;
+        bx = 0.15710; by = 0.06657; bz = 0.78407;
+        desc_txt = "CDE Display P3";
+    } else if (profile_spec_is_adobe_rgb(spec)) {
+        rx = 0.60974; ry = 0.31111; rz = 0.01947;
+        gx = 0.20528; gy = 0.62567; gz = 0.06087;
+        bx = 0.14919; by = 0.06322; bz = 0.74457;
+        desc_txt = "CDE Adobe RGB";
+    } else if (profile_spec_is_hdr10(spec)) {
+        rx = 0.67349; ry = 0.27904; rz = -0.00193;
+        gx = 0.16566; gy = 0.67534; gz = 0.02998;
+        bx = 0.12505; by = 0.04562; bz = 0.79686;
+        is_pq = true;
+        desc_txt = "CDE HDR10 BT2020";
+    } else {
+        return nullptr;
+    }
+
+    /* Layout (4-byte aligned):
+     *   0..127   : ICC v2.4 header (128 B)
+     *   128..131 : tag count = 9 (4 B)
+     *   132..239 : 9 tag table entries (108 B)
+     *   240..347 : 'desc' tag (108 B)
+     *   348..359 : 'text' copyright tag (12 B)
+     *   360..379 : 'wtpt' D50 XYZ tag (20 B)
+     *   380..399 : 'rXYZ' tag (20 B)
+     *   400..419 : 'gXYZ' tag (20 B)
+     *   420..439 : 'bXYZ' tag (20 B)
+     *   440..end : 'curv' shared rTRC/gTRC/bTRC (16 B for gamma 2.2, or 524 B for PQ 256-entry LUT)
+     */
+    size_t trc_sz = is_pq ? (12u + 256u * 2u) : 16u;
+    size_t total = 440u + trc_sz;
+    uint8_t *buf = calloc(1, total);
+    if (!buf) return nullptr;
+
+    put_be32(buf + 0, (uint32_t)total);
+    memcpy(buf + 4, "lcms", 4);
+    put_be32(buf + 8, 0x02400000u);
+    memcpy(buf + 12, "mntr", 4);
+    memcpy(buf + 16, "RGB ", 4);
+    memcpy(buf + 20, "XYZ ", 4);
+    put_be16(buf + 24, 2026);
+    put_be16(buf + 26, 1);
+    put_be16(buf + 28, 1);
+    memcpy(buf + 36, "acsp", 4);
+    memcpy(buf + 40, "APPL", 4);
+    /* D50 PCS illuminant (0.96420, 1.00000, 0.82491) */
+    put_be32(buf + 68, 0x0000f6d6u);
+    put_be32(buf + 72, 0x00010000u);
+    put_be32(buf + 76, 0x0000d32du);
+    memcpy(buf + 80, "lcms", 4);
+
+    put_be32(buf + 128, 9u);
+    struct {
+        char sig[4];
+        uint32_t off;
+        uint32_t sz;
+    } tags[9] = {
+        { {'d','e','s','c'}, 240u, 108u },
+        { {'c','p','r','t'}, 348u, 12u },
+        { {'w','t','p','t'}, 360u, 20u },
+        { {'r','X','Y','Z'}, 380u, 20u },
+        { {'g','X','Y','Z'}, 400u, 20u },
+        { {'b','X','Y','Z'}, 420u, 20u },
+        { {'r','T','R','C'}, 440u, (uint32_t)trc_sz },
+        { {'g','T','R','C'}, 440u, (uint32_t)trc_sz },
+        { {'b','T','R','C'}, 440u, (uint32_t)trc_sz },
+    };
+    for (int i = 0; i < 9; ++i) {
+        size_t toff = 132u + (size_t)i * 12u;
+        memcpy(buf + toff, tags[i].sig, 4);
+        put_be32(buf + toff + 4, tags[i].off);
+        put_be32(buf + toff + 8, tags[i].sz);
+    }
+
+    /* 'desc' tag at 240 */
+    memcpy(buf + 240, "desc\0\0\0\0", 8);
+    size_t dlen = strlen(desc_txt) + 1u;
+    if (dlen > 24u) dlen = 24u;
+    put_be32(buf + 248, (uint32_t)dlen);
+    memcpy(buf + 252, desc_txt, dlen - 1u);
+
+    /* 'text' tag at 348 */
+    memcpy(buf + 348, "text\0\0\0\0CC0\0", 12);
+
+    /* XYZ tags */
+    put_icc_xyz_tag(buf + 360, 0.96420, 1.00000, 0.82491);
+    put_icc_xyz_tag(buf + 380, rx, ry, rz);
+    put_icc_xyz_tag(buf + 400, gx, gy, gz);
+    put_icc_xyz_tag(buf + 420, bx, by, bz);
+
+    /* 'curv' tag at 440 */
+    memcpy(buf + 440, "curv\0\0\0\0", 8);
+    if (!is_pq) {
+        put_be32(buf + 448, 1u);
+        put_be16(buf + 452, 0x0233u); /* gamma 2.2 in u8Fixed8 */
+    } else {
+        put_be32(buf + 448, 256u);
+        /* 256-entry TRC mapping encoded PQ [0..1] -> relative linear light [0..1] for lcms2 */
+        const double m1 = 2610.0 / 16384.0;
+        const double m2 = (2523.0 / 4096.0) * 128.0;
+        const double c1 = 3424.0 / 4096.0;
+        const double c2 = (2413.0 / 4096.0) * 32.0;
+        const double c3 = (2392.0 / 4096.0) * 32.0;
+        for (int i = 0; i < 256; ++i) {
+            double e = (double)i / 255.0;
+            double np = pow(e, 1.0 / m2);
+            double num = fmax(np - c1, 0.0);
+            double den = fmax(c2 - c3 * np, 1e-6);
+            double l_norm = pow(num / den, 1.0 / m1);
+            if (l_norm > 1.0) l_norm = 1.0;
+            uint16_t u = (uint16_t)llround(l_norm * 65535.0);
+            put_be16(buf + 452 + i * 2, u);
+        }
+    }
+
+    if (out_sz) *out_sz = total;
+    return buf;
+}
+
+static float pq_eotf_nits(float e) {
+    if (e <= 0.0f) return 0.0f;
+    if (e > 1.0f) e = 1.0f;
+    const double m1 = 2610.0 / 16384.0;
+    const double m2 = (2523.0 / 4096.0) * 128.0;
+    const double c1 = 3424.0 / 4096.0;
+    const double c2 = (2413.0 / 4096.0) * 32.0;
+    const double c3 = (2392.0 / 4096.0) * 32.0;
+    double np = pow((double)e, 1.0 / m2);
+    double num = fmax(np - c1, 0.0);
+    double den = fmax(c2 - c3 * np, 1e-6);
+    return (float)(10000.0 * pow(num / den, 1.0 / m1));
+}
+
+static float hlg_oetf_inv_rel(float e) {
+    if (e <= 0.0f) return 0.0f;
+    if (e > 1.0f) e = 1.0f;
+    const double a = 0.17883277;
+    const double b = 1.0 - 4.0 * a;
+    const double c = 0.5 - a * log(4.0 * a);
+    double lin = (e <= 0.5f) ? ((double)e * (double)e / 3.0)
+                             : ((exp(((double)e - c) / a) + b) / 12.0);
+    /* Nominal 1000 cd/m² HLG system gamma 1.2 relative to 203 cd/m² SDR white */
+    return (float)((1000.0 / 203.0) * pow(fmax(lin, 0.0), 1.2));
+}
+
+static float srgb_eotf_rel(float e) {
+    if (e <= 0.0f) return 0.0f;
+    if (e >= 1.0f) return 1.0f;
+    return (e <= 0.04045f) ? (e / 12.92f) : powf((e + 0.055f) / 1.055f, 2.4f);
+}
+
+static uint8_t linear_to_srgb_u8(float v) {
+    if (!(v > 0.0f)) return 0u;
+    if (v >= 1.0f) return 255u;
+    float s = (v <= 0.0031308f) ? (12.92f * v) : (1.055f * powf(v, 1.0f / 2.4f) - 0.055f);
+    int iv = (int)lrintf(s * 255.0f);
+    if (iv < 0) iv = 0;
+    if (iv > 255) iv = 255;
+    return (uint8_t)iv;
+}
+
+#if defined(DTWM_HAVE_WLR_GLES2_H) && defined(DTWM_HAVE_WLR_EGL_H)
+typedef struct {
+    bool resolved;
+    bool ok;
+    EGLDisplay (*p_eglGetCurrentDisplay)(void);
+    EGLContext (*p_eglGetCurrentContext)(void);
+    EGLSurface (*p_eglGetCurrentSurface)(EGLint);
+    EGLBoolean (*p_eglMakeCurrent)(EGLDisplay, EGLSurface, EGLSurface, EGLContext);
+    GLuint (*p_glCreateShader)(GLenum);
+    void (*p_glShaderSource)(GLuint, GLsizei, const GLchar *const *, const GLint *);
+    void (*p_glCompileShader)(GLuint);
+    void (*p_glGetShaderiv)(GLuint, GLenum, GLint *);
+    void (*p_glDeleteShader)(GLuint);
+    GLuint (*p_glCreateProgram)(void);
+    void (*p_glAttachShader)(GLuint, GLuint);
+    void (*p_glBindAttribLocation)(GLuint, GLuint, const GLchar *);
+    void (*p_glLinkProgram)(GLuint);
+    void (*p_glGetProgramiv)(GLuint, GLenum, GLint *);
+    void (*p_glUseProgram)(GLuint);
+    GLint (*p_glGetUniformLocation)(GLuint, const GLchar *);
+    void (*p_glUniform1i)(GLint, GLint);
+    void (*p_glUniform1f)(GLint, GLfloat);
+    void (*p_glBindFramebuffer)(GLenum, GLuint);
+    void (*p_glViewport)(GLint, GLint, GLsizei, GLsizei);
+    void (*p_glActiveTexture)(GLenum);
+    void (*p_glBindTexture)(GLenum, GLuint);
+    void (*p_glTexParameteri)(GLenum, GLenum, GLint);
+    void (*p_glDisable)(GLenum);
+    void (*p_glEnable)(GLenum);
+    GLboolean (*p_glIsEnabled)(GLenum);
+    void (*p_glGetIntegerv)(GLenum, GLint *);
+    void (*p_glVertexAttribPointer)(GLuint, GLint, GLenum, GLboolean, GLsizei, const void *);
+    void (*p_glEnableVertexAttribArray)(GLuint);
+    void (*p_glDisableVertexAttribArray)(GLuint);
+    void (*p_glDrawArrays)(GLenum, GLint, GLsizei);
+    void (*p_glFlush)(void);
+    void (*p_glGenFramebuffers)(GLsizei, GLuint *);
+    void (*p_glDeleteFramebuffers)(GLsizei, const GLuint *);
+    void (*p_glFramebufferTexture2D)(GLenum, GLenum, GLenum, GLuint, GLint);
+    GLenum (*p_glCheckFramebufferStatus)(GLenum);
+    void (*p_glGenTextures)(GLsizei, GLuint *);
+    void (*p_glDeleteTextures)(GLsizei, const GLuint *);
+    void (*p_glTexImage2D)(GLenum, GLint, GLint, GLsizei, GLsizei, GLint, GLenum, GLenum, const void *);
+    void (*p_glReadPixels)(GLint, GLint, GLsizei, GLsizei, GLenum, GLenum, void *);
+    GLuint prog;
+    GLint u_tex;
+    GLint u_tf_mode;
+    GLint u_prim_mode;
+    GLint u_peak_rel;
+} DtwmGles2TonemapCtx;
+
+static DtwmGles2TonemapCtx g_gl_tm = {0};
+
+static bool ensure_gles2_symbols(void) {
+    if (!g_gl_tm.resolved) {
+        g_gl_tm.resolved = true;
+        void *hegl = dlopen("libEGL.so.1", RTLD_LAZY | RTLD_LOCAL);
+        void *hgl = dlopen("libGLESv2.so.2", RTLD_LAZY | RTLD_LOCAL);
+#define RESOLVE_SYM(lib, name) \
+        g_gl_tm.p_##name = (__typeof__(g_gl_tm.p_##name))( \
+            dlsym(RTLD_DEFAULT, #name) ? dlsym(RTLD_DEFAULT, #name) : (lib ? dlsym(lib, #name) : nullptr))
+        RESOLVE_SYM(hegl, eglGetCurrentDisplay);
+        RESOLVE_SYM(hegl, eglGetCurrentContext);
+        RESOLVE_SYM(hegl, eglGetCurrentSurface);
+        RESOLVE_SYM(hegl, eglMakeCurrent);
+        RESOLVE_SYM(hgl, glCreateShader);
+        RESOLVE_SYM(hgl, glShaderSource);
+        RESOLVE_SYM(hgl, glCompileShader);
+        RESOLVE_SYM(hgl, glGetShaderiv);
+        RESOLVE_SYM(hgl, glDeleteShader);
+        RESOLVE_SYM(hgl, glCreateProgram);
+        RESOLVE_SYM(hgl, glAttachShader);
+        RESOLVE_SYM(hgl, glBindAttribLocation);
+        RESOLVE_SYM(hgl, glLinkProgram);
+        RESOLVE_SYM(hgl, glGetProgramiv);
+        RESOLVE_SYM(hgl, glUseProgram);
+        RESOLVE_SYM(hgl, glGetUniformLocation);
+        RESOLVE_SYM(hgl, glUniform1i);
+        RESOLVE_SYM(hgl, glUniform1f);
+        RESOLVE_SYM(hgl, glBindFramebuffer);
+        RESOLVE_SYM(hgl, glViewport);
+        RESOLVE_SYM(hgl, glActiveTexture);
+        RESOLVE_SYM(hgl, glBindTexture);
+        RESOLVE_SYM(hgl, glTexParameteri);
+        RESOLVE_SYM(hgl, glDisable);
+        RESOLVE_SYM(hgl, glEnable);
+        RESOLVE_SYM(hgl, glIsEnabled);
+        RESOLVE_SYM(hgl, glGetIntegerv);
+        RESOLVE_SYM(hgl, glVertexAttribPointer);
+        RESOLVE_SYM(hgl, glEnableVertexAttribArray);
+        RESOLVE_SYM(hgl, glDisableVertexAttribArray);
+        RESOLVE_SYM(hgl, glDrawArrays);
+        RESOLVE_SYM(hgl, glFlush);
+        RESOLVE_SYM(hgl, glGenFramebuffers);
+        RESOLVE_SYM(hgl, glDeleteFramebuffers);
+        RESOLVE_SYM(hgl, glFramebufferTexture2D);
+        RESOLVE_SYM(hgl, glCheckFramebufferStatus);
+        RESOLVE_SYM(hgl, glGenTextures);
+        RESOLVE_SYM(hgl, glDeleteTextures);
+        RESOLVE_SYM(hgl, glTexImage2D);
+        RESOLVE_SYM(hgl, glReadPixels);
+#undef RESOLVE_SYM
+        g_gl_tm.ok = g_gl_tm.p_eglGetCurrentDisplay && g_gl_tm.p_eglMakeCurrent &&
+                     g_gl_tm.p_glCreateShader && g_gl_tm.p_glCreateProgram &&
+                     g_gl_tm.p_glDrawArrays && g_gl_tm.p_glFlush;
+    }
+    return g_gl_tm.ok;
+}
+
+static bool ensure_gles2_tonemap_program_current_ctx(void) {
+    if (!ensure_gles2_symbols()) return false;
+    if (g_gl_tm.prog != 0) return true;
+
+    static const char *vs_src =
+        "attribute vec2 a_pos;\n"
+        "varying vec2 v_uv;\n"
+        "void main() {\n"
+        "    v_uv = a_pos * 0.5 + 0.5;\n"
+        "    gl_Position = vec4(a_pos, 0.0, 1.0);\n"
+        "}\n";
+    static const char *fs_src =
+        "precision highp float;\n"
+        "varying vec2 v_uv;\n"
+        "uniform sampler2D u_tex;\n"
+        "uniform int u_tf_mode;\n"
+        "uniform int u_prim_mode;\n"
+        "uniform float u_peak_rel;\n"
+        "vec3 pq_eotf_rel(vec3 e) {\n"
+        "    e = clamp(e, 0.0, 1.0);\n"
+        "    vec3 np = pow(e, vec3(1.0 / 78.84375));\n"
+        "    vec3 num = max(np - vec3(0.8359375), vec3(0.0));\n"
+        "    vec3 den = max(vec3(18.8515625) - vec3(18.6875) * np, vec3(1e-6));\n"
+        "    return (10000.0 / 203.0) * pow(num / den, vec3(1.0 / 0.1593017578125));\n"
+        "}\n"
+        "float hlg_ch(float e) {\n"
+        "    e = clamp(e, 0.0, 1.0);\n"
+        "    float lin = (e <= 0.5) ? (e * e / 3.0)\n"
+        "                           : ((exp((e - 0.55991073) / 0.17883277) + 0.28466892) / 12.0);\n"
+        "    return (1000.0 / 203.0) * pow(max(lin, 0.0), 1.2);\n"
+        "}\n"
+        "vec3 hlg_eotf_rel(vec3 e) {\n"
+        "    return vec3(hlg_ch(e.r), hlg_ch(e.g), hlg_ch(e.b));\n"
+        "}\n"
+        "float srgb_in_ch(float e) {\n"
+        "    e = clamp(e, 0.0, 1.0);\n"
+        "    return (e <= 0.04045) ? (e / 12.92) : pow((e + 0.055) / 1.055, 2.4);\n"
+        "}\n"
+        "vec3 srgb_eotf(vec3 e) {\n"
+        "    return vec3(srgb_in_ch(e.r), srgb_in_ch(e.g), srgb_in_ch(e.b));\n"
+        "}\n"
+        "float srgb_out_ch(float c) {\n"
+        "    c = clamp(c, 0.0, 1.0);\n"
+        "    return (c <= 0.0031308) ? (12.92 * c) : (1.055 * pow(c, 1.0 / 2.4) - 0.055);\n"
+        "}\n"
+        "vec3 srgb_oetf(vec3 c) {\n"
+        "    return vec3(srgb_out_ch(c.r), srgb_out_ch(c.g), srgb_out_ch(c.b));\n"
+        "}\n"
+        "void main() {\n"
+        "    vec4 src = texture2D(u_tex, v_uv);\n"
+        "    vec3 lin;\n"
+        "    if (u_tf_mode == 1) lin = pq_eotf_rel(src.rgb);\n"
+        "    else if (u_tf_mode == 2) lin = hlg_eotf_rel(src.rgb);\n"
+        "    else if (u_tf_mode == 3) lin = src.rgb;\n"
+        "    else lin = srgb_eotf(src.rgb);\n"
+        "    if (u_prim_mode == 1) {\n"
+        "        lin = vec3(\n"
+        "            1.6605 * lin.r - 0.5876 * lin.g - 0.0728 * lin.b,\n"
+        "           -0.1246 * lin.r + 1.1329 * lin.g - 0.0083 * lin.b,\n"
+        "           -0.0182 * lin.r - 0.1006 * lin.g + 1.1187 * lin.b);\n"
+        "    } else if (u_prim_mode == 2) {\n"
+        "        lin = vec3(\n"
+        "            1.2249 * lin.r - 0.2247 * lin.g - 0.0002 * lin.b,\n"
+        "           -0.0420 * lin.r + 1.0419 * lin.g + 0.0001 * lin.b,\n"
+        "           -0.0197 * lin.r - 0.0786 * lin.g + 1.0983 * lin.b);\n"
+        "    }\n"
+        "    lin = max(lin, vec3(0.0));\n"
+        "    if (u_tf_mode == 1 || u_tf_mode == 2) {\n"
+        "        float y = dot(lin, vec3(0.2126, 0.7152, 0.0722));\n"
+        "        if (y > 1e-6) {\n"
+        "            float y_tm = (y * (1.0 + y / (u_peak_rel * u_peak_rel))) / (1.0 + y);\n"
+        "            lin *= (y_tm / y);\n"
+        "        }\n"
+        "    }\n"
+        "    gl_FragColor = vec4(srgb_oetf(lin), 1.0);\n"
+        "}\n";
+
+    GLuint vs = g_gl_tm.p_glCreateShader(GL_VERTEX_SHADER);
+    g_gl_tm.p_glShaderSource(vs, 1, &vs_src, nullptr);
+    g_gl_tm.p_glCompileShader(vs);
+    GLint ok_v = 0;
+    g_gl_tm.p_glGetShaderiv(vs, GL_COMPILE_STATUS, &ok_v);
+
+    GLuint fs = g_gl_tm.p_glCreateShader(GL_FRAGMENT_SHADER);
+    g_gl_tm.p_glShaderSource(fs, 1, &fs_src, nullptr);
+    g_gl_tm.p_glCompileShader(fs);
+    GLint ok_f = 0;
+    g_gl_tm.p_glGetShaderiv(fs, GL_COMPILE_STATUS, &ok_f);
+
+    if (!ok_v || !ok_f) {
+        g_gl_tm.p_glDeleteShader(vs);
+        g_gl_tm.p_glDeleteShader(fs);
+        return false;
+    }
+    GLuint prog = g_gl_tm.p_glCreateProgram();
+    g_gl_tm.p_glAttachShader(prog, vs);
+    g_gl_tm.p_glAttachShader(prog, fs);
+    g_gl_tm.p_glBindAttribLocation(prog, 0, "a_pos");
+    g_gl_tm.p_glLinkProgram(prog);
+    g_gl_tm.p_glDeleteShader(vs);
+    g_gl_tm.p_glDeleteShader(fs);
+    GLint linked = 0;
+    g_gl_tm.p_glGetProgramiv(prog, GL_LINK_STATUS, &linked);
+    if (!linked) return false;
+
+    g_gl_tm.prog = prog;
+    g_gl_tm.u_tex = g_gl_tm.p_glGetUniformLocation(prog, "u_tex");
+    g_gl_tm.u_tf_mode = g_gl_tm.p_glGetUniformLocation(prog, "u_tf_mode");
+    g_gl_tm.u_prim_mode = g_gl_tm.p_glGetUniformLocation(prog, "u_prim_mode");
+    g_gl_tm.u_peak_rel = g_gl_tm.p_glGetUniformLocation(prog, "u_peak_rel");
+    return true;
+}
+
+static struct wlr_buffer *tonemap_via_gles2_shader(
+    DtwmServer *server,
+    struct wlr_texture *src_tex,
+    int tf_mode,
+    int prim_mode,
+    float peak_rel
+) {
+    if (!server || !server->renderer || !server->allocator || !src_tex) return nullptr;
+    if (!wlr_renderer_is_gles2(server->renderer) || !wlr_texture_is_gles2(src_tex)) {
+        return nullptr;
+    }
+    struct wlr_gles2_texture_attribs attribs = {0};
+    wlr_gles2_texture_get_attribs(src_tex, &attribs);
+    if (attribs.target != GL_TEXTURE_2D || attribs.tex == 0) {
+        return nullptr;
+    }
+    struct wlr_egl *egl = wlr_gles2_renderer_get_egl(server->renderer);
+    if (!egl) return nullptr;
+
+    int w = (int)src_tex->width;
+    int h = (int)src_tex->height;
+    if (w <= 0 || h <= 0) return nullptr;
+
+    EGLDisplay edpy = wlr_egl_get_display(egl);
+    EGLContext ectx = wlr_egl_get_context(egl);
+    if (!ensure_gles2_symbols() || edpy == EGL_NO_DISPLAY || ectx == EGL_NO_CONTEXT) {
+        return nullptr;
+    }
+
+    /* Fast path: zero-copy render directly into allocator DMA-BUF FBO when supported */
+    struct wlr_buffer *dst_buf = nullptr;
+    GLuint fbo = 0;
+    const struct wlr_drm_format_set *fmts =
+        wlr_renderer_get_texture_formats(server->renderer, server->allocator->buffer_caps);
+    const struct wlr_drm_format *fmt = fmts ? wlr_drm_format_set_get(fmts, DRM_FORMAT_XRGB8888) : nullptr;
+    if (!fmt && fmts) fmt = wlr_drm_format_set_get(fmts, DRM_FORMAT_ARGB8888);
+    if (fmt && (server->allocator->buffer_caps & server->renderer->render_buffer_caps) != 0) {
+        dst_buf = wlr_allocator_create_buffer(server->allocator, w, h, fmt);
+        if (dst_buf) {
+            struct wlr_render_pass *init_pass =
+                wlr_renderer_begin_buffer_pass(server->renderer, dst_buf, nullptr);
+            if (init_pass && wlr_render_pass_submit(init_pass)) {
+                fbo = wlr_gles2_renderer_get_buffer_fbo(server->renderer, dst_buf);
+            }
+            if (fbo == 0) {
+                wlr_buffer_drop(dst_buf);
+                dst_buf = nullptr;
+            }
+        }
+    }
+
+    EGLDisplay prev_dpy = g_gl_tm.p_eglGetCurrentDisplay();
+    EGLContext prev_ctx = g_gl_tm.p_eglGetCurrentContext();
+    EGLSurface prev_draw = (prev_dpy != EGL_NO_DISPLAY) ? g_gl_tm.p_eglGetCurrentSurface(EGL_DRAW) : EGL_NO_SURFACE;
+    EGLSurface prev_read = (prev_dpy != EGL_NO_DISPLAY) ? g_gl_tm.p_eglGetCurrentSurface(EGL_READ) : EGL_NO_SURFACE;
+    if (!g_gl_tm.p_eglMakeCurrent(edpy, EGL_NO_SURFACE, EGL_NO_SURFACE, ectx)) {
+        if (dst_buf) wlr_buffer_drop(dst_buf);
+        return nullptr;
+    }
+
+    if (!ensure_gles2_tonemap_program_current_ctx()) {
+        if (prev_dpy != EGL_NO_DISPLAY) {
+            g_gl_tm.p_eglMakeCurrent(prev_dpy, prev_draw, prev_read, prev_ctx);
+        } else {
+            g_gl_tm.p_eglMakeCurrent(edpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        }
+        if (dst_buf) wlr_buffer_drop(dst_buf);
+        return nullptr;
+    }
+
+    GLint prev_fbo = 0, prev_prog = 0, prev_vp[4] = {0}, prev_act = 0, prev_tex = 0;
+    GLboolean prev_blend = g_gl_tm.p_glIsEnabled(GL_BLEND);
+    GLboolean prev_scis = g_gl_tm.p_glIsEnabled(GL_SCISSOR_TEST);
+    g_gl_tm.p_glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prev_fbo);
+    g_gl_tm.p_glGetIntegerv(GL_CURRENT_PROGRAM, &prev_prog);
+    g_gl_tm.p_glGetIntegerv(GL_VIEWPORT, prev_vp);
+    g_gl_tm.p_glGetIntegerv(GL_ACTIVE_TEXTURE, &prev_act);
+    g_gl_tm.p_glActiveTexture(GL_TEXTURE0);
+    g_gl_tm.p_glGetIntegerv(GL_TEXTURE_BINDING_2D, &prev_tex);
+
+    GLuint temp_fbo = 0, temp_tex = 0;
+    if (fbo == 0) {
+        if (!g_gl_tm.p_glGenFramebuffers || !g_gl_tm.p_glGenTextures ||
+            !g_gl_tm.p_glTexImage2D || !g_gl_tm.p_glFramebufferTexture2D ||
+            !g_gl_tm.p_glCheckFramebufferStatus || !g_gl_tm.p_glReadPixels) {
+            goto out_restore;
+        }
+        g_gl_tm.p_glGenTextures(1, &temp_tex);
+        g_gl_tm.p_glBindTexture(GL_TEXTURE_2D, temp_tex);
+        g_gl_tm.p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        g_gl_tm.p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        g_gl_tm.p_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        g_gl_tm.p_glGenFramebuffers(1, &temp_fbo);
+        g_gl_tm.p_glBindFramebuffer(GL_FRAMEBUFFER, temp_fbo);
+        g_gl_tm.p_glFramebufferTexture2D(
+            GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, temp_tex, 0
+        );
+        if (g_gl_tm.p_glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+            goto out_restore;
+        }
+        fbo = temp_fbo;
+    } else {
+        g_gl_tm.p_glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    }
+
+    g_gl_tm.p_glViewport(0, 0, w, h);
+    g_gl_tm.p_glDisable(GL_BLEND);
+    g_gl_tm.p_glDisable(GL_SCISSOR_TEST);
+    g_gl_tm.p_glUseProgram(g_gl_tm.prog);
+    g_gl_tm.p_glBindTexture(GL_TEXTURE_2D, attribs.tex);
+    g_gl_tm.p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    g_gl_tm.p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    g_gl_tm.p_glUniform1i(g_gl_tm.u_tex, 0);
+    g_gl_tm.p_glUniform1i(g_gl_tm.u_tf_mode, tf_mode);
+    g_gl_tm.p_glUniform1i(g_gl_tm.u_prim_mode, prim_mode);
+    g_gl_tm.p_glUniform1f(g_gl_tm.u_peak_rel, peak_rel);
+
+    static const float quad_verts[8] = {
+        -1.0f, -1.0f,
+         1.0f, -1.0f,
+        -1.0f,  1.0f,
+         1.0f,  1.0f,
+    };
+    g_gl_tm.p_glEnableVertexAttribArray(0);
+    g_gl_tm.p_glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, quad_verts);
+    g_gl_tm.p_glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    g_gl_tm.p_glDisableVertexAttribArray(0);
+    g_gl_tm.p_glFlush();
+
+    if (g_gl_tm.p_glReadPixels && w >= 4 && h >= 2) {
+        uint8_t spx[4] = {0};
+        g_gl_tm.p_glReadPixels(w / 4, h / 2, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, spx);
+        server->last_tonemap_sample_l =
+            ((uint32_t)spx[0] << 16) | ((uint32_t)spx[1] << 8) | (uint32_t)spx[2];
+        g_gl_tm.p_glReadPixels((w * 3) / 4, h / 2, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, spx);
+        server->last_tonemap_sample_r =
+            ((uint32_t)spx[0] << 16) | ((uint32_t)spx[1] << 8) | (uint32_t)spx[2];
+    }
+
+    if (temp_fbo != 0 && !dst_buf) {
+        cairo_t *cr = nullptr;
+        cairo_surface_t *csurf = nullptr;
+        dst_buf = dtwm_cairo_buffer_begin(w, h, &cr, &csurf);
+        if (dst_buf) {
+            cairo_surface_flush(csurf);
+            uint8_t *dbase = cairo_image_surface_get_data(csurf);
+            int dstride = cairo_image_surface_get_stride(csurf);
+            uint32_t *rgba = malloc((size_t)w * (size_t)h * 4u);
+            if (rgba) {
+                g_gl_tm.p_glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, rgba);
+                for (int y = 0; y < h; ++y) {
+                    const uint32_t *srow = rgba + (size_t)y * (size_t)w;
+                    uint32_t *drow = (uint32_t *)(dbase + y * dstride);
+                    for (int x = 0; x < w; ++x) {
+                        uint32_t px = srow[x]; /* ABGR in little-endian u32 */
+                        uint32_t r = px & 0xffu;
+                        uint32_t g = (px >> 8) & 0xffu;
+                        uint32_t b = (px >> 16) & 0xffu;
+                        drow[x] = 0xff000000u | (r << 16) | (g << 8) | b;
+                    }
+                }
+                free(rgba);
+            }
+            cairo_surface_mark_dirty(csurf);
+            dtwm_cairo_buffer_finish(cr, csurf);
+        }
+    }
+
+out_restore:
+    if (temp_fbo != 0 && g_gl_tm.p_glDeleteFramebuffers) {
+        g_gl_tm.p_glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        g_gl_tm.p_glDeleteFramebuffers(1, &temp_fbo);
+    }
+    if (temp_tex != 0 && g_gl_tm.p_glDeleteTextures) {
+        g_gl_tm.p_glBindTexture(GL_TEXTURE_2D, 0);
+        g_gl_tm.p_glDeleteTextures(1, &temp_tex);
+    }
+    g_gl_tm.p_glBindTexture(GL_TEXTURE_2D, (GLuint)prev_tex);
+    g_gl_tm.p_glActiveTexture((GLenum)prev_act);
+    g_gl_tm.p_glUseProgram((GLuint)prev_prog);
+    g_gl_tm.p_glBindFramebuffer(GL_FRAMEBUFFER, (GLuint)prev_fbo);
+    g_gl_tm.p_glViewport(prev_vp[0], prev_vp[1], prev_vp[2], prev_vp[3]);
+    if (prev_blend) g_gl_tm.p_glEnable(GL_BLEND);
+    if (prev_scis) g_gl_tm.p_glEnable(GL_SCISSOR_TEST);
+
+    if (prev_dpy != EGL_NO_DISPLAY) {
+        g_gl_tm.p_eglMakeCurrent(prev_dpy, prev_draw, prev_read, prev_ctx);
+    } else {
+        g_gl_tm.p_eglMakeCurrent(edpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    }
+    return dst_buf;
+}
+#endif
+
+static struct wlr_buffer *tonemap_via_cpu_lut(
+    struct wlr_texture *src_tex,
+    int tf_mode,
+    int prim_mode,
+    float peak_rel
+) {
+    if (!src_tex || src_tex->width == 0 || src_tex->height == 0 ||
+        src_tex->width > 8192 || src_tex->height > 8192) {
+        return nullptr;
+    }
+    int w = (int)src_tex->width;
+    int h = (int)src_tex->height;
+    size_t stride = (size_t)w * 4u;
+    uint32_t *raw = malloc(stride * (size_t)h);
+    if (!raw) return nullptr;
+
+    struct wlr_texture_read_pixels_options ropts = {
+        .data = raw,
+        .format = DRM_FORMAT_XRGB8888,
+        .stride = (uint32_t)stride,
+    };
+    if (!wlr_texture_read_pixels(src_tex, &ropts)) {
+        ropts.format = DRM_FORMAT_ARGB8888;
+        if (!wlr_texture_read_pixels(src_tex, &ropts)) {
+            free(raw);
+            return nullptr;
+        }
+    }
+
+    float tf_lut[256];
+    for (int i = 0; i < 256; ++i) {
+        float e = (float)i / 255.0f;
+        if (tf_mode == 1) tf_lut[i] = pq_eotf_nits(e) / 203.0f;
+        else if (tf_mode == 2) tf_lut[i] = hlg_oetf_inv_rel(e);
+        else if (tf_mode == 3) tf_lut[i] = e;
+        else tf_lut[i] = srgb_eotf_rel(e);
+    }
+
+    cairo_t *cr = nullptr;
+    cairo_surface_t *csurf = nullptr;
+    struct wlr_buffer *dst_buf = dtwm_cairo_buffer_begin(w, h, &cr, &csurf);
+    if (!dst_buf) {
+        free(raw);
+        return nullptr;
+    }
+    cairo_surface_flush(csurf);
+    uint8_t *dst_base = cairo_image_surface_get_data(csurf);
+    int dst_stride = cairo_image_surface_get_stride(csurf);
+    float peak_sq = peak_rel * peak_rel;
+
+    for (int y = 0; y < h; ++y) {
+        const uint32_t *srow = raw + (size_t)y * (size_t)w;
+        uint32_t *drow = (uint32_t *)(dst_base + y * dst_stride);
+        for (int x = 0; x < w; ++x) {
+            uint32_t px = srow[x];
+            float r = tf_lut[(px >> 16) & 0xffu];
+            float g = tf_lut[(px >> 8) & 0xffu];
+            float b = tf_lut[px & 0xffu];
+            if (prim_mode == 1) {
+                float nr =  1.6605f * r - 0.5876f * g - 0.0728f * b;
+                float ng = -0.1246f * r + 1.1329f * g - 0.0083f * b;
+                float nb = -0.0182f * r - 0.1006f * g + 1.1187f * b;
+                r = nr; g = ng; b = nb;
+            } else if (prim_mode == 2) {
+                float nr =  1.2249f * r - 0.2247f * g - 0.0002f * b;
+                float ng = -0.0420f * r + 1.0419f * g + 0.0001f * b;
+                float nb = -0.0197f * r - 0.0786f * g + 1.0983f * b;
+                r = nr; g = ng; b = nb;
+            }
+            if (r < 0.0f) r = 0.0f;
+            if (g < 0.0f) g = 0.0f;
+            if (b < 0.0f) b = 0.0f;
+            if (tf_mode == 1 || tf_mode == 2) {
+                float lum = 0.2126f * r + 0.7152f * g + 0.0722f * b;
+                if (lum > 1e-6f) {
+                    float lum_tm = (lum * (1.0f + lum / peak_sq)) / (1.0f + lum);
+                    float scale = lum_tm / lum;
+                    r *= scale;
+                    g *= scale;
+                    b *= scale;
+                }
+            }
+            uint8_t sr = linear_to_srgb_u8(r);
+            uint8_t sg = linear_to_srgb_u8(g);
+            uint8_t sb = linear_to_srgb_u8(b);
+            drow[x] = 0xff000000u | ((uint32_t)sr << 16) | ((uint32_t)sg << 8) | (uint32_t)sb;
+        }
+    }
+    cairo_surface_mark_dirty(csurf);
+    dtwm_cairo_buffer_finish(cr, csurf);
+    free(raw);
+    return dst_buf;
+}
+
+static DtwmOutput *output_for_view_center(const DtwmView *view) {
+    if (!view || !view->server) return nullptr;
+    double cx = view->x + (view->client_w > 0 ? view->client_w * 0.5 : 64.0);
+    double cy = view->y + (view->client_h > 0 ? view->client_h * 0.5 : 64.0);
+    struct wlr_output *wo = wlr_output_layout_output_at(view->server->output_layout, cx, cy);
+    if (wo) {
+        DtwmOutput *o;
+        wl_list_for_each(o, &view->server->outputs, link) {
+            if (o->wlr_output == wo) return o;
+        }
+    }
+    return primary_or_first_output(view->server);
+}
+
+static void update_view_hdr_tonemap(DtwmView *view) {
+    if (!view || !view->server || !view->tonemap_buf) return;
+    view->tonemap_buf->point_accepts_input = tonemap_reject_input;
+
+    if (!view->mapped || view->kind != DTWM_VIEW_XDG || !view->xdg_toplevel ||
+        view->client_w <= 0 || view->client_h <= 0) {
+        view->tonemap_active = false;
+        wlr_scene_buffer_set_buffer(view->tonemap_buf, nullptr);
+        wlr_scene_node_set_enabled(&view->tonemap_buf->node, false);
+        return;
+    }
+
+    struct wlr_surface *csurf = view->xdg_toplevel->base->surface;
+    const struct wlr_image_description_v1_data *d =
+        csurf ? wlr_surface_get_image_description_v1_data(csurf) : nullptr;
+    DtwmOutput *out = output_for_view_center(view);
+    bool out_is_hdr10 = out && profile_spec_is_hdr10(out->color_profile_name);
+    bool out_is_p3 = out && profile_spec_is_display_p3(out->color_profile_name);
+
+    int tf_mode = 0; /* 0=sRGB, 1=ST2084_PQ, 2=HLG, 3=EXT_LINEAR */
+    int prim_mode = 0; /* 0=sRGB, 1=BT2020->sRGB, 2=P3->sRGB */
+    if (d) {
+        if (d->tf_named == WP_COLOR_MANAGER_V1_TRANSFER_FUNCTION_ST2084_PQ) tf_mode = 1;
+        else if (d->tf_named == WP_COLOR_MANAGER_V1_TRANSFER_FUNCTION_HLG) tf_mode = 2;
+        else if (d->tf_named == WP_COLOR_MANAGER_V1_TRANSFER_FUNCTION_EXT_LINEAR) tf_mode = 3;
+
+        if (d->primaries_named == WP_COLOR_MANAGER_V1_PRIMARIES_BT2020 && !out_is_hdr10) {
+            prim_mode = 1;
+        } else if ((d->primaries_named == WP_COLOR_MANAGER_V1_PRIMARIES_DISPLAY_P3 ||
+                    d->primaries_named == WP_COLOR_MANAGER_V1_PRIMARIES_DCI_P3) &&
+                   !out_is_hdr10 && !out_is_p3) {
+            prim_mode = 2;
+        }
+    }
+
+    bool need_tonemap = !out_is_hdr10 && (tf_mode == 1 || tf_mode == 2 || prim_mode != 0);
+    struct wlr_texture *src_tex = (need_tonemap && csurf) ? wlr_surface_get_texture(csurf) : nullptr;
+    if (!need_tonemap || !src_tex) {
+        bool was_active = view->tonemap_active;
+        view->tonemap_active = false;
+        wlr_scene_buffer_set_buffer(view->tonemap_buf, nullptr);
+        wlr_scene_node_set_enabled(&view->tonemap_buf->node, false);
+        if (was_active) {
+            publish_color_state_ipc(view->server, csurf);
+        }
+        return;
+    }
+
+    float peak_nits = (d && d->max_cll >= 250) ? (float)d->max_cll : 1000.0f;
+    float peak_rel = fmaxf(peak_nits / 203.0f, 1.5f);
+    struct wlr_buffer *tm_buf = nullptr;
+#if defined(DTWM_HAVE_WLR_GLES2_H) && defined(DTWM_HAVE_WLR_EGL_H)
+    tm_buf = tonemap_via_gles2_shader(view->server, src_tex, tf_mode, prim_mode, peak_rel);
+    if (tm_buf) {
+        snprintf(
+            view->server->last_tonemap_backend,
+            sizeof(view->server->last_tonemap_backend),
+            "gles2_shader"
+        );
+    }
+#endif
+    if (!tm_buf) {
+        tm_buf = tonemap_via_cpu_lut(src_tex, tf_mode, prim_mode, peak_rel);
+        if (tm_buf) {
+            snprintf(
+                view->server->last_tonemap_backend,
+                sizeof(view->server->last_tonemap_backend),
+                "cpu_lut"
+            );
+            void *dp = nullptr;
+            uint32_t dfmt = 0;
+            size_t dstr = 0;
+            if (wlr_buffer_begin_data_ptr_access(
+                    tm_buf, WLR_BUFFER_DATA_PTR_ACCESS_READ, &dp, &dfmt, &dstr
+                )) {
+                if (dp && tm_buf->width >= 4 && tm_buf->height >= 2) {
+                    const uint32_t *mrow =
+                        (const uint32_t *)((const uint8_t *)dp + (size_t)(tm_buf->height / 2) * dstr);
+                    view->server->last_tonemap_sample_l = mrow[tm_buf->width / 4] & 0xffffffu;
+                    view->server->last_tonemap_sample_r = mrow[(tm_buf->width * 3) / 4] & 0xffffffu;
+                }
+                wlr_buffer_end_data_ptr_access(tm_buf);
+            }
+        }
+    }
+    if (!tm_buf) {
+        view->tonemap_active = false;
+        wlr_scene_node_set_enabled(&view->tonemap_buf->node, false);
+        return;
+    }
+
+    int l = 0, t = 0, r = 0, b = 0;
+    if (view->decorated) {
+        dtwm_view_insets(view, &l, &t, &r, &b);
+    }
+    view->tonemap_active = true;
+    wlr_scene_node_set_position(&view->tonemap_buf->node, l, t);
+    wlr_scene_buffer_set_buffer(view->tonemap_buf, tm_buf);
+    wlr_scene_buffer_set_dest_size(view->tonemap_buf, view->client_w, view->client_h);
+    wlr_scene_node_set_enabled(&view->tonemap_buf->node, true);
+    wlr_buffer_drop(tm_buf);
+    publish_color_state_ipc(view->server, csurf);
+}
+
+static void refresh_all_views_hdr_tonemap(DtwmServer *server) {
+    if (!server) return;
+    DtwmView *v;
+    wl_list_for_each(v, &server->views, link) {
+        if (v->mapped && v->kind == DTWM_VIEW_XDG && v->xdg_toplevel) {
+            sync_surface_preferred_color_description(server, v->xdg_toplevel->base->surface);
+            update_view_hdr_tonemap(v);
+        }
+    }
+    schedule_all_outputs_frame(server);
+}
+
 static bool dtwm_apply_output_color_profile(DtwmOutput *output, const char *spec) {
     if (!output) return false;
     while (spec && isspace((unsigned char)*spec)) spec++;
@@ -6748,12 +7708,35 @@ static bool dtwm_apply_output_color_profile(DtwmOutput *output, const char *spec
             output->color_transform = nullptr;
         }
         output->color_profile_name[0] = '\0';
+        if (output->wlr_output) {
+            wlr_output_schedule_frame(output->wlr_output);
+        }
         return true;
     }
 
     struct wlr_color_transform *nt = nullptr;
     if (strcasecmp(spec, "srgb") == 0) {
         nt = wlr_color_transform_init_srgb();
+    } else if (profile_spec_is_display_p3(spec) || profile_spec_is_adobe_rgb(spec) ||
+               profile_spec_is_hdr10(spec)) {
+        size_t icc_sz = 0;
+        uint8_t *icc = synthesize_builtin_icc_profile(spec, &icc_sz);
+        if (icc && icc_sz > 0) {
+            nt = wlr_color_transform_init_linear_to_icc(icc, icc_sz);
+            free(icc);
+        }
+        if (!nt && profile_spec_is_hdr10(spec)) {
+            /* Allow HDR10 passthrough mode even if lcms2 rejects non-monotonic PQ LUT */
+            if (output->color_transform) {
+                wlr_color_transform_unref(output->color_transform);
+                output->color_transform = nullptr;
+            }
+            snprintf(output->color_profile_name, sizeof(output->color_profile_name), "hdr10");
+            if (output->wlr_output) {
+                wlr_output_schedule_frame(output->wlr_output);
+            }
+            return true;
+        }
     } else {
         int fd = open(spec, O_RDONLY | O_CLOEXEC);
         if (fd >= 0) {
@@ -6943,8 +7926,14 @@ static void handle_new_output(struct wl_listener *listener, void *data) {
     output->dpi = resolve_initial_output_dpi(server, output->output_idx, wlr_output->name);
     {
         const char *icc_env = getenv("DTWM_ICC_PROFILE");
+        const char *saved_cp =
+            (wlr_output && wlr_output->name)
+                ? dtwm_power_display_lookup_color_profile(server, wlr_output->name)
+                : nullptr;
         if (icc_env && icc_env[0]) {
             (void)dtwm_apply_output_color_profile(output, icc_env);
+        } else if (saved_cp && saved_cp[0]) {
+            (void)dtwm_apply_output_color_profile(output, saved_cp);
         }
     }
 
@@ -7176,6 +8165,7 @@ static void xdg_toplevel_map(struct wl_listener *listener, void *data) {
         &view->frame_tree->node, !view->minimized && dtwm_view_visible_on_current_ws(view)
     );
     dtwm_view_update_frame(view);
+    update_view_hdr_tonemap(view);
     sync_all_modal_dialogs(view->server);
     dtwm_icons_on_view_map(view);
     dtwm_foreign_toplevel_sync(view);
@@ -7246,6 +8236,11 @@ static void xdg_toplevel_unmap(struct wl_listener *listener, void *data) {
         view->server->input_escaped_view = nullptr;
     }
     view->mapped = false;
+    view->tonemap_active = false;
+    if (view->tonemap_buf) {
+        wlr_scene_buffer_set_buffer(view->tonemap_buf, nullptr);
+        wlr_scene_node_set_enabled(&view->tonemap_buf->node, false);
+    }
     sync_input_capture_for_focused_view(view->server, false);
     view->pending_activation = false;
     view->has_pending_geom = false;
@@ -7372,6 +8367,10 @@ static void xdg_toplevel_commit(struct wl_listener *listener, void *data) {
                 &view->client_bg_rect->node, dtwm_view_wants_opaque_client_bg(view)
             );
         }
+        update_view_hdr_tonemap(view);
+        if (csurf && wlr_surface_get_image_description_v1_data(csurf)) {
+            publish_color_state_ipc(view->server, csurf);
+        }
     }
 }
 
@@ -7441,6 +8440,11 @@ static void xdg_toplevel_destroy(struct wl_listener *listener, void *data) {
     DtwmView *view = wl_container_of(listener, view, destroy);
     DtwmServer *server = view->server;
     view->mapped = false;
+    view->tonemap_active = false;
+    if (view->tonemap_buf) {
+        wlr_scene_buffer_set_buffer(view->tonemap_buf, nullptr);
+        wlr_scene_node_set_enabled(&view->tonemap_buf->node, false);
+    }
     dtwm_anim_cancel_for_view(server, view);
     if (view == server->focused_view) {
         server->focused_view = nullptr;
@@ -8216,6 +9220,11 @@ static void xwayland_unmap(struct wl_listener *listener, void *data) {
         xcb_flush(view->server->xcb_conn);
     }
     view->mapped = false;
+    view->tonemap_active = false;
+    if (view->tonemap_buf) {
+        wlr_scene_buffer_set_buffer(view->tonemap_buf, nullptr);
+        wlr_scene_node_set_enabled(&view->tonemap_buf->node, false);
+    }
     view->has_pending_geom = false;
     view->pending_pos_set = false;
     view->resize_inflight = false;
@@ -8238,6 +9247,7 @@ static void xwayland_unmap(struct wl_listener *listener, void *data) {
         view->frame_tree = nullptr;
         view->client_bg_rect = nullptr;
         view->content_tree = nullptr;
+        view->tonemap_buf = nullptr;
         view->modal_dim_rect = nullptr;
         view->frame_top_buf = nullptr;
         view->frame_bottom_buf = nullptr;
@@ -8518,6 +9528,11 @@ static void xwayland_destroy(struct wl_listener *listener, void *data) {
     DtwmView *view = wl_container_of(listener, view, destroy);
     DtwmServer *server = view->server;
     view->mapped = false;
+    view->tonemap_active = false;
+    if (view->tonemap_buf) {
+        wlr_scene_buffer_set_buffer(view->tonemap_buf, nullptr);
+        wlr_scene_node_set_enabled(&view->tonemap_buf->node, false);
+    }
     dtwm_anim_cancel_for_view(server, view);
     if (view == server->grabbed_view) {
         server->cursor_mode = DTWM_CURSOR_PASSTHROUGH;
@@ -10475,7 +11490,7 @@ bool dtwm_wayland_session_handle_wm_request(DtwmServer *server, const char *cmd)
     if (strncmp(cmd, "f.set_output_color_profile", 26) == 0 && isspace((unsigned char)cmd[26])) {
         const char *p = cmd + 27;
         while (*p && isspace((unsigned char)*p)) p++;
-        char target[32] = {0};
+        char target[64] = {0};
         size_t ti = 0;
         while (*p && !isspace((unsigned char)*p) && ti + 1 < sizeof(target)) {
             target[ti++] = *p++;
@@ -10484,13 +11499,23 @@ bool dtwm_wayland_session_handle_wm_request(DtwmServer *server, const char *cmd)
         while (*p && isspace((unsigned char)*p)) p++;
         if (target[0] && *p) {
             bool all = (strcasecmp(target, "all") == 0);
-            long idx = all ? -1 : strtol(target, nullptr, 10);
+            char *endp = nullptr;
+            long idx = all ? -1 : strtol(target, &endp, 10);
+            bool numeric = (!all && endp && *endp == '\0' && idx >= 0);
             DtwmOutput *o;
             wl_list_for_each(o, &server->outputs, link) {
-                if (all || (idx >= 0 && o->output_idx == (uint32_t)idx)) {
-                    (void)dtwm_apply_output_color_profile(o, p);
+                bool match = all ||
+                             (numeric && o->output_idx == (uint32_t)idx) ||
+                             (o->wlr_output && o->wlr_output->name &&
+                              strcmp(o->wlr_output->name, target) == 0);
+                if (match) {
+                    if (dtwm_apply_output_color_profile(o, p) &&
+                        o->wlr_output && o->wlr_output->name) {
+                        dtwm_power_display_record_color_profile(server, o->wlr_output->name, p);
+                    }
                 }
             }
+            refresh_all_views_hdr_tonemap(server);
             publish_color_state_ipc(
                 server, server->focused_view ? view_wlr_surface(server->focused_view) : nullptr
             );

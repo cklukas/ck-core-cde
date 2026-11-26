@@ -61,6 +61,11 @@ typedef struct {
     int dpi;
 } DtwmDpiRule;
 
+typedef struct {
+    char name[64];
+    char spec[256];
+} DtwmColorProfileRule;
+
 struct DtwmPowerDisplayState {
     DtwmServer *server;
     struct wlr_gamma_control_manager_v1 *gamma_mgr;
@@ -82,6 +87,8 @@ struct DtwmPowerDisplayState {
     DtwmVrrRule vrr_rules[16];
     int dpi_rule_count;
     DtwmDpiRule dpi_rules[16];
+    int color_rule_count;
+    DtwmColorProfileRule color_rules[16];
 
     /* Power / Lid / Idle Suspend policy (~/.config/ck-core/power-policy.conf) */
     time_t policy_mtime;
@@ -263,6 +270,25 @@ static void record_dpi_rule(DtwmPowerDisplayState *st, const char *name, int dpi
     }
 }
 
+static void record_color_rule(DtwmPowerDisplayState *st, const char *name, const char *spec) {
+    if (!st || !name || !name[0] || !spec) return;
+    while (*spec && isspace((unsigned char)*spec)) spec++;
+    const char *norm = (*spec && strcasecmp(spec, "none") != 0) ? spec : "default";
+    for (int i = 0; i < st->color_rule_count; ++i) {
+        if (strcmp(st->color_rules[i].name, name) == 0) {
+            snprintf(st->color_rules[i].spec, sizeof(st->color_rules[0].spec), "%s", norm);
+            return;
+        }
+    }
+    if (st->color_rule_count < 16) {
+        snprintf(st->color_rules[st->color_rule_count].name,
+                 sizeof(st->color_rules[0].name), "%s", name);
+        snprintf(st->color_rules[st->color_rule_count].spec,
+                 sizeof(st->color_rules[0].spec), "%s", norm);
+        st->color_rule_count++;
+    }
+}
+
 static void save_ergonomics_conf(const DtwmPowerDisplayState *st) {
     if (!st) return;
     char path[PATH_MAX], tmp[PATH_MAX + 32];
@@ -281,6 +307,9 @@ static void save_ergonomics_conf(const DtwmPowerDisplayState *st) {
     }
     for (int i = 0; i < st->dpi_rule_count; ++i) {
         fprintf(fp, "dpi.%s=%d\n", st->dpi_rules[i].name, st->dpi_rules[i].dpi);
+    }
+    for (int i = 0; i < st->color_rule_count; ++i) {
+        fprintf(fp, "color_profile.%s=%s\n", st->color_rules[i].name, st->color_rules[i].spec);
     }
     if (fclose(fp) == 0) {
         if (rename(tmp, path) != 0) unlink(tmp);
@@ -327,6 +356,8 @@ static void load_ergonomics_conf(DtwmPowerDisplayState *st) {
             if (dpi >= 48 && dpi <= 576) {
                 record_dpi_rule(st, k + 4, dpi);
             }
+        } else if (strncmp(k, "color_profile.", 14) == 0 && k[14] != '\0') {
+            record_color_rule(st, k + 14, v);
         }
     }
     fclose(fp);
@@ -347,6 +378,27 @@ int dtwm_power_display_lookup_dpi(const DtwmServer *server, const char *name) {
         }
     }
     return 0;
+}
+
+void dtwm_power_display_record_color_profile(
+    DtwmServer *server, const char *name, const char *spec
+) {
+    if (!server || !server->power_display || !name || !name[0]) return;
+    record_color_rule(server->power_display, name, spec ? spec : "default");
+    save_ergonomics_conf(server->power_display);
+}
+
+const char *dtwm_power_display_lookup_color_profile(
+    const DtwmServer *server, const char *name
+) {
+    if (!server || !server->power_display || !name || !name[0]) return nullptr;
+    const DtwmPowerDisplayState *st = server->power_display;
+    for (int i = 0; i < st->color_rule_count; ++i) {
+        if (strcmp(st->color_rules[i].name, name) == 0) {
+            return st->color_rules[i].spec;
+        }
+    }
+    return nullptr;
 }
 
 /* -------------------------------------------------------------------------

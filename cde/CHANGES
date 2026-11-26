@@ -1,4 +1,23 @@
 2026-11-26
+- Add per-monitor GUI color profile management in `dtstyle` (*Display &
+  Monitors*) and mixed SDR + HDR10 (`BT.2020 PQ` / `HLG`) per-surface tone
+  mapping in `dtwm-wayland`:
+  - Add a **Color Profile** option menu (`Display Native`, `sRGB Clamp`,
+    `Display P3`, `HDR10 (BT.2020 PQ)`, and `Custom ICC Profile...` with an
+    `XmFileSelectionDialog` `.icc`/`.icm` browser and active profile indicator)
+    to `dtstyle -monitors`, persisting `color_profile.<output>=<spec>` in
+    `~/.dt/display_ergonomics.conf` and applying live `f.set_output_color_profile`
+    requests on Wayland alongside `_ICC_PROFILE` / `_DT_COLOR_PROFILE_STATE`
+    root properties on X11/RandR.
+  - Synthesize standards-compliant ICC v2.4 `Display P3`, `Adobe RGB`, and
+    `HDR10` profiles in `dtwm-wayland`, restore persisted per-output color
+    profiles on startup, dynamically update per-surface preferred
+    `wp_color_manager_v1` image descriptions (`ST.2084 PQ` + `BT.2020` on HDR10
+    outputs, `Display P3` on P3 outputs, `sRGB` otherwise), and tone-map
+    `ST.2084 PQ` / `HLG` / wide-gamut `BT.2020` & `Display P3` surfaces onto SDR
+    outputs via a zero-readback GLES2 GLSL shader (`gles2_shader`) with automatic
+    LUT-accelerated CPU fallback (`cpu_lut`), covered by
+    `check-dtwm-wayland-hdr-dtstyle.py`.
 - Add upstream Wayland dialog modality, tearing-control, and FIFO frame-pacing
   protocols (`xdg-dialog-v1`, `wp-tearing-control-v1`, and `wp-fifo-v1`) in
   `dtwm-wayland`, advancing the CK Core Motif pin to `b1829055a603`:

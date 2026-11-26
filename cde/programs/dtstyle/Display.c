@@ -21,6 +21,7 @@
 #include <cairo/cairo-xlib.h>
 
 #include <Xm/DrawingA.h>
+#include <Xm/FileSB.h>
 #include <Xm/Form.h>
 #include <Xm/Frame.h>
 #include <Xm/LabelG.h>
@@ -75,6 +76,7 @@ typedef struct {
     int rotation;        /* 0, 90, 180, 270 */
     int dpi;             /* 96, 120, 144, 168, 192 */
     bool vrr_enabled;    /* Per-output Variable Refresh Rate / Adaptive Sync */
+    char color_profile[256]; /* "default", "srgb", "display-p3", "hdr10", or .icc path */
     int mode_count;
     DispMode modes[MAX_DISP_MODES];
 #ifdef HAVE_XRANDR
@@ -130,6 +132,11 @@ typedef struct {
     Widget rot_btns[4];
     Widget dpi_opt_menu;
     Widget dpi_btns[5];
+    Widget color_opt_menu;
+    Widget color_btns[5];
+    Widget color_browse_btn;
+    Widget color_path_lbl;
+    Widget icc_fsb_dlg;
     Widget ergo_tb;
     Widget nl_toggle;
     Widget nl_mode_opt_menu;
@@ -172,6 +179,21 @@ static const char *const k_nl_mode_labels[3] = {
     "Always On",
     "Night Schedule (20:00-06:00)",
     "Sunset to Sunrise",
+};
+
+static const char *const k_color_profile_ids[5] = {
+    "default",
+    "srgb",
+    "display-p3",
+    "hdr10",
+    "custom",
+};
+static const char *const k_color_profile_labels[5] = {
+    "Native",
+    "sRGB Clamp",
+    "Display P3",
+    "HDR10 (PQ)",
+    "Custom ICC...",
 };
 
 static int clamp_i(int v, int lo, int hi) {
@@ -257,6 +279,8 @@ static void save_ergonomics_file(
     for (int i = 0; i < count; ++i) {
         if (arr[i].name[0]) {
             fprintf(fp, "vrr.%s=%d\n", arr[i].name, arr[i].vrr_enabled ? 1 : 0);
+            const char *cp = arr[i].color_profile[0] ? arr[i].color_profile : "default";
+            fprintf(fp, "color_profile.%s=%s\n", arr[i].name, cp);
         }
     }
     if (fclose(fp) == 0) {
@@ -305,6 +329,17 @@ static void load_ergonomics_into_state(void) {
                 for (int i = 0; i < g_disp.count; ++i) {
                     if (strcmp(g_disp.outs[i].name, k + 4) == 0) {
                         g_disp.outs[i].vrr_enabled = (atoi(v) != 0);
+                    }
+                }
+            } else if (strncmp(k, "color_profile.", 14) == 0) {
+                for (int i = 0; i < g_disp.count; ++i) {
+                    if (strcmp(g_disp.outs[i].name, k + 14) == 0) {
+                        snprintf(
+                            g_disp.outs[i].color_profile,
+                            sizeof(g_disp.outs[i].color_profile),
+                            "%s",
+                            v[0] ? v : "default"
+                        );
                     }
                 }
             }
@@ -367,6 +402,42 @@ static void load_ergonomics_into_state(void) {
                     }
                 }
             }
+        }
+        Atom cp_a = XInternAtom(style.display, "_DT_COLOR_PROFILE_STATE", True);
+        if (cp_a != None) {
+            Atom at = None;
+            int af = 0;
+            unsigned long ni = 0, rem = 0;
+            unsigned char *data = nullptr;
+            if (XGetWindowProperty(style.display, style.root, cp_a, 0, 1024, False,
+                                   AnyPropertyType, &at, &af, &ni, &rem, &data) == Success && data) {
+                char buf[1024];
+                size_t cl = ni < sizeof(buf) - 1 ? (size_t)ni : sizeof(buf) - 1;
+                memcpy(buf, data, cl);
+                buf[cl] = '\0';
+                XFree(data);
+                char *savep = nullptr;
+                for (char *tok = strtok_r(buf, ",", &savep); tok; tok = strtok_r(nullptr, ",", &savep)) {
+                    char *eq = strchr(tok, '=');
+                    if (!eq) continue;
+                    *eq = '\0';
+                    for (int i = 0; i < g_disp.count; ++i) {
+                        if (strcmp(g_disp.outs[i].name, tok) == 0) {
+                            snprintf(
+                                g_disp.outs[i].color_profile,
+                                sizeof(g_disp.outs[i].color_profile),
+                                "%s",
+                                (eq[1] != '\0') ? (eq + 1) : "default"
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    }
+    for (int i = 0; i < g_disp.count; ++i) {
+        if (!g_disp.outs[i].color_profile[0]) {
+            snprintf(g_disp.outs[i].color_profile, sizeof(g_disp.outs[i].color_profile), "default");
         }
     }
 
@@ -643,7 +714,7 @@ static void apply_ergonomics(
     }
 
     if (g_disp.is_wayland) {
-        char cmd[256];
+        char cmd[512];
         snprintf(cmd, sizeof(cmd), "f.set_night_light %d %s %d %d %d",
                  nl_enabled ? 1 : 0, mode_str, temp_k, nl_start_min, nl_end_min);
         send_wayland_wm_request(cmd);
@@ -651,6 +722,10 @@ static void apply_ergonomics(
             if (!arr[i].name[0]) continue;
             snprintf(cmd, sizeof(cmd), "f.set_vrr %s %d",
                      arr[i].name, arr[i].vrr_enabled ? 1 : 0);
+            send_wayland_wm_request(cmd);
+            const char *cp = arr[i].color_profile[0] ? arr[i].color_profile : "default";
+            snprintf(cmd, sizeof(cmd), "f.set_output_color_profile %s %s",
+                     arr[i].name, cp);
             send_wayland_wm_request(cmd);
         }
         return;
@@ -748,6 +823,45 @@ static void apply_ergonomics(
     }
     XChangeProperty(style.display, style.root, vrr_state_atom, XA_STRING, 8,
                     PropModeReplace, (const unsigned char *)vrr_buf, vp);
+
+    Atom cp_state_atom = XInternAtom(style.display, "_DT_COLOR_PROFILE_STATE", False);
+    Atom icc_atom = XInternAtom(style.display, "_ICC_PROFILE", False);
+    char cp_buf[1024];
+    int cpp = 0;
+    cp_buf[0] = '\0';
+    bool uploaded_icc = false;
+    for (int i = 0; i < count; ++i) {
+        const char *cp = arr[i].color_profile[0] ? arr[i].color_profile : "default";
+        int n = snprintf(cp_buf + cpp, sizeof(cp_buf) - (size_t)cpp, "%s%s=%s",
+                         cpp > 0 ? "," : "", arr[i].name, cp);
+        if (n > 0 && cpp + n < (int)sizeof(cp_buf)) cpp += n;
+        if (!uploaded_icc && cp[0] == '/') {
+            FILE *ifp = fopen(cp, "rb");
+            if (ifp) {
+                struct stat st;
+                if (fstat(fileno(ifp), &st) == 0 && st.st_size > 128 &&
+                    st.st_size <= (4 * 1024 * 1024)) {
+                    unsigned char *ibuf = malloc((size_t)st.st_size);
+                    if (ibuf) {
+                        if (fread(ibuf, 1, (size_t)st.st_size, ifp) == (size_t)st.st_size) {
+                            XChangeProperty(
+                                style.display, style.root, icc_atom, XA_CARDINAL, 8,
+                                PropModeReplace, ibuf, (int)st.st_size
+                            );
+                            uploaded_icc = true;
+                        }
+                        free(ibuf);
+                    }
+                }
+                fclose(ifp);
+            }
+        }
+    }
+    if (!uploaded_icc) {
+        XDeleteProperty(style.display, style.root, icc_atom);
+    }
+    XChangeProperty(style.display, style.root, cp_state_atom, XA_STRING, 8,
+                    PropModeReplace, (const unsigned char *)cp_buf, cpp);
     XSync(style.display, False);
 #endif
 }
@@ -1548,6 +1662,93 @@ static void select_dpi_cb(Widget w, XtPointer client_data, XtPointer call_data) 
     }
 }
 
+static void update_controls_from_selected(void);
+
+static void icc_fsb_cancel_cb(Widget w, XtPointer client_data, XtPointer call_data) {
+    (void)client_data;
+    (void)call_data;
+    XtUnmanageChild(w);
+    update_controls_from_selected();
+}
+
+static void icc_fsb_ok_cb(Widget w, XtPointer client_data, XtPointer call_data) {
+    (void)client_data;
+    XmFileSelectionBoxCallbackStruct *cbs = (XmFileSelectionBoxCallbackStruct *)call_data;
+    char *path = nullptr;
+    if (cbs && cbs->value && XmStringGetLtoR(cbs->value, XmFONTLIST_DEFAULT_TAG, &path) && path) {
+        if (path[0] && g_disp.selected >= 0 && g_disp.selected < g_disp.count) {
+            snprintf(
+                g_disp.outs[g_disp.selected].color_profile,
+                sizeof(g_disp.outs[g_disp.selected].color_profile),
+                "%s",
+                path
+            );
+            apply_ergonomics(
+                g_disp.nl_enabled, g_disp.nl_mode, g_disp.nl_temp_k,
+                g_disp.nl_start_min, g_disp.nl_end_min,
+                g_disp.outs, g_disp.count, false
+            );
+        }
+        XtFree(path);
+    }
+    XtUnmanageChild(w);
+    update_controls_from_selected();
+}
+
+static void open_icc_file_picker(void) {
+    if (!style.displayDialog) return;
+    if (!g_disp.icc_fsb_dlg) {
+        Arg args[8];
+        int n = 0;
+        XmString pat = CMPSTR("*.ic*");
+        XmString dtitle = CMPSTR("Select Monitor ICC Color Profile");
+        XtSetArg(args[n], XmNpattern, pat); n++;
+        XtSetArg(args[n], XmNdialogTitle, dtitle); n++;
+        g_disp.icc_fsb_dlg = XmCreateFileSelectionDialog(style.displayDialog, "iccFileSB", args, n);
+        XmStringFree(pat);
+        XmStringFree(dtitle);
+        Widget help_btn = XmFileSelectionBoxGetChild(g_disp.icc_fsb_dlg, XmDIALOG_HELP_BUTTON);
+        if (help_btn) XtUnmanageChild(help_btn);
+        XtAddCallback(g_disp.icc_fsb_dlg, XmNokCallback, icc_fsb_ok_cb, nullptr);
+        XtAddCallback(g_disp.icc_fsb_dlg, XmNcancelCallback, icc_fsb_cancel_cb, nullptr);
+    }
+    XtManageChild(g_disp.icc_fsb_dlg);
+}
+
+static void browse_icc_profile_cb(Widget w, XtPointer client_data, XtPointer call_data) {
+    (void)w;
+    (void)client_data;
+    (void)call_data;
+    if (g_disp.updating_widgets) return;
+    open_icc_file_picker();
+}
+
+static void select_color_profile_cb(Widget w, XtPointer client_data, XtPointer call_data) {
+    (void)w;
+    (void)call_data;
+    if (g_disp.updating_widgets) return;
+    int cidx = (int)(intptr_t)client_data;
+    if (cidx < 0 || cidx >= 5 || g_disp.selected < 0 || g_disp.selected >= g_disp.count) {
+        return;
+    }
+    if (cidx == 4) {
+        open_icc_file_picker();
+        return;
+    }
+    snprintf(
+        g_disp.outs[g_disp.selected].color_profile,
+        sizeof(g_disp.outs[g_disp.selected].color_profile),
+        "%s",
+        k_color_profile_ids[cidx]
+    );
+    update_controls_from_selected();
+    apply_ergonomics(
+        g_disp.nl_enabled, g_disp.nl_mode, g_disp.nl_temp_k,
+        g_disp.nl_start_min, g_disp.nl_end_min,
+        g_disp.outs, g_disp.count, false
+    );
+}
+
 static void toggle_vrr_cb(Widget w, XtPointer client_data, XtPointer call_data) {
     (void)w;
     (void)client_data;
@@ -1716,6 +1917,30 @@ static void update_controls_from_selected(void) {
         XtVaSetValues(g_disp.dpi_opt_menu, XmNmenuHistory, g_disp.dpi_btns[dpi_idx], NULL);
     }
 
+    int cp_idx = 0;
+    const char *cp = o->color_profile[0] ? o->color_profile : "default";
+    if (strcasecmp(cp, "default") == 0 || strcasecmp(cp, "none") == 0) cp_idx = 0;
+    else if (strcasecmp(cp, "srgb") == 0) cp_idx = 1;
+    else if (strcasecmp(cp, "display-p3") == 0 || strcasecmp(cp, "p3") == 0) cp_idx = 2;
+    else if (strcasecmp(cp, "hdr10") == 0 || strcasecmp(cp, "bt2020-pq") == 0) cp_idx = 3;
+    else cp_idx = 4;
+
+    if (g_disp.color_opt_menu && g_disp.color_btns[cp_idx]) {
+        XtVaSetValues(g_disp.color_opt_menu, XmNmenuHistory, g_disp.color_btns[cp_idx], NULL);
+    }
+    if (g_disp.color_path_lbl) {
+        char plbl[192];
+        if (cp_idx == 4) {
+            const char *base = strrchr(cp, '/');
+            snprintf(plbl, sizeof(plbl), "ICC: %s", base ? (base + 1) : cp);
+        } else {
+            snprintf(plbl, sizeof(plbl), "Active: %s", k_color_profile_labels[cp_idx]);
+        }
+        XmString xs = CMPSTR(plbl);
+        XtVaSetValues(g_disp.color_path_lbl, XmNlabelString, xs, NULL);
+        XmStringFree(xs);
+    }
+
     if (g_disp.vrr_toggle) {
         XmToggleButtonSetState(g_disp.vrr_toggle, o->vrr_enabled ? True : False, False);
     }
@@ -1806,27 +2031,8 @@ static void dialog_button_cb(Widget w, XtPointer client_data, XtPointer call_dat
     }
 }
 
-static void display_ipc_prop_eh(Widget w, XtPointer client_data, XEvent *ev, Boolean *cont) {
-    (void)client_data;
-    (void)cont;
-    if (!ev || ev->type != PropertyNotify || !style.display) return;
-    Atom ipc_atom = XInternAtom(style.display, "_DTSTYLE_DISPLAY_IPC", False);
-    if (ev->xproperty.atom != ipc_atom || ev->xproperty.state != PropertyNewValue) return;
-
-    Atom act = None;
-    int fmt = 0;
-    unsigned long ni = 0, rem = 0;
-    unsigned char *data = nullptr;
-    if (XGetWindowProperty(style.display, XtWindow(w), ipc_atom, 0, 512, True,
-                           AnyPropertyType, &act, &fmt, &ni, &rem, &data) != Success || !data) {
-        return;
-    }
-    char cmd[512];
-    size_t cl = ni < sizeof(cmd) - 1 ? (size_t)ni : sizeof(cmd) - 1;
-    memcpy(cmd, data, cl);
-    cmd[cl] = '\0';
-    XFree(data);
-
+static void handle_display_ipc_cmd(const char *cmd) {
+    if (!cmd || !cmd[0]) return;
     if (strncmp(cmd, "set-ergonomics", 14) == 0) {
         int en = 1, tk = 3400, vrr = 1;
         char mode[32] = "always";
@@ -1838,6 +2044,36 @@ static void display_ipc_prop_eh(Widget w, XtPointer client_data, XEvent *ev, Boo
             g_disp.nl_temp_k = clamp_i(tk, 2700, 6500);
             for (int i = 0; i < g_disp.count; ++i) {
                 g_disp.outs[i].vrr_enabled = (vrr != 0);
+            }
+            update_controls_from_selected();
+            apply_ergonomics(
+                g_disp.nl_enabled, g_disp.nl_mode, g_disp.nl_temp_k,
+                g_disp.nl_start_min, g_disp.nl_end_min,
+                g_disp.outs, g_disp.count, false
+            );
+        }
+    } else if (strncmp(cmd, "set-color-profile", 17) == 0 && isspace((unsigned char)cmd[17])) {
+        const char *p = cmd + 18;
+        while (*p && isspace((unsigned char)*p)) p++;
+        char target[64] = {0};
+        size_t ti = 0;
+        while (*p && !isspace((unsigned char)*p) && ti + 1 < sizeof(target)) {
+            target[ti++] = *p++;
+        }
+        target[ti] = '\0';
+        while (*p && isspace((unsigned char)*p)) p++;
+        if (target[0] && *p) {
+            bool all = (strcasecmp(target, "all") == 0);
+            for (int i = 0; i < g_disp.count; ++i) {
+                if (all || strcmp(g_disp.outs[i].name, target) == 0 ||
+                    (isdigit((unsigned char)target[0]) && atoi(target) == i)) {
+                    snprintf(
+                        g_disp.outs[i].color_profile,
+                        sizeof(g_disp.outs[i].color_profile),
+                        "%s",
+                        p
+                    );
+                }
             }
             update_controls_from_selected();
             apply_ergonomics(
@@ -1861,6 +2097,34 @@ static void display_ipc_prop_eh(Widget w, XtPointer client_data, XEvent *ev, Boo
     }
 }
 
+static void display_ipc_prop_eh(Widget w, XtPointer client_data, XEvent *ev, Boolean *cont) {
+    (void)client_data;
+    (void)cont;
+    if (!ev || ev->type != PropertyNotify || !style.display) return;
+    Atom ipc_atom = XInternAtom(style.display, "_DTSTYLE_DISPLAY_IPC", False);
+    Atom wl_ipc_atom = XInternAtom(style.display, "_DT_STYLE_DISPLAY_IPC", False);
+    if ((ev->xproperty.atom != ipc_atom && ev->xproperty.atom != wl_ipc_atom) ||
+        ev->xproperty.state != PropertyNewValue) {
+        return;
+    }
+
+    Atom act = None;
+    int fmt = 0;
+    unsigned long ni = 0, rem = 0;
+    unsigned char *data = nullptr;
+    Window src_win = ev->xproperty.window ? ev->xproperty.window : XtWindow(w);
+    if (XGetWindowProperty(style.display, src_win, ev->xproperty.atom, 0, 512, True,
+                           AnyPropertyType, &act, &fmt, &ni, &rem, &data) != Success || !data) {
+        return;
+    }
+    char cmd[512];
+    size_t cl = ni < sizeof(cmd) - 1 ? (size_t)ni : sizeof(cmd) - 1;
+    memcpy(cmd, data, cl);
+    cmd[cl] = '\0';
+    XFree(data);
+    handle_display_ipc_cmd(cmd);
+}
+
 static void build_display_dialog(Widget shell) {
     Arg args[MAX_ARGS];
     int n;
@@ -1873,7 +2137,7 @@ static void build_display_dialog(Widget shell) {
 
     XtSetArg(g_disp_save.posArgs[g_disp_save.poscnt], XmNbuttonCount, 4); g_disp_save.poscnt++;
     XtSetArg(g_disp_save.posArgs[g_disp_save.poscnt], XmNbuttonLabelStrings, button_string); g_disp_save.poscnt++;
-    XtSetArg(g_disp_save.posArgs[g_disp_save.poscnt], XmNdefaultPosition, True); g_disp_save.poscnt++;
+    XtSetArg(g_disp_save.posArgs[g_disp_save.poscnt], XmNdefaultPosition, False); g_disp_save.poscnt++;
 
     style.displayDialog = __DtCreateDialogBoxDialog(
         shell, "displayDialog", g_disp_save.posArgs, g_disp_save.poscnt
@@ -2120,6 +2384,53 @@ static void build_display_dialog(Widget shell) {
     XmStringFree(x_dpi);
     XtManageChild(g_disp.dpi_opt_menu);
 
+    /* Row 3: Per-Monitor Color Profile / HDR / Custom ICC Picker */
+    Widget row3 = XtVaCreateManagedWidget(
+        "colorRow", xmRowColumnWidgetClass, set_rc,
+        XmNorientation, XmHORIZONTAL,
+        XmNspacing, 10,
+        NULL
+    );
+
+    Widget cp_pd = XmCreatePulldownMenu(row3, "colorPD", nullptr, 0);
+    for (int i = 0; i < 5; ++i) {
+        XmString xs = CMPSTR((char *)k_color_profile_labels[i]);
+        g_disp.color_btns[i] = XtVaCreateManagedWidget(
+            "colorItem", xmPushButtonGadgetClass, cp_pd,
+            XmNlabelString, xs,
+            NULL
+        );
+        XmStringFree(xs);
+        XtAddCallback(
+            g_disp.color_btns[i], XmNactivateCallback, select_color_profile_cb, (XtPointer)(intptr_t)i
+        );
+    }
+    XmString x_cp = CMPSTR("Color:");
+    n = 0;
+    XtSetArg(args[n], XmNlabelString, x_cp); n++;
+    XtSetArg(args[n], XmNsubMenuId, cp_pd); n++;
+    g_disp.color_opt_menu = XmCreateOptionMenu(row3, "colorOpt", args, n);
+    XmStringFree(x_cp);
+    XtManageChild(g_disp.color_opt_menu);
+
+    XmString x_browse = CMPSTR("Browse ICC...");
+    g_disp.color_browse_btn = XtVaCreateManagedWidget(
+        "browseIccBtn", xmPushButtonGadgetClass, row3,
+        XmNlabelString, x_browse,
+        XmNmarginWidth, 6,
+        NULL
+    );
+    XmStringFree(x_browse);
+    XtAddCallback(g_disp.color_browse_btn, XmNactivateCallback, browse_icc_profile_cb, nullptr);
+
+    XmString x_cp_lbl = CMPSTR("Active: Native");
+    g_disp.color_path_lbl = XtVaCreateManagedWidget(
+        "colorPathLbl", xmLabelGadgetClass, row3,
+        XmNlabelString, x_cp_lbl,
+        NULL
+    );
+    XmStringFree(x_cp_lbl);
+
     /* 3. Night Light & Adaptive Sync TitleBox */
     XmString tb3_str = CMPSTR("Night Light & Eye Comfort");
     n = 0;
@@ -2198,6 +2509,22 @@ static void build_display_dialog(Widget shell) {
         XtParent(style.displayDialog), PropertyChangeMask, False,
         display_ipc_prop_eh, nullptr
     );
+    XtAddEventHandler(
+        form, PropertyChangeMask, False,
+        display_ipc_prop_eh, nullptr
+    );
+    if (g_disp.is_wayland && style.display && style.root != None) {
+        XWindowAttributes wa;
+        if (XGetWindowAttributes(style.display, style.root, &wa)) {
+            XSelectInput(style.display, style.root, wa.your_event_mask | PropertyChangeMask);
+        }
+        Widget root_w = XtWindowToWidget(style.display, style.root);
+        if (root_w) {
+            XtAddEventHandler(root_w, PropertyChangeMask, False, display_ipc_prop_eh, nullptr);
+        } else {
+            XtRegisterDrawable(style.display, style.root, form);
+        }
+    }
 
     XtManageChild(form);
 }
@@ -2227,6 +2554,9 @@ static void publish_display_dlg_window(void) {
     Atom a = XInternAtom(style.display, "_DTSTYLE_DISPLAY_DLG_WIN", False);
     XChangeProperty(style.display, style.root, a, XA_WINDOW, 32,
                     PropModeReplace, (const unsigned char *)&w, 1);
+    Atom ready_a = XInternAtom(style.display, "_DT_STYLE_DISPLAY_READY", False);
+    XChangeProperty(style.display, style.root, ready_a, XA_STRING, 8,
+                    PropModeReplace, (const unsigned char *)"1", 1);
     XFlush(style.display);
 }
 
@@ -2246,6 +2576,21 @@ void popup_displayBB(Widget shell) {
         );
         update_controls_from_selected();
         XtManageChild(style.displayDialog);
+        {
+            Widget dsh = XtParent(style.displayDialog);
+            int scr_w = WidthOfScreen(style.screen);
+            int scr_h = HeightOfScreen(style.screen);
+            int dw = (int)XtWidth(style.displayDialog);
+            int dh = (int)XtHeight(style.displayDialog);
+            if (dw < 400) dw = 620;
+            if (dh < 300) dh = 520;
+            Position nx = (Position)((scr_w - dw) / 2);
+            Position ny = (Position)((scr_h - dh) / 2);
+            if (scr_w >= 1200 && nx < 360) nx = (Position)(scr_w - dw - 48);
+            if (nx < 24) nx = 24;
+            if (ny < 32) ny = 32;
+            XtVaSetValues(dsh, XmNx, nx, XmNy, ny, NULL);
+        }
         XtRealizeWidget(XtParent(style.displayDialog));
         publish_display_dlg_window();
         sync_monitor_identify_overlays(true);

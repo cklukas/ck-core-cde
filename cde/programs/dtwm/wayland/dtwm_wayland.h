@@ -27,6 +27,10 @@
 #if __has_include(<GLES2/gl2.h>)
 #include <wlr/render/gles2.h>
 #define DTWM_HAVE_WLR_GLES2_H 1
+#if __has_include(<wlr/render/egl.h>)
+#include <wlr/render/egl.h>
+#define DTWM_HAVE_WLR_EGL_H 1
+#endif
 #endif
 #if __has_include(<vulkan/vulkan_core.h>)
 #include <wlr/render/vulkan.h>
@@ -245,6 +249,7 @@ struct DtwmView {
     struct wlr_scene_tree *frame_tree;
     struct wlr_scene_rect *client_bg_rect;
     struct wlr_scene_tree *content_tree;
+    struct wlr_scene_buffer *tonemap_buf;
     struct wlr_scene_rect *modal_dim_rect;
     struct wlr_scene_buffer *frame_top_buf;
     struct wlr_scene_buffer *frame_bottom_buf;
@@ -299,6 +304,7 @@ struct DtwmView {
     bool modal_has_min_saved;
     bool modal_has_max_saved;
     bool modal_saved_btns_valid;
+    bool tonemap_active;
 
     /* Desktop icon state (open-window icon + minimized icon + live pixmap) */
     struct wlr_scene_buffer *desktop_icon_buf;
@@ -608,6 +614,9 @@ struct DtwmServer {
     struct wl_global *toplevel_tag_global;
     struct wlr_security_context_manager_v1 *security_context_mgr;
     struct wlr_color_manager_v1 *color_manager;
+    char last_tonemap_backend[24];
+    uint32_t last_tonemap_sample_l;
+    uint32_t last_tonemap_sample_r;
     struct wlr_xdg_wm_dialog_v1 *xdg_wm_dialog;
     struct wl_listener new_xdg_dialog;
     struct wl_list xdg_dialogs;
@@ -951,6 +960,8 @@ void dtwm_power_display_on_output_destroy(DtwmServer *server, DtwmOutput *output
 void dtwm_power_display_sync_outputs(DtwmServer *server);
 void dtwm_power_display_record_dpi(DtwmServer *server, const char *name, int dpi);
 int dtwm_power_display_lookup_dpi(const DtwmServer *server, const char *name);
+void dtwm_power_display_record_color_profile(DtwmServer *server, const char *name, const char *spec);
+const char *dtwm_power_display_lookup_color_profile(const DtwmServer *server, const char *name);
 void dtwm_power_display_on_new_input(DtwmServer *server, struct wlr_input_device *dev);
 void dtwm_power_display_notify_activity(DtwmServer *server);
 bool dtwm_power_display_handle_wm_request(DtwmServer *server, const char *cmd);

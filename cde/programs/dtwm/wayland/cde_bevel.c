@@ -753,6 +753,14 @@ void dtwm_view_update_frame(DtwmView *view) {
             wlr_scene_node_set_position(&view->content_tree->node, 0, 0);
             wlr_scene_subsurface_tree_set_clip(&view->content_tree->node, nullptr);
         }
+        if (view->tonemap_buf) {
+            if (view->tonemap_active && view->client_w > 0 && view->client_h > 0) {
+                wlr_scene_node_set_position(&view->tonemap_buf->node, 0, 0);
+                wlr_scene_buffer_set_dest_size(view->tonemap_buf, view->client_w, view->client_h);
+            } else {
+                wlr_scene_node_set_enabled(&view->tonemap_buf->node, false);
+            }
+        }
         if (view->popup_anchor_tree) {
             wlr_scene_node_set_position(&view->popup_anchor_tree->node, 0, 0);
         }
@@ -793,6 +801,14 @@ void dtwm_view_update_frame(DtwmView *view) {
     if (view->modal_dim_rect) {
         wlr_scene_rect_set_size(view->modal_dim_rect, view->client_w, view->client_h);
         wlr_scene_node_set_position(&view->modal_dim_rect->node, left, top);
+    }
+    if (view->tonemap_buf) {
+        wlr_scene_node_set_position(&view->tonemap_buf->node, left, top);
+        if (view->tonemap_active && view->client_w > 0 && view->client_h > 0) {
+            wlr_scene_buffer_set_dest_size(view->tonemap_buf, view->client_w, view->client_h);
+        } else {
+            wlr_scene_node_set_enabled(&view->tonemap_buf->node, false);
+        }
     }
 
     int outer_w = view->client_w + left + right;
