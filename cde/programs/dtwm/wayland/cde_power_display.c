@@ -468,6 +468,10 @@ static void publish_power_policy_action(DtwmServer *server, const char *action_s
     if (!server || !server->power_display || !action_str) return;
     DtwmPowerDisplayState *st = server->power_display;
     snprintf(st->last_power_action, sizeof(st->last_power_action), "%s", action_str);
+    dtwm_native_ipc_publish_prop(
+        server, "_DT_POWER_POLICY_LAST_ACTION",
+        st->last_power_action, strlen(st->last_power_action)
+    );
     if (!server->xcb_conn || server->xcb_root == XCB_WINDOW_NONE) return;
     if (st->atom_power_last_action == XCB_ATOM_NONE) {
         st->atom_power_last_action = intern_xcb_atom(server->xcb_conn, "_DT_POWER_POLICY_LAST_ACTION");
@@ -980,6 +984,14 @@ static void check_idle_suspend_with_elapsed(DtwmServer *server, int idle_sec, bo
     if (limit_sec <= 0) return;
 
     if (idle_sec >= limit_sec && (!st->idle_suspend_fired || force_recheck)) {
+        if (server->portal_idle_inhibited) {
+            char msg[256];
+            snprintf(msg, sizeof(msg),
+                     "reason=idle action=inhibited_by_portal idle_sec=%d limit_sec=%d on_battery=%d",
+                     idle_sec, limit_sec, on_battery ? 1 : 0);
+            publish_power_policy_action(server, msg);
+            return;
+        }
         st->idle_suspend_fired = true;
         bool dbus_ok = invoke_logind_suspend_dbus();
         char msg[256];

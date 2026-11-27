@@ -587,8 +587,11 @@ synchronization:
   forward and backward.
 - **Cross-toolkit dark/light mode synchronization (`cde-color-sync`):** Started
   automatically as `cde-color-sync --daemon` in `Xsession.wayland`,
-  `dtsession --wayland`, and X11 `Xsession` (and registered in
-  `cde-portals.conf` as `org.freedesktop.impl.portal.Settings=cde;gtk`).
+  `dtsession --wayland`, and X11 `Xsession` (owning
+  `org.freedesktop.impl.portal.desktop.cde` with `DBUS_NAME_FLAG_ALLOW_REPLACEMENT`
+  when running standalone and emitting `org.cde.Appearance1.SchemeChanged` so
+  `xdg-desktop-portal-cde` seamlessly takes over `Settings` alongside all other
+  CDE portals).
   Switching between `ModernDark.dp` (`modern_dark`), `HighContrast.dp`
   (`high_contrast`), and light/classic palettes in `dtstyle`, `dtsession`, or
   `dtwm-wayland` updates D-Bus `org.freedesktop.portal.Settings`
@@ -596,6 +599,51 @@ synchronization:
   `prefer-light` + `SettingChanged`), X11 `_XSETTINGS_S0` binary
   `_XSETTINGS_SETTINGS` (`Net/ThemeName`), `gsettings`, and
   `~/.config/gtk-{3,4}.0/settings.ini` live.
+
+## Native Motif `xdg-desktop-portal-cde` (`FileChooser`, `AppChooser`, `Inhibit`, `Wallpaper`, `GlobalShortcuts`, `Settings`, `RemoteDesktop` & EIS)
+
+`cde/programs/dtportal/xdg-desktop-portal-cde` (`cde.portal` +
+`cde-portals.conf` `default=cde;wlr;gtk`) provides a native CK Core Motif ABI 9
+(`libXm.so.9`) XDG Desktop Portal backend on `org.freedesktop.impl.portal.desktop.cde`
+so Firefox, Chromium, Flatpaks, Electron apps, and Wayland KVM/remote-desktop
+clients open genuine CDE Motif dialogs and integrate directly with `dtwm-wayland`:
+
+- **`FileChooser` (`OpenFile`, `SaveFile`, `SaveFiles`):** Opens a native Motif
+  `XmFileSelectionDialog` validated via `ck-core-fs-lib`, pre-populated with a
+  CDE Favorites row (`Home`, `Desktop`, `Documents`, `Downloads`, plus custom
+  entries from `~/.dt/dtfile.favorites`), file glob/MIME filters
+  (`current_filter`), dynamic portal `choices` (`XmOptionMenu` dropdowns and
+  `XmToggleButton` checkboxes), multi-selection, folder-picker mode (`directory`),
+  `SaveFiles` batch destination selection, and `Request.Close()` cancellation.
+- **`AppChooser` (`ChooseApplication`, `UpdateChoices`):** Presents a Motif
+  application picker backed by `libDtSvc`'s `DtAction` database (`DtDbLoad`,
+  `DtActionExists`, `DtActionLabel`) and XDG `.desktop` entries, supporting live
+  in-flight `UpdateChoices` list updates and `xdg-activation-v1` startup token
+  minting (`XmWaylandRequestActivationToken`).
+- **`Wallpaper` (`SetWallpaperURI`):** Optionally displays a Motif preview
+  confirmation dialog (`show-preview`), converts PNG/XPM images into a quantized
+  XPM3 backdrop (`~/.dt/backdrops/PortalWallpaper.pm`), and applies it live to
+  the active workspace via `_DT_WM_REQUEST` (`f.change_backdrop ... 0 2`).
+- **`Inhibit` (`Inhibit`, `CreateMonitor`, `QueryEndResponse`):** Tracks active
+  client inhibitors (`logout`, `user-switch`, `suspend`, `idle`), exports
+  `$XDG_RUNTIME_DIR/cde-portal-inhibit.state`, suppresses `dtwm-wayland` idle
+  auto-suspend (`f.set_portal_inhibit` -> `action=inhibited_by_portal`), and
+  emits `StateChanged` session-state signals.
+- **`GlobalShortcuts` (`CreateSession`, `BindShortcuts`, `ListShortcuts`, `ConfigureShortcuts`):**
+  Parses XDG shortcut triggers (`<Control><Alt>g`, `<Super>...`), registers live
+  compositor key grabs in `dtwm-wayland` (`f.register_portal_shortcut` /
+  `f.unregister_portal_session`), persists bindings in
+  `$XDG_CONFIG_HOME/ck-core/global-shortcuts.conf`, and emits `Activated` /
+  `Deactivated` D-Bus signals over the `.ipc` event channel.
+- **`RemoteDesktop` (`CreateSession`, `SelectDevices`, `Start`, `Notify*`, `ConnectToEIS`):**
+  Presents a Motif input-consent dialog with persistent `restore_token`
+  (`persist_mode` stored in `$XDG_CONFIG_HOME/ck-core/remotedesktop-tokens.conf`
+  for non-interactive trusted reconnects), injects pointer, keyboard, and touch
+  events via `zwlr_virtual_pointer_v1`, `zwp_virtual_keyboard_v1`, and
+  `SYNTH_TOUCH`, and implements a native **EIS v1** (`libei` Emulated Input
+  Server) binary wire-protocol `socketpair` endpoint in `ConnectToEIS`
+  (`ei_handshake` -> `ei_connection` -> `ei_seat` -> `ei_device` + `ei_pointer_abs`
+  / `ei_button` / `ei_scroll` / `ei_keyboard` / `ei_touchscreen`).
 
 ## Polkit authentication, Secret Service PAM auto-unlock, and interactive region/clipboard capture (`WP-14`)
 
@@ -916,6 +964,14 @@ atomically once the compositor session is ready.
   `docs/baremetal-3d-gpu-qualification.json`, verifying `BT.2020 ST.2084 PQ`
   and `HLG` FBO shaders at `0` LSB error and multi-plane `DRM_FORMAT_NV12`
   `DMA-BUF` modifier import + `GL_OES_EGL_image_external` YUV→RGB CSC),
+  `check-xdg-desktop-portal-cde.py` (native `libXm.so.9` `xdg-desktop-portal-cde`
+  end-to-end verification of `Settings`, `FileChooser` `OpenFile`/`SaveFile` +
+  `Request.Close`, `AppChooser` + live `UpdateChoices`, `Wallpaper` XPM3
+  conversion + `grim` backdrop pixel check, `Inhibit` `CreateMonitor` +
+  compositor idle-suspend suppression, `GlobalShortcuts` `<Control><Alt>g`
+  `Activated`/`Deactivated` signals, and `RemoteDesktop` Motif consent +
+  `restore_token` + `NotifyPointer*` + `ConnectToEIS` binary EIS v1 wire-protocol
+  clicks),
   `check-dtwm-wayland-hdr-dtstyle.py` (`dtstyle -monitors` per-monitor Color
   Profile picker + `~/.dt/display_ergonomics.conf` persistence + GLES2 shader
   and CPU LUT mixed SDR + HDR10 `BT.2020 PQ` per-surface tone mapping),

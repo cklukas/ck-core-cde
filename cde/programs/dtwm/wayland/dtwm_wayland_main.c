@@ -7273,6 +7273,160 @@ static bool handle_compositor_keybinding(DtwmServer *server, uint32_t mods, xkb_
     return false;
 }
 
+static void publish_portal_shortcut_event(
+    DtwmServer *server,
+    const char *kind,
+    const char *session_key,
+    const char *shortcut_id,
+    uint32_t t_ms
+) {
+    if (!server || !kind || !session_key || !shortcut_id) return;
+    server->portal_shortcut_seq++;
+    char buf[320];
+    int n = snprintf(
+        buf, sizeof(buf), "%s %s %s %u %u",
+        kind, session_key, shortcut_id, server->portal_shortcut_seq, t_ms
+    );
+    if (n <= 0) return;
+    dtwm_native_ipc_publish_prop(server, "_DT_PORTAL_SHORTCUT_EVENT", buf, (size_t)n);
+    if (server->xcb_conn && server->xcb_root != XCB_WINDOW_NONE) {
+        xcb_intern_atom_cookie_t ck = xcb_intern_atom(
+            server->xcb_conn, 0, strlen("_DT_PORTAL_SHORTCUT_EVENT"), "_DT_PORTAL_SHORTCUT_EVENT"
+        );
+        xcb_intern_atom_reply_t *rep = xcb_intern_atom_reply(server->xcb_conn, ck, nullptr);
+        if (rep && rep->atom != XCB_ATOM_NONE) {
+            xcb_change_property(
+                server->xcb_conn, XCB_PROP_MODE_REPLACE, server->xcb_root,
+                rep->atom, XCB_ATOM_STRING, 8, (uint32_t)n, buf
+            );
+            xcb_flush(server->xcb_conn);
+        }
+        free(rep);
+    }
+}
+
+static bool parse_portal_shortcut_trigger(
+    const char *spec, uint32_t *out_mods, xkb_keysym_t *out_sym
+) {
+    if (!spec || !spec[0] || !out_mods || !out_sym) return false;
+    uint32_t mods = 0;
+    const char *p = spec;
+    char key_tok[64] = {0};
+
+    while (*p) {
+        while (*p && (isspace((unsigned char)*p) || *p == '+')) p++;
+        if (!*p) break;
+        if (*p == '<') {
+            const char *end = strchr(p + 1, '>');
+            if (!end) return false;
+            size_t len = (size_t)(end - (p + 1));
+            if (len == 7 && strncasecmp(p + 1, "Control", 7) == 0) mods |= WLR_MODIFIER_CTRL;
+            else if (len == 4 && strncasecmp(p + 1, "Ctrl", 4) == 0) mods |= WLR_MODIFIER_CTRL;
+            else if (len == 3 && strncasecmp(p + 1, "Alt", 3) == 0) mods |= WLR_MODIFIER_ALT;
+            else if (len == 5 && strncasecmp(p + 1, "Shift", 5) == 0) mods |= WLR_MODIFIER_SHIFT;
+            else if ((len == 5 && strncasecmp(p + 1, "Super", 5) == 0) ||
+                     (len == 4 && strncasecmp(p + 1, "Logo", 4) == 0) ||
+                     (len == 4 && strncasecmp(p + 1, "Meta", 4) == 0)) mods |= WLR_MODIFIER_LOGO;
+            p = end + 1;
+            continue;
+        }
+        const char *plus = strchr(p, '+');
+        if (plus) {
+            size_t len = (size_t)(plus - p);
+            while (len > 0 && isspace((unsigned char)p[len - 1])) len--;
+            if ((len == 4 && strncasecmp(p, "CTRL", 4) == 0) ||
+                (len == 7 && strncasecmp(p, "CONTROL", 7) == 0)) {
+                mods |= WLR_MODIFIER_CTRL;
+                p = plus + 1;
+                continue;
+            }
+            if (len == 3 && strncasecmp(p, "ALT", 3) == 0) {
+                mods |= WLR_MODIFIER_ALT;
+                p = plus + 1;
+                continue;
+            }
+            if (len == 5 && strncasecmp(p, "SHIFT", 5) == 0) {
+                mods |= WLR_MODIFIER_SHIFT;
+                p = plus + 1;
+                continue;
+            }
+            if ((len == 5 && strncasecmp(p, "SUPER", 5) == 0) ||
+                (len == 4 && strncasecmp(p, "LOGO", 4) == 0)) {
+                mods |= WLR_MODIFIER_LOGO;
+                p = plus + 1;
+                continue;
+            }
+        }
+        size_t ki = 0;
+        while (*p && !isspace((unsigned char)*p) && ki + 1 < sizeof(key_tok)) {
+            key_tok[ki++] = *p++;
+        }
+        key_tok[ki] = '\0';
+    }
+    if (!key_tok[0]) return false;
+    xkb_keysym_t sym = xkb_keysym_from_name(key_tok, XKB_KEYSYM_CASE_INSENSITIVE);
+    if (sym == XKB_KEY_NoSymbol) return false;
+    *out_mods = xkb_keysym_to_lower(sym) != sym ? mods : mods;
+    *out_sym = xkb_keysym_to_lower(sym);
+    return true;
+}
+
+bool dtwm_portal_handle_wm_request(DtwmServer *server, const char *cmd) {
+    if (!server || !cmd) return false;
+    if (strncmp(cmd, "f.set_idle_inhibit", 18) == 0 && isspace((unsigned char)cmd[18])) {
+        int v = 0;
+        if (sscanf(cmd + 19, "%d", &v) == 1) {
+            server->portal_idle_inhibited = (v != 0);
+        }
+        return true;
+    }
+    if (strncmp(cmd, "f.unregister_portal_session", 27) == 0 && isspace((unsigned char)cmd[27])) {
+        char skey[96] = {0};
+        if (sscanf(cmd + 28, "%95s", skey) == 1) {
+            for (size_t i = 0; i < 64; ++i) {
+                if (server->portal_shortcuts[i].in_use &&
+                    strcmp(server->portal_shortcuts[i].session_key, skey) == 0) {
+                    memset(&server->portal_shortcuts[i], 0, sizeof(server->portal_shortcuts[i]));
+                }
+            }
+        }
+        return true;
+    }
+    if (strncmp(cmd, "f.register_portal_shortcut", 26) == 0 && isspace((unsigned char)cmd[26])) {
+        char skey[96] = {0}, sid[96] = {0}, trig[128] = {0};
+        if (sscanf(cmd + 27, "%95s %95s %127[^\r\n]", skey, sid, trig) == 3) {
+            uint32_t mods = 0;
+            xkb_keysym_t sym = XKB_KEY_NoSymbol;
+            if (parse_portal_shortcut_trigger(trig, &mods, &sym)) {
+                int slot = -1;
+                for (int i = 0; i < 64; ++i) {
+                    if (server->portal_shortcuts[i].in_use &&
+                        strcmp(server->portal_shortcuts[i].session_key, skey) == 0 &&
+                        strcmp(server->portal_shortcuts[i].shortcut_id, sid) == 0) {
+                        slot = i;
+                        break;
+                    }
+                    if (!server->portal_shortcuts[i].in_use && slot < 0) {
+                        slot = i;
+                    }
+                }
+                if (slot >= 0) {
+                    server->portal_shortcuts[slot].in_use = true;
+                    snprintf(server->portal_shortcuts[slot].session_key,
+                             sizeof(server->portal_shortcuts[slot].session_key), "%s", skey);
+                    snprintf(server->portal_shortcuts[slot].shortcut_id,
+                             sizeof(server->portal_shortcuts[slot].shortcut_id), "%s", sid);
+                    server->portal_shortcuts[slot].mods = mods;
+                    server->portal_shortcuts[slot].keysym = sym;
+                    server->portal_shortcuts[slot].pressed = false;
+                }
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
 bool dtwm_server_dispatch_keybinding(DtwmServer *server, uint32_t mods, xkb_keysym_t sym) {
     return handle_compositor_keybinding(server, mods, sym);
 }
@@ -7373,6 +7527,26 @@ static void handle_keyboard_key(struct wl_listener *listener, void *data) {
             } else {
                 server->super_tap_pending = false;
                 for (int i = 0; i < nsyms; ++i) {
+                    xkb_keysym_t low_sym = xkb_keysym_to_lower(syms[i]);
+                    uint32_t clean_mods =
+                        mods & (WLR_MODIFIER_SHIFT | WLR_MODIFIER_CTRL | WLR_MODIFIER_ALT | WLR_MODIFIER_LOGO);
+                    for (size_t pi = 0; pi < 64; ++pi) {
+                        if (server->portal_shortcuts[pi].in_use &&
+                            server->portal_shortcuts[pi].mods == clean_mods &&
+                            server->portal_shortcuts[pi].keysym == low_sym) {
+                            server->portal_shortcuts[pi].pressed = true;
+                            server->portal_shortcuts[pi].press_keycode = ev->keycode;
+                            publish_portal_shortcut_event(
+                                server, "ACTIVATED",
+                                server->portal_shortcuts[pi].session_key,
+                                server->portal_shortcuts[pi].shortcut_id,
+                                t_ms
+                            );
+                            handled = true;
+                            break;
+                        }
+                    }
+                    if (handled) break;
                     if (handle_compositor_keybinding(server, mods, syms[i])) {
                         handled = true;
                         break;
@@ -7380,6 +7554,20 @@ static void handle_keyboard_key(struct wl_listener *listener, void *data) {
                 }
             }
         } else if (ev->state == WL_KEYBOARD_KEY_STATE_RELEASED) {
+            for (size_t pi = 0; pi < 64; ++pi) {
+                if (server->portal_shortcuts[pi].in_use &&
+                    server->portal_shortcuts[pi].pressed &&
+                    server->portal_shortcuts[pi].press_keycode == ev->keycode) {
+                    server->portal_shortcuts[pi].pressed = false;
+                    publish_portal_shortcut_event(
+                        server, "DEACTIVATED",
+                        server->portal_shortcuts[pi].session_key,
+                        server->portal_shortcuts[pi].shortcut_id,
+                        t_ms
+                    );
+                    handled = true;
+                }
+            }
             if (is_super_sym && server->super_tap_pending) {
                 server->super_tap_pending = false;
                 if ((uint32_t)(t_ms - server->super_tap_press_ms) <= 600u) {

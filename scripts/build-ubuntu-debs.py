@@ -739,6 +739,30 @@ def guest_build_and_verify(args: argparse.Namespace) -> int:
     shutil.copy2(deb_meta / "cde-wayland.desktop", r_cde / "usr" / "share" / "wayland-sessions" / "cde-wayland.desktop")
     if (deb_meta / "cde-portals.conf").is_file():
         shutil.copy2(deb_meta / "cde-portals.conf", r_cde / "usr" / "share" / "xdg-desktop-portal" / "cde-portals.conf")
+    portal_src = cde_repo / "cde" / "programs" / "dtportal" / "cde.portal"
+    if portal_src.is_file():
+        (r_cde / "usr" / "share" / "xdg-desktop-portal" / "portals").mkdir(parents=True, exist_ok=True)
+        shutil.copy2(portal_src, r_cde / "usr" / "share" / "xdg-desktop-portal" / "portals" / "cde.portal")
+    (r_cde / "usr" / "share" / "dbus-1" / "services").mkdir(parents=True, exist_ok=True)
+    (r_cde / "usr" / "share" / "dbus-1" / "services" / "org.freedesktop.impl.portal.desktop.cde.service").write_text(
+        "[D-BUS Service]\n"
+        "Name=org.freedesktop.impl.portal.desktop.cde\n"
+        "Exec=/usr/dt/bin/xdg-desktop-portal-cde\n"
+        "SystemdService=xdg-desktop-portal-cde.service\n",
+        encoding="utf-8",
+    )
+    (r_cde / "usr" / "lib" / "systemd" / "user").mkdir(parents=True, exist_ok=True)
+    (r_cde / "usr" / "lib" / "systemd" / "user" / "xdg-desktop-portal-cde.service").write_text(
+        "[Unit]\n"
+        "Description=CK Core CDE XDG Desktop Portal Backend (Native Motif)\n"
+        "PartOf=graphical-session.target\n\n"
+        "[Service]\n"
+        "Type=dbus\n"
+        "BusName=org.freedesktop.impl.portal.desktop.cde\n"
+        "ExecStart=/usr/dt/bin/xdg-desktop-portal-cde\n"
+        "Restart=on-failure\n",
+        encoding="utf-8",
+    )
     shutil.copy2(deb_meta / "Xsession.wayland", r_cde / "usr" / "dt" / "bin" / "Xsession.wayland")
     os.chmod(r_cde / "usr" / "dt" / "bin" / "Xsession.wayland", 0o755)
     (r_cde / "lib" / "systemd" / "system").mkdir(parents=True, exist_ok=True)

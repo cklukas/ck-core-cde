@@ -1,0 +1,4 @@
+[portal]
+DBusName=org.freedesktop.impl.portal.desktop.cde
+Interfaces=org.freedesktop.impl.portal.FileChooser;org.freedesktop.impl.portal.AppChooser;org.freedesktop.impl.portal.Inhibit;org.freedesktop.impl.portal.Wallpaper;org.freedesktop.impl.portal.GlobalShortcuts;org.freedesktop.impl.portal.RemoteDesktop;org.freedesktop.impl.portal.Settings;
+UseIn=CDE;cde;cde-wayland;

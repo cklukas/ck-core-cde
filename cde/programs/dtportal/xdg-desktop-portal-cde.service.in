@@ -1,0 +1,9 @@
+[Unit]
+Description=CK Core CDE XDG Desktop Portal Backend (Native Motif)
+PartOf=graphical-session.target
+
+[Service]
+Type=dbus
+BusName=org.freedesktop.impl.portal.desktop.cde
+ExecStart=@CDE_INSTALLATION_TOP@/bin/xdg-desktop-portal-cde
+Restart=on-failure

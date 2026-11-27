@@ -641,6 +641,19 @@ struct DtwmServer {
     uint32_t scanout_commits;
     uint32_t scanout_fallbacks;
 
+    /* xdg-desktop-portal-cde GlobalShortcuts & Inhibit integration */
+    struct {
+        bool in_use;
+        char session_key[96];
+        char shortcut_id[96];
+        uint32_t mods;
+        xkb_keysym_t keysym;
+        bool pressed;
+        uint32_t press_keycode;
+    } portal_shortcuts[64];
+    uint32_t portal_shortcut_seq;
+    bool portal_idle_inhibited;
+
     /* Interactive move / resize / snap / wireframe state */
     DtwmCursorMode cursor_mode;
     DtwmView *grabbed_view;
@@ -1061,5 +1074,6 @@ void dtwm_overview_set_visible(DtwmServer *server, bool visible);
 void dtwm_overview_toggle(DtwmServer *server);
 void dtwm_overview_refresh(DtwmServer *server);
 void dtwm_publish_presentation_state(DtwmServer *server);
+bool dtwm_portal_handle_wm_request(DtwmServer *server, const char *cmd);
 
 #endif /* DTWM_WAYLAND_H */

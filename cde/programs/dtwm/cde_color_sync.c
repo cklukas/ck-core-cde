@@ -359,6 +359,7 @@ typedef struct {
 typedef int (*DBusHandleMessageFunction)(DBusConnection *, DBusMessage *, void *);
 
 #define DBUS_BUS_SESSION 0
+#define DBUS_NAME_FLAG_ALLOW_REPLACEMENT 0x1
 #define DBUS_NAME_FLAG_REPLACE_EXISTING 0x2
 #define DBUS_NAME_FLAG_DO_NOT_QUEUE 0x4
 #define DBUS_HANDLER_RESULT_HANDLED 0
@@ -473,6 +474,17 @@ static void daemon_set_scheme(DaemonCtx *ctx, CdeScheme sc, bool broadcast_signa
         emit_portal_setting_u32(ctx, "org.freedesktop.impl.portal.Settings", "org.freedesktop.appearance", "contrast", ct_val);
         emit_portal_setting_u32(ctx, "org.freedesktop.portal.Settings", "org.freedesktop.appearance", "color-scheme", cs_val);
         emit_portal_setting_u32(ctx, "org.freedesktop.portal.Settings", "org.freedesktop.appearance", "contrast", ct_val);
+        DBusMessage *asig = ctx->db.msg_new_signal("/org/cde/Appearance1", "org.cde.Appearance1", "SchemeChanged");
+        if (asig) {
+            const char *ms = scheme_mode_str(sc);
+            DBusMessageIter ait;
+            ctx->db.iter_init_append(asig, &ait);
+            ctx->db.iter_append_basic(&ait, DBUS_TYPE_STRING, &ms);
+            ctx->db.iter_append_basic(&ait, DBUS_TYPE_UINT32, &cs_val);
+            ctx->db.iter_append_basic(&ait, DBUS_TYPE_UINT32, &ct_val);
+            ctx->db.conn_send(ctx->conn, asig, NULL);
+            ctx->db.msg_unref(asig);
+        }
         ctx->db.conn_flush(ctx->conn);
     }
 }
@@ -645,7 +657,7 @@ static int run_daemon(CdeScheme initial_scheme) {
 
             ctx.db.error_init(&err);
             ctx.db.bus_request_name(ctx.conn, "org.freedesktop.impl.portal.desktop.cde",
-                                    DBUS_NAME_FLAG_REPLACE_EXISTING | DBUS_NAME_FLAG_DO_NOT_QUEUE, &err);
+                                    DBUS_NAME_FLAG_ALLOW_REPLACEMENT | DBUS_NAME_FLAG_DO_NOT_QUEUE, &err);
             ctx.db.error_free(&err);
 
             /* Only claim org.freedesktop.portal.desktop when xdg-desktop-portal is not running */

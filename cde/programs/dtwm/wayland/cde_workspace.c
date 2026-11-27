@@ -1157,6 +1157,7 @@ static void handle_dt_wm_request_item(DtwmServer *server, const char *cmd) {
     if (dtwm_power_display_handle_wm_request(server, cmd)) return;
     if (dtwm_a11y_handle_wm_request(server, cmd)) return;
     if (dtwm_wayland_session_handle_wm_request(server, cmd)) return;
+    if (dtwm_portal_handle_wm_request(server, cmd)) return;
 
     if (strncmp(cmd, "f.set_minimize_animation", 24) == 0 && isspace((unsigned char)cmd[24])) {
         server->minimize_anim_style = dtwm_parse_anim_style(cmd + 25);

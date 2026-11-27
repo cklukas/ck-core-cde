@@ -795,6 +795,13 @@ AC_SUBST([WAYLAND_COMP_LIBS])
 AC_SUBST([WAYLAND_CLIENT_CFLAGS])
 AC_SUBST([WAYLAND_CLIENT_LIBS])
 
+PKG_CHECK_MODULES([DTPORTAL_DEPS], [gio-unix-2.0 glib-2.0 gobject-2.0 cairo xkbcommon],
+  [build_dtportal=yes],
+  [DTPORTAL_DEPS_CFLAGS=""; DTPORTAL_DEPS_LIBS=""; build_dtportal=no])
+AM_CONDITIONAL([BUILD_DTPORTAL], [test "x$build_dtportal" = "xyes"])
+AC_SUBST([DTPORTAL_DEPS_CFLAGS])
+AC_SUBST([DTPORTAL_DEPS_LIBS])
+
 dnl check MISSING_PROGS - error out here if there's stuff in it.
 
 if test -n "$MISSING_PROGS"; then
@@ -941,6 +948,7 @@ programs/dtfile/dtcopy/Makefile
 programs/dtfile/dtsync/Makefile
 
 programs/dtwm/Makefile
+programs/dtportal/Makefile
 
 programs/dtlogin/Makefile
 programs/dtlogin/config/Makefile

@@ -6,7 +6,7 @@ SUBDIRS = backdrops icons dsdm dtmail dtpad dtfile dtwm dtlogin		\
         dtappbuilder palettes dtappintegrate dtprintegrate dtconfig	\
         dtcreate dtprintinfo fontaliases dtdspmsg ttsnoop dtimsstart	\
         dtpdm dtsr dtpdmd dtinfo types tttypes util dtopen localized	\
-        dthelp dtdocbook
+        dthelp dtdocbook dtportal
 
 # The user defined font tools are not built by this tree; their shared
 # library source is still checked.  The DtInfo search engine is checked here

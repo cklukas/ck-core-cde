@@ -1,4 +1,23 @@
 2026-11-27
+- Add native Motif `xdg-desktop-portal-cde` (`cde/programs/dtportal`) serving
+  `FileChooser`, `AppChooser`, `Wallpaper`, `Inhibit`, `GlobalShortcuts`,
+  `Settings`, and `RemoteDesktop` (`Notify*` + `ConnectToEIS` EIS v1 binary wire
+  protocol), routing `cde-portals.conf` `default=cde;wlr;gtk`:
+  - Provide native `libXm.so.9` `XmFileSelectionDialog` file/folder open & save
+    dialogs (`ck-core-fs-lib` path validation, CDE Favorites row, MIME/glob
+    filters, portal `choices`, `Request.Close`), `DtAction` + `.desktop`
+    `AppChooser` (`UpdateChoices` + `xdg-activation-v1` token minting), and
+    `Wallpaper` preview + XPM3 `PortalWallpaper.pm` live workspace backdrop
+    application.
+  - Wire `Inhibit` (`CreateMonitor` `StateChanged` + `dtwm-wayland`
+    `f.set_portal_inhibit` idle-suspend suppression), `GlobalShortcuts`
+    (`f.register_portal_shortcut` / `_DT_PORTAL_SHORTCUT_EVENT` `Activated` &
+    `Deactivated` signals), `Settings` (`cde-color-sync` `ALLOW_REPLACEMENT` +
+    `org.cde.Appearance1.SchemeChanged` coexistence), and `RemoteDesktop`
+    (Motif consent dialog, `restore_token` persistence, `zwlr_virtual_pointer_v1`
+    / `zwp_virtual_keyboard_v1` / `SYNTH_TOUCH` injection, and a native EIS v1
+    `ConnectToEIS` `socketpair` server), covered by
+    `check-xdg-desktop-portal-cde.py`.
 - Add `xdg-toplevel-drag-v1` live window/tab tear-off, subsurface & live-move
   `zwp_input_popup_surface_v2` CJK candidate anchoring, unoccluded fullscreen
   direct KMS scanout, and physical Broadcom V3D bare-metal 3D GPU qualification

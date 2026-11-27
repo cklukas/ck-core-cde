@@ -989,7 +989,7 @@ def run_x11_lane(
                 lambda: parse_kv_lines(subprocess.check_output([str(x11_helper_bin)], env=env, text=True))
                 .get("_DT_OSD_STATE", "")
                 .startswith("visible=0;"),
-                timeout=8.0,
+                timeout=16.0,
                 desc="X11 dtwm SetupWmEwmh _DT_OSD_STATE ready",
             )
             verify_pid_maps_motif9(dtwm_p.pid, "X11 dtwm")

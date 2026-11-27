@@ -1,0 +1,4 @@
+[D-BUS Service]
+Name=org.freedesktop.impl.portal.desktop.cde
+Exec=@CDE_INSTALLATION_TOP@/bin/xdg-desktop-portal-cde
+SystemdService=xdg-desktop-portal-cde.service
