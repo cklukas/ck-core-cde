@@ -157,7 +157,7 @@ typedef struct {
 
 static I18n i18n;
 
-static saveRestore save = {FALSE, 0, };
+static saveRestore save = {FALSE, 0, {{0}}};
 
 static char i18nRes[150]="";
 
@@ -273,7 +273,7 @@ SetImsToggleList(I18nEnv *env)
 	im_tog = (Widget*)XtCalloc(env->ims_sel->ims_list_size, sizeof(Widget));
 
 
-    for (i=0; i< env->ims_sel->ims_list_size; i++) {
+    for (i=0; (int)i < env->ims_sel->ims_list_size; i++) {
 	string = XmStringCreateLocalized(env->ims_sel->ims_list[i].im_label);
 	n = 0;
 	XtSetArg(args[n], XmNlabelString, string); n++;

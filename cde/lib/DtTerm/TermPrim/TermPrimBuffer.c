@@ -1545,7 +1545,7 @@ _DtTermPrimBufferMoveLockArea
     /* if we are moving more lines than will fit in the lineCache, we need
      * to malloc (and free) storage for the termLineRecs...
      */
-    if (cacheSize > (sizeof(lineCache) / sizeof(lineCache[0]))) {
+    if (cacheSize > (int)(sizeof(lineCache) / sizeof(lineCache[0]))) {
 	holdLines = (TermLine *) XtCalloc(cacheSize, sizeof(TermLine));
     }
 
@@ -1739,7 +1739,7 @@ _DtTermPrimBufferInsertLine
     /* if we are moving more lines than will fit in the lineCache, we need
      * to malloc (and free) storage for the termLineRecs...
      */
-    if (length > (sizeof(lineCache) / sizeof(lineCache[0]))) {
+    if (length > (int)(sizeof(lineCache) / sizeof(lineCache[0]))) {
 	holdLines = (TermLine *) XtCalloc(length, sizeof(TermLine));
     }
 
@@ -1909,7 +1909,7 @@ _DtTermPrimBufferDeleteLine
     /* if we are moving more lines than will fit in the lineCache, we need
      * to malloc (and free) storage for the termLineRecs...
      */
-    if (length > (sizeof(lineCache) / sizeof(lineCache[0]))) {
+    if (length > (int)(sizeof(lineCache) / sizeof(lineCache[0]))) {
 	holdLines = (TermLine *) XtCalloc(length, sizeof(TermLine));
     }
 

@@ -62,3 +62,5 @@ check-local: libtt.la
 	TT_LIBS='$(tt_environment_libs) $(LIBS)' \
 	python3 $(srcdir)/tests/check-environment.py $(srcdir) $(top_srcdir)/lib/tt
 	python3 $(srcdir)/tests/check-documented-calls.py $(top_srcdir)
+
+AM_CXXFLAGS = $(CK_HARDENING_PHASE2_FLAGS)

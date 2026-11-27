@@ -31,3 +31,5 @@ check-local:
 	DIRSELECT_CC='$(CC)' python3 $(srcdir)/tests/check-pad-features.py $(srcdir)
 	CC="$(CC)" python3 $(srcdir)/tests/check-temp-file-create.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-panic-signal.py
+
+dtpad_CFLAGS += $(CK_HARDENING_PHASE2_FLAGS)

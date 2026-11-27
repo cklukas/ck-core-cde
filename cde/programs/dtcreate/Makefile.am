@@ -19,3 +19,5 @@ dtcreate_SOURCES = main.c AddFiletype.c Confirmed.c			\
         CreateActionAppShell.h OpenFile.h ca_aux.h dtcreate.h		\
         parser.h cmncbs.h ErrorDialog.h UxXt.h cmnrtns.h		\
         FileCharacteristics.h cmnutils.h fileio.h
+
+AM_CFLAGS = $(CK_HARDENING_PHASE2_FLAGS)

@@ -25,3 +25,5 @@ libTerm_la_SOURCES = \
         TermParseTable.c \
         TermVersion.c
 
+
+libTerm_la_CFLAGS += $(CK_HARDENING_PHASE2_FLAGS)

@@ -1415,7 +1415,7 @@ NameToNetworkAddress(char *name, CARD16Ptr connectionTypep, ARRAY8Ptr connection
 	return FALSE;
     if (colon != name)
     {
-	if (colon - name >= sizeof (hostname))
+	if ((size_t)(colon - name) >= sizeof (hostname))
 	    return FALSE;
 	strncpy (hostname, name, colon - name);
 	hostname[colon - name] = '\0';

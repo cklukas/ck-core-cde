@@ -119,3 +119,5 @@ dtchooser_LDADD += -lgen -lresolv -lbsm -lcmd
 dtlogin_SOURCES += solaris.c
 endif
 
+
+AM_CFLAGS += $(CK_HARDENING_PHASE2_FLAGS)

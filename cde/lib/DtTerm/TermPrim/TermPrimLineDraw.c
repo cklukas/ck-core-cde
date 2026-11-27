@@ -353,7 +353,7 @@ GetLineDrawFontIndex(GlyphInfo glyphInfo, int numGlyphs)
     lineDrawFontData->glyphInfo = glyphInfo;
     lineDrawFontData->numGlyphs = numGlyphs;
     /* clear out the array... */
-    for (i = 0; i < (sizeof(lineDrawFontData->lineDrawIndex) /
+    for (i = 0; (size_t)i < (sizeof(lineDrawFontData->lineDrawIndex) /
 	    sizeof(lineDrawFontData->lineDrawIndex[0])); i++) {
 	lineDrawFontData->lineDrawIndex[i] = -1;
     }

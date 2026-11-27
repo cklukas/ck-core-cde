@@ -8,3 +8,5 @@ if SOLARIS
 dttypes_LDADD += -lgen
 endif
 
+AM_CFLAGS = $(CK_HARDENING_PHASE2_FLAGS)
+

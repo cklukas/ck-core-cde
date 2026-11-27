@@ -55,3 +55,5 @@ check-local:
 	TTDB_OBJECTS='$(rpc_ttdbserver_OBJECTS)' \
 	TTDB_LIBS='$(rpc_ttdbserver_LDADD) $(LIBS)' \
 	python3 $(srcdir)/tests/check-requests.py $(srcdir) $(top_srcdir)/lib/tt/lib/db
+
+rpc_ttdbserver_CXXFLAGS += $(CK_HARDENING_PHASE2_FLAGS)

@@ -18,3 +18,5 @@ dtsearchpath_SOURCES = AppSearchPath.C DbSearchPath.C			\
 		       InfoLibSearchPath.C ManSearchPath.C Options.C	\
 		       SearchPath.C dtsearchpath.C Options.h		\
 		       SearchPath.h
+
+AM_CXXFLAGS = $(CK_HARDENING_PHASE2_FLAGS)

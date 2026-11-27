@@ -2302,7 +2302,7 @@ make_registers(int type)
 static void
 menu_handler(Widget widget, XtPointer client_data, XEvent *event, Boolean *continue_to_dispatch)
 {
-  int button ;
+  unsigned int button = 0 ;
   Widget menu ;
 
   X->mtype = (enum menu_type) client_data ;
@@ -4230,14 +4230,14 @@ SaveSession(char *path, char *file_name)
       char *string;
 
       string = (char *)XtMalloc(num_workspaces * 40);
-      for (j = 0; j < num_workspaces; j++)
+      for (j = 0; (unsigned long)j < num_workspaces; j++)
       {
          workspace_name = XGetAtomName (X->dpy, ws_presence[j]);
          if(j == 0)
             strcpy(string, workspace_name);
          else
             strcat(string, workspace_name);
-         if(j + 1 != num_workspaces)
+         if((unsigned long)(j + 1) != num_workspaces)
             strcat(string, " ");
          XtFree ((char *) workspace_name);
       }
@@ -4548,14 +4548,14 @@ TimerEvent( XtPointer client_data, XtIntervalId *id)
 static char *
 _DtcalcStripSpaces(char *file)
 {
-   int i, j;
+   size_t i, j;
 
    if (file == nullptr)
       return (file);
 
    for (i = 0; i < strlen(file); i++)
    {
-      if (isspace(file[i]))
+      if (isspace((unsigned char)file[i]))
       {
          for(j = i; file[j] != '\0'; j++)
             file[j] = file[j + 1];

@@ -588,6 +588,7 @@ dtPrintSetupBoxClassRec =
     },	
 
     {	/* print setup box class record */
+	nullptr,					/* list_callback */
 	nullptr,					/* extension  */
     }, 
 };
@@ -3978,7 +3979,7 @@ _DtPrintSetupBoxGeoMatrixCreate(
     /*
      * menu bar 
      */
-    for (i = 0; i < psub->composite.num_children; i++)
+    for (i = 0; (Cardinal)i < psub->composite.num_children; i++)
     {
 	Widget w = psub->composite.children[i];
 
@@ -4186,7 +4187,7 @@ _DtPrintSetupBoxGeoMatrixCreate(
     {
 	++boxPtr ;
     } 
-    for(i = 0; i < psub->composite.num_children; i++)
+    for(i = 0; (Cardinal)i < psub->composite.num_children; i++)
     {
 	Widget w = psub->composite.children[i];
 	if(IsButton(w)

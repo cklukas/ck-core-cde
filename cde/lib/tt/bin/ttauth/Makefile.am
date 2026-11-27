@@ -20,3 +20,5 @@ ttauth_LDADD += $(XTOOLLIB)
 endif
 
 ttauth_SOURCES = ttauth.c process.c
+
+ttauth_CFLAGS += $(CK_HARDENING_PHASE2_FLAGS)

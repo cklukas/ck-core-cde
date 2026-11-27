@@ -144,7 +144,6 @@ _DtHelpCeAddOctalToBuf(
 	int	 *dst_max,
 	int	  grow_size )
 {
-    char     tmp;
     char    *dstPtr;
     char    *grown;
     int      newMax;
@@ -192,12 +191,22 @@ _DtHelpCeAddOctalToBuf(
 	return -1;
       }
 
-    tmp = src[4];
-    src[4] = '\0';
-    value = strtoul (src, nullptr, 16);
-    src[4] = tmp;
+    char     hexBuf[5];
+    char    *endPtr = nullptr;
 
-    if ((value == ULONG_MAX && errno == ERANGE) || value > 255 || value < 1)
+    if (strnlen (src, 4) < 4)
+      {
+	errno = CEErrorFormattingValue;
+	return -1;
+      }
+
+    memcpy (hexBuf, src, 4);
+    hexBuf[4] = '\0';
+    errno = 0;
+    value = strtoul (hexBuf, &endPtr, 16);
+
+    if (endPtr != hexBuf + 4 ||
+	(value == ULONG_MAX && errno == ERANGE) || value > 255 || value < 1)
       {
 	errno = CEErrorFormattingValue;
 	return -1;
@@ -375,7 +384,8 @@ _DtHelpCeAddStrToBuf (
     /*
      * check the input
      */
-    if (src == nullptr || *src == nullptr || (((int)strlen(*src)) < copy_size)
+    if (copy_size < 0 || src == nullptr || *src == nullptr
+		|| (((int)strlen(*src)) < copy_size)
 		|| dst == nullptr || dst_size == nullptr || dst_max == nullptr
 		|| (*dst == nullptr && (*dst_size || *dst_max)))
       {
@@ -411,14 +421,11 @@ _DtHelpCeAddStrToBuf (
       }
 
     /*
-     * make sure there is a null byte to append to.
-     */
-    dstPtr[*dst_size] = '\0';
-
-    /*
      * copy the source into the destination
      */
-    strncat (dstPtr, srcPtr, copy_size);
+    if (copy_size > 0)
+	memcpy (dstPtr + *dst_size, srcPtr, (size_t) copy_size);
+    dstPtr[*dst_size + copy_size] = '\0';
 
     /*
      * adjust the pointers

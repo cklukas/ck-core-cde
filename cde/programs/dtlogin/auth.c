@@ -201,21 +201,21 @@ struct AuthProtocol {
 
 static struct AuthProtocol AuthProtocols[] = {
 { (unsigned short) 18,	"MIT-MAGIC-COOKIE-1",
-    MitInitAuth, MitGetAuth, nullptr
+    MitInitAuth, MitGetAuth, nullptr, 0
 },
 #ifdef HASXDMAUTH
 { (unsigned short) 19,	"XDM-AUTHORIZATION-1",
-    XdmInitAuth, XdmGetAuth, XdmGetXdmcpAuth,
+    XdmInitAuth, XdmGetAuth, XdmGetXdmcpAuth, 0
 },
 #endif
 #ifdef SECURE_RPC
 { (unsigned short) 9, "SUN-DES-1",
-    SecureRPCInitAuth, SecureRPCGetAuth, nullptr,
+    SecureRPCInitAuth, SecureRPCGetAuth, nullptr, 0
 },
 #endif
 #ifdef K5AUTH
 { (unsigned short) 14, "MIT-KERBEROS-5",
-    Krb5InitAuth, Krb5GetAuth, nullptr,
+    Krb5InitAuth, Krb5GetAuth, nullptr, 0
 },
 #endif
 };
@@ -225,7 +225,7 @@ static struct AuthProtocol AuthProtocols[] = {
 static struct AuthProtocol *
 findProtocol (unsigned short name_length, const char *name)
 {
-    int	i;
+    size_t	i;
 
     for (i = 0; i < NUM_AUTHORIZATION; i++)
 	if (AuthProtocols[i].name_length == name_length &&

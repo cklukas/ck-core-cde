@@ -135,7 +135,7 @@ setScanType
 
     if (event->xbutton.time > selectInfo->lastTime &&
         event->xbutton.time - selectInfo->lastTime <
-			 (multiClickTime == 200 ? 500 : multiClickTime))
+			 (Time)(multiClickTime == 200 ? 500 : multiClickTime))
     {
         i = 0;
 	while (i < selectInfo->scanArraySize && 
@@ -1678,7 +1678,7 @@ handleTargets
         XFree((char *)tmpProp.value);
     }
 
-    for (i = 0; i < *length; i++, atomPtr++)
+    for (i = 0; (unsigned long)i < *length; i++, atomPtr++)
     {
         if (*atomPtr == CS_OF_LOCALE)
         {
@@ -3161,7 +3161,7 @@ XmTestInSelection(
            /* or if it is part of a multiclick sequence */
            (event->xbutton.time > selectInfo->lastTime &&
             event->xbutton.time - selectInfo->lastTime  <
-              XtGetMultiClickTime(XtDisplay((Widget)w))) )
+              (Time)XtGetMultiClickTime(XtDisplay((Widget)w))) )
         return(False);
     else {
         /* The determination of whether this is a transfer drag cannot be made

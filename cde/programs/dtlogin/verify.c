@@ -76,7 +76,8 @@
 #endif
 
 struct passwd nobody = {
-	"Nobody", "***************"
+	.pw_name = "Nobody",
+	.pw_passwd = "***************"
 };
 
 static  char    *Pndefault      = "/etc/default/login";

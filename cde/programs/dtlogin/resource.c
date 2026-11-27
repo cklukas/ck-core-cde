@@ -418,7 +418,7 @@ GetResource( char *name, char *class, int valueType, char **valuep,
      */
      
      if (valueType == DM_STRING && *valuep) {
- 	if (string != nullptr && strlen (*valuep) == len && !strncmp (*valuep, string, len))
+ 	if (string != nullptr && len >= 0 && strlen (*valuep) == (size_t)len && !strncmp (*valuep, string, (size_t)len))
 	    return 0;
  	else {
  	    free (*valuep);
@@ -602,7 +602,7 @@ LoadDMResources( void )
 	if (keyFile) {free(keyFile); keyFile=nullptr;}
 	if (accessFile) {free(accessFile); accessFile=nullptr;}
 
-	for (i = 0; i < NUM_DM_RESOURCES; i++) {
+	for (i = 0; (size_t)i < NUM_DM_RESOURCES; i++) {
 		snprintf (name, sizeof (name), "%s.%s", AppName, DmResources[i].name);
 		snprintf (class, sizeof (class), "%s.%s", AppName, DmResources[i].class);
 		GetResource (name, class, DmResources[i].type,
@@ -676,7 +676,7 @@ LoadDisplayResources( struct display *d )
 	lang = d->language;
 	d->language = nullptr;
 
-	for (i = 0; i < NUM_DISPLAY_RESOURCES; i++) {
+	for (i = 0; (size_t)i < NUM_DISPLAY_RESOURCES; i++) {
 		snprintf (name, sizeof (name), "%s.%s.%s", AppName,
 			dpyName, DisplayResources[i].name);
 		snprintf (class, sizeof (class), "%s.%s.%s", AppName,
@@ -726,7 +726,7 @@ SetAppName( void )
     char	*type;
     XrmValue	value;
 
-    for (i = 0; i < NUM_DM_RESOURCES; i++) {
+    for (i = 0; (size_t)i < NUM_DM_RESOURCES; i++) {
 
         /*
          *  try "Dtlogin" (default) ...

@@ -3,8 +3,12 @@ libFuzzer targets for the parsers of CK Core CDE
 
 This directory holds fuzz targets for parsers that read data an attacker or a
 damaged file can control: the dtspcd request layer, the dtlogin XDMCP request
-handlers, and the session, palette and window property readers of dtsession
-and dtwm.  No production source is changed.
+handlers, the session, palette and window property readers of dtsession and
+dtwm, the DtHelp SDL and SGML/CCDF help-volume markup parsers, the dtmail
+RFC 5322 / MIME / HTML / iTIP decoders, and the dtcm iCalendar / CalDAV XML
+parsers.  No production source is recompiled with mocks at install time; each
+harness extracts the production parser implementation into its own sanitizer
+binary.
 
 How a target works
 ------------------
@@ -135,6 +139,22 @@ Targets
   dtlogin-xaccess    dtlogin Xaccess file reader and the XDMCP access checks
                      over it (access.c, compiled whole); the input starts with
                      the client host name
+  dtmail-rfc5322     dtmail RFC 5322 / MIME / HTML / iTIP decoders
+                     (libDtMail/RFC/RFCMIME.C, MIMEPartial.C, HtmlReadable.C,
+                     ItipBanner.C, CurlMailEngine.C): Base64, Quoted-Printable,
+                     text/enriched, message/partial parameter lists, HTML
+                     plain-text extraction and CSP sandbox sanitization, iTIP
+                     invitation extraction and RFC 5322 header folding
+  dtcm-icalendar     dtcm RFC 5545 iCalendar and RFC 4791 CalDAV XML parsers
+                     (ics_io.c, caldav_client.c): VEVENT/VTODO/RRULE/EXDATE/
+                     DURATION parsing, recurrence expansion, round-trip SUMMARY/
+                     DESCRIPTION escaping, iTIP reply generation and WebDAV
+                     multistatus XML response extraction
+  dthelp-sgml        DtHelp SGML/CCDF help-volume tag and topic parser
+                     (CCDFUtil.c over bufio.c, FormatUtil.c, StringFuncs.c and
+                     CvString.c): <TOPIC>, <TITLE>, <ABBREV>, formatting
+                     commands, quoted/escaped string parameters, numeric value
+                     parameters and hex character tags
 
 What a finding means
 --------------------

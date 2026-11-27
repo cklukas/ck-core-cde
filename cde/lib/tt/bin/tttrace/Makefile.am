@@ -11,3 +11,5 @@ tttrace_LDADD += -lintl -lsocket -lnsl
 endif
 
 tttrace_SOURCES = tttrace.C tttrace_objs.C
+
+tttrace_CXXFLAGS += $(CK_HARDENING_PHASE2_FLAGS)

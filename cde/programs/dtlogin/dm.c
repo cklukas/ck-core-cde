@@ -1452,7 +1452,7 @@ SetTitle( char *name, char *ptr )
     length = strlen(s);
     
     t = strrchr(s, '/');
-    if ( (t != nullptr) && ((t-s+1) >= (strlen(p) + 3)) ) {
+    if ( (t != nullptr) && ((size_t)(t-s+1) >= (strlen(p) + 3)) ) {
 	t++;
 
 	/* the room check above guarantees that "program <displayName>" fits */

@@ -444,7 +444,78 @@ def build_dtlogin_xaccess(wt):
         "link": x_link_flags(["Xdmcp", "Xau"])}
 
 
+def build_dtmail_rfc5322(wt):
+    base = wt / "cde/programs/dtmail"
+    rfc_dir = base / "libDtMail/RFC"
+    ui_dir = base / "dtmail"
+    rfcmime = (rfc_dir / "RFCMIME.C").read_text()
+    partial = (rfc_dir / "MIMEPartial.C").read_text()
+    curl_eng = (ui_dir / "CurlMailEngine.C").read_text()
+    types = (
+        '#include "HtmlReadable.h"\n'
+        '#include "ItipBanner.h"\n'
+        "class RFCMIME {\npublic:\n"
+        "    static void readBase64(char *buf, int &off, const char *bp, const unsigned long len);\n"
+        "    static void readQPrint(char *buf, int &off, const char *bp, const unsigned long bp_len);\n"
+        "    static void readTextEnriched(char *buf, int &off, const char *bp, const unsigned long bp_len);\n"
+        "};\n"
+    )
+    prod = between(partial, "static const unsigned int\tMaxPartialParts", "static char\t*\ngetNamedHeader", "MIMEPartial.C")
+    prod += function(partial, "getNamedValueString", "MIMEPartial.C")
+    prod += function(partial, "getNamedValueInt", "MIMEPartial.C")
+    prod += between(rfcmime, "inline int\nbase64_decode_val", "void\nRFCMIME::writeBase64", "RFCMIME.C")
+    prod += between(rfcmime, "void\nRFCMIME::readTextEnriched", "void\nRFCMIME::writeQPrint", "RFCMIME.C")
+    prod += function(curl_eng, "extract_from_header", "CurlMailEngine.C")
+    prod += function(curl_eng, "extract_header_value", "CurlMailEngine.C")
+    prod += f'#include "{ui_dir / "HtmlReadable.C"}"\n'
+    prod += f'#include "{ui_dir / "ItipBanner.C"}"\n'
+    return {"types.h": types, "production.h": prod}, {
+        "cxx": True,
+        "define": ["DTMAIL_ITIP_NO_GUI=1"],
+        "include": [str(ui_dir)]}
+
+
+def build_dtcm_icalendar(wt):
+    root = wt / "cde/programs/dtcm/dtcm"
+    caldav = (root / "caldav_client.c").read_text()
+    types = f'#include "{root / "ics_io.h"}"\n#include "{root / "caldav_client.h"}"\n'
+    prod = f'#include "{root / "ics_io.c"}"\n'
+    prod += function(caldav, "dtcm_caldav_validate_url", "caldav_client.c")
+    for fn in ("find_xml_tag_open", "find_xml_tag_close", "trim_copy", "resolve_href_url", "ends_with_ics"):
+        prod += function(caldav, fn, "caldav_client.c")
+    return {"types.h": types, "production.h": prod}, {"include": [str(root)]}
+
+
+def build_dthelp_sgml(wt):
+    base = wt / "cde"
+    root = base / "lib/DtHelp"
+    ccdf = (root / "CCDFUtil.c").read_text()
+    for name in ("_DtHelpCeGetCcdfEndMark", "_DtHelpCeGetCcdfStrParam", "_DtHelpCeGetCcdfValueParam",
+                 "_DtHelpCeSkipToNextCcdfToken", "_DtHelpCeGetCcdfTopicCmd", "_DtHelpCeCheckNextCcdfCmd",
+                 "_DtHelpCeGetCcdfTopicAbbrev", "_DtHelpCeSkipCcdfAbbrev", "_DtHelpCeGetCcdfAbbrevCmd",
+                 "_DtHelpCeGetCcdfCmd", "_DtHelpCeGetCcdfFontType"):
+        c_function(ccdf, name, "CCDFUtil.c")
+    prod = f'#include "{root / "CCDFUtil.c"}"\n#include "{root / "bufio.c"}"\n#include "{root / "CvString.c"}"\n'
+    fmt = (root / "FormatUtil.c").read_text()
+    strf = (root / "StringFuncs.c").read_text()
+    for fn in ("_DtHelpCeReadBuf", "_DtHelpCeAddCharToBuf", "_DtHelpCeAddOctalToBuf",
+               "_DtHelpCeAddStrToBuf", "_DtHelpCeGetNxtBuf"):
+        prod += c_function(fmt, fn, "FormatUtil.c")
+    for fn in ("_DtHelpCeStrcspn", "_DtHelpCeStrspn"):
+        prod += c_function(strf, fn, "StringFuncs.c")
+    return {"types.h": "", "production.h": prod}, {
+        "define": ["DTLIB"],
+        "include": [str(root), str(base / "include/Dt"), str(base / "include/DtI"), str(base / "include")]}
+
+
 TARGETS = {
+    "dtmail-rfc5322": ("dtmail RFC 5322 headers, MIME Base64/Quoted-Printable/Enriched/partial parameters, "
+                       "CSP-sandboxed HTML and iTIP parser (RFCMIME.C, MIMEPartial.C, HtmlReadable.C, ItipBanner.C)",
+                       build_dtmail_rfc5322),
+    "dtcm-icalendar": ("dtcm RFC 5545 iCalendar (.ics) event/RRULE/DURATION/iTIP parser and RFC 4791 CalDAV "
+                       "multistatus XML parser (ics_io.c, caldav_client.c)", build_dtcm_icalendar),
+    "dthelp-sgml": ("DtHelp SGML/CCDF help-volume markup parser: commands, topic/title/abbrev headers, "
+                    "string/value parameters and octal escapes (DtHelp/CCDFUtil.c over bufio.c)", build_dthelp_sgml),
     "dtlogin-xaccess": ("dtlogin Xaccess file reader and the XDMCP access checks over it: hosts, patterns, "
                         "aliases, chooser and broadcast entries (dtlogin/access.c)", build_dtlogin_xaccess),
     "dthelp-sdl": ("DtHelp SDL token layer: elements, attributes, cdata with entities and multibyte "
@@ -482,9 +553,16 @@ def build(name, wt, scratch, clang, recover_ub=False):
     for fname, content in gen.items():
         (gendir / fname).write_text(content)
     binary = gendir / (f"fuzz-{name}-recover" if recover_ub else f"fuzz-{name}")
-    cmd = [clang, f"-fsanitize=fuzzer,{_CK_SANITIZE_LIST}",
+    is_cxx = bool(extra.get("cxx"))
+    compiler = (clang + "++") if is_cxx else clang
+    if is_cxx and not shutil.which(compiler):
+        compiler = os.environ.get("CXX", "clang++")
+    extra_san = ["-fno-sanitize=vptr"] if is_cxx else []
+    cmd = [compiler, *(["-x", "c++"] if is_cxx else []),
+           f"-fsanitize=fuzzer,{_CK_SANITIZE_LIST}", *extra_san,
            "-fsanitize-recover=undefined" if recover_ub else "-fno-sanitize-recover=undefined",
-           "-fno-omit-frame-pointer", "-g", "-O1", "-std=gnu23", "-w",
+           "-fno-omit-frame-pointer", "-g", "-O1",
+           "-std=gnu++17" if is_cxx else "-std=gnu23", "-w",
            "-D_DEFAULT_SOURCE", "-D_DARWIN_C_SOURCE",
            f'-DFUZZ_TYPES_H="{gendir / "types.h"}"', f'-DFUZZ_PRODUCTION_H="{gendir / "production.h"}"',
            "-I", str(gendir), *x_include_flags()]
@@ -559,7 +637,7 @@ def replay(name, scratch, wt, clang):
     mutation (libFuzzer -runs=0).  Prints one result line; returns 1 on a crash."""
     binary = build(name, wt, scratch, clang)
     seeds = HERE / "corpus" / name
-    inputs = [p for p in seeds.rglob("*") if p.is_file()]
+    inputs = [p for p in seeds.rglob("*") if p.is_file() and not p.name.startswith(".")]
     if not inputs:
         print(f"{name}: replay FAILED: no corpus files in {seeds}")
         return 1

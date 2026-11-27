@@ -68,3 +68,5 @@ Backdrops: Backdrops.src
 Palettes: Palettes.src
 	$(RM) $@
 	$(GENCPP) -P -DXCOMM=# $(LOCAL_CPP_DEFINES) $< > $@
+
+AM_CFLAGS = $(CK_HARDENING_PHASE2_FLAGS)

@@ -22,3 +22,5 @@ libDtPrint_la_SOURCES = PrintMsgs.c PrintDlgMgr.c PrintOptions.c PrintSetupB.c \
 
 EXTRA_DIST = tests/check-dtprint-pdf-cups.py
 TESTS = tests/check-dtprint-pdf-cups.py
+
+libDtPrint_la_CFLAGS += $(CK_HARDENING_PHASE2_FLAGS)

@@ -2205,7 +2205,7 @@ _tt_get_all_sessions_1(_tt_get_all_sessions_args * args,
 	} else {
 	  results.session_list.values_val = (_tt_string *)NULL;
 	}
-	for (offset = 0 ; offset < results.session_list.values_len ; offset++) {
+	for (offset = 0 ; (u_int)offset < results.session_list.values_len ; offset++) {
 		propValue = list->top();
 		results.session_list.values_val[offset].value = strdup(propValue);
 		list->pop();

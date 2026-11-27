@@ -18,3 +18,5 @@ ttdbck_SOURCES = binkey.C        binkey_utils.C  common.C \
 		 options.C       options_tt.C    prop.C \
 		 prop_utils.C    spec.C          spec_repair.C \
 		 spec_utils.C    ttdbck.C
+
+ttdbck_CXXFLAGS += $(CK_HARDENING_PHASE2_FLAGS)

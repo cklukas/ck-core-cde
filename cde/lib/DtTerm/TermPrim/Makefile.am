@@ -38,3 +38,5 @@ libTermPrim_la_SOURCES += TermPrimGetPty-svr4.c
 else
 libTermPrim_la_SOURCES += TermPrimGetPty-pts.c
 endif
+
+AM_CFLAGS = $(CK_HARDENING_PHASE2_FLAGS)

@@ -67,3 +67,5 @@ if !HAS_UTEMPTER_LIBRARY
 	chmod 4755 $(DESTDIR)$(bindir)/dtterm
 endif
 	@TIC@ dtterm.ti
+
+dtterm_CFLAGS += $(CK_HARDENING_PHASE2_FLAGS)

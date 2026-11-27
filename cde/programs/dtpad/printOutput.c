@@ -843,7 +843,7 @@ _poStripEmbeddedNulls(char *strbuf, int *len)
 {
     DtEditorErrorCode retval = DtEDITOR_NO_ERRORS;
 
-    if (strlen(strbuf) != *len)
+    if (*len >= 0 && strlen(strbuf) != (size_t)*len)
     {
        int firstNull;
 

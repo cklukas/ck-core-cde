@@ -515,7 +515,7 @@ void SaveSession( void )
 				    &ws_presence, &num_workspaces) == Success)
     {
 	all_workspace_names[0] = '\0';
-	for (j = 0; j < num_workspaces; j++)
+	for (j = 0; (unsigned long)j < num_workspaces; j++)
 	{
 	    workspace_name = XGetAtomName (display, ws_presence[j]);
 	    if (workspace_name == nullptr)

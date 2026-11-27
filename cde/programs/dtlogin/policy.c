@@ -95,7 +95,8 @@ static char * WillingMsg( void ) ;
 ARRAY8Ptr 
 ChooseAuthentication( ARRAYofARRAY8Ptr authenticationNames )
 {
-    int	i, j;
+    int	i;
+    size_t j;
 
     for (i = 0; i < authenticationNames->length; i++)
 	for (j = 0; j < NumAuth; j++)
@@ -120,7 +121,8 @@ int
 SelectAuthorizationTypeIndex( ARRAY8Ptr authenticationName,
 			      ARRAYofARRAY8Ptr authorizationNames )
 {
-    int	i, j;
+    int	i;
+    size_t j;
 
     for (j = 0; j < NumAuth; j++)
 	if (XdmcpARRAY8Equal (authenticationName,

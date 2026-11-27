@@ -27,3 +27,5 @@ tt_type_comp_LDADD += $(XTOOLLIB) -lintl -lsocket -lnsl
 endif
 
 frozen.mp_types_lex.o: frozen.mp_types_gram.h
+
+tt_type_comp_CXXFLAGS += $(CK_HARDENING_PHASE2_FLAGS)

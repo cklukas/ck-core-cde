@@ -21,3 +21,5 @@ CLEANFILES = $(CPP_TARGETS)
 Dthello: Dthello.src
 	$(RM) $@
 	$(GENCPP) -P -DXCOMM=#  $< > $@
+
+AM_CFLAGS = $(CK_HARDENING_PHASE2_FLAGS)

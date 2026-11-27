@@ -11,3 +11,5 @@ endif
 
 libCliSrv_a_SOURCES = DirIterator.C Environ.C TTFile.C UnixEnv.C	\
 	cstring.C cstring.h DirIterator.h Environ.h TTFile.h
+
+libCliSrv_a_CXXFLAGS += $(CK_HARDENING_PHASE2_FLAGS)

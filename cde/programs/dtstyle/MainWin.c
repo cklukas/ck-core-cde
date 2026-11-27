@@ -121,7 +121,7 @@ static void ProcessComponentList(
 /*+++++++++++++++++++++++++++++++++++++++*/
 
 static int         colorUse = XmCO_BLACK_WHITE;   
-static saveRestore save = {FALSE, 0, };
+static saveRestore save = {FALSE, 0, {{0}}};
 
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/

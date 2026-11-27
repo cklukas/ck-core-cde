@@ -2086,7 +2086,7 @@ SingleClickCB(
     if (event->type == KeyPress)
       {
         if ((event->xkey.time - w->icon.old_time) <=
-            XtGetMultiClickTime(XtDisplay(w)))
+            (Time)XtGetMultiClickTime(XtDisplay(w)))
           {
             reason = GuiDOUBLE_CLICK;
             callback = w->icon.double_click_callback;
@@ -2149,7 +2149,7 @@ DoubleClickCB(
     if (event->type == ButtonPress)
       {
 	if (event->xkey.time - w->icon.old_time >
-	    XtGetMultiClickTime(XtDisplay(w)))
+	    (Time)XtGetMultiClickTime(XtDisplay(w)))
 	  {
 	    return;
 	  }

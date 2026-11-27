@@ -54,6 +54,7 @@ AC_DEFUN([CK_HARDENING_INIT],
   [], [enable_sanitizers=no])
 
  ck_hardening_flags=
+ CK_HARDENING_PHASE2_FLAGS=
  AS_IF([test "x$enable_hardening" = xyes], [
    _CK_HARDENING_FLAG([-Wall], [ck_hardening_flags])
    _CK_HARDENING_FLAG([-Wextra], [ck_hardening_flags])
@@ -76,6 +77,8 @@ AC_DEFUN([CK_HARDENING_INIT],
    _CK_HARDENING_FLAG([-Werror=implicit-fallthrough], [ck_hardening_flags])
    _CK_HARDENING_FLAG([-Werror=misleading-indentation], [ck_hardening_flags])
    _CK_HARDENING_FLAG([-Werror=cast-function-type], [ck_hardening_flags])
+   _CK_HARDENING_FLAG([-Werror=sign-compare], [CK_HARDENING_PHASE2_FLAGS])
+   _CK_HARDENING_FLAG([-Werror=missing-field-initializers], [CK_HARDENING_PHASE2_FLAGS])
    _CK_HARDENING_FLAG([-fstack-protector-strong], [ck_hardening_flags])
    AS_CASE([" $CFLAGS "],
      [*" -O1 "*|*" -O2 "*|*" -O3 "*|*" -Os "*|*" -Og "*|*" -Ofast "*],
@@ -83,6 +86,7 @@ AC_DEFUN([CK_HARDENING_INIT],
           [ck_hardening_flags])],
        [AC_MSG_NOTICE([the build is not optimized; skipping -D_FORTIFY_SOURCE=3])])
  ])
+ AC_SUBST([CK_HARDENING_PHASE2_FLAGS])
 
  ck_sanitize_list=
  ck_sanitize_extra=

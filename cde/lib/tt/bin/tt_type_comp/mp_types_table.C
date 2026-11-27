@@ -643,7 +643,7 @@ input()
 		while (c == '#') {
 			char buf[MAXPATHLEN+100];
 			// Apparently fgets can't be used because ungetc is
-			int i;
+			size_t i;
 			for (i=0;i<sizeof(buf)-1;i++){
 				buf[i] = getc(yyin);
 				if (buf[i] == '\n') break;

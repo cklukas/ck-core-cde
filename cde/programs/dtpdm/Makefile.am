@@ -19,3 +19,6 @@ dtpdm_SOURCES = JobBox.c Main.c MainWindow.c PdmMsgs.c PdmOid.c		\
 		PdmXp.c PrinterBox.c JobBox.h PdmMsgs.h PdmOid.h	\
 		PdmXp.h MainWindow.h PdmOidDefs.h PdmOidStrs.h		\
 		PrinterBox.h
+
+dtpdm_CFLAGS += $(CK_HARDENING_PHASE2_FLAGS)
+AM_CXXFLAGS = $(CK_HARDENING_PHASE2_FLAGS)

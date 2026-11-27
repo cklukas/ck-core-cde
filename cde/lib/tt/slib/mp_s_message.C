@@ -1283,7 +1283,7 @@ _tt_excludes(Tt_category best_category, int best_match,
 				return 0;
 			}
 			if (   (best_match == score)
-			    && (best_timestamp >= timestamp))
+			    && (best_timestamp >= (unsigned int)timestamp))
 			{
 				// Newest PUSH pattern wins
 				return 1;
@@ -1307,7 +1307,7 @@ _tt_excludes(Tt_category best_category, int best_match,
 			}
 			if (   (best_match == score)
 			    && (best_category == TT_HANDLE_ROTATE)
-			    && (best_timestamp < timestamp))
+			    && (best_timestamp < (unsigned int)timestamp))
 			{
 				// Coldest ROTATE pattern wins
 				return 1;

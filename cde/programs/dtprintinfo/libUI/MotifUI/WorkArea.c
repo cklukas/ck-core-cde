@@ -323,7 +323,7 @@ GuiCreateScrolledWorkArea(
     * creating the scrolled window portion of the scroll workArea.
     */
    merged_args = (ArgList)GuiStackAlloc(arg_size, args_cache);
-   for (n=0; n < argcount; n++)
+   for (n=0; (Cardinal)n < argcount; n++)
     {
       merged_args[n].name = arglist[n].name;
       merged_args[n].value = arglist[n].value;
@@ -904,7 +904,7 @@ Redisplay(
    if (!w->workArea.is_list && XtIsRealized((Widget)w) &&
      w->core.visible && w->workArea.delay_layout == FALSE)
     {
-      for (i = 0; i < w->composite.num_children; i++)
+      for (i = 0; (Cardinal)i < w->composite.num_children; i++)
        {
          child = w->composite.children[i];
          workArea_const = WORKAREA_CONSTRAINT(child);

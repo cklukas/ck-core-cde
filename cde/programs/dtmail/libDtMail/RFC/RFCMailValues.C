@@ -97,18 +97,19 @@ decode1522(const char * enc_start, const char * max_end, char **output, DtMail::
     int qs = 0;
     const char *enc_end;
     for (enc_end = enc_start;
-	 *enc_end && enc_end < max_end;
+	 enc_end < max_end && *enc_end;
 	 enc_end++) {
 
 	if (*enc_end == '?') {
 	    qs += 1;
-	    if (qs > 3 && *(enc_end + 1) == '=') {
+	    if (qs > 3 && (enc_end + 1) < max_end && *(enc_end + 1) == '=') {
 		break;
 	    }
 	}
     }
 
-    if (*enc_end != '?') {
+    if (enc_end >= max_end || qs <= 3 || *enc_end != '?' ||
+	(enc_end + 1) >= max_end || *(enc_end + 1) != '=') {
 	return(enc_start);
     }
 
@@ -117,26 +118,36 @@ decode1522(const char * enc_start, const char * max_end, char **output, DtMail::
     // Pull off the char set name.
     //
     const char *cs_end;
-    for (cs_end = enc_start + 2; *cs_end != '?'; cs_end++) {
+    for (cs_end = enc_start + 2; cs_end < (enc_end - 1) && *cs_end != '?'; cs_end++) {
 	continue;
     }
+    if (cs_end >= (enc_end - 1) || *cs_end != '?' ||
+	(cs_end + 2) >= (enc_end - 1) || *(cs_end + 2) != '?') {
+	return(enc_start);
+    }
 
-    int cs_name_length = cs_end - enc_start - 2;
-    char *cs_name = (char*) malloc(cs_name_length + 1);
+    int cs_name_length = (int)(cs_end - enc_start - 2);
+    char *cs_name = (char*) malloc((size_t)cs_name_length + 1);
+    if (cs_name == NULL) {
+	return(enc_start);
+    }
 
-    strncpy(cs_name, enc_start + 2, cs_name_length);
+    memcpy(cs_name, enc_start + 2, (size_t)cs_name_length);
     cs_name[cs_name_length] = 0;
 
     // Set the encoding method and start of buffer.
     //
-    char encoding = *(cs_end + 1);
+    unsigned char encoding = (unsigned char)*(cs_end + 1);
     const char * buf_start = cs_end + 3;
+    unsigned long enc_payload_len = (buf_start < (enc_end - 1))
+	? (unsigned long)((enc_end - 1) - buf_start)
+	: 0UL;
 
     switch (toupper(encoding)) {
       case 'Q':
       {
 	  int len = 0;
-	  RFCMIME::readQPrint(*output, len, buf_start, enc_end - buf_start - 1);
+	  RFCMIME::readQPrint(*output, len, buf_start, enc_payload_len);
 	  (*output)[len] = 0;
 	  break;
       }
@@ -144,7 +155,7 @@ decode1522(const char * enc_start, const char * max_end, char **output, DtMail::
       case 'B':
       {
 	  int len = 0;
-	  RFCMIME::readBase64(*output, len, buf_start, enc_end - buf_start - 1);
+	  RFCMIME::readBase64(*output, len, buf_start, enc_payload_len);
 	  (*output)[len] = 0;
 	  break;
       }

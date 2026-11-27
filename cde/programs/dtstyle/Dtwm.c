@@ -193,7 +193,7 @@ typedef struct {
 } Dtwm, *DtwmPtr;
 
 static Dtwm dtwm;
-static saveRestore save = {FALSE, 0, };
+static saveRestore save = {FALSE, 0, {{0}}};
 
 static char dtwmRes[2048]="";
 

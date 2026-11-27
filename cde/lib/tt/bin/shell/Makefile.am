@@ -20,3 +20,5 @@ ttrm_SOURCES = ttrm.C remover.C
 ttcp_SOURCES = ttcp.C copier.C
 
 ttrmdir_SOURCES = ttrm.C remover.C
+
+AM_CXXFLAGS += $(CK_HARDENING_PHASE2_FLAGS)

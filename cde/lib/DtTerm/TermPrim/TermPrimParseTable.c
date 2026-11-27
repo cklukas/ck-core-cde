@@ -55,5 +55,5 @@ startTable[] =
   { 0x00, 0xFF, &stateStart, _DtTermPrimParseWriteChar, }, /* write to dpy    */
 };
 
-static StateTableRec stateStart = {True, startTable};
+static StateTableRec stateStart = {True, startTable, nullptr};
 StateTable _DtTermPrimStateStart = &stateStart;

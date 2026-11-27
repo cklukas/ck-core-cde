@@ -261,7 +261,7 @@ CString CString::copy
     if (isNull())
 	return *this;
 
-    for (int i = 0; i < strlen(delim); i++) {
+    for (size_t i = 0; i < strlen(delim); i++) {
 	char * q;
 	if (q = strchr(contents,delim[i])) {
 	    char remember = *q;
@@ -283,10 +283,10 @@ CString CString::copy
     if (isNull())
 	return *this;
 
-    for (int i = 0; i < strlen(delim1); i++) {
+    for (size_t i = 0; i < strlen(delim1); i++) {
 	char * q;
 	if (q = strchr(contents,delim1[i])) {
-	    for (int j = 0; j < strlen(delim2); j++) {
+	    for (size_t j = 0; j < strlen(delim2); j++) {
 		char * p;
 		if (p = strchr(q+1,delim2[j])) {
 		    char remember = *p;
@@ -519,9 +519,9 @@ int i;
 	if (strlen(delimiter) == 1)
 	    q = strchr(cursor,delimiter[0]);
 	else {
-	    for (i = 0; i < strlen(cursor); i++)
-		if (strchr(delimiter,cursor[i])) {
-		    q = &cursor[i];
+	    for (size_t k = 0; k < strlen(cursor); k++)
+		if (strchr(delimiter,cursor[k])) {
+		    q = &cursor[k];
 		    break;
 		}
 	}

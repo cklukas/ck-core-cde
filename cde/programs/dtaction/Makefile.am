@@ -11,3 +11,5 @@ EXTRA_DIST = tests/check-setgid-uid.py tests/check-setgid-uid.c
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-setgid-uid.py
+
+AM_CFLAGS = $(CK_HARDENING_PHASE2_FLAGS)

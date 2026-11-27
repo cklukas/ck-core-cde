@@ -29,3 +29,5 @@ libutil_la_SOURCES = copyright.C	    tt_map_entry_utils.C \
 	tt_entry_pt.C			    tt_secure_env.C \
 	tt_spawn.C			    tt_env_names.C
 
+
+libutil_la_CXXFLAGS += $(CK_HARDENING_PHASE2_FLAGS)

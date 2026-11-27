@@ -15,3 +15,5 @@ libdb_la_SOURCES = db_server_clnt.C           db_server_xdr.C \
         tt_db_object_utils.C                  tt_db_objid_to_key.C \
         tt_db_property.C                      tt_db_property_utils.C \
         tt_db_rpc_message_routines.C          tt_db_rpc_routines.C
+
+libdb_la_CXXFLAGS += $(CK_HARDENING_PHASE2_FLAGS)

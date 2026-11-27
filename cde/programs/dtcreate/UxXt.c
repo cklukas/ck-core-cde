@@ -517,7 +517,7 @@ Pixmap    UxConvertPixmap( char *file_name )
 void*   UxNewContext (size_t size, int isSubclass)
 {
         static void* LastSubclassResult = 0;
-        static int   LastResultSize = 0;
+        static size_t LastResultSize = 0;
 
         void * result;
 

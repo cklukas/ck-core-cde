@@ -155,7 +155,7 @@ typedef struct {
 } DispDialogState;
 
 static DispDialogState g_disp = {0};
-static saveRestore g_disp_save = {FALSE, 0, };
+static saveRestore g_disp_save = {FALSE, 0, {{0}}};
 
 static const int k_rot_values[4] = {0, 90, 180, 270};
 static const char *const k_rot_labels[4] = {

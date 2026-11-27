@@ -25,9 +25,19 @@ scripts/warning-baseline.py compare make.log baseline.json --depth 2 --strip "$P
 
 `compare` fails when any component and class has more warnings than the
 baseline, so the baseline is a ratchet: counts may only fall. The `list` mode
-prints the individual warnings of chosen classes for triage. Once a defect
-warning class reaches zero across the entire tree, `--enable-hardening` promotes
-it to `-Werror=<class>` in `cde/m4/ck_hardening.m4`.
+prints the individual warnings of chosen classes for triage. Once a defect warning class reaches zero across the entire tree,
+`--enable-hardening` promotes it to `-Werror=<class>` in `cde/m4/ck_hardening.m4`.
+For Phase 2 warning classes (`-Wsign-compare` and `-Wmissing-field-initializers`),
+`CK_HARDENING_INIT` also populates `$(CK_HARDENING_PHASE2_FLAGS)` (`-Werror=sign-compare`
+and `-Werror=missing-field-initializers` under `--enable-hardening`), ratcheting
+each cleaned library and program (`lib/DtXinerama`, `lib/DtPrint`, `lib/DtTerm`,
+`lib/tt`, `programs/dtaction`, `programs/dtcalc`, `programs/dtcreate`,
+`programs/dtdbcache`, `programs/dtexec`, `programs/dthello`, `programs/dticon`,
+`programs/dtimsstart`, `programs/dtlogin`, `programs/dtpad`, `programs/dtpdm`,
+`programs/dtpdmd`, `programs/dtportal`, `programs/dtprintinfo`,
+`programs/dtsearchpath`, `programs/dtspcd`, `programs/dtstyle`, `programs/dtterm`,
+and `programs/util/dttypes`) component-by-component on both GCC and Clang so
+cleaned subtrees cannot regress while larger C++ modules are worked down.
 
 ## Baseline 2026-11-04 and 2026-11-16 defect-class burndown
 
@@ -80,15 +90,16 @@ parse failures.
 
 A component is *audited* when a topic commit records a review of its complete
 input path, not when a compiler is quiet. Components marked "none recorded"
-have not had such a review. Ten libFuzzer targets under `cde/fuzz/` cover the
-highest-exposure network, session, window-property, database and help parsers
-and are replayed in CI via `python3 cde/fuzz/run-fuzz.py --all --replay`.
+have not had such a review. Thirteen libFuzzer targets under `cde/fuzz/` cover
+the highest-exposure network, session, window-property, database, mail,
+calendar and help parsers and are replayed in CI via
+`python3 cde/fuzz/run-fuzz.py --all --replay`.
 
 | Component | Exposure | Prior hardening | Unique warnings (baseline -> current) | Defect-class (baseline -> current) | cppcheck errors (baseline -> current) | Fuzz targets |
 |---|---|---|---:|---:|---:|---|
 | `programs/dtappbuilder` | developer tool; mostly generated stubs | temporary files, checked allocations, browser null checks and codegen bounds (2026-11-12, 2026-11-14); `abmf` `mf_calloc` overflow guard, `fopen` null check, `ui_c_file.c` indentation, `msg_file.c`/`test.c` `realloc` preservation and `write_c.c` `va_end` pairing (2026-11-16) | 1,594 -> 1,514 | 59 -> 0 | 28 -> 0 | none |
-| `programs/dtmail` | unprivileged mailer; set-group-id spool helper (`dtmailspool`); mail and MIME parsing | mail spool helper split from the mailer (2026-11-10), mailbox save and path handling, text made from a message, command-line and session input, ToolTalk request data, mail server clients, message/partial assembly, MIME and lock file text (2026-11-10); signal handling, checked allocations, C++ allocator pairing, `RFCMailBox` error-logging braces and `MenuBar`/`RoamCmds`/`DtMailGenDialog`/`Help` fixes (2026-11-13, 2026-11-16) | 1,369 -> 1,316 | 44 -> 0 | 0 -> 0 | none |
-| `programs/dtcm` | includes rpc.cmsd (RPC server run as root); calendar | rpc.cmsd request path (2026-11-04); signal handling, access checks, recurrence rules (2026-11-10); `mkstemp` drop/load files, checked allocations, `XtNewString`/`XtFree` pairing and bounded string formatting (2026-11-12, 2026-11-16) | 879 -> 795 | 59 -> 0 | 5 -> 1 | none |
+| `programs/dtmail` | unprivileged mailer; set-group-id spool helper (`dtmailspool`); mail and MIME parsing | mail spool helper split from the mailer (2026-11-10), mailbox save and path handling, text made from a message, command-line and session input, ToolTalk request data, mail server clients, message/partial assembly, MIME and lock file text (2026-11-10); signal handling, checked allocations, C++ allocator pairing, `RFCMailBox` error-logging braces and `MenuBar`/`RoamCmds`/`DtMailGenDialog`/`Help` fixes (2026-11-13, 2026-11-16); `RFCMIME` Base64/Quoted-Printable/`From ` bounds, `RFCMailValues::decodeRFC1522` bounds and `ItipBanner` `memmem` bounds (2026-11-27) | 1,369 -> 1,316 | 44 -> 0 | 0 -> 0 | `dtmail-rfc5322` |
+| `programs/dtcm` | includes rpc.cmsd (RPC server run as root); calendar | rpc.cmsd request path (2026-11-04); signal handling, access checks, recurrence rules (2026-11-10); `mkstemp` drop/load files, checked allocations, `XtNewString`/`XtFree` pairing and bounded string formatting (2026-11-12, 2026-11-16); `ics_io` `DURATION:`/`INTERVAL=`/`COUNT=` signed-overflow guards (2026-11-27) | 879 -> 795 | 59 -> 0 | 5 -> 1 | `dtcm-icalendar` |
 | `programs/dtfile` | file operations; drag and drop | Trash, copy and transfer (2026-11-02, 2026-11-03); `faccessat(AT_EACCESS)`, owner-before-mode attribute updates, signal dispositions and checked allocations (2026-11-13, 2026-11-14); in-process `$VAR`/`${VAR}` expansion in `_DtPathFromInput`, `_DtFollowLink`/`_DtPName`/`_DtBuildPath` bounds, `(st_dev, st_ino)` hardlink block deduplication in `StorageSize`, and `FileMgr` slash-less path handling (2026-11-16) | 813 -> 561 | 203 -> 0 | 10 -> 0 | none |
 | `programs/dthelp` | help compiler; SGML parser | literal buffer bounds, checked allocations and `realloc` failure handling (2026-11-13, 2026-11-14); `canon1`/`pass1` `xref.c`, `malloc.c`, `help.c` and `param.c` fixes, `dthelpgen` topic-path bounds, and `dthelpprint` `O_CREAT | O_EXCL` (`0600`) temp-file creation and bounded formatting (2026-11-16) | 644 -> 524 | 64 -> 0 | 4 -> 2 | none |
 | `lib/DtSvc` | SPC protocol shared by dtspcd and its clients; data-type database | SPC wire layer and data-type lookup (Dts.c) (2026-11-04); data-type matching, database file reader, termios strings (2026-11-10); `_DtSignal`, self-pipe `SIGCHLD`, `DtDbReader` and `DtsMM` cache bounds, checked allocations and bounded strings (2026-11-13, 2026-11-14) | 412 -> 387 | 24 -> 0 | 22 -> 5 | `spc-proto`, `dtsvc-dbreader`, `dtsvc-mmcache` |
@@ -98,8 +109,8 @@ and are replayed in CI via `python3 cde/fuzz/run-fuzz.py --all --replay`.
 | `programs/ttsnoop` | local user program | `DtTt` stream output bounds, `O_CREAT` mode and temp-file cleanup, `strdup` environment lifetime, `choiceOkayed`/`argOkayed` switch breaks, `msgReject` dispatch and `getopt` `-m` option argument (2026-11-16) | 359 -> 350 | 9 -> 0 | 0 -> 0 | none |
 | `programs/dtprintinfo` | local user program | `util/Privilege.h` privilege drop checks, checked allocations and C++ allocator pairing (2026-11-13, 2026-11-14); `ParseJobs` temp-file `mkstemp`, bounded parser tokens, child process reaping in `Invoke`, bounded `Queue`/`PrintJob`/`Process`/`MotifThread` command formatting, `Button.C` arrow direction switch breaks, and `snprintf` across `UI/` and `libUI/` (2026-11-16) | 345 -> 307 | 20 -> 0 | 0 -> 0 | none |
 | `lib/DtSearch` | full-text search; vendored raima subtree excluded | damaged index (2026-11-10); async-signal-safe `signal_abort` and checked allocations (2026-11-13, 2026-11-14); `split_llist`/`merge_llist`/`sort_llist` and `ditto_sort`, `clean_wrap` empty-string bounds, 64-bit `DtSrObjdate` validation, `fread_d99_header` `hole_count` clamping, `is_matching_rule`/`paice_stemmer` suffix bounds, `raima/fillnew.c` `field_table` bounds and `ocf`/`boolpars`/`hilite` bounds (2026-11-16) | 285 -> 252 | 12 -> 0 | 5 -> 0 | none |
-| `lib/DtTerm` | terminal emulation; escape-sequence parser | parser bounds (2026-11-02); setuid handling (2026-11-04); `_DtSignal`, checked allocations, bounded string formatting, `TermFunction` `eraseFromCol0` break and `TermViewMenu` cascade-button braces (2026-11-14, 2026-11-16) | 258 -> 236 | 20 -> 0 | 14 -> 0 | none |
-| `lib/DtHelp` | help file and markup parsing | string handling (2026-11-02); SDL parser bounds, stream EOF checks and `realloc` failure handling (2026-11-13, 2026-11-14); `FormatUtil` `mblen` error guard, `FormatCCDF` `titleChunks` free, `FormatTerm` null guard, `SDLI.h` and `il/` unsigned shift masks and `realloc` preservation across `FormatSDL`, `Graphics`, `HelpUtil`, `Access`, `FileUtils` and `GlobSearch` (2026-11-16) | 248 -> 175 | 73 -> 0 | 34 -> 2 | `dthelp-sdl` |
+| `lib/DtTerm` | terminal emulation; escape-sequence parser | parser bounds (2026-11-02); setuid handling (2026-11-04); `_DtSignal`, checked allocations, bounded string formatting, `TermFunction` `eraseFromCol0` break and `TermViewMenu` cascade-button braces (2026-11-14, 2026-11-16); `TermPrim` `wcstombs` error check + leak fix and Phase 2 `-Werror=sign-compare -Werror=missing-field-initializers` ratchet (2026-11-27) | 258 -> 236 | 20 -> 0 | 14 -> 0 | none |
+| `lib/DtHelp` | help file and markup parsing | string handling (2026-11-02); SDL parser bounds, stream EOF checks and `realloc` failure handling (2026-11-13, 2026-11-14); `FormatUtil` `mblen` error guard, `FormatCCDF` `titleChunks` free, `FormatTerm` null guard, `SDLI.h` and `il/` unsigned shift masks and `realloc` preservation across `FormatSDL`, `Graphics`, `HelpUtil`, `Access`, `FileUtils` and `GlobSearch` (2026-11-16); `UtilSDL`/`FormatSDL` unsigned-`char` `BUFFILEEOF` fixes, `CCDFUtil` EOF/backslash/quoted-newline/leak fixes, and `FormatUtil` `_DtHelpCeAddOctalToBuf`/`_DtHelpCeAddStrToBuf` bounds (2026-11-27) | 248 -> 175 | 73 -> 0 | 34 -> 2 | `dthelp-sdl`, `dthelp-sgml` |
 | `programs/dtstyle` | local user program | palette lookup null checks, `_DtSignal` and checked allocations (2026-11-13, 2026-11-14); `ColorFile` list-unlink and `ReadInInfo` bounds, `I18nEnv` pipe accumulation and `GetImsList` bounds, and bounded `snprintf` across `ColorMain`, `ColorEdit`, `Backdrop`, `SaveRestore`, `I18nMain`, `Dtwm`, `Startup`, `Audio`, `Keyboard`, `Font`, `Screen` and `Mouse` (2026-11-16) | 218 -> 203 | 12 -> 0 | 3 -> 0 | none |
 | `lib/csa` | RPC interface of rpc.cmsd | request decoding used by rpc.cmsd (2026-11-04); limits and lists of the protocols (2026-11-10); hash/name table checked allocations, ISO 8601 bounds and bounded strings (2026-11-13, 2026-11-14) | 189 -> 178 | 8 -> 0 | 0 -> 0 | none |
 | `programs/dtlogin` | runs as root; XDMCP network service | environment and arguments (2026-11-02); XDMCP, authorization, signals (2026-11-04); chooser, displays, configuration files, expired passwords, session signals, greeter requests (2026-11-10); XDMCP forward port and `Xaccess` alias cycle bounds, `BoundedCall`, `netaddr.c` `addressEqual` null guard, checked allocations and bounded strings (2026-11-13, 2026-11-16) | 163 -> 141 | 21 -> 0 | 9 -> 0 | `dtlogin-xdmcp`, `dtlogin-xaccess` |
@@ -131,7 +142,7 @@ the generator.
 
 - The `sanitizers` CI job builds CK Core Motif and CK Core CDE with
   `--enable-sanitizers` (AddressSanitizer and UndefinedBehaviorSanitizer) and
-  runs `make check`; the `fuzz-replay` CI job replays all 10 libFuzzer corpora
+  runs `make check`; the `fuzz-replay` CI job replays all 13 libFuzzer corpora
   via `python3 cde/fuzz/run-fuzz.py --all --replay`.
 - The desktop smoke test has not yet been run under the sanitizers.
 - cppcheck ran with `--max-configs=1`, so code behind alternative `#ifdef`

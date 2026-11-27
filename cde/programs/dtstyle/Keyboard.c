@@ -129,7 +129,7 @@ typedef struct {
 } Kbd, *KdbPtr;
 
 static Kbd kbd;
-static saveRestore save = {FALSE, 0, };
+static saveRestore save = {FALSE, 0, {{0}}};
 
 /*+++++++++++++++++++++++++++++++++++++++*/
 /* popup_kbdDialog                       */

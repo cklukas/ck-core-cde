@@ -389,7 +389,7 @@ static enumName eventTypes[] = {
     {"ClientMessage",		33},
     {"MappingNotify",		34},
     {"LASTEvent",		35},
-    {nullptr},
+    {nullptr, 0},
 };
 
 static enumName notifyModes[] = {
@@ -397,7 +397,7 @@ static enumName notifyModes[] = {
     {"NotifyGrab",		1},
     {"NotifyUngrab",		2},
     {"NotifyWhileGrabbed",	3},
-    {nullptr},
+    {nullptr, 0},
 };
 
 static enumName notifyDetails[] = {
@@ -409,13 +409,13 @@ static enumName notifyDetails[] = {
     {"NotifyPointer",		5},
     {"NotifyPointerRoot",	6},
     {"NotifyDetailNone",	7},
-    {nullptr},
+    {nullptr, 0},
 };
 
 static enumName boolTypes[] = {
     {"True",			1},
     {"False",			0},
-    {nullptr},
+    {nullptr, 0},
 };
 
 static char *

@@ -14,3 +14,5 @@ libapi_la_SOURCES = api_api.C           api_auth.C \
         api_session_prop.C  api_spec.C          api_spec_map_ref.C \
         api_storage.C       api_typecb.C        api_typecb_utils.C \
         api_utils.C         api_xdr.C
+
+libapi_la_CXXFLAGS += $(CK_HARDENING_PHASE2_FLAGS)

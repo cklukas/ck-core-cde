@@ -42,3 +42,5 @@ else
 libDtTerm_la_LDFLAGS = -version-info 3:0:1
 endif
 
+
+AM_CFLAGS = $(CK_HARDENING_PHASE2_FLAGS)

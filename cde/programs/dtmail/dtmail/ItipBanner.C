@@ -66,14 +66,15 @@ static int parse_prop(const char *line, const char *prop_name, char *out, size_t
 
 int dtmail_itip_parse(const char *raw, size_t len, DtMailItipInvite *out)
 {
-    if (!raw || len == 0 || !out) return -1;
+    if (!raw || len < 28 || !out) return -1;
     memset(out, 0, sizeof(*out));
 
-    const char *start = strstr(raw, "BEGIN:VCALENDAR");
+    const char *start = (const char *)memmem(raw, len, "BEGIN:VCALENDAR", 15);
     if (!start) return -1;
-    const char *end = strstr(start, "END:VCALENDAR");
+    size_t rem = (size_t)((raw + len) - start);
+    const char *end = (const char *)memmem(start, rem, "END:VCALENDAR", 13);
     if (!end) return -1;
-    end += strlen("END:VCALENDAR");
+    end += 13;
     if ((size_t)(end - raw) > len) return -1;
 
     int in_vevent = 0;

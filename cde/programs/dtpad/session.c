@@ -194,7 +194,7 @@ SaveMain(
 	    int i;
 	    snprintf(bufr, sizeof(bufr), "*mainWindow%d.workspaceList: ", padNum);
 	    WriteSessionText(fd, bufr);
-	    for(i = 0; i < numInfo; i++)
+	    for(i = 0; (unsigned long)i < numInfo; i++)
 	    {
 	        char *name =  XGetAtomName(XtDisplay(pPad->app_shell),
 					   pWsPresence[i]);

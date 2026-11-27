@@ -9,3 +9,5 @@ dtdbcache_LDADD += -lw -lgen
 endif
 
 dtdbcache_SOURCES = Main.c
+
+AM_CFLAGS = $(CK_HARDENING_PHASE2_FLAGS)

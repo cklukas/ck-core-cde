@@ -39,6 +39,10 @@ enum { XmNx = 1, XmNy, XmNwidth, XmNimageName };
 #define XtDisplay(w) ((void *)0)
 #define XtWindow(w) 0
 #define XtScreen(w) ((void *)0)
+#define XtX(w) 0
+#define None 0
+typedef struct { char *res_name, *res_class; } XClassHint;
+static void XSetClassHint(void *d, int w, XClassHint *h) { (void)d; (void)w; (void)h; }
 
 enum { SUBPANEL_NAME, SUBPANEL_CONTAINER_NAME, CONTROL_NAME, BOX_NAME, ELEMENTS };
 enum { BOX = 1, SUBPANEL = 2 };

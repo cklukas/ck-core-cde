@@ -547,7 +547,7 @@ _DtTermGetRenderFontIndex(Widget w, int id)
     int i;
 
     /* search for the index that matches this id... */
-    for (i = 0; i < (sizeof(td->renderFonts) / sizeof(td->renderFonts[0]));
+    for (i = 0; (size_t)i < (sizeof(td->renderFonts) / sizeof(td->renderFonts[0]));
 	    i++) {
 	if (td->renderFonts[i].id == id) {
 	    return(i);
@@ -585,7 +585,7 @@ Initialize(Widget ref_w, Widget w, Arg *args, Cardinal *num_args)
 
     /* set up our fonts...
      */
-    for (i = 0; i < (sizeof(td->renderFonts) / sizeof(td->renderFonts[0]));
+    for (i = 0; (size_t)i < (sizeof(td->renderFonts) / sizeof(td->renderFonts[0]));
 	    i++) {
 	td->renderFonts[i].termFont = (TermFont) 0;
 	td->renderFonts[i].id = -1;

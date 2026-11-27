@@ -158,7 +158,7 @@ typedef struct {
 static Startup startup;
 
 
-static saveRestore save = {FALSE, 0, };
+static saveRestore save = {FALSE, 0, {{0}}};
 
 
 /*+++++++++++++++++++++++++++++++++++++++*/

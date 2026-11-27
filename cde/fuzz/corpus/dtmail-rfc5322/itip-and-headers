@@ -1,0 +1,12 @@
+†From: Alice <alice@example.org>
+Subject: Sync
+Content-Type: text/calendar; method=REQUEST
+
+BEGIN:VCALENDAR
+METHOD:REQUEST
+BEGIN:VEVENT
+UID:1
+DTSTART:20261127T100000Z
+SUMMARY:Review
+END:VEVENT
+END:VCALENDAR

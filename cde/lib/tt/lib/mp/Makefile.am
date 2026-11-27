@@ -22,3 +22,5 @@ libmp_la_SOURCES = mp_arg.C            mp_arg_utils.C          mp_auth.C \
         mp_session.C        mp_session_prop.C       mp_session_prop_utils.C \
         mp_session_utils.C  mp_stream_socket.C      mp_stream_socket_utils.C \
         mp_trace.C          mp_xdr_functions.C
+
+libmp_la_CXXFLAGS += $(CK_HARDENING_PHASE2_FLAGS)

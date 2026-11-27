@@ -1109,24 +1109,24 @@ static DefResource defResourceCO[] = {
         XrmPutStringResource(&defDb, "*greeting.fontList", GREET_FONT);
 
 
-    for (i = 0; i < NUM_RESOURCES; i++)
+    for (i = 0; (size_t)i < NUM_RESOURCES; i++)
 	XrmPutStringResource(&defDb,
 	    		     defResource[i].name,
 			     defResource[i].value);
 
     if ( dpyinfo.depth < 4 )
-	for (i = 0; i < NUM_BW_RESOURCES; i++)
+	for (i = 0; (size_t)i < NUM_BW_RESOURCES; i++)
 	    XrmPutStringResource(&defDb,
 	    			 defResourceBW[i].name,
 				 defResourceBW[i].value);
     else				 
-	for (i = 0; i < NUM_CO_RESOURCES; i++)
+	for (i = 0; (size_t)i < NUM_CO_RESOURCES; i++)
 	    XrmPutStringResource(&defDb,
 	    			 defResourceCO[i].name,
 				 defResourceCO[i].value);
 
     if ( dpyinfo.visual->class == GrayScale )
-	for (i = 0; i < NUM_GS_RESOURCES; i++)
+	for (i = 0; (size_t)i < NUM_GS_RESOURCES; i++)
 	    XrmPutStringResource(&defDb,
 	    			 defResourceGS[i].name,
 				 defResourceGS[i].value);

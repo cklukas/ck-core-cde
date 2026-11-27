@@ -170,7 +170,7 @@ typedef struct {
 } Backdrops, *BackdropsPtr;
 static Backdrops backdrops; 
 
-static saveRestore save = {FALSE, 0, };
+static saveRestore save = {FALSE, 0, {{0}}};
 char *BACKDROPSDLG = "backdropsDialog";
 
 /*

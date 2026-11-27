@@ -5,3 +5,5 @@ noinst_LTLIBRARIES = libdnd.la
 libdnd_la_CFLAGS = -I../..
 
 libdnd_la_SOURCES = ttdnd.c
+
+libdnd_la_CFLAGS += $(CK_HARDENING_PHASE2_FLAGS)

@@ -94,7 +94,7 @@ static void
 killWindows( Display *dpy, Window window )
 {
 	Window	root, parent, *children;
-	int	child;
+	unsigned int child;
 	unsigned int nchildren = 0;
 	
 	while (XQueryTree (dpy, window, &root, &parent, &children, &nchildren)

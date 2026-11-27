@@ -564,7 +564,7 @@ parse_args(List *l, int argc, char **argv)
 
 			if(!read_errors)
 			{
-				for(j = 0; j < XtNumber(error_str); j++)
+				for(j = 0; (Cardinal)j < XtNumber(error_str); j++)
 				{
 					error_str[j] = CATGETS(dtcatd, 1, 30+j, error_str[j]);
 				}

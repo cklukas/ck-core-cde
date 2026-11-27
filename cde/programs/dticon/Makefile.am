@@ -16,3 +16,5 @@ dticon_SOURCES = dtIconShell.c event.c event.h fileIO.c fileIO.h	\
                  help.c image.c image.h main.c newIconDialog.c		\
                  process.c queryDialog.c stdErrDialog.c utils.c		\
                  utils.h constants.h externals.h help.h main.h
+
+dticon_CFLAGS += $(CK_HARDENING_PHASE2_FLAGS)

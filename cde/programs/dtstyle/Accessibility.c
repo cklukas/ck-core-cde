@@ -84,7 +84,7 @@ static struct {
     A11yConfig orig;
 } g_a11yUI;
 
-static saveRestore g_a11ySave = { FALSE, 0, };
+static saveRestore g_a11ySave = {FALSE, 0, {{0}}};
 
 static int
 ClampInt(int v, int lo, int hi)

@@ -243,7 +243,7 @@ RestoreDescriptorBackup(
     ClearDescriptorBackup();
 }
 
-static saveRestore save = {FALSE, 0, };
+static saveRestore save = {FALSE, 0, {{0}}};
 
 /*+++++++++++++++++++++++++++++++++++++++*/
 /* Internal Functions                    */

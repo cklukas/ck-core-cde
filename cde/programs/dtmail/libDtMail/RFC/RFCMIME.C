@@ -216,7 +216,7 @@ RFCMIME::getEncodingType(const char * body,
   const char * last_nl = body;
   const char * cur;
   
-  if (strncmp(body, "From ", 5) == 0) {
+  if (len >= 5 && memcmp(body, "From ", 5) == 0) {
     qprint_growth += 2;
   }
   
@@ -595,151 +595,63 @@ static const char base64_chars[] =
  '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'
 };
 
-inline unsigned char
-base64inv(const char cur)
+inline int
+base64_decode_val(unsigned char cur)
 {
-    switch (cur) {
-      case '+':
-	return(62);
-
-      case '/':
-	return(63);
-
-      default:
-	break;
-    }
-
-    if ((cur - '0') < 10) {
-	return(cur - '0' + 52);
-    }
-
-    if ((cur - 'A') < 26) {
-	return(cur - 'A');
-    }
-
-    if ((cur - 'a') < 26) {
-	return(cur - 'a' + 26);
-    }
-
-    return(0);
+    if (cur >= 'A' && cur <= 'Z')
+	return (int)(cur - 'A');
+    if (cur >= 'a' && cur <= 'z')
+	return (int)(cur - 'a' + 26);
+    if (cur >= '0' && cur <= '9')
+	return (int)(cur - '0' + 52);
+    if (cur == '+')
+	return 62;
+    if (cur == '/')
+	return 63;
+    return -1;
 }
-
-//
-// RFCMIME::readBase64 -- decode base 64 text into clear text
-// Arguments:
-//  char * buf		-- buffer into which clear text is to be placed
-//  int & off		-- offset into buffer when placing clear text
-//			-- incremented as bytes are placed into buffer
-//  char *bp		-- buffer from which base 64 text is retrieved
-//  const unsigned long len -- number of bytes of base 64 text at bp
-// Returns:
-//  <void>
-// Description:
-//  Given a pointer/length to base 64 text, decode the base 64 text into
-//  ordinary clear text. The decoding process proceeds from left to right
-//  (buffer forward) decoding groups of 4-byte encoded octets into groups
-//  of 3-byte clear text triplets. The last octet may contain padding as
-//  necessary to represent a data stream that is not a multiple of 24 bits.
-//
 
 void
 RFCMIME::readBase64(char * buf, int & off, const char * bp, const unsigned long len)
 {
-    // Make local copy of base 64 text length
-    //
-    unsigned long main_len = len;
+    if (buf == NULL || bp == NULL || len == 0)
+	return;
 
-    // Strip trailing white space from base 64 text so we can find the magic '=' 
-    // characters at the end which indicate if padding has been used to pad the
-    // last octet in the data stream
-    //
-    while (isspace(bp[main_len - 1])) {
-	main_len -= 1;
-    }
+    // Decode valid base64 quartets strictly within [bp, bp + len), ignoring
+    // whitespace/linebreaks and stopping cleanly on '=' padding or end-of-input.
+    // Every 4 input symbols emit at most 3 output bytes, guaranteeing the output
+    // never exceeds len bytes.
+    unsigned char quartet[4];
+    int qcount = 0;
+    int pad = 0;
 
-    // Check to see if the last byte of the final octet in the base 64 text has
-    // the magic '=' character - if it does, bump down the base 64 text stream 
-    // count by 1 octet and leave decoding of the last octet until after all
-    // unpadded octets have been decoded
-    //
-    if (bp[main_len - 1] == '=') {
-	// We have normal base64 padding, which consists of one or two '=' characters
-        // at the end of the stream. Ignore it for now and process at the very end.
-	//
-        main_len -= 4;	// backup over last 4-byte encoding containing padding
-    }
-
-    // Main octet decoding loop. We are assured that main_len is mod 4, so
-    // we can zip through decoding full octets
-    //
-    for (const char * cur = bp; cur < (bp + main_len - 3); cur += 4) {
-	while (*cur == ' ') {
-	    cur += 1;
+    for (unsigned long i = 0; i < len; i++) {
+	unsigned char ch = (unsigned char)bp[i];
+	if (isspace(ch))
+	    continue;
+	if (ch == '=') {
+	    quartet[qcount++] = 0;
+	    pad++;
+	} else {
+	    if (pad > 0)
+		break; // data after '=' padding ends the base64 block
+	    int v = base64_decode_val(ch);
+	    if (v < 0)
+		continue; // RFC 2045 section 6.8: ignore non-alphabet octets
+	    quartet[qcount++] = (unsigned char)v;
 	}
 
-	if (*cur == '\r') {
-	    cur += 1;
-	}
-	if (*cur == '\n') {
-	    cur += 1;
-	}
-	unsigned char b1 = base64inv(*cur);
-
-	if (*(cur + 1) == '\r') {
-	    cur += 1;
-	}
-	if (*(cur + 1) == '\n') {
-	    cur += 1;
-	}
-	unsigned char b2 = base64inv(*(cur + 1));
-
-	if (*(cur + 2) == '\r') {
-	    cur += 1;
-	}
-	if (*(cur + 2) == '\n') {
-	    cur += 1;
-	}
-	unsigned char b3 = base64inv(*(cur + 2));
-
-	if (*(cur + 3) == '\r') {
-	    cur += 1;
-	}
-	if (*(cur + 3) == '\n') {
-	    cur += 1;
-	}
-	unsigned char b4 = base64inv(*(cur + 3));
-
-	buf[off++] = (char)((unsigned char)(b1 << 2) & 0xfc) | ((unsigned char)(b2 >> 4) & 0x3);
-	buf[off++] = (char)((unsigned char)(b2 & 0xf) << 4) | ((unsigned char)(b3 >> 2) & 0xf);
-	buf[off++] = (char)((unsigned char)(b3 & 0x3) << 6) | ((unsigned char)(b4 & 0x3f));
-    }
-
-    // Throw away any white space left in base 64 text, just in case.
-    //
-    while (main_len < len && isspace(bp[main_len])) {
-	main_len += 1;
-    }
-
-    // If end of stream was padded, there will be additional data not yet processed
-    // from the stream. Since encoding is three bytes clear to four bytes encoded,
-    // padding means there are one or two bytes at most remaining to be decoded from
-    // the last octet.
-    //
-    if (main_len != len) {
-	unsigned char b1 = base64inv(bp[main_len]);
-	unsigned char b2 = base64inv(bp[main_len + 1]);
-	unsigned char b3 = 0;
-	if (bp[main_len + 2] != '=') {
-	    b3 = base64inv(bp[main_len + 2]);
-	}
-
-	buf[off++] = (char)((unsigned char)(b1 << 2) & 0xfc) | ((unsigned char)(b2 >> 4) & 0x3);
-	if (bp[main_len + 2] != '=') {
-	    buf[off++] = (char)((unsigned char)(b2 & 0xf) << 4) | ((unsigned char)(b3 >> 2) & 0xf);
+	if (qcount == 4) {
+	    buf[off++] = (char)(((quartet[0] << 2) & 0xfc) | ((quartet[1] >> 4) & 0x03));
+	    if (pad < 2)
+		buf[off++] = (char)(((quartet[1] & 0x0f) << 4) | ((quartet[2] >> 2) & 0x0f));
+	    if (pad == 0)
+		buf[off++] = (char)(((quartet[2] & 0x03) << 6) | (quartet[3] & 0x3f));
+	    qcount = 0;
+	    if (pad > 0)
+		break;
 	}
     }
-
-    return;
 }
 
 void
@@ -893,34 +805,36 @@ RFCMIME::readQPrint(
 		char *buf, int &off,
 		const char *bp, const unsigned long bp_len)
 {
-    for (const char * cur = bp; cur < (bp + bp_len); cur++) {
+    if (buf == NULL || bp == NULL || bp_len == 0)
+	return;
+
+    const char *end = bp + bp_len;
+    for (const char * cur = bp; cur < end; cur++) {
 	if (*cur == '=') {
-	    if (*(cur + 1) == '\n') {
+	    if ((cur + 1) < end && *(cur + 1) == '\n') {
 		cur += 1;
 		continue;
 	    }
-	    else if (*(cur + 1) == '\r' && *(cur + 2) == '\n') {
+	    else if ((cur + 2) < end && *(cur + 1) == '\r' && *(cur + 2) == '\n') {
 		cur += 2;
 		continue;
 	    }
-	    else {
-		if (isxdigit(*(cur + 1)) && isxdigit(*(cur + 2))) {
-		    char hex[3];
-		    hex[0] = *(cur + 1);
-		    hex[1] = *(cur + 2);
-		    hex[2] = 0;
+	    else if ((cur + 2) < end &&
+		     isxdigit((unsigned char)*(cur + 1)) &&
+		     isxdigit((unsigned char)*(cur + 2))) {
+		char hex[3];
+		hex[0] = *(cur + 1);
+		hex[1] = *(cur + 2);
+		hex[2] = 0;
 
-		    buf[off++] = (char) strtol(hex, NULL, 16);
-		    cur += 2;
-		    continue;
-		}
+		buf[off++] = (char) strtol(hex, NULL, 16);
+		cur += 2;
+		continue;
 	    }
 	}
 
 	buf[off++] = *cur;
     }
-
-    return;
 }
 
 void
@@ -946,7 +860,7 @@ RFCMIME::writeQPrint(Buffer & buf, const char * bp, const unsigned long bp_len)
   // way.
   //
   const char * start;
-  if (strncmp(bp, "From ", 5) == 0) {
+  if (bp_len >= 5 && memcmp(bp, "From ", 5) == 0) {
     memcpy(&line_buf[off], "=46", 3);
     start = bp + 1;
     off += 3;

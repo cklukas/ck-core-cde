@@ -80,10 +80,10 @@ Bool _DtXineramaGetScreen(DtXineramaInfo_t *DtXI, unsigned int screen,
   if (DtXI == nullptr)
     return(False);
 
-  if (DtXI->numscreens == 0)
+  if (DtXI->numscreens <= 0)
     return(False);		/* no screens or no Xinerama */
 
-  if (screen >= DtXI->numscreens)
+  if (screen >= (unsigned int)DtXI->numscreens)
     return(False);		/* invalid screen */
 
 				/* now get the info from the XinerInfo */

@@ -1187,7 +1187,7 @@ GetMetaMask
     for (match = False, metaMask = Mod1Mask, mapIndex = Mod1MapIndex;
 	    (mapIndex <= Mod5MapIndex) && !match;
 	    metaMask <<= 1, mapIndex++) {
-	for (i1 = 0; i1 < modifierMapping->max_keypermod; i1++) {
+	for (i1 = 0; (int)i1 < modifierMapping->max_keypermod; i1++) {
 	    thisKeyCode = modifierMapping->modifiermap[mapIndex *
 		    modifierMapping->max_keypermod + i1];
 	    if (thisKeyCode < minKeycodes)
@@ -4388,8 +4388,10 @@ PreeditDraw(
 	mb = (unsigned char *)XtMalloc(len);
 	
 	/* check for invalid string */
-	if (wcstombs((char *)mb, wcs, len) == -1)
+	if (wcstombs((char *)mb, wcs, len) == (size_t)-1) {
+	    XtFree((char *)mb);
 	    return;
+	}
     } else
 	mb = (unsigned char *)call_data->text->string.multi_byte;
 

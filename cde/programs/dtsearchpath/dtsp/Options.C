@@ -62,7 +62,7 @@ CString Usage ("Usage: dtsearchpath [ -v | -T | -o | -a | -csh | -ksh ] "
 	       "[ -u <login-name> ]");
 
     if (argc > 1) {
-	for (int i = 1; i < argc; i++) {
+	for (unsigned int i = 1; i < argc; i++) {
 	    if (strcmp(argv[i],"-v") == 0)
 		flags |= 1;
 	    else if (strcmp(argv[i],"-T") == 0)

@@ -1,4 +1,32 @@
 2026-11-27
+- Ratchet Phase 2 compiler hardening (`-Werror=sign-compare` and
+  `-Werror=missing-field-initializers`) across 23 `cde/lib` and `cde/programs`
+  components and expand `ASan + UBSan + libFuzzer` parser qualification to 13
+  targets (`dtmail-rfc5322`, `dtcm-icalendar`, `dthelp-sgml`):
+  - Add `CK_HARDENING_PHASE2_FLAGS` in `cde/m4/ck_hardening.m4` and enforce
+    `-Werror=sign-compare` and `-Werror=missing-field-initializers` on both GCC
+    and Clang across `lib/DtXinerama`, `lib/DtPrint`, `lib/DtTerm`, `lib/tt`,
+    `programs/dtaction`, `programs/dtcalc`, `programs/dtcreate`,
+    `programs/dtdbcache`, `programs/dtexec`, `programs/dthello`,
+    `programs/dticon`, `programs/dtimsstart`, `programs/dtlogin`,
+    `programs/dtpad`, `programs/dtpdm`, `programs/dtpdmd`, `programs/dtportal`,
+    `programs/dtprintinfo`, `programs/dtsearchpath`, `programs/dtspcd`,
+    `programs/dtstyle`, `programs/dtterm`, and `programs/util/dttypes`.
+  - Add `fuzz-dtmail-rfc5322.c` (`RFCMIME`, `MIMEPartial`, `HtmlReadable`,
+    `ItipBanner`, `CurlMailEngine`), `fuzz-dtcm-icalendar.c` (`ics_io`,
+    `caldav_client`), and `fuzz-dthelp-sgml.c` (`CCDFUtil`, `FormatUtil`,
+    `bufio`, `StringFuncs`, `CvString`) plus regression seed corpora in
+    `cde/fuzz/`.
+  - Fix heap buffer underflow/over-reads and signed-`char` UB in
+    `RFCMIME::readBase64`, `RFCMIME::readQPrint`, `getEncodingType`,
+    `writeQPrint`, `RFCMailValues::decodeRFC1522`, and `dtmail_itip_parse`;
+    signed integer overflow UB in `dtcm` `ics_io.c` (`DURATION:`, `INTERVAL=`,
+    `COUNT=`); unsigned-`char` `BUFFILEEOF` infinite loops in `libDtHelp`
+    `UtilSDL.c` and `FormatSDL.c`; EOF infinite loops, trailing-backslash OOB
+    reads, quoted-newline infinite loop, `_DtHelpCeAddOctalToBuf` bounds, and
+    error-path leaks in `CCDFUtil.c` and `FormatUtil.c`; `wcstombs` error
+    handling in `TermPrim.c`; and palette-name multibyte validation in
+    `dtstyle/ColorMain.c`.
 - Add Fastmail OAuth2 & RFC 8620/8621 JMAP mail transport and CSP-sandboxed HTML
   viewing in `dtmail`, plus `webdavs://` / user-space `sshfs` remote mounts and
   `ck-core-fs-lib` streaming search in `dtfile`'s **File → Find...** dialog:

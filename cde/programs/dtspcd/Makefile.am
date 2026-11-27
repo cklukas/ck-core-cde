@@ -46,3 +46,5 @@ dtspcdenv: dtspcdenv.src
 	$(RM) $@
 	$(GENCPP) -P -DXCOMM=# $(LOCAL_CPP_DEFINES) $< > $@
 
+
+dtspcd_CFLAGS += $(CK_HARDENING_PHASE2_FLAGS)

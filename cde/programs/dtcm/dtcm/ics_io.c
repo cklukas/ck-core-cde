@@ -4,6 +4,8 @@
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -218,7 +220,8 @@ static long parse_ics_duration_sec(const char *val)
     if (*val != 'P' && *val != 'p') return 0;
     val++;
 
-    long total = 0;
+    static const int64_t k_max_dur = 100LL * 365LL * 86400LL;
+    int64_t total = 0;
     int in_time = 0;
     while (*val) {
         if (*val == 'T' || *val == 't') {
@@ -228,20 +231,34 @@ static long parse_ics_duration_sec(const char *val)
         }
         if (!isdigit((unsigned char)*val)) break;
         char *endp = NULL;
-        long num = strtol(val, &endp, 10);
-        if (!endp || endp == val || !*endp) break;
+        errno = 0;
+        long long num = strtoll(val, &endp, 10);
+        if (errno == ERANGE || !endp || endp == val || !*endp || num < 0)
+            break;
+        if (num > k_max_dur)
+            num = k_max_dur;
         char unit = (char)toupper((unsigned char)*endp);
+        int64_t mult = 0;
         if (!in_time) {
-            if (unit == 'W') total += num * 7L * 86400L;
-            else if (unit == 'D') total += num * 86400L;
+            if (unit == 'W') mult = 7LL * 86400LL;
+            else if (unit == 'D') mult = 86400LL;
         } else {
-            if (unit == 'H') total += num * 3600L;
-            else if (unit == 'M') total += num * 60L;
-            else if (unit == 'S') total += num;
+            if (unit == 'H') mult = 3600LL;
+            else if (unit == 'M') mult = 60LL;
+            else if (unit == 'S') mult = 1LL;
+        }
+        if (mult > 0) {
+            if (num > k_max_dur / mult)
+                total = k_max_dur;
+            else {
+                total += (int64_t)num * mult;
+                if (total > k_max_dur)
+                    total = k_max_dur;
+            }
         }
         val = endp + 1;
     }
-    return total * sign;
+    return (long)(total * (int64_t)sign);
 }
 
 static unsigned int parse_byday_list(const char *s)
@@ -288,11 +305,19 @@ static void parse_ics_rrule(const char *val, DtcmIcsEvent *ev)
             else if (strcasecmp(f, "MONTHLY") == 0) ev->freq = DTCM_ICS_MONTHLY;
             else if (strcasecmp(f, "YEARLY") == 0) ev->freq = DTCM_ICS_YEARLY;
         } else if (strncasecmp(tok, "INTERVAL=", 9) == 0) {
-            int iv = atoi(tok + 9);
-            if (iv >= 1) ev->interval = iv;
+            char *ep = NULL;
+            errno = 0;
+            long iv = strtol(tok + 9, &ep, 10);
+            if (errno == 0 && ep != tok + 9 && iv >= 1) {
+                ev->interval = (iv > 10000L) ? 10000 : (int)iv;
+            }
         } else if (strncasecmp(tok, "COUNT=", 6) == 0) {
-            int cnt = atoi(tok + 6);
-            if (cnt >= 1) ev->count = cnt;
+            char *ep = NULL;
+            errno = 0;
+            long cnt = strtol(tok + 6, &ep, 10);
+            if (errno == 0 && ep != tok + 6 && cnt >= 1) {
+                ev->count = (cnt > 100000L) ? 100000 : (int)cnt;
+            }
         } else if (strncasecmp(tok, "BYDAY=", 6) == 0) {
             ev->byday_mask = parse_byday_list(tok + 6);
         } else if (strncasecmp(tok, "UNTIL=", 6) == 0) {
@@ -304,16 +329,18 @@ static void parse_ics_rrule(const char *val, DtcmIcsEvent *ev)
     }
 
     if (ev->freq != DTCM_ICS_ONCE && ev->count == 0 && ev->byday_mask == 0 &&
-        has_until && until_ts > ev->start_utc) {
-        long span = (long)(until_ts - ev->start_utc);
-        long step = 86400L;
-        if (ev->freq == DTCM_ICS_WEEKLY) step = 7L * 86400L;
-        else if (ev->freq == DTCM_ICS_MONTHLY) step = 30L * 86400L;
-        else if (ev->freq == DTCM_ICS_YEARLY) step = 365L * 86400L;
-        step *= (long)(ev->interval > 0 ? ev->interval : 1);
-        int approx = (int)(span / step) + 1;
+        has_until && ev->start_utc > 0 && until_ts > ev->start_utc) {
+        int64_t span = (int64_t)until_ts - (int64_t)ev->start_utc;
+        int64_t step = 86400LL;
+        if (ev->freq == DTCM_ICS_WEEKLY) step = 7LL * 86400LL;
+        else if (ev->freq == DTCM_ICS_MONTHLY) step = 30LL * 86400LL;
+        else if (ev->freq == DTCM_ICS_YEARLY) step = 365LL * 86400LL;
+        int64_t iv = (ev->interval > 0 && ev->interval <= 10000) ? ev->interval : 1;
+        step *= iv;
+        int64_t approx = (span / step) + 1;
         if (approx < 1) approx = 1;
-        ev->count = approx;
+        if (approx > 100000) approx = 100000;
+        ev->count = (int)approx;
     }
 }
 
@@ -392,7 +419,8 @@ static void handle_unfolded_line(const char *line,
     }
 
     if (strncasecmp(line, "BEGIN:", 6) == 0) {
-        (*subcomponent_depth)++;
+        if (*subcomponent_depth < 1024)
+            (*subcomponent_depth)++;
         return;
     }
     if (strncasecmp(line, "END:", 4) == 0) {
@@ -848,7 +876,7 @@ int dtcm_ics_expand_occurrences(const DtcmIcsEvent *ev,
         return out;
     }
 
-    int interval = ev->interval > 0 ? ev->interval : 1;
+    int interval = (ev->interval > 0 && ev->interval <= 10000) ? ev->interval : 1;
     int max_count = ev->count > 0 ? ev->count : 0;
     time_t hard_end = range_end;
     if (ev->until_utc > 0 && ev->until_utc < hard_end)

@@ -123,7 +123,7 @@ typedef struct {
 } Audio;
 
 static Audio audio;
-static saveRestore save = {FALSE, 0, };
+static saveRestore save = {FALSE, 0, {{0}}};
 
 static Widget build_audioDlg( Widget shell ) ;
 static void formLayoutCB    ( Widget, XtPointer, XtPointer ) ;

@@ -240,7 +240,7 @@ typedef struct {
 } ScreenData;                        /* using the savers toggle when the saver extn is not present */
 
 static ScreenData  screen;
-static saveRestore save = {FALSE, 0,};
+static saveRestore save = {FALSE, 0, {{0}}};
 
 typedef struct {
   char    *saversList;                  /* list of available savers */

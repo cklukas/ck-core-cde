@@ -22,3 +22,5 @@ tttar_SOURCES = tttar.C \
 		tttar_spec.C \
 		tttar_file_utils.C \
 		tttar_string_map.C
+
+tttar_CXXFLAGS += $(CK_HARDENING_PHASE2_FLAGS)

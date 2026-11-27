@@ -201,7 +201,7 @@ get_titleBS_table[] =
  {  '\\', '\\', &stateStart, _DtTermParserSunWindowTitle, },
  {  0x00,0xFF, &_DtTermStateGetTitle, _DtTermSaveChar,   },
 };
-StateTableRec _DtTermStateGetTitleBS  = {False, get_titleBS_table};
+StateTableRec _DtTermStateGetTitleBS  = {False, get_titleBS_table, nullptr};
 
 /*
 ** this is table used when "Esc ] l"  has been seen
@@ -212,7 +212,7 @@ get_title_table[] =
  {  0x1B, 0x1B,&_DtTermStateGetTitleBS,_DtTermPrimParserNextState,  },
  {  0x00,0xFF, &_DtTermStateGetTitle, _DtTermSaveChar,   },
 };
-StateTableRec _DtTermStateGetTitle  = {False, get_title_table};
+StateTableRec _DtTermStateGetTitle  = {False, get_title_table, nullptr};
 
 /*
 ** this is table used when "Esc ] L<string>Esc"  has been seen
@@ -223,7 +223,7 @@ get_iconBS_table[] =
  {  '\\', '\\', &stateStart, _DtTermParserSunWindowIcon, },
  {  0x00,0xFF, &_DtTermStateGetIcon, _DtTermSaveChar,   },
 };
-StateTableRec _DtTermStateGetIconBS  = {False, get_iconBS_table};
+StateTableRec _DtTermStateGetIconBS  = {False, get_iconBS_table, nullptr};
 
 /*
 ** this is table used when "Esc ] L"  has been seen
@@ -234,7 +234,7 @@ get_icon_table[] =
  {  0x1B, 0x1B,&_DtTermStateGetIconBS , _DtTermPrimParserNextState, },
  {  0x00,0xFF, &_DtTermStateGetIcon, _DtTermSaveChar,   },
 };
-StateTableRec _DtTermStateGetIcon  = {False, get_icon_table};
+StateTableRec _DtTermStateGetIcon  = {False, get_icon_table, nullptr};
 
 /*
 ** this is table used when "Esc ] I<file>Esc"  has been seen
@@ -245,7 +245,7 @@ get_fileBS_table[] =
  {  '\\', '\\', &stateStart, _DtTermParserSunIconFile, },
  {  0x00,0xFF, &_DtTermStateGetIconFile, _DtTermSaveChar, },
 };
-StateTableRec _DtTermStateGetIconFileBS  = {False, get_fileBS_table};
+StateTableRec _DtTermStateGetIconFileBS  = {False, get_fileBS_table, nullptr};
 
 /*
 ** this is table used when "Esc ] I"  has been seen
@@ -256,7 +256,7 @@ get_file_table[] =
  {  0x1B, 0x1B,&_DtTermStateGetIconFileBS , _DtTermPrimParserNextState, },
  {  0x00,0xFF, &_DtTermStateGetIconFile, _DtTermSaveChar, },
 };
-StateTableRec _DtTermStateGetIconFile  = {False, get_file_table};
+StateTableRec _DtTermStateGetIconFile  = {False, get_file_table, nullptr};
 
 /*
 ** CDExc21154:
@@ -269,7 +269,7 @@ get_stringBS_table[] =
  {  0x07, 0x07, &stateStart, _DtTermChangeTextParam,/*new Icon,Title,etc*/ },
  {  0x00, 0xFF, &_DtTermStateGetString, _DtTermSaveChar,   /* text*/ },
 };
-StateTableRec _DtTermStateGetStringBS  = {False, get_stringBS_table};
+StateTableRec _DtTermStateGetStringBS  = {False, get_stringBS_table, nullptr};
 
 /*
 ** this is table used when "Esc ] number ;"  has been seen
@@ -281,7 +281,7 @@ get_string_table[] =
  {  0x1B, 0x1B, &_DtTermStateGetStringBS , _DtTermPrimParserNextState, },
  {  0x00,0xFF, &_DtTermStateGetString, _DtTermSaveChar,   /* text*/ },
 };
-StateTableRec _DtTermStateGetString  = {False, get_string_table};
+StateTableRec _DtTermStateGetString  = {False, get_string_table, nullptr};
 
 /*
 ** this is table used when esc ] has been seen
@@ -296,7 +296,7 @@ right_bracket_table[] =
  {  'I',  'I', &_DtTermStateGetIconFile,  _DtTermPrimParserNextState, },
  {  0x00, 0xFF, &stateStart,       _DtTermPrintState     /* end of table */ },
 };
-StateTableRec _DtTermStateRightBracket  = {False, right_bracket_table};
+StateTableRec _DtTermStateRightBracket  = {False, right_bracket_table, nullptr};
 
 /*
 ** this is table used when esc [ has been seen and '?' is not in the follow
@@ -411,7 +411,7 @@ up_backslash_table[] =
  {  '\\', '\\',&stateStart , _DtTermPrimParserNextState, /* End of text */ },
  {  0x00, 0xFF, &_DtTermStateUpArrow,   _DtTermPrimParserNextState  },
 };
-StateTableRec _DtTermStateUA_BS = {False, up_backslash_table};
+StateTableRec _DtTermStateUA_BS = {False, up_backslash_table, nullptr};
 
 /*
 ** this is table used when esc ^ has been seen
@@ -423,7 +423,7 @@ uparrow_table[] =
  {  0x9C, 0x9C, &stateStart, _DtTermPrimParserNextState,        /* ST  */ },
  {  0x00, 0xFF, &_DtTermStateUpArrow,   _DtTermPrimParserNextState  },
 };
-StateTableRec _DtTermStateUpArrow  = {False, uparrow_table};
+StateTableRec _DtTermStateUpArrow  = {False, uparrow_table, nullptr};
 
 /*
 ** this is table used when esc _ ... esc has been seen
@@ -434,7 +434,7 @@ under_backslash_table[] =
  {  '\\', '\\',&stateStart , _DtTermPrimParserNextState, /* End of text */ },
  {  0x00, 0xFF, &_DtTermStateUnderscore,  _DtTermPrimParserNextState  /* Go back to Underscore*/ },
 };
-StateTableRec _DtTermStateUS_BS = {False, under_backslash_table};
+StateTableRec _DtTermStateUS_BS = {False, under_backslash_table, nullptr};
 
 /*
 ** this is table used when esc _ has been seen
@@ -446,7 +446,7 @@ underscore_table[] =
  {  0x9C, 0x9C, &stateStart, _DtTermPrimParserNextState,  /* ST */ },
  {  0x00, 0xFF, &_DtTermStateUnderscore,  _DtTermPrimParserNextState  },
 };
-StateTableRec _DtTermStateUnderscore  = {False, underscore_table};
+StateTableRec _DtTermStateUnderscore  = {False, underscore_table, nullptr};
 
 /*
 ** this is the table used when an CSI ? has been seen
@@ -486,7 +486,7 @@ sk_backslash_table[] =
  {  '\\', '\\',&stateStart,  _DtTermParseUserKeyLoadLast, /* ST    */ },
  {  0x00, 0xFF, &_DtTermStateIsNextBS_SK, _DtTermPrimParserNextState/*toss*/ },
 };
-StateTableRec _DtTermStateIsNextBS_SK  = {False, sk_backslash_table};
+StateTableRec _DtTermStateIsNextBS_SK  = {False, sk_backslash_table, nullptr};
 
 /*
 ** this is the table used when an DCS p1;p2 |  p3/ has been seen
@@ -502,7 +502,7 @@ user_key_string_table[] =
  {  0x9C, 0x9C, &stateStart, _DtTermParseUserKeyLoadLast,  /* ST */ },
  {  0x00, 0xFF, &stateStart   ,      _DtTermPrintState   /* end of table */ },
 };
-StateTableRec _DtTermStateUserKeyString  = {False, user_key_string_table};
+StateTableRec _DtTermStateUserKeyString  = {False, user_key_string_table, nullptr};
 
 /*
 ** this is the table used when an DCS p1;p2 |  has been seen
@@ -516,7 +516,7 @@ softkey_table[] =
  {  0x9C, 0x9C, &stateStart, _DtTermParseUserKeyLoadLast,  /* ST */ },
  {  0x00, 0xFF, &stateStart   ,      _DtTermPrintState   /* end of table */ },
 };
-StateTableRec _DtTermStateUserKey  = {False, softkey_table};
+StateTableRec _DtTermStateUserKey  = {False, softkey_table, nullptr};
 
 /*
  * this is the table used when an DCS p1;p2 { ..... Esc  has been seen
@@ -528,7 +528,7 @@ dl_backslash_table[] =
  {  0x20,0x7E, &_DtTermStateP, _DtTermPrimParserNextState, /* all text */ },
  {  0x00, 0xFF, &stateStart   ,      _DtTermPrintState   /* end of table */ },
 };
-StateTableRec _DtTermStateIsNextBS_DL = {False, dl_backslash_table};
+StateTableRec _DtTermStateIsNextBS_DL = {False, dl_backslash_table, nullptr};
 
 /*
 ** this is the table used when an DCS (ESC P) p1;p2... {  has been seen
@@ -542,7 +542,7 @@ dl_char_table[] =
  {  0x9C, 0x9C, &stateStart, _DtTermLoadCharSet,  /* C1 string terminator*/ },
  {  0x00, 0xFF, &stateStart   ,      _DtTermPrintState   /* end of table */ },
 };
-StateTableRec _DtTermStateDLCharSet  = {False, dl_char_table};
+StateTableRec _DtTermStateDLCharSet  = {False, dl_char_table, nullptr};
 
 /*
 ** this is the table used when an Esc P  (DCS) has been seen
@@ -569,5 +569,5 @@ error_table[] =
  {  0x00, 0xFF, &_DtTermStateError, _DtTermPrimParserNextState  /* end  */ },
 };
 
-StateTableRec _DtTermStateError = {False, error_table};
+StateTableRec _DtTermStateError = {False, error_table, nullptr};
 

@@ -192,4 +192,58 @@ put("dtlogin-xaccess", "alias", xaccess(b"x.example.org", b"%servers serverA ser
 put("dtlogin-xaccess", "pattern", xaccess(b"term7.lab", b"term?.lab CHOOSER %hosts\n%hosts hostA hostB\n!bad.lab\n"))
 put("dtlogin-xaccess", "direct", xaccess(b"pc2", b"pc2\n127.0.0.1 CHOOSER BROADCAST\n"))
 
+# ---- dtmail-rfc5322: selector byte, then MIME / HTML / iTIP / RFC 5322 payload -------------------
+put("dtmail-rfc5322", "base64-normal", b"\x00SGVsbG8gQ0tDb3JlIENEQSE=\r\n")
+put("dtmail-rfc5322", "base64-reg-short-eq", b"\x00=")
+put("dtmail-rfc5322", "base64-reg-spaces", b"\x00   \r\n  ")
+put("dtmail-rfc5322", "qprint-normal", b"\x01Hello=20World=\r\n=C3=A9\r\n")
+put("dtmail-rfc5322", "qprint-reg-trailing-eq", b"\x01abc=")
+put("dtmail-rfc5322", "enriched", b"\x02<bold>Hello</bold> <<literal>> <param>hidden</param>\n\nNext")
+put("dtmail-rfc5322", "mime-partial-params",
+    b'\x03message/partial; id="part\\"1@host"; number=2; total=5; boundary="=_Next_1"')
+put("dtmail-rfc5322", "html-sandbox",
+    b'\x85<html><script>alert(1)</script><a href="java&#x09;script:x">bad</a>'
+    b'<img src="https://tracker.invalid/p.gif" alt="px"><p>Safe &amp; clean</p></html>')
+put("dtmail-rfc5322", "itip-and-headers",
+    b"\x86From: Alice <alice@example.org>\r\nSubject: Sync\r\n"
+    b"Content-Type: text/calendar; method=REQUEST\r\n\r\n"
+    b"BEGIN:VCALENDAR\r\nMETHOD:REQUEST\r\nBEGIN:VEVENT\r\nUID:1\r\n"
+    b"DTSTART:20261127T100000Z\r\nSUMMARY:Review\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n")
+
+# ---- dtcm-icalendar: flags byte, then RFC 5545 .ics or RFC 4791 CalDAV XML -----------------------
+put("dtcm-icalendar", "vevent-rrule",
+    b"\x06BEGIN:VCALENDAR\r\nVERSION:2.0\r\nMETHOD:REQUEST\r\nBEGIN:VEVENT\r\n"
+    b"UID:ev-1@cde\r\nDTSTART;TZID=Europe/Berlin:20261127T090000\r\n"
+    b"DURATION:PT1H30M\r\nRRULE:FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE,FR;COUNT=6\r\n"
+    b"EXDATE:20261202T090000Z\r\nSUMMARY:Standup\\, Team\r\nLOCATION:Room 4\r\n"
+    b"ORGANIZER;CN=Alice:mailto:alice@example.org\r\n"
+    b"ATTENDEE;CN=Bob;PARTSTAT=ACCEPTED:mailto:bob@example.org\r\n"
+    b"END:VEVENT\r\nEND:VCALENDAR\r\n")
+put("dtcm-icalendar", "reg-duration-overflow",
+    b"\x00BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nDTSTART:20261127T090000Z\r\n"
+    b"DURATION:P999999999999999999W\r\nRRULE:FREQ=DAILY;INTERVAL=2147483647;UNTIL=20991231T000000Z\r\n"
+    b"END:VEVENT\r\nEND:VCALENDAR\r\n")
+put("dtcm-icalendar", "caldav-multistatus",
+    b'\x01<?xml version="1.0" encoding="utf-8"?>'
+    b'<D:multistatus xmlns:D="DAV:"><D:response>'
+    b'<D:href>/dav/calendars/user/personal/ev-1.ics</D:href>'
+    b'<D:propstat><D:prop><D:getetag>"etag-123"</D:getetag>'
+    b'<D:getcontenttype>text/calendar; component=vevent</D:getcontenttype>'
+    b'</D:prop></D:propstat></D:response></D:multistatus>')
+
+# ---- dthelp-sgml: flags, op count, ops, then SGML/CCDF help-volume stream ------------------------
+put("dthelp-sgml", "topic-and-title",
+    sdl(0x03, [3, 4, 0, 1, 7],
+        b'<TOPIC charset iso8859-1><TITLE>Overview <angle italic>Guide</>\\n</><ABBREV>Short</>'))
+put("dthelp-sgml", "commands-and-params",
+    sdl(0x01, [0, 1, 2, 5, 6, 8, 9],
+        b'paragraph firstindent 4 leftindent 2 id "sec1" graphic "fig1.pm" 0x2a </> <paragraph>Body</>'))
+put("dthelp-sgml", "reg-eof-value-param", b"\xff\x00pp")
+put("dthelp-sgml", "reg-eof-trailing-backslash",
+    sdl(0x01, [4], b"<TOPIC><TITLE>Truncated\\"))
+put("dthelp-sgml", "reg-eof-short-hex-tag",
+    sdl(0x01, [4], b"<TOPIC><TITLE><0x2"))
+put("dthelp-sgml", "reg-quoted-newline-param",
+    sdl(0x01, [1], b'param "line1\nline2" >'))
+
 print("seeds written below", root)

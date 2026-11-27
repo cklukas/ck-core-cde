@@ -43,3 +43,5 @@ check-local: libstt.a
 	TT_LINK='$(LIBTOOL) --tag=CXX --mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS)' \
 	TT_LIBS='$(tt_decode_libs) $(LIBS)' \
 	python3 $(srcdir)/tests/check-decode.py $(srcdir) $(top_srcdir)/lib/tt
+
+libstt_a_CXXFLAGS += $(CK_HARDENING_PHASE2_FLAGS)

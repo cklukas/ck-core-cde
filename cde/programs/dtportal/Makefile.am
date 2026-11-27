@@ -53,3 +53,5 @@ check-local:
 	  --compositor ../dtwm/dtwm-wayland
 endif
 endif
+
+AM_CFLAGS = $(CK_HARDENING_PHASE2_FLAGS)

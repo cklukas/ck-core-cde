@@ -163,7 +163,7 @@ EditData edit;
 /*+++++++++++++++++++++++++++++++++++++++*/
 /* Internal Variables                    */
 /*+++++++++++++++++++++++++++++++++++++++*/
-static saveRestore save = {FALSE, 0, };
+static saveRestore save = {FALSE, 0, {{0}}};
 static Boolean OldNewSame = False;
 
 /************************************************************************

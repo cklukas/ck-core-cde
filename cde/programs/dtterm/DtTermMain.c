@@ -889,7 +889,7 @@ ToggleMenuBar
 	/* can't use case here, since we are not switching on a pre-defined
 	 * value...
 	 */
-	if (cb->event->xclient.data.l[0] == xa_DTTERM_TOGGLE_MENUBAR) {
+	if ((Atom)cb->event->xclient.data.l[0] == xa_DTTERM_TOGGLE_MENUBAR) {
 	    (void) _DtTermViewMenuToggleMenuBar((Widget) client_data);
 	}
     }
@@ -1324,7 +1324,7 @@ main(int argc, char **argv)
 
     sa.sa_handler = SignalHandler;
     /* trap all signals that we want to clean up after... */
-    for (i = 0; i < (sizeof(signalList) / sizeof(signalList[0])); i++) {
+    for (i = 0; (size_t)i < (sizeof(signalList) / sizeof(signalList[0])); i++) {
 	(void) sigaction(signalList[i], &sa, (struct sigaction *) 0);
     }
 
@@ -1784,7 +1784,7 @@ SaveTerm(
 				  XtWindow(XtParent(dtvw)), &pWsPresence,
 				  &numInfo) == Success)
     {
-	int i;
+	unsigned long i;
 	sprintf(bufr, "*dtterm_%d.workspaceList: ", cloneNum);
 	WriteSessionText(fd, bufr);
 	for(i = 0; i < numInfo; i++)

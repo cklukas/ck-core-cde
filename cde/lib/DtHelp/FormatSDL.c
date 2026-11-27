@@ -7111,9 +7111,10 @@ Cdata(
                     strmove (&string[i], &string[i+1]);
                     if (string[i] == '\0')
                       {
-                        string[i] = BufFileGet(my_struct->my_file);
-                        if (string[i] == BUFFILEEOF)
+                        int rawc = BufFileGet(my_struct->my_file);
+                        if (rawc == BUFFILEEOF)
                             return -1;
+                        string[i] = (char)rawc;
                         string[i+1] = '\0';
                       }
     
@@ -7177,9 +7178,10 @@ Cdata(
 			  {
 			    do
 			      {
-			        string[i] = BufFileGet(my_struct->my_file);
-				if (string[i] == BUFFILEEOF)
+			        int rawc = BufFileGet(my_struct->my_file);
+				if (rawc == BUFFILEEOF)
 				    return -1;
+			        string[i] = (char)rawc;
 				i++;
 			      } while (i < myLen && '0' <= string[i-1]
 							&& string[i-1] <= '9');
@@ -7330,9 +7332,10 @@ Cdata(
 		string = newString;
 
 		while (curLen < 0 && len < multiLen) {
-		    string[myLen] = BufFileGet(my_struct->my_file);
+		    int rawc = BufFileGet(my_struct->my_file);
 
-		    if (string[myLen] == BUFFILEEOF) return -1;
+		    if (rawc == BUFFILEEOF) return -1;
+		    string[myLen] = (char)rawc;
 
 		    string[myLen + 1] = '\0';
 		    curLen = mblen(&string[i], multiLen);

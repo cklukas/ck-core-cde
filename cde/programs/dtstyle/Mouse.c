@@ -397,7 +397,7 @@ static Widget warnDialog;
 static Widget midwarnDialog;
 
 static Mouse mouse;
-static saveRestore save = {FALSE, 0, };
+static saveRestore save = {FALSE, 0, {{0}}};
 static Boolean dclickSelectState = False;
 static uint64_t lastPictBoxClickMonoMs = 0;
 static int pictBoxClickCount = 0;

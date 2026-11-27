@@ -53,3 +53,6 @@ check-local: ttsession
 	TT_IMPRINT_LINK='$(tt_check_link)' \
 	TT_IMPRINT_LIBS='$(tt_check_libs)' \
 	python3 $(srcdir)/tests/check-sender-imprint.py $(srcdir) ./ttsession
+
+AM_CFLAGS = $(CK_HARDENING_PHASE2_FLAGS)
+ttsession_CXXFLAGS += $(CK_HARDENING_PHASE2_FLAGS)

@@ -12,3 +12,5 @@ libtttk_la_SOURCES = ttdesktop.C     ttdtfile.C      ttdtimprint.C ttdtprocess.C
 	             ttdtprocid.C \
 	             ttmedia.C       tttk.C          tttk2free.C \
 		     tttkmessage.C   tttkpattern.C   tttkutils.C
+
+libtttk_la_CXXFLAGS += $(CK_HARDENING_PHASE2_FLAGS)

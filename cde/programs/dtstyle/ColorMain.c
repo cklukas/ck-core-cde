@@ -520,7 +520,7 @@ static char *WHITE_ONLY = "White";
 static char *BLACK_ONLY = "Black";
 
 static char *PALETTEDLG = "paletteDlg";
-static saveRestore save = {FALSE, 0, };
+static saveRestore save = {FALSE, 0, {{0}}};
 
 static Widget           colorButton[XmCO_MAX_NUM_COLORS];
 static Widget           addDialog;
@@ -1508,7 +1508,7 @@ addOkCB(
   
   /* malloc space for the new palette desc */
   newPalette->desc = (char *)XtMalloc(strlen(name) + 1);
-  for(i = 0; i < strlen(name); i++)
+  for(i = 0; (size_t)i < strlen(name); i++)
     newPalette->desc[i] = name[i];
   newPalette->desc[i] = '\0';
   
@@ -2948,10 +2948,17 @@ ValidName(
    }
 
 #ifdef NLS16
-   chlen = mblen (&name[0], MB_CUR_MAX);
-   for (i = 0; (i < strlen(name)) && chlen && valid; i += chlen)
+   if (valid)
    {
-      chlen = mblen (&name[i], MB_CUR_MAX);
+      chlen = mblen (&name[0], MB_CUR_MAX);
+      for (i = 0; chlen > 0 && valid && (size_t)i < strlen(name); i += chlen)
+      {
+         chlen = mblen (&name[i], MB_CUR_MAX);
+         if (chlen <= 0)
+         {
+            valid = False;
+            break;
+         }
       if ((chlen == 1) &&
           ((name[i] == '*') ||
            (name[i] == '"') ||
@@ -2971,9 +2978,10 @@ ValidName(
       {
            valid = False;
       }
+      }
    }
 #else /* NLS16 */
-   for (i = 0; (i < strlen(name)) && valid; i++)
+   for (i = 0; valid && ((size_t)i < strlen(name)); i++)
    {
       if (strchr ("|!(){}[]<>*:\"\\", (int) name[i]))
       {

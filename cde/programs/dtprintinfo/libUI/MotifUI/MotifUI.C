@@ -826,12 +826,12 @@ static void VerbosePass1(Widget w, int level)
    if (new_width > G_width)
       G_width = new_width;
    if (XtIsWidget(w))
-      for (i = 0; i < w->core.num_popups; i++)
+      for (i = 0; (Cardinal)i < w->core.num_popups; i++)
 	 VerbosePass1(w->core.popup_list[i], level + 1);
    if (XtIsComposite(w))
     {
       CompositeWidget cw = (CompositeWidget) w;
-      for (i = 0; i < cw->composite.num_children; i++)
+      for (i = 0; (Cardinal)i < cw->composite.num_children; i++)
 	 VerbosePass1(cw->composite.children[i], level + 1);
     }
 }
@@ -878,13 +878,13 @@ void MotifUI::DumpWidgets(Widget w, boolean verbose, int level)
    int i;
    if (XtIsWidget(w))
     {
-      for (i = 0; i < w->core.num_popups; i++)
+      for (i = 0; (Cardinal)i < w->core.num_popups; i++)
 	 DumpWidgets(w->core.popup_list[i], verbose, level + 1);
     }
    if (XtIsComposite(w))
     {
       CompositeWidget cw = (CompositeWidget) w;
-      for (i = 0; i < cw->composite.num_children; i++)
+      for (i = 0; (Cardinal)i < cw->composite.num_children; i++)
 	 DumpWidgets(cw->composite.children[i], verbose, level + 1);
     }
 }

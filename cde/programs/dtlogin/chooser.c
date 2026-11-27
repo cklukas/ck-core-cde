@@ -650,7 +650,7 @@ RegisterHostname (char *name)
 	    in_addr.sin_family = AF_INET;
 	}
 	/* Per RFC 1123, check first for IP address in dotted-decimal form */
-	else if ((in_addr.sin_addr.s_addr = inet_addr(name)) != -1)
+	else if ((in_addr.sin_addr.s_addr = inet_addr(name)) != INADDR_NONE)
 	    in_addr.sin_family = AF_INET;
 	else
 	{

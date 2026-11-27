@@ -564,8 +564,9 @@ _DtHelpCeGetSdlCdata (
     char      *ptr;
     char       buf[MB_LEN_MAX + 1];
 #define	ESC_STR_LEN	4
-    char       escStr[ESC_STR_LEN];
-    char       c;
+    char       escStr[ESC_STR_LEN + 1];
+    int        c;
+    char       outCh;
 
     if (string == nullptr)
 	ignore = True;
@@ -579,8 +580,11 @@ _DtHelpCeGetSdlCdata (
     do {
 	c = BufFileGet(f);
 
-	buf[len++] = c;
-	buf[len]   = '\0';
+	if (c != BUFFILEEOF)
+	  {
+	    buf[len++] = (char)c;
+	    buf[len]   = '\0';
+	  }
 
 	if (c != BUFFILEEOF && max_mb != 1)
 	    strMB = mblen(buf, max_mb);
@@ -649,6 +653,7 @@ _DtHelpCeGetSdlCdata (
 			escStr[len++] = c;
 
 		      } while (len < ESC_STR_LEN && c >= '0' && c <= '9');
+		    escStr[len] = '\0';
 
 		    /*
 		     * the ending character of the entity has to be a
@@ -708,7 +713,8 @@ _DtHelpCeGetSdlCdata (
 	        if (c == '\t')
 		    c = ' ';
 
-	        ptr = &c;
+	        outCh = (char)c;
+	        ptr = &outCh;
 	        if (c == '\n')
 		  {
 		    lastWasSpace = True;

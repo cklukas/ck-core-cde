@@ -1135,7 +1135,7 @@ DrawBox( void )
 	/* 
 	 * Set limits
 	 */
-	if ((( 2 * box_line_width ) + x_offset + maxWidth) > displayWidth)
+	if ((unsigned int)(( 2 * box_line_width ) + x_offset + maxWidth) > displayWidth)
 	{
 		useDecoration = False;
 		x_offset = 0;

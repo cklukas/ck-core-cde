@@ -89,3 +89,6 @@ check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-privilege.py
 	CXX="$(CXX)" python3 $(srcdir)/tests/check-dtprintinfo-hardening.py
 
+
+AM_CFLAGS = $(CK_HARDENING_PHASE2_FLAGS)
+AM_CXXFLAGS = $(CK_HARDENING_PHASE2_FLAGS)

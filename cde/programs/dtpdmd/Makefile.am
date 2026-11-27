@@ -13,3 +13,5 @@ dtpdmd_LDADD = $(DTCLIENTLIBS) $(XTOOLLIB)
 
 dtpdmd_SOURCES = dispatch.c dtpdmd.c mailbox.c manager.c records.c	\
 		 nlmsg.c setup.c util.c dtpdmdP.h nlmsg.h
+
+dtpdmd_CFLAGS += $(CK_HARDENING_PHASE2_FLAGS)
