@@ -434,11 +434,14 @@ done
 %systemd_postun dtlogin.service
 
 %files -n ck-core-motif9 -f %{_builddir}/files-motif9.list
+%defattr(-,root,root,-)
 %config(noreplace) /etc/ld.so.conf.d/ck-core-cde.conf
 
 %files -n ck-core-fs-lib -f %{_builddir}/files-fs-lib.list
+%defattr(-,root,root,-)
 
 %files -f %{_builddir}/files-cde.list
+%defattr(-,root,root,-)
 %config(noreplace) /etc/pam.d/dtsession
 %config(noreplace) /etc/profile.d/ck-core-cde.sh
 /usr/share/xsessions/cde.desktop
@@ -450,6 +453,7 @@ done
 %{_unitdir}/rpc-cmsd.service
 
 %files -n ck-core-dtlogin
+%defattr(-,root,root,-)
 /usr/dt/bin/dtlogin
 /usr/dt/bin/dtgreet
 /usr/dt/bin/dtchooser
@@ -458,6 +462,7 @@ done
 %{_unitdir}/dtlogin.service
 
 %files -n ck-core-apps -f %{_builddir}/files-apps.list
+%defattr(-,root,root,-)
 
 %changelog
 * Fri Nov 27 2026 CK Core Project <cklukas@users.noreply.github.com> - 3.0.0-1

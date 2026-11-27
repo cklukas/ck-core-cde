@@ -157,6 +157,22 @@ def stage_and_build_rpm(args: argparse.Namespace) -> int:
                     shutil.copy2(bin_file, dst_b)
                     os.chmod(dst_b, 0o755)
                     (t_apps / "usr" / "bin" / bin_file.name).symlink_to(f"/usr/dt/bin/{bin_file.name}")
+        apps_src_dir = build_root / "apps-src"
+        if (apps_src_dir / "Makefile").is_file() and (apps_src_dir / "data" / "icons" / "toolbar").is_dir():
+            subprocess.run(
+                [
+                    "make",
+                    "-C",
+                    str(apps_src_dir),
+                    "install-toolbar-icons",
+                    "install-midi-assets",
+                    "install-audio-assets",
+                    "install-video-assets",
+                    "PREFIX=/usr",
+                    f"DESTDIR={t_apps}",
+                ],
+                check=True,
+            )
 
     # Remove files explicitly listed in %files or owned by ck-core-dtlogin from t_cde list
     explicit_cde = {

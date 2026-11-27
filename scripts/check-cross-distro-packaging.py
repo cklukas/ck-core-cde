@@ -204,6 +204,7 @@ def test_rpm_staging_and_spec(tmp: Path) -> None:
         "%systemd_post rpc-cmsd.service",
         "%systemd_post dtlogin.service",
         "files-motif9.list",
+        "%defattr(-,root,root,-)",
         "MOTIF_PREFIX=\"$STAGE/motif/usr/dt\"",
     ):
         assert required in spec_txt, f"missing RPM spec directive: {required}"

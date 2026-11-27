@@ -1,4 +1,16 @@
 2026-11-27
+- Advance the CK Core Motif dependency pin to `af3c49863100` (`_XmRenderTableRec`
+  16-bit rendition-count caps and `ILP32` `-Werror=type-limits` / `XmRenderFormat`
+  hardening fixes) and include bundled `ck-core-apps` assets and `root:root`
+  `%defattr` ownership in binary `.rpm` staging (`packaging/rpm/ck-core-cde.spec`,
+  `scripts/build-rpm.py`, `scripts/check-cross-distro-packaging.py`,
+  `.ckgit/motif-revision`, `.ckgit/ci.yml`):
+  - Stage toolbar icons, XPM app icons, MIDI demos/playlists, soundfonts, and
+    `.desktop` files from `apps-src` into `ck-core-apps` when building prebuilt-stage
+    `.rpm` packages via `scripts/build-rpm.py` (matching `%without prebuilt_stage`),
+    and enforce `%defattr(-,root,root,-)` across all five RPM subpackages in
+    `ck-core-cde.spec` so non-root `rpmbuild` hosts never embed build-user UID/GID
+    metadata in binary `.rpm` payloads.
 - Advance the CK Core Motif dependency pin to `f6a0aeaad45d` (zero-warning
   `--enable-hardening` `-Werror=type-limits` ratchet and `Appearance`/`XmString`
   bounds fixes) and qualify binary `.rpm` package generation on cross-distro
