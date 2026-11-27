@@ -1,0 +1,7 @@
+CK Core CDE 3.0.0 is the modernized C23 Common Desktop Environment built
+against CK Core Motif ABI 9 (/usr/dt/lib/libXm.so.9), featuring:
+  - dtwm-wayland (wlroots-0.19 compositor with seatd + drm-kmod + evdev support)
+  - dtlogin Wayland local-seat greeter (_dtgreeter + OpenPAM pam_xdg) and X11
+  - xdg-desktop-portal-cde native Motif desktop portal
+  - Cairo/Pango vector PDF + CUPS IPP Everywhere printing in libDtPrint
+  - OAuth2/JMAP dtmail, CalDAV + LOCAL_PEERCRED AF_UNIX rpc.cmsd, and dtfile

@@ -1,0 +1,17 @@
+bin/uil
+bin/xmbind
+include/Mrm/MrmAppl.h
+include/Mrm/MrmDecls.h
+include/Mrm/MrmPublic.h
+include/Xm/Wayland.h
+include/Xm/Xm.h
+include/Xm/XmAll.h
+lib/libMrm.so
+lib/libMrm.so.9
+lib/libUil.so
+lib/libUil.so.9
+lib/libXm.so
+lib/libXm.so.9
+libdata/pkgconfig/libMrm.pc
+libdata/pkgconfig/libUil.pc
+libdata/pkgconfig/libXm.pc

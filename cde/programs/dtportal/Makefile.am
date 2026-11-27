@@ -20,7 +20,7 @@ xdg_desktop_portal_cde_CPPFLAGS = -DCDE_INSTALLATION_TOP=\"$(CDE_INSTALLATION_TO
 xdg_desktop_portal_cde_LDADD = $(DTCLIENTLIBS) $(XTOOLLIB) \
                                $(DTPORTAL_DEPS_LIBS) \
                                $(WAYLAND_CLIENT_LIBS) \
-                               -ldl -lm
+                               $(LIBDL) -lm
 
 if HAVE_CK_CORE_FS
 xdg_desktop_portal_cde_CPPFLAGS += -DHAVE_CK_CORE_FS=1 $(CK_CORE_FS_CFLAGS)

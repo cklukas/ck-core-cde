@@ -2,7 +2,15 @@
 # CK Core CDE Wayland session entry point (/usr/share/wayland-sessions/cde-wayland.desktop)
 set -eu
 
-export PATH="/usr/dt/bin:$PATH"
+case ":${PATH}:" in
+    *:/usr/local/bin:*) export PATH="/usr/dt/bin:$PATH" ;;
+    *) export PATH="/usr/dt/bin:/usr/local/bin:$PATH" ;;
+esac
+# Ensure a session D-Bus is running on non-systemd seats (e.g. FreeBSD seatd)
+if [ -z "${DBUS_SESSION_BUS_ADDRESS:-}" ] && [ -z "${CK_CDE_DBUS_WRAPPED:-}" ] && command -v dbus-run-session >/dev/null 2>&1; then
+    export CK_CDE_DBUS_WRAPPED=1
+    exec dbus-run-session -- "$0" "$@"
+fi
 # Never inherit a stale parent WAYLAND_DISPLAY / DISPLAY into the root session compositor
 unset WAYLAND_DISPLAY DISPLAY
 export XDG_CURRENT_DESKTOP="${XDG_CURRENT_DESKTOP:-CDE}"
@@ -75,9 +83,9 @@ if [ -n "${HOME:-}" ] && [ -d "$HOME/.dt/ims" ]; then
     CDE_IMS_CHOICE="$(awk '/^@ims:/{print $2; exit}' "$HOME/.dt/ims/"* 2>/dev/null || true)"
 fi
 if [ -z "$CDE_IMS_CHOICE" ]; then
-    if [ -x /usr/bin/fcitx5 ]; then
+    if command -v fcitx5 >/dev/null 2>&1; then
         CDE_IMS_CHOICE="fcitx5"
-    elif [ -x /usr/bin/ibus-daemon ]; then
+    elif command -v ibus-daemon >/dev/null 2>&1; then
         CDE_IMS_CHOICE="ibus"
     fi
 fi

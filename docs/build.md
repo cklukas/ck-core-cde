@@ -809,3 +809,9 @@ echo "deb [signed-by=/etc/apt/keyrings/ck-core-archive-keyring.asc] file:/path/t
 sudo apt-get update
 sudo apt-get install ck-core-cde ck-core-apps ck-core-dtlogin
 ```
+
+For Fedora / RHEL / openSUSE `.rpm` packaging (`packaging/rpm/ck-core-cde.spec`
+and `scripts/build-rpm.py`) and FreeBSD ports / `pkg` recipes
+(`packaging/freebsd/` and `scripts/build-freebsd-pkg.py`, including `seatd` +
+`drm-kmod` + `evdev` seat configuration), see
+[Packaging and Seat Portability](packaging.md).

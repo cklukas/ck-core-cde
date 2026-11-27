@@ -63,6 +63,9 @@
 #include <rpc/rpcb_clnt.h>
 #endif /* SunOS */
 #include <sys/param.h>
+#if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(__APPLE__)
+#include <sys/ucred.h>
+#endif
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <rpc/rpc.h>
@@ -601,6 +604,50 @@ verify_unix_peercred(struct svc_req *rqstp, SVCXPRT *transp)
 						"rpc.cmsd: rejected spoofed AUTH_UNIX uid=%u (SO_PEERCRED uid=%u pid=%d)\n",
 						aup ? (unsigned)aup->aup_uid : 0U,
 						(unsigned)cred.uid, (int)cred.pid);
+				return (-1);
+			}
+		}
+	}
+#elif defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(__APPLE__)
+	{
+		uid_t peer_uid = (uid_t)-1;
+		gid_t peer_gid = (gid_t)-1;
+		int peer_pid = -1;
+		int have_cred = 0;
+
+#if defined(LOCAL_PEERCRED) && (defined(__FreeBSD__) || defined(__APPLE__))
+		struct xucred xcred;
+		socklen_t xlen = sizeof(xcred);
+#ifndef SOL_LOCAL
+#define SOL_LOCAL 0
+#endif
+		if (getsockopt(transp->xp_fd, SOL_LOCAL, LOCAL_PEERCRED,
+		               &xcred, &xlen) == 0 &&
+		    xcred.cr_version == XUCRED_VERSION) {
+			peer_uid = xcred.cr_uid;
+#if defined(__FreeBSD__) && __FreeBSD_version >= 1300000
+			peer_pid = (int)xcred.cr_pid;
+#endif
+			have_cred = 1;
+		}
+#endif
+		if (!have_cred && getpeereid(transp->xp_fd, &peer_uid, &peer_gid) == 0)
+			have_cred = 1;
+		if (!have_cred)
+			return (-1);
+
+		if (rqstp->rq_proc == NULLPROC)
+			return (1);
+
+		if (rqstp->rq_cred.oa_flavor == AUTH_UNIX) {
+			struct authunix_parms *aup =
+				(struct authunix_parms *)rqstp->rq_clntcred;
+			if (aup == nullptr || (uid_t)aup->aup_uid != peer_uid) {
+				if (debug)
+					fprintf(stderr,
+						"rpc.cmsd: rejected spoofed AUTH_UNIX uid=%u (LOCAL_PEERCRED uid=%u pid=%d)\n",
+						aup ? (unsigned)aup->aup_uid : 0U,
+						(unsigned)peer_uid, peer_pid);
 				return (-1);
 			}
 		}

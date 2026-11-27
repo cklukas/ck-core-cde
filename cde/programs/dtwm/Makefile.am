@@ -214,6 +214,7 @@ wayland/xdg-toplevel-drag-v1-protocol.c: $(WAYLAND_PROTOCOLS_DATADIR)/staging/xd
 	$(WAYLAND_SCANNER) private-code $< $@
 
 dtwm_wayland_SOURCES = wayland/dtwm_wayland.h \
+                       wayland/cde_evdev_compat.h \
                        wayland/cde_bevel.c \
                        wayland/cde_workspace.c \
                        wayland/cde_icons.c \
@@ -230,7 +231,7 @@ $(dtwm_wayland_OBJECTS): $(WAYLAND_GEN_HDRS)
 dtwm_wayland_CPPFLAGS = -I$(builddir)/wayland -I$(srcdir)/wayland -DWLR_USE_UNSTABLE=1 \
                         -DCDE_INSTALLATION_TOP=\"$(CDE_INSTALLATION_TOP)\"
 dtwm_wayland_CFLAGS = $(WAYLAND_COMP_CFLAGS)
-dtwm_wayland_LDADD = $(WAYLAND_COMP_LIBS) -lxcb-randr -lxcb-xfixes -linput -ldl -lm
+dtwm_wayland_LDADD = $(WAYLAND_COMP_LIBS) -lxcb-randr -lxcb-xfixes -linput $(LIBDL) -lm
 
 dtwm_panel_SOURCES = wayland/WmFpWayland.c \
                      Button.c        Callback.c      Clock.c \
@@ -248,7 +249,7 @@ AM_CPPFLAGS = -DLARGECURSORS -DR2_COMPAT -DOPAQUE -DSHAPE -DUNMAP_ON_RESTART \
 	      -DBATCH_DRAG_REQUESTS -DCDE_INSTALLATION_TOP=\"$(CDE_INSTALLATION_TOP)\" \
 	      -DCDE_CONFIGURATION_TOP=\"$(CDE_CONFIGURATION_TOP)\"
 
-dtwm_LDADD = $(DTCLIENTLIBS) $(XTOOLLIB) $(XCURSORLIB) -ldl
+dtwm_LDADD = $(DTCLIENTLIBS) $(XTOOLLIB) $(XCURSORLIB) $(LIBDL)
 dtfplist_LDADD = $(DTCLIENTLIBS) $(TIRPCLIB) $(XTOOLLIB)
 
 if SOLARIS
@@ -277,11 +278,11 @@ dtwm_SOURCES = WmCDInfo.c      WmCDecor.c      WmCEvent.c \
 dtfplist_SOURCES = Print.c Parse.c DataBaseLoad.c WmParse.c Session.c
 
 dtwm_media_ctl_SOURCES = dtwm_media_ctl.c
-dtwm_media_ctl_LDADD = -ldl -lm
+dtwm_media_ctl_LDADD = $(LIBDL) -lm
 
 cde_color_sync_SOURCES = cde_color_sync.c
 cde_color_sync_CPPFLAGS = $(AM_CPPFLAGS)
-cde_color_sync_LDADD = -lX11 -ldl
+cde_color_sync_LDADD = -lX11 $(LIBDL)
 
 SCRIPTFLAGS = -DCDE_INSTALLATION_TOP=$(CDE_INSTALLATION_TOP) \
               -DCDE_CONFIGURATION_TOP=$(CDE_CONFIGURATION_TOP)

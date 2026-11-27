@@ -1,0 +1,4 @@
+CK Core Motif 2.4.0 is the native ABI 9 Motif toolkit powering CK Core CDE and
+CK Core Apps on X11/XLibre and Wayland. It installs into /usr/dt so it coexists
+cleanly alongside FreeBSD's x11-toolkits/open-motif (libXm.so.4) under
+/usr/local.

@@ -1,0 +1,41 @@
+#!/bin/sh
+
+# PROVIDE: rpc_cmsd
+# REQUIRE: DAEMON FILESYSTEMS rpcbind
+# BEFORE: dtlogin
+# KEYWORD: shutdown
+#
+# Local AF_UNIX + LOCAL_PEERCRED calendar daemon for CK Core CDE dtcm
+# (zero TCP/UDP ports open by default).
+
+. /etc/rc.subr
+
+name="rpc_cmsd"
+rcvar="rpc_cmsd_enable"
+
+load_rc_config "$name"
+
+: "${rpc_cmsd_enable:=NO}"
+: "${rpc_cmsd_sock:=/var/run/rpc.cmsd/cmsd.sock}"
+: "${rpc_cmsd_flags:=-s -U ${rpc_cmsd_sock}}"
+
+command="/usr/dt/bin/rpc.cmsd"
+pidfile="/var/run/rpc_cmsd.pid"
+start_precmd="rpc_cmsd_precmd"
+start_cmd="rpc_cmsd_start"
+
+rpc_cmsd_precmd()
+{
+	install -d -m 1777 /var/spool/calendar
+	install -d -m 0755 "$(dirname "${rpc_cmsd_sock}")"
+	if [ ! -e /run ] && [ -d /var/run/rpc.cmsd ]; then
+		:
+	fi
+}
+
+rpc_cmsd_start()
+{
+	/usr/sbin/daemon -p "${pidfile}" "${command}" ${rpc_cmsd_flags}
+}
+
+run_rc_command "$1"

@@ -10,7 +10,7 @@
 
 #include <ctype.h>
 #include <errno.h>
-#include <linux/input-event-codes.h>
+#include "cde_evdev_compat.h"
 #include <math.h>
 #include <signal.h>
 #include <stdio.h>

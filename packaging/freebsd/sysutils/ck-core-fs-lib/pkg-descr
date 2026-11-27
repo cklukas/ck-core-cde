@@ -1,0 +1,3 @@
+Headless C/C++ filesystem comparison, atomic copy/move, FreeDesktop trash, and
+streaming filename/content search backend shared by CK Core CDE (dtfile and
+xdg-desktop-portal-cde) and ckUtilities.

@@ -35,6 +35,28 @@ static uint32_t monotonic_ms(void) {
     return (uint32_t)(ts.tv_sec * 1000u + (uint32_t)(ts.tv_nsec / 1000000L));
 }
 
+static int create_anon_keymap_fd(size_t sz) {
+    int fd = -1;
+#if defined(__linux__) || (defined(__FreeBSD__) && __FreeBSD__ >= 13)
+    fd = memfd_create("dtportal-xkb", MFD_CLOEXEC);
+#elif defined(__FreeBSD__) && defined(SHM_ANON)
+    fd = shm_open(SHM_ANON, O_RDWR | O_CLOEXEC, 0600);
+#endif
+    if (fd < 0) {
+        const char *rt = getenv("XDG_RUNTIME_DIR");
+        char tmpl[PATH_MAX];
+        snprintf(tmpl, sizeof(tmpl), "%s/dtportal-xkb-XXXXXX",
+                 (rt && rt[0] == '/') ? rt : "/var/tmp");
+        fd = mkostemp(tmpl, O_CLOEXEC);
+        if (fd >= 0) unlink(tmpl);
+    }
+    if (fd >= 0 && ftruncate(fd, (off_t)sz) != 0) {
+        close(fd);
+        return -1;
+    }
+    return fd;
+}
+
 static void mkdir_p_dir(const char *dir) {
     char tmp[PATH_MAX];
     snprintf(tmp, sizeof(tmp), "%s", dir);
@@ -408,8 +430,8 @@ static bool ensure_virtual_input_ready(DtPortalCtx *ctx) {
             char *km_str = xkb_keymap_get_as_string(ctx->xkb_keymap, XKB_KEYMAP_FORMAT_TEXT_V1);
             if (km_str) {
                 size_t sz = strlen(km_str) + 1;
-                int fd = memfd_create("dtportal-xkb", MFD_CLOEXEC);
-                if (fd >= 0 && ftruncate(fd, (off_t)sz) == 0) {
+                int fd = create_anon_keymap_fd(sz);
+                if (fd >= 0) {
                     void *map = mmap(NULL, sz, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
                     if (map != MAP_FAILED) {
                         memcpy(map, km_str, sz);

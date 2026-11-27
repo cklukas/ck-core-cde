@@ -11,7 +11,7 @@ AM_CPPFLAGS = \
 	-I$(builddir)/objects/PrintObj -I$(srcdir)/objects/PrintObj \
 	-DKORNSHELL=\"$(KSH)\"
 
-dtprintinfo_LDADD = $(DTCLIENTLIBS) $(XTOOLLIB) -ldl
+dtprintinfo_LDADD = $(DTCLIENTLIBS) $(XTOOLLIB) $(LIBDL)
 
 UTIL_SRC = util/Invoke.C util/Invoke.h util/Privilege.h util/Process.C util/Process.h
 

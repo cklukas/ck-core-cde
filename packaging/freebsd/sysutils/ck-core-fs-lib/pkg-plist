@@ -1,0 +1,5 @@
+include/ck_file_engine.h
+include/ck_fs_search.h
+include/ck_trash.h
+lib/libck_file_engine.so
+libdata/pkgconfig/ck-core-fs-lib.pc

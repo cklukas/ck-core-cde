@@ -633,6 +633,10 @@ AC_SUBST([XCURSORLIB])
 dnl libraries
 AC_CHECK_LIB(m, cosf)
 AC_SEARCH_LIBS(dlopen, [dl dld], [], [])
+AS_CASE([$ac_cv_search_dlopen],
+        [no|"none required"], [LIBDL=""],
+        [LIBDL="$ac_cv_search_dlopen"])
+AC_SUBST([LIBDL])
 
 AC_CHECK_LIB(crypt, crypt)
 dnl this should be configurable, for now it is required

@@ -17,7 +17,7 @@
 #include <fcntl.h>
 #include <getopt.h>
 #include <limits.h>
-#include <linux/input-event-codes.h>
+#include "cde_evdev_compat.h"
 #include <math.h>
 #include <poll.h>
 #include <signal.h>
@@ -12291,7 +12291,8 @@ static bool probe_hw_3d_render_support(struct wlr_backend *backend) {
     bool found_hw = false;
     struct dirent *de;
     while ((de = readdir(dir)) != nullptr) {
-        if (strncmp(de->d_name, "renderD", 7) != 0) {
+        if (strncmp(de->d_name, "renderD", 7) != 0 &&
+            strncmp(de->d_name, "card", 4) != 0) {
             continue;
         }
         char path[256];
@@ -12311,6 +12312,45 @@ static bool probe_hw_3d_render_support(struct wlr_backend *backend) {
     }
     closedir(dir);
     return found_hw;
+}
+
+static void ensure_seatd_backend_env(void) {
+    const char *backends = getenv("WLR_BACKENDS");
+    if (backends && strncasecmp(backends, "headless", 8) == 0) {
+        return;
+    }
+    struct stat st;
+    if (stat("/run/systemd/seats", &st) == 0 && S_ISDIR(st.st_mode)) {
+        return;
+    }
+    const char *explicit_sock = getenv("SEATD_SOCK");
+    static const char *const seatd_candidates[] = {
+        "/var/run/seatd.sock",
+        "/run/seatd.sock",
+        nullptr
+    };
+    const char *found_sock = nullptr;
+    if (explicit_sock && explicit_sock[0] &&
+        stat(explicit_sock, &st) == 0 && S_ISSOCK(st.st_mode)) {
+        found_sock = explicit_sock;
+    } else {
+        for (int i = 0; seatd_candidates[i]; ++i) {
+            if (stat(seatd_candidates[i], &st) == 0 && S_ISSOCK(st.st_mode) &&
+                access(seatd_candidates[i], R_OK | W_OK) == 0) {
+                found_sock = seatd_candidates[i];
+                break;
+            }
+        }
+    }
+    if (found_sock) {
+        if (!explicit_sock || !explicit_sock[0]) {
+            setenv("SEATD_SOCK", found_sock, 0);
+        }
+        const char *lb = getenv("LIBSEAT_BACKEND");
+        if (!lb || !lb[0]) {
+            setenv("LIBSEAT_BACKEND", "seatd", 0);
+        }
+    }
 }
 
 static const char *identify_wlr_renderer_name(struct wlr_renderer *r) {
@@ -13229,6 +13269,7 @@ int main(int argc, char **argv) {
     server.sigint_source = wl_event_loop_add_signal(ev_loop, SIGINT, handle_signal_quit, server.wl_display);
     server.sigterm_source = wl_event_loop_add_signal(ev_loop, SIGTERM, handle_signal_quit, server.wl_display);
 
+    ensure_seatd_backend_env();
     server.backend = wlr_backend_autocreate(ev_loop, &server.wlr_session);
     if (!server.backend) {
         fprintf(stderr, "dtwm-wayland: failed to create wlroots backend\n");

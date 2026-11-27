@@ -15,7 +15,7 @@
 #include <drm_fourcc.h>
 #include <fcntl.h>
 #include <limits.h>
-#include <linux/input-event-codes.h>
+#include "cde_evdev_compat.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>

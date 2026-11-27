@@ -1,0 +1,44 @@
+#!/bin/sh
+
+# PROVIDE: dtlogin
+# REQUIRE: DAEMON LOGIN dbus rpcbind rpc_cmsd seatd
+# KEYWORD: shutdown
+#
+# Add to /etc/rc.conf to enable the CK Core CDE Wayland / X11 display manager:
+#   seatd_enable="YES"
+#   dbus_enable="YES"
+#   rpcbind_enable="YES"
+#   rpc_cmsd_enable="YES"
+#   dtlogin_enable="YES"
+
+. /etc/rc.subr
+
+name="dtlogin"
+rcvar="dtlogin_enable"
+
+load_rc_config "$name"
+
+: "${dtlogin_enable:=NO}"
+: "${dtlogin_flags:=-daemon}"
+
+command="/usr/dt/bin/dtlogin"
+pidfile="/var/dt/Xpid"
+start_precmd="dtlogin_precmd"
+
+dtlogin_precmd()
+{
+	install -d -m 0755 /var/dt /var/run/dtlogin
+	if pw usershow _dtgreeter >/dev/null 2>&1; then
+		for grp in video webcamd; do
+			if pw groupshow "$grp" >/dev/null 2>&1; then
+				pw groupmod "$grp" -m _dtgreeter >/dev/null 2>&1 || true
+			fi
+		done
+	fi
+	if [ -S /var/run/seatd.sock ]; then
+		export SEATD_SOCK="/var/run/seatd.sock"
+		export LIBSEAT_BACKEND="seatd"
+	fi
+}
+
+run_rc_command "$1"

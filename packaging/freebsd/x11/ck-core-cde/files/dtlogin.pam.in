@@ -1,0 +1,7 @@
+# FreeBSD OpenPAM configuration for CK Core dtlogin
+auth		include		system
+account		include		system
+session		optional	pam_xdg.so
+session		optional	/usr/local/lib/pam_ck_connector.so
+session		include		system
+password	include		system

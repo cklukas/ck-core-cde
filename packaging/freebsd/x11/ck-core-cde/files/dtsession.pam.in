@@ -1,0 +1,3 @@
+# FreeBSD OpenPAM screen-unlock configuration for CK Core dtsession
+auth		include		system
+account		include		system

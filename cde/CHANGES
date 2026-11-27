@@ -1,4 +1,23 @@
 2026-11-27
+- Add Fedora / RHEL / openSUSE RPM packaging, FreeBSD ports/`pkg` recipes, and
+  `seatd` / `drm-kmod` / `evdev` / `LOCAL_PEERCRED` portability across
+  `dtwm-wayland`, `dtlogin`, `xdg-desktop-portal-cde`, and `rpc.cmsd`:
+  - Add `packaging/rpm/ck-core-cde.spec` and `scripts/build-rpm.py` building the
+    five-package cohort (`ck-core-motif9`, `ck-core-fs-lib`, `ck-core-cde`,
+    `ck-core-dtlogin`, `ck-core-apps`) with `/usr/dt/lib` SONAME isolation from
+    system `motif`/`libXm4`, Fedora/RHEL vs openSUSE PAM conditionals, and
+    `systemd` service presets.
+  - Add FreeBSD port skeletons under `packaging/freebsd/` (`x11-toolkits/ck-core-motif9`,
+    `sysutils/ck-core-fs-lib`, `x11/ck-core-cde`, `x11/ck-core-apps`) with
+    `rc.subr` `dtlogin` and `rpc_cmsd` service scripts, OpenPAM `pam_xdg.so`
+    stacks, and `scripts/build-freebsd-pkg.py`.
+  - Add `cde_evdev_compat.h` (`<dev/evdev/input-event-codes.h>` fallback),
+    `seatd` socket auto-detection (`SEATD_SOCK` + `LIBSEAT_BACKEND=seatd`),
+    FreeBSD `vt(4)` `ttyv*` console parsing, `/var/run` runtime & `/usr/local/share`
+    session discovery, `$(LIBDL)` portable `dlopen` linking, FreeBSD ACPI
+    battery/suspend fallbacks, and `LOCAL_PEERCRED` / `getpeereid()` `AF_UNIX`
+    UID verification in `rpc.cmsd`, covered by
+    `scripts/check-cross-distro-packaging.py` and documented on `docs/packaging.md`.
 - Ratchet Phase 2 compiler hardening (`-Werror=sign-compare` and
   `-Werror=missing-field-initializers`) across 23 `cde/lib` and `cde/programs`
   components and expand `ASan + UBSan + libFuzzer` parser qualification to 13

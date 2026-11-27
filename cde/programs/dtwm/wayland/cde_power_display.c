@@ -661,13 +661,31 @@ static void reload_power_policy_if_changed(DtwmPowerDisplayState *st, bool force
     fclose(fp);
 }
 
+#if defined(__FreeBSD__)
+#include <sys/sysctl.h>
+#endif
+
 static bool detect_on_battery_power(void) {
     const char *sysfs = getenv("CK_STATUS_SYSFS_ROOT");
     char ps_dir[PATH_MAX];
     snprintf(ps_dir, sizeof(ps_dir), "%s/power_supply",
              (sysfs && sysfs[0]) ? sysfs : "/sys/class");
     DIR *dp = opendir(ps_dir);
-    if (!dp) return false;
+    if (!dp) {
+#if defined(__FreeBSD__)
+        int acline = -1;
+        size_t len = sizeof(acline);
+        if (sysctlbyname("hw.acpi.acline", &acline, &len, nullptr, 0) == 0) {
+            return (acline == 0);
+        }
+        int bstate = 0;
+        len = sizeof(bstate);
+        if (sysctlbyname("hw.acpi.battery.state", &bstate, &len, nullptr, 0) == 0) {
+            return (bstate & 1) != 0; /* ACPI_BATT_STAT_DISCHARG */
+        }
+#endif
+        return false;
+    }
 
     bool has_bat = false;
     bool bat_discharging = false;
@@ -776,10 +794,43 @@ static bool invoke_logind_suspend_dbus(void) {
                     ok = true;
                 }
             }
+            if (!ok) {
+                DBusMessage *ck_msg = p_new_call(
+                    "org.freedesktop.ConsoleKit",
+                    "/org/freedesktop/ConsoleKit/Manager",
+                    "org.freedesktop.ConsoleKit.Manager",
+                    "Suspend"
+                );
+                if (ck_msg) {
+                    unsigned int interactive = 1u;
+                    p_append_args(ck_msg, (int)'b', &interactive, 0);
+                    p_err_init(&err);
+                    DBusMessage *ck_rep = p_send_block(conn, ck_msg, 1500, &err);
+                    p_err_free(&err);
+                    p_msg_unref(ck_msg);
+                    if (ck_rep) {
+                        p_msg_unref(ck_rep);
+                        ok = true;
+                    }
+                }
+            }
             p_conn_unref(conn);
         }
     }
     dlclose(lib);
+#if defined(__FreeBSD__)
+    if (!ok && access("/usr/sbin/acpiconf", X_OK) == 0) {
+        pid_t pid = fork();
+        if (pid == 0) {
+            execl("/usr/sbin/acpiconf", "acpiconf", "-s", "3", (char *)nullptr);
+            _exit(127);
+        } else if (pid > 0) {
+            int st = 0;
+            while (waitpid(pid, &st, 0) < 0 && errno == EINTR) {}
+            ok = (WIFEXITED(st) && WEXITSTATUS(st) == 0);
+        }
+    }
+#endif
     return ok;
 }
 

@@ -1,0 +1,31 @@
+[
+{ type: install
+  message: <<EOM
+CK Core CDE 3.0.0 (Wayland + X11) has been installed beneath /usr/dt.
+
+To run the native Wayland session or the dtlogin Wayland greeter on FreeBSD
+14.x / 15.x with drm-kmod, evdev, and seatd:
+
+1. Load your GPU KMS driver (i915kms, amdgpu, or radeonkms) and enable evdev:
+     sysrc kld_list+="i915kms"
+
+2. Add your desktop user (and _dtgreeter) to the video group:
+     pw groupmod video -m <username>
+     pw groupmod video -m _dtgreeter
+
+3. Enable seatd, D-Bus, rpcbind, rpc_cmsd, and dtlogin in /etc/rc.conf:
+     sysrc seatd_enable="YES"
+     sysrc dbus_enable="YES"
+     sysrc rpcbind_enable="YES"
+     sysrc rpc_cmsd_enable="YES"
+     sysrc dtlogin_enable="YES"
+
+4. Start services immediately or launch CDE Wayland from a ttyv console:
+     service seatd start
+     service dbus start
+     service rpc_cmsd start
+     service dtlogin start
+   (or directly from a user login: /usr/dt/bin/Xsession.wayland)
+EOM
+}
+]

@@ -111,6 +111,14 @@ static int parse_vtnr(const char *tty)
 {
     if (!tty) return 0;
     if (strncmp(tty, "/dev/", 5) == 0) tty += 5;
+    /* FreeBSD vt(4) / syscons: ttyv0..ttyvf map to 1-based VT numbers 1..16 */
+    if (strncmp(tty, "ttyv", 4) == 0 && isxdigit((unsigned char)tty[4])) {
+        char *endp = nullptr;
+        long idx = strtol(tty + 4, &endp, 16);
+        if (endp && *endp == '\0' && idx >= 0 && idx < 64) {
+            return (int)idx + 1;
+        }
+    }
     if (strncmp(tty, "tty", 3) == 0 && isdigit((unsigned char)tty[3])) {
         return atoi(tty + 3);
     }
@@ -120,13 +128,49 @@ static int parse_vtnr(const char *tty)
     return 0;
 }
 
+static const char *detect_seatd_socket(char *buf, size_t buf_sz)
+{
+    struct stat st;
+    const char *explicit_lb = getenv("LIBSEAT_BACKEND");
+    if (explicit_lb && explicit_lb[0] && strcmp(explicit_lb, "seatd") != 0) {
+        return nullptr;
+    }
+    const char *sd_seats = getenv("DTLOGIN_SYSTEMD_SEATS_DIR");
+    if (!sd_seats || !sd_seats[0]) {
+        sd_seats = "/run/systemd/seats";
+    }
+    if ((!explicit_lb || !explicit_lb[0]) &&
+        stat(sd_seats, &st) == 0 && S_ISDIR(st.st_mode)) {
+        return nullptr;
+    }
+    const char *explicit_sock = getenv("SEATD_SOCK");
+    if (explicit_sock && explicit_sock[0] &&
+        stat(explicit_sock, &st) == 0 && S_ISSOCK(st.st_mode)) {
+        snprintf(buf, buf_sz, "%s", explicit_sock);
+        return buf;
+    }
+    static const char *const candidates[] = {
+        "/var/run/seatd.sock",
+        "/run/seatd.sock",
+        nullptr
+    };
+    for (int i = 0; candidates[i]; ++i) {
+        if (stat(candidates[i], &st) == 0 && S_ISSOCK(st.st_mode)) {
+            snprintf(buf, buf_sz, "%s", candidates[i]);
+            return buf;
+        }
+    }
+    return nullptr;
+}
+
 static int ensure_runtime_base(char *out_base, size_t out_sz)
 {
     const char *env_base = getenv("DTLOGIN_WAYLAND_RUNTIME_BASE");
-    const char *candidates[3];
+    const char *candidates[4];
     int ncand = 0;
     if (env_base && env_base[0]) candidates[ncand++] = env_base;
     candidates[ncand++] = "/run/dtlogin";
+    candidates[ncand++] = "/var/run/dtlogin";
     candidates[ncand++] = "/var/dt";
 
     for (int i = 0; i < ncand; ++i) {
@@ -338,7 +382,18 @@ int DtloginStartWaylandGreeter(struct display *d)
                 if (v) env = setEnv(env, (char *)passthrough_vars[i], (char *)v);
             }
             if (!getEnv(env, "PATH")) {
-                env = setEnv(env, "PATH", CDE_INSTALLATION_TOP "/bin:/usr/bin:/bin");
+                env = setEnv(env, "PATH", CDE_INSTALLATION_TOP "/bin:/usr/local/bin:/usr/bin:/bin");
+            }
+            {
+                char seatd_sock[PATH_MAX];
+                if (detect_seatd_socket(seatd_sock, sizeof(seatd_sock))) {
+                    if (!getEnv(env, "SEATD_SOCK")) {
+                        env = setEnv(env, "SEATD_SOCK", seatd_sock);
+                    }
+                    if (!getEnv(env, "LIBSEAT_BACKEND")) {
+                        env = setEnv(env, "LIBSEAT_BACKEND", "seatd");
+                    }
+                }
             }
             if (d->environStr && d->environStr[0]) {
                 env = parseEnv(env, d->environStr);
@@ -612,7 +667,17 @@ static void scan_desktop_dir(const char *dir, int is_wayland,
         if (strchr(de->d_name, ' ') != nullptr) continue;
         DesktopSessionEntry item;
         if (parse_desktop_file(dir, de->d_name, is_wayland, &item)) {
-            entries[(*count)++] = item;
+            int dup_found = 0;
+            for (int k = 0; k < *count; ++k) {
+                if (entries[k].is_wayland == is_wayland &&
+                    strcmp(entries[k].filename, item.filename) == 0) {
+                    dup_found = 1;
+                    break;
+                }
+            }
+            if (!dup_found) {
+                entries[(*count)++] = item;
+            }
         }
     }
     closedir(dp);
@@ -623,16 +688,23 @@ void DtloginPopulateDesktopSessions(struct display *d, XrmDatabase *db)
     if (!d || !d->isWaylandSeat || !db) return;
 
     const char *wl_dir = getenv("DTLOGIN_WAYLAND_SESSIONS_DIR");
-    if (!wl_dir || !wl_dir[0]) wl_dir = "/usr/share/wayland-sessions";
-
     const char *x11_dir = getenv("DTLOGIN_XSESSIONS_DIR");
-    if (!x11_dir || !x11_dir[0]) x11_dir = "/usr/share/xsessions";
 
     DesktopSessionEntry entries[DTLOGIN_MAX_DESKTOP_SESSIONS];
     int count = 0;
 
-    scan_desktop_dir(wl_dir, 1, entries, &count);
-    scan_desktop_dir(x11_dir, 0, entries, &count);
+    if (wl_dir && wl_dir[0]) {
+        scan_desktop_dir(wl_dir, 1, entries, &count);
+    } else {
+        scan_desktop_dir("/usr/share/wayland-sessions", 1, entries, &count);
+        scan_desktop_dir("/usr/local/share/wayland-sessions", 1, entries, &count);
+    }
+    if (x11_dir && x11_dir[0]) {
+        scan_desktop_dir(x11_dir, 0, entries, &count);
+    } else {
+        scan_desktop_dir("/usr/share/xsessions", 0, entries, &count);
+        scan_desktop_dir("/usr/local/share/xsessions", 0, entries, &count);
+    }
 
     /* Ensure CDE (Wayland) and CDE (X11 / XLibre) are present if installed in CDE_INSTALLATION_TOP */
     int has_cde_wl = 0, has_cde_x11 = 0;
@@ -915,6 +987,17 @@ int DtloginHandoffWaylandSeat(struct display *d, struct verify_info *verify, con
         verify->userEnviron = setEnv(verify->userEnviron, "XDG_SESSION_CLASS", "user");
         verify->userEnviron = setEnv(verify->userEnviron, "XDG_SEAT", "seat0");
         verify->userEnviron = setEnv(verify->userEnviron, "XDG_CURRENT_DESKTOP", (char *)desktop_names);
+        {
+            char seatd_sock[PATH_MAX];
+            if (detect_seatd_socket(seatd_sock, sizeof(seatd_sock))) {
+                if (!getEnv(verify->userEnviron, "SEATD_SOCK")) {
+                    verify->userEnviron = setEnv(verify->userEnviron, "SEATD_SOCK", seatd_sock);
+                }
+                if (!getEnv(verify->userEnviron, "LIBSEAT_BACKEND")) {
+                    verify->userEnviron = setEnv(verify->userEnviron, "LIBSEAT_BACKEND", "seatd");
+                }
+            }
+        }
     } else {
         char seat_dpy[64];
         if (!spawn_seat_x11_server(d, seat_dpy, sizeof(seat_dpy))) {
@@ -980,9 +1063,14 @@ void DtloginSyncPamSessionEnv(struct display *d, struct verify_info *verify)
             char dir_buf[PATH_MAX];
             if (ubase && ubase[0]) {
                 snprintf(dir_buf, sizeof(dir_buf), "%s/user-%d", ubase, verify->uid);
-            } else if (access("/run/user", W_OK | X_OK) == 0 || geteuid() == 0) {
+            } else if (access("/run/user", W_OK | X_OK) == 0 ||
+                       (geteuid() == 0 && access("/run", W_OK | X_OK) == 0)) {
                 (void)mkdir("/run/user", 0755);
                 snprintf(dir_buf, sizeof(dir_buf), "/run/user/%d", verify->uid);
+            } else if (access("/var/run/user", W_OK | X_OK) == 0 ||
+                       (geteuid() == 0 && access("/var/run", W_OK | X_OK) == 0)) {
+                (void)mkdir("/var/run/user", 0755);
+                snprintf(dir_buf, sizeof(dir_buf), "/var/run/user/%d", verify->uid);
             } else {
                 snprintf(dir_buf, sizeof(dir_buf), "/var/dt/user-%d", verify->uid);
             }

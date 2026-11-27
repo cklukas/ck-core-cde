@@ -310,6 +310,18 @@ Cancel returns to the login screen.
 stand-ins that abort on an invalid handle, in each state the greeter can be in
 at exit; the code from before the change fails all four scenarios.
 
+## Wayland seat and FreeBSD `seatd` portability
+
+- On local Wayland seats (`Dtlogin*displayType: Wayland`), `wayland_seat.c`
+  supervises an unprivileged `_dtgreeter` `dtwm-wayland --greeter` compositor,
+  populates the Session menu from both `/usr/share/{wayland-sessions,xsessions}`
+  and `/usr/local/share/{wayland-sessions,xsessions}`, maps FreeBSD `vt(4)`
+  `/dev/ttyv0`..`/dev/ttyvf` consoles alongside Linux `/dev/tty*` / `vt*` to
+  `XDG_VTNR`, and auto-detects `seatd` (`/var/run/seatd.sock` or
+  `/run/seatd.sock` -> `LIBSEAT_BACKEND=seatd`) when `systemd-logind` is not
+  active. See [Packaging and Seat Portability](../packaging.md) for Debian/Ubuntu,
+  Fedora/RHEL/openSUSE, and FreeBSD `rc.d` + OpenPAM deployment recipes.
+
 ## Limits
 
 - The tests exercise the functions directly. A complete login through the

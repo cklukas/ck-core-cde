@@ -1,0 +1,5 @@
+# FreeBSD OpenPAM stack for CK Core dtlogin unprivileged Wayland greeter (_dtgreeter)
+auth		sufficient	pam_permit.so
+account		sufficient	pam_permit.so
+session		optional	pam_xdg.so
+session		required	pam_permit.so
