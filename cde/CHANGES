@@ -1,4 +1,18 @@
 2026-11-27
+- Advance the CK Core Motif dependency pin to `f6a0aeaad45d` (zero-warning
+  `--enable-hardening` `-Werror=type-limits` ratchet and `Appearance`/`XmString`
+  bounds fixes) and qualify binary `.rpm` package generation on cross-distro
+  build hosts (`packaging/rpm/ck-core-cde.spec`, `scripts/build-rpm.py`,
+  `.ckgit/motif-revision`, `.ckgit/ci.yml`):
+  - Provide portable `%systemd_post`, `%systemd_preun`, `%systemd_postun`, and
+    `%systemd_postun_with_restart` lazy `%define` fallbacks, RPM 4.20+/6.0
+    per-package `%{_builddir}` `%files` manifest propagation, private
+    `/usr/dt/lib` (`libck-core-fs-lib`, `dtksh` `libast`/`libcmd`/`libdll`/
+    `libshell`, and `libcef`) `__requires_exclude` filtering in
+    `ck-core-cde.spec`, and `--nodeps` for `--with prebuilt_stage` in
+    `scripts/build-rpm.py` so cross-distro hosts produce installable binary
+    `.rpm` cohorts with intact systemd preset scriptlets while preserving
+    native `systemd-rpm-macros` expansion on Fedora, RHEL, and openSUSE.
 - Harden Wayland scanout occlusion/subsurface/teardown paths, portable `dtmail`
   Wayland activation lookup, and RPM/FreeBSD `ck-core-apps` build recipes,
   advancing the CK Core Motif pin to `090ac07dfc49`:

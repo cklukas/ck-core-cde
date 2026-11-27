@@ -260,6 +260,7 @@ def stage_and_build_rpm(args: argparse.Namespace) -> int:
         cmd = [
             rpmbuild,
             "-bb",
+            "--nodeps",
             "--with",
             "prebuilt_stage",
             "--define",

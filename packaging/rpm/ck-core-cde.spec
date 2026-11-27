@@ -10,10 +10,17 @@
 %global debug_package %{nil}
 %global _build_id_links none
 
+# Fallback systemd scriptlet macros when building --with prebuilt_stage on
+# non-RPM hosts (e.g. Debian/Ubuntu rpmbuild without systemd-rpm-macros).
+%{!?systemd_post:%define systemd_post() if [ $1 -eq 1 ] && [ -x /usr/bin/systemctl ]; then /usr/bin/systemctl --no-reload preset %{?*} >/dev/null 2>&1 || : ; fi}
+%{!?systemd_preun:%define systemd_preun() if [ $1 -eq 0 ] && [ -x /usr/bin/systemctl ]; then /usr/bin/systemctl --no-reload disable --now %{?*} >/dev/null 2>&1 || : ; fi}
+%{!?systemd_postun:%define systemd_postun() if [ -x /usr/bin/systemctl ]; then /usr/bin/systemctl daemon-reload >/dev/null 2>&1 || : ; fi}
+%{!?systemd_postun_with_restart:%define systemd_postun_with_restart() if [ $1 -ge 1 ] && [ -x /usr/bin/systemctl ]; then /usr/bin/systemctl try-restart %{?*} >/dev/null 2>&1 || : ; fi}
+
 # Isolate private /usr/dt/lib ABI 9 SONAMEs so ck-core-motif9 never collides with
 # system motif (Fedora/RHEL libXm.so.4) or libXm4 (openSUSE).
 %global __provides_exclude_from ^/usr/dt/lib/.*\\.so.*$
-%global __requires_exclude ^(libXm|libMrm|libUil|libDt.*|libtt|libcsa|libck_.*)\\.so.*$
+%global __requires_exclude ^(libXm|libMrm|libUil|libDt.*|libtt|libcsa|libck[-_].*|libast|libcmd|libdll|libshell|libcef)\\.so.*$
 
 %global motif_ver 2.4.0
 %global fs_ver    0.3.0
@@ -234,6 +241,9 @@ mkdir -p %{buildroot}
 
 %if %{with prebuilt_stage}
 cp -a %{prebuilt_stage_dir}/. %{buildroot}/
+if [ "%{_topdir}/BUILD" != "%{_builddir}" ]; then
+    cp -a %{_topdir}/BUILD/files-*.list "%{_builddir}/"
+fi
 %else
 STAGE="%{_builddir}/stage-pfx"
 cp -a "$STAGE/motif/." %{buildroot}/
