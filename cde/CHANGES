@@ -1,4 +1,22 @@
 2026-11-27
+- Add Fastmail OAuth2 & RFC 8620/8621 JMAP mail transport and CSP-sandboxed HTML
+  viewing in `dtmail`, plus `webdavs://` / user-space `sshfs` remote mounts and
+  `ck-core-fs-lib` streaming search in `dtfile`'s **File → Find...** dialog:
+  - Extend `MailAccountStore`, `OAuth2Client`, `AccountSetupDialog`, and
+    `CurlMailEngine` with `DTMAIL_OAUTH_FASTMAIL` (`fastmail` and `fastmail_jmap`
+    presets) and full RFC 8620/8621 JMAP over HTTPS (`Mailbox/get`, `Email/query`,
+    `Email/get` blob download, `Email/set` keyword sync, and `Email/import` +
+    `EmailSubmission/set` delivery).
+  - Add `dtmail_sanitize_html_sandboxed()` (`HtmlReadable.C`, `Editor.C`) enforcing
+    an explicit tag/attribute allowlist, `default-src 'none'` Content-Security-Policy,
+    entity-decoded URI scheme validation, and default remote `http(s)://` image /
+    tracking-pixel blocking across both the reading pane and **Open HTML in Browser**.
+  - Normalize `webdavs://` / `webdav://` URIs and add `~/.dt/mounts` user-space
+    `sshfs` fallback + `fusermount3 -u` disconnect in `dtfile` (`Devices.c`), and
+    wire `ck_fs_search.h` (`ckfes_start_v1` / `ckfes_poll_v1`) into `dtfile`'s
+    **File → Find...** dialog (`Find.c`), covered by `check-curl-mail.py`,
+    `check-html-readable.py`, `check-oauth2-pkce.py`, and
+    `check-remote-mounts-and-search.py`.
 - Replace retired X11 `Xprint` (`Xp`) and legacy `lp` PostScript stubs in
   `libDtPrint`, `dtpad`, `dtmail`, `dtcm`, `libDtHelp`, and `dthelpprint` with a
   Unicode-clean Cairo/Pango vector PDF and direct CUPS / IPP Everywhere pipeline:

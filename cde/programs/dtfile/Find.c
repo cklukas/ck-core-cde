@@ -75,7 +75,9 @@
 
 
 #include <Dt/DtSigP.h>
+#include "SyncFeature.h"
 #include <unistd.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <time.h>
 #include <limits.h>
@@ -131,6 +133,10 @@
 #include "Find.h"
 #include "Help.h"
 #include "SharedMsgs.h"
+
+#if DTFILE_SYNC_FEATURE_ENABLED
+#include <ck_fs_search.h>
+#endif
 
 
 typedef struct _Dummy {
@@ -386,7 +392,7 @@ Create(
 
    /*  Allocate the find file dialog instance record.  */
 
-   find_rec = (FindRec *) XtMalloc (sizeof (FindRec));
+   find_rec = (FindRec *) XtCalloc (1, sizeof (FindRec));
 
    /*  Create the shell and form used for the dialog.  */
 
@@ -889,11 +895,79 @@ InstallClose(
  *
  ************************************************************************/
 
+#if DTFILE_SYNC_FEATURE_ENABLED
+#define FIND_RETIRED_CAP 32
+static ckfes_job *g_find_retired_jobs[FIND_RETIRED_CAP];
+static int g_find_retired_count = 0;
+static XtIntervalId g_find_retired_timer = 0;
+
+static void
+find_retired_poll_cb(XtPointer client_data, XtIntervalId *id)
+{
+   (void)id;
+   Widget ref_w = (Widget)client_data;
+   g_find_retired_timer = 0;
+
+   int w = 0;
+   for (int r = 0; r < g_find_retired_count; ++r)
+   {
+      uint32_t drained = 0;
+      if (ckfes_worker_drained_v1(g_find_retired_jobs[r], &drained) != CKFE_API_OK || drained != 0)
+         ckfes_release(g_find_retired_jobs[r]);
+      else
+         g_find_retired_jobs[w++] = g_find_retired_jobs[r];
+   }
+   g_find_retired_count = w;
+   if (g_find_retired_count > 0 && ref_w != nullptr)
+   {
+      g_find_retired_timer = XtAppAddTimeOut(
+         XtWidgetToApplicationContext(ref_w), 50, find_retired_poll_cb, (XtPointer)ref_w);
+   }
+}
+
+static void
+retire_find_fs_job(Widget ref_w, ckfes_job *job)
+{
+   if (!job)
+      return;
+   ckfes_request_cancel(job);
+   uint32_t drained = 0;
+   if (ckfes_worker_drained_v1(job, &drained) != CKFE_API_OK || drained != 0)
+   {
+      ckfes_release(job);
+      return;
+   }
+   if (g_find_retired_count < FIND_RETIRED_CAP)
+   {
+      g_find_retired_jobs[g_find_retired_count++] = job;
+      if (g_find_retired_timer == 0 && ref_w != nullptr)
+      {
+         g_find_retired_timer = XtAppAddTimeOut(
+            XtWidgetToApplicationContext(ref_w), 50, find_retired_poll_cb, (XtPointer)ref_w);
+      }
+   }
+}
+#endif
+
 static void
 Destroy(
         XtPointer dialog )
 {
    FindRec *find_rec = dialog;
+#if DTFILE_SYNC_FEATURE_ENABLED
+   if (find_rec->fsSearchTimer != 0)
+   {
+      XtRemoveTimeOut(find_rec->fsSearchTimer);
+      find_rec->fsSearchTimer = 0;
+   }
+   if (find_rec->fsSearchJob != nullptr)
+   {
+      retire_find_fs_job(toplevel, (ckfes_job *)find_rec->fsSearchJob);
+      find_rec->fsSearchJob = nullptr;
+   }
+   XtFree(find_rec->fsSearchRoot);
+   find_rec->fsSearchRoot = nullptr;
+#endif
    XtDestroyWidget (find_rec->shell);
    XtFree ((char *) find_rec->apply_data);
    XtFree ((char *) find_rec);
@@ -1447,6 +1521,23 @@ StopSearch(
    /* just as the user hit the 'stop' key, we need to check to see   */
    /* if the operation is still active.                              */
 
+#if DTFILE_SYNC_FEATURE_ENABLED
+   if (find_rec->fsSearchTimer != 0)
+   {
+      XtRemoveTimeOut(find_rec->fsSearchTimer);
+      find_rec->fsSearchTimer = 0;
+   }
+   if (find_rec->fsSearchJob != nullptr)
+   {
+      retire_find_fs_job(find_rec->shell ? find_rec->shell : toplevel,
+                         (ckfes_job *)find_rec->fsSearchJob);
+      find_rec->fsSearchJob = nullptr;
+      find_rec->searchInProgress = False;
+   }
+   XtFree(find_rec->fsSearchRoot);
+   find_rec->fsSearchRoot = nullptr;
+#endif
+
    if (find_rec->popenId != nullptr)
    {
       /* Abort the find process, and remove the alternate input handler */
@@ -1723,6 +1814,145 @@ FindProcessStarted(
  *
  ************************************************************************/
 
+#if DTFILE_SYNC_FEATURE_ENABLED
+static void
+FindFsPollTimerCb(XtPointer client_data, XtIntervalId *id)
+{
+   (void)id;
+   FindRec *find_rec = (FindRec *)client_data;
+   find_rec->fsSearchTimer = 0;
+
+   ckfes_job *job = (ckfes_job *)find_rec->fsSearchJob;
+   if (!job)
+      return;
+
+   ckfes_snapshot_v1 snap;
+   memset(&snap, 0, sizeof(snap));
+   snap.version = CKFES_VERSION;
+   snap.struct_size = sizeof(snap);
+
+   if (ckfes_poll_v1(job, &snap) != CKFE_API_OK)
+      return;
+
+   DialogData *dialog_data = _DtGetInstanceData((XtPointer)find_rec->fileMgrRec);
+   FileMgrData *file_mgr_data = dialog_data ? (FileMgrData *)dialog_data->data : nullptr;
+
+   uint64_t offset = (uint64_t)find_rec->fsSearchOffset;
+   ckfes_hit_v1 page[64];
+   while (offset < snap.matched_entries)
+   {
+      uint32_t got = 0;
+      if (ckfes_page_v1_get(job, offset, page, 64, &got) != CKFE_API_OK || got == 0)
+         break;
+
+      XmString *batch = (XmString *)XtCalloc(got, sizeof(XmString));
+      int batch_len = 0;
+      const char *root = find_rec->fsSearchRoot ? find_rec->fsSearchRoot : "/";
+
+      for (uint32_t i = 0; i < got; ++i)
+      {
+         const ckfes_hit_v1 *h = &page[i];
+         uint64_t req_units = 0;
+         uint32_t enc = 0;
+         char *rel = (char *)XtMalloc((Cardinal)(h->relative_units + 1));
+         if (ckfes_path_copy_v1(job, h->hit_index, rel, h->relative_units,
+                                &req_units, &enc) != CKFE_API_OK)
+         {
+            XtFree(rel);
+            continue;
+         }
+         rel[h->relative_units] = '\0';
+
+         size_t alen = strlen(root) + 1 + strlen(rel) + 1;
+         char *abs_p = (char *)XtMalloc((Cardinal)alen);
+         snprintf(abs_p, alen, "%s/%s", strcmp(root, "/") == 0 ? "" : root, rel);
+         XtFree(rel);
+
+         Boolean keep = True;
+         if (desktop_dir && strncmp(desktop_dir, abs_p, strlen(desktop_dir)) == 0)
+            keep = False;
+         if (keep && !find_rec->fsHasContentQuery)
+         {
+            char *ftype = (char *)DtDtsDataToDataType(abs_p, nullptr, 0, nullptr,
+                                                      nullptr, nullptr, nullptr);
+            if (_DtCheckForDataTypeProperty(ftype, "invisible"))
+               keep = False;
+            if (ftype)
+               DtDtsFreeDataType(ftype);
+         }
+
+         if (keep)
+         {
+            const char *disp = abs_p;
+            if (file_mgr_data && file_mgr_data->restricted_directory != nullptr &&
+                strncmp(abs_p, file_mgr_data->restricted_directory,
+                        strlen(file_mgr_data->restricted_directory)) == 0)
+            {
+               disp = abs_p + strlen(file_mgr_data->restricted_directory);
+            }
+            batch[batch_len++] = XmStringCreateLocalized((char *)disp);
+         }
+         XtFree(abs_p);
+      }
+
+      if (batch_len > 0 && find_rec->matchList)
+      {
+         XmListAddItemsUnselected(find_rec->matchList, batch, batch_len, 0);
+         for (int k = 0; k < batch_len; ++k)
+            XmStringFree(batch[k]);
+      }
+      XtFree((char *)batch);
+      offset += got;
+   }
+   find_rec->fsSearchOffset = (unsigned long)offset;
+
+   if (snap.state == CKFES_RUNNING)
+   {
+      find_rec->fsSearchTimer = XtAppAddTimeOut(
+         XtWidgetToApplicationContext(find_rec->shell),
+         40, FindFsPollTimerCb, (XtPointer)find_rec);
+      return;
+   }
+
+   retire_find_fs_job(find_rec->shell, job);
+   find_rec->fsSearchJob = nullptr;
+   XtFree(find_rec->fsSearchRoot);
+   find_rec->fsSearchRoot = nullptr;
+   find_rec->searchInProgress = False;
+
+   XtRemoveEventHandler(find_rec->stop, LeaveWindowMask, FALSE, LeaveStopBttn, find_rec);
+   XtRemoveEventHandler(find_rec->stop, EnterWindowMask, FALSE, EnterStopBttn, find_rec);
+
+   XtSetSensitive(find_rec->close, True);
+   XtSetSensitive(find_rec->start, True);
+   XtSetSensitive(find_rec->stop, False);
+
+   int item_count = 0;
+   Arg args[1];
+   XtSetArg(args[0], XmNitemCount, &item_count);
+   XtGetValues(find_rec->matchList, args, 1);
+
+   XtSetArg(args[0], XmNdefaultButton, find_rec->start);
+   XtSetValues(find_rec->form, args, 1);
+
+   if (snap.state == CKFES_COMPLETE && item_count == 0)
+   {
+      char *title = XtNewString(GetSharedMessage(FIND_ERROR_TITLE));
+      char *msg = XtNewString(GetSharedMessage(NO_FILES_FOUND_ERROR));
+      _DtMessage(find_rec->shell, title, msg, nullptr, HelpRequestCB);
+      XtFree(title);
+      XtFree(msg);
+   }
+   else if (item_count > 0)
+   {
+      XmListSelectPos(find_rec->matchList, 1, True);
+      XmProcessTraversal(find_rec->matchList, XmTRAVERSE_CURRENT);
+   }
+
+   _DtTurnOffHourGlass(find_rec->shell);
+}
+#endif
+
 static Boolean
 ExecuteFind(
    FindRec * find_rec,
@@ -1857,6 +2087,78 @@ ExecuteFind(
       return (False);
    }
 
+#if DTFILE_SYNC_FEATURE_ENABLED
+   {
+      XtFree((char *)command);
+
+      if (find_rec->fsSearchTimer != 0)
+      {
+         XtRemoveTimeOut(find_rec->fsSearchTimer);
+         find_rec->fsSearchTimer = 0;
+      }
+      if (find_rec->fsSearchJob != nullptr)
+      {
+         retire_find_fs_job(find_rec->shell, (ckfes_job *)find_rec->fsSearchJob);
+         find_rec->fsSearchJob = nullptr;
+      }
+      XtFree(find_rec->fsSearchRoot);
+      find_rec->fsSearchRoot = path;
+      find_rec->fsSearchOffset = 0;
+      find_rec->fsHasContentQuery =
+         (find_data->content != nullptr && find_data->content[0] != '\0') ? True : False;
+
+      ckfes_options_v1 opts;
+      ckfes_options_init_v1(&opts);
+      opts.root_path.data = find_rec->fsSearchRoot;
+      opts.root_path.units = strlen(find_rec->fsSearchRoot);
+      opts.root_path.encoding = CKFES_POSIX_BYTES;
+
+      const char *nq = find_data->filter ? find_data->filter : "";
+      if (*nq && strcmp(nq, "*") != 0)
+      {
+         opts.name_query.data = nq;
+         opts.name_query.units = strlen(nq);
+         opts.name_query.encoding = CKFES_POSIX_BYTES;
+         if (strchr(nq, '*') != nullptr || strchr(nq, '?') != nullptr)
+            opts.name_mode = CKFES_NAME_GLOB;
+         else
+            opts.name_mode = CKFES_NAME_SUBSTRING;
+      }
+      else
+      {
+         opts.name_mode = CKFES_NAME_NONE;
+      }
+
+      const char *cq = find_data->content ? find_data->content : "";
+      if (*cq)
+      {
+         opts.content_query.data = cq;
+         opts.content_query.units = strlen(cq);
+         opts.content_query.encoding = CKFES_POSIX_BYTES;
+      }
+
+      opts.case_sensitive = 0;
+      opts.include_hidden = file_mgr_data->show_hid_enabled ? 1 : 0;
+      opts.skip_binary_content = 1;
+      opts.max_depth = CKFES_HARD_MAX_DEPTH;
+      opts.max_results = 50000;
+
+      ckfes_job *job = nullptr;
+      ckfe_error err;
+      memset(&err, 0, sizeof(err));
+      if (ckfes_start_v1(&opts, &job, &err) != CKFE_API_OK || job == nullptr)
+      {
+         XtFree(find_rec->fsSearchRoot);
+         find_rec->fsSearchRoot = nullptr;
+         return False;
+      }
+      find_rec->fsSearchJob = (void *)job;
+      find_rec->fsSearchTimer = XtAppAddTimeOut(
+         XtWidgetToApplicationContext(find_rec->shell),
+         25, FindFsPollTimerCb, (XtPointer)find_rec);
+      return True;
+   }
+#endif
 
    /* See if the buffer needs to grow */
 

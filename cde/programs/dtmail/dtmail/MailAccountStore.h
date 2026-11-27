@@ -25,7 +25,8 @@ typedef enum {
     DTMAIL_OAUTH_NONE = 0,
     DTMAIL_OAUTH_GMAIL,
     DTMAIL_OAUTH_M365,
-    DTMAIL_OAUTH_CUSTOM
+    DTMAIL_OAUTH_CUSTOM,
+    DTMAIL_OAUTH_FASTMAIL
 } DtMailOAuthProvider;
 
 typedef struct {
@@ -49,7 +50,7 @@ typedef struct {
     char signature[256];
 } DtMailAccount;
 
-/* Provider presets: "gmail", "icloud", "fastmail", "m365", "custom", "local" */
+/* Provider presets: "gmail", "icloud", "fastmail", "fastmail_jmap", "jmap", "m365", "custom", "local" */
 void dtmail_account_apply_preset(DtMailAccount *acct, const char *preset);
 
 /* Sanitize identifier/folder for safe filesystem path under ~/.dt/mail */

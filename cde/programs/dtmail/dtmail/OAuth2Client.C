@@ -200,15 +200,28 @@ int dtmail_oauth2_build_auth_url(const DtMailAccount *acct,
     if (!acct || !pkce || loopback_port <= 0 || !out_url || out_len < 64) return -1;
     const char *base = acct->oauth_auth_url;
     const char *scope = "https://mail.google.com/";
+    int is_google = 1;
     if (!base[0]) {
         if (acct->oauth_provider == DTMAIL_OAUTH_M365) {
             base = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
             scope = "offline_access https://outlook.office.com/IMAP.AccessAsUser.All https://outlook.office.com/SMTP.Send";
+            is_google = 0;
+        } else if (acct->oauth_provider == DTMAIL_OAUTH_FASTMAIL) {
+            base = "https://api.fastmail.com/oauth/authorize";
+            scope = "urn:ietf:params:oauth:scope:mail urn:ietf:params:jmap:core urn:ietf:params:jmap:mail urn:ietf:params:jmap:submission";
+            is_google = 0;
         } else {
             base = "https://accounts.google.com/o/oauth2/v2/auth";
         }
     } else if (acct->oauth_provider == DTMAIL_OAUTH_M365) {
         scope = "offline_access https://outlook.office.com/IMAP.AccessAsUser.All https://outlook.office.com/SMTP.Send";
+        is_google = 0;
+    } else if (acct->oauth_provider == DTMAIL_OAUTH_FASTMAIL) {
+        scope = "urn:ietf:params:oauth:scope:mail urn:ietf:params:jmap:core urn:ietf:params:jmap:mail urn:ietf:params:jmap:submission";
+        is_google = 0;
+    } else if (acct->oauth_provider == DTMAIL_OAUTH_CUSTOM) {
+        scope = "openid email offline_access";
+        is_google = 0;
     }
 
     char redir_raw[128], redir_enc[256], scope_enc[512], cid_enc[512];
@@ -220,9 +233,10 @@ int dtmail_oauth2_build_auth_url(const DtMailAccount *acct,
     int n = snprintf(out_url, out_len,
                      "%s?client_id=%s&redirect_uri=%s&response_type=code"
                      "&scope=%s&code_challenge=%s&code_challenge_method=S256"
-                     "&state=%s&access_type=offline&prompt=consent",
+                     "&state=%s%s",
                      base, cid_enc, redir_enc, scope_enc,
-                     pkce->code_challenge, pkce->state);
+                     pkce->code_challenge, pkce->state,
+                     is_google ? "&access_type=offline&prompt=consent" : "");
     return (n > 0 && (size_t)n < out_len) ? 0 : -1;
 }
 
@@ -440,9 +454,12 @@ int dtmail_oauth2_exchange_code(const DtMailAccount *acct,
     if (!acct || !code || !code_verifier || !redirect_uri || !out_tokens) return -1;
     const char *turl = acct->oauth_token_url;
     if (!turl[0]) {
-        turl = (acct->oauth_provider == DTMAIL_OAUTH_M365)
-            ? "https://login.microsoftonline.com/common/oauth2/v2.0/token"
-            : "https://oauth2.googleapis.com/token";
+        if (acct->oauth_provider == DTMAIL_OAUTH_M365)
+            turl = "https://login.microsoftonline.com/common/oauth2/v2.0/token";
+        else if (acct->oauth_provider == DTMAIL_OAUTH_FASTMAIL)
+            turl = "https://api.fastmail.com/oauth/refresh";
+        else
+            turl = "https://oauth2.googleapis.com/token";
     }
     char cid_e[512], code_e[512], ver_e[256], redir_e[256];
     url_encode(acct->oauth_client_id, cid_e, sizeof(cid_e));
@@ -466,9 +483,12 @@ int dtmail_oauth2_refresh_token(const DtMailAccount *acct,
     if (!acct || !refresh_token || !refresh_token[0] || !out_tokens) return -1;
     const char *turl = acct->oauth_token_url;
     if (!turl[0]) {
-        turl = (acct->oauth_provider == DTMAIL_OAUTH_M365)
-            ? "https://login.microsoftonline.com/common/oauth2/v2.0/token"
-            : "https://oauth2.googleapis.com/token";
+        if (acct->oauth_provider == DTMAIL_OAUTH_M365)
+            turl = "https://login.microsoftonline.com/common/oauth2/v2.0/token";
+        else if (acct->oauth_provider == DTMAIL_OAUTH_FASTMAIL)
+            turl = "https://api.fastmail.com/oauth/refresh";
+        else
+            turl = "https://oauth2.googleapis.com/token";
     }
     char cid_e[512], ref_e[2048];
     url_encode(acct->oauth_client_id, cid_e, sizeof(cid_e));

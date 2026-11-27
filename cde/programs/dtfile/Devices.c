@@ -99,6 +99,7 @@ static XtIntervalId g_udisks_rescan_debounce = 0;
 static int g_gvfs_inotify_fd = -1;
 static XtInputId g_gvfs_input = 0;
 static int g_gvfs_watch_wd = -1;
+static int g_user_mounts_watch_wd = -1;
 static XtIntervalId g_gvfs_debounce = 0;
 
 static DtfileDeviceEntry g_devices[MAX_DEVICES];
@@ -142,6 +143,42 @@ static void get_gvfs_root_dir(char *out, size_t out_sz) {
     snprintf(out, out_sz, "/run/user/%u/gvfs", (unsigned)getuid());
 }
 
+static void get_user_mounts_root_dir(char *out, size_t out_sz) {
+    const char *override_root = getenv("DTFILE_USER_MOUNT_ROOT");
+    if (override_root && override_root[0] == '/') {
+        size_t len = strlen(override_root);
+        while (len > 1 && override_root[len - 1] == '/')
+            len--;
+        snprintf(out, out_sz, "%.*s", (int)len, override_root);
+        return;
+    }
+    const char *home = getenv("HOME");
+    if (home && home[0] == '/') {
+        char dt_dir[PATH_MAX];
+        snprintf(dt_dir, sizeof(dt_dir), "%s/.dt", home);
+        (void)mkdir(dt_dir, 0700);
+        snprintf(out, out_sz, "%s/.dt/mounts", home);
+        return;
+    }
+    const char *xdg_rt = getenv("XDG_RUNTIME_DIR");
+    if (xdg_rt && xdg_rt[0] == '/') {
+        snprintf(out, out_sz, "%s/dtfile-mounts", xdg_rt);
+        return;
+    }
+    snprintf(out, out_sz, "/run/user/%u/dtfile-mounts", (unsigned)getuid());
+}
+
+static bool is_user_mount_path(const char *path) {
+    if (!path || path[0] != '/')
+        return false;
+    char uroot[PATH_MAX];
+    get_user_mounts_root_dir(uroot, sizeof(uroot));
+    size_t rlen = strlen(uroot);
+    if (rlen == 0 || strncmp(path, uroot, rlen) != 0)
+        return false;
+    return (path[rlen] == '/' && path[rlen + 1] != '\0');
+}
+
 Boolean DtfileDevicesIsSyntheticPath(const char *path) {
     return (path && strncmp(path, "udisks://", 9) == 0) ? True : False;
 }
@@ -149,6 +186,8 @@ Boolean DtfileDevicesIsSyntheticPath(const char *path) {
 Boolean DtfileDevicesIsGvfsPath(const char *path) {
     if (!path || path[0] != '/')
         return False;
+    if (is_user_mount_path(path))
+        return True;
     char gvfs_root[PATH_MAX];
     get_gvfs_root_dir(gvfs_root, sizeof(gvfs_root));
     size_t rlen = strlen(gvfs_root);
@@ -609,11 +648,10 @@ static void format_gvfs_entry_label(const char *d_name, char *label_out, size_t 
     }
 }
 
-static void scan_gvfs_mounts(void) {
-    char gvfs_root[PATH_MAX];
-    get_gvfs_root_dir(gvfs_root, sizeof(gvfs_root));
-
-    DIR *d = opendir(gvfs_root);
+static void scan_mount_root_dir(const char *root_dir, bool skip_empty_dir) {
+    if (!root_dir || !root_dir[0])
+        return;
+    DIR *d = opendir(root_dir);
     if (!d)
         return;
 
@@ -622,11 +660,32 @@ static void scan_gvfs_mounts(void) {
         if (de->d_name[0] == '.')
             continue;
         char full[PATH_MAX];
-        if (snprintf(full, sizeof(full), "%s/%s", gvfs_root, de->d_name) >= (int)sizeof(full))
+        if (snprintf(full, sizeof(full), "%s/%s", root_dir, de->d_name) >= (int)sizeof(full))
             continue;
         struct stat st;
         if (stat(full, &st) != 0 || !S_ISDIR(st.st_mode))
             continue;
+        if (skip_empty_dir) {
+            /* Skip stale unmounted empty mountpoint stubs unless non-empty or a different st_dev */
+            struct stat parent_st;
+            bool diff_dev = (stat(root_dir, &parent_st) == 0 && parent_st.st_dev != st.st_dev);
+            if (!diff_dev) {
+                DIR *sub = opendir(full);
+                bool has_entry = false;
+                if (sub) {
+                    struct dirent *sde;
+                    while ((sde = readdir(sub)) != nullptr) {
+                        if (strcmp(sde->d_name, ".") != 0 && strcmp(sde->d_name, "..") != 0) {
+                            has_entry = true;
+                            break;
+                        }
+                    }
+                    closedir(sub);
+                }
+                if (!has_entry)
+                    continue;
+            }
+        }
 
         DtfileDeviceEntry *ent = &g_devices[g_device_count++];
         memset(ent, 0, sizeof(*ent));
@@ -643,6 +702,17 @@ static void scan_gvfs_mounts(void) {
                                 &ent->is_mtp);
     }
     closedir(d);
+}
+
+static void scan_gvfs_mounts(void) {
+    char gvfs_root[PATH_MAX];
+    get_gvfs_root_dir(gvfs_root, sizeof(gvfs_root));
+    scan_mount_root_dir(gvfs_root, false);
+
+    char user_root[PATH_MAX];
+    get_user_mounts_root_dir(user_root, sizeof(user_root));
+    if (strcmp(user_root, gvfs_root) != 0)
+        scan_mount_root_dir(user_root, true);
 }
 
 /* Synchronize discovered UDisks2 + GVFS items into Shelf slots and publish X11 state */
@@ -1655,18 +1725,28 @@ static void create_connect_progress_dialog(GioJobCtx *job) {
     }
 }
 
-static void collect_current_gvfs_dirs(char out[32][MAX_PATH], int *count_out) {
-    *count_out = 0;
-    char gvfs_root[PATH_MAX];
-    get_gvfs_root_dir(gvfs_root, sizeof(gvfs_root));
-    DIR *d = opendir(gvfs_root);
+static void collect_mount_dirs_from(const char *root, char out[32][MAX_PATH], int *count_out) {
+    if (!root || !root[0]) return;
+    DIR *d = opendir(root);
     if (!d) return;
     struct dirent *de;
     while ((de = readdir(d)) != nullptr && *count_out < 32) {
         if (de->d_name[0] == '.') continue;
-        snprintf(out[(*count_out)++], MAX_PATH, "%s/%s", gvfs_root, de->d_name);
+        snprintf(out[(*count_out)++], MAX_PATH, "%s/%s", root, de->d_name);
     }
     closedir(d);
+}
+
+static void collect_current_gvfs_dirs(char out[32][MAX_PATH], int *count_out) {
+    *count_out = 0;
+    char gvfs_root[PATH_MAX];
+    get_gvfs_root_dir(gvfs_root, sizeof(gvfs_root));
+    collect_mount_dirs_from(gvfs_root, out, count_out);
+
+    char user_root[PATH_MAX];
+    get_user_mounts_root_dir(user_root, sizeof(user_root));
+    if (strcmp(user_root, gvfs_root) != 0)
+        collect_mount_dirs_from(user_root, out, count_out);
 }
 
 static void gio_job_input_cb(XtPointer client_data, int *source, XtInputId *id) {
@@ -1938,6 +2018,26 @@ void DtfileDevicesUnmountOrEject(
 
     DtfileDeviceEntry ent;
     bool found = DtfileDevicesLookupByPath(path, &ent) ? true : false;
+
+    if (is_user_mount_path(path)) {
+        const char *um_bin = getenv("DTFILE_FUSERMOUNT_BIN");
+        pid_t upid = fork();
+        if (upid == 0) {
+            if (um_bin && um_bin[0])
+                execlp(um_bin, um_bin, "-u", path, (char *)nullptr);
+            execlp("fusermount3", "fusermount3", "-u", path, (char *)nullptr);
+            execlp("fusermount", "fusermount", "-u", path, (char *)nullptr);
+            execlp("umount", "umount", path, (char *)nullptr);
+            _exit(127);
+        }
+        if (upid > 0) {
+            int st = 0;
+            while (waitpid(upid, &st, 0) < 0 && errno == EINTR) {}
+        }
+        (void)rmdir(path);
+        DtfileDevicesRescan();
+        return;
+    }
 
     if ((found && ent.is_gvfs) || DtfileDevicesIsGvfsPath(path)) {
         const char *gio_bin = getenv("DTFILE_GIO_BIN");
@@ -2323,9 +2423,141 @@ static bool is_supported_remote_uri(const char *uri) {
             strncasecmp(uri, "ssh://", 6) == 0 ||
             strncasecmp(uri, "davs://", 7) == 0 ||
             strncasecmp(uri, "dav://", 6) == 0 ||
+            strncasecmp(uri, "webdavs://", 10) == 0 ||
+            strncasecmp(uri, "webdav://", 9) == 0 ||
             strncasecmp(uri, "nfs://", 6) == 0 ||
             strncasecmp(uri, "ftp://", 6) == 0 ||
             strncasecmp(uri, "mtp://", 6) == 0);
+}
+
+static void normalize_remote_uri(const char *raw, char *out, size_t out_sz) {
+    if (!out || out_sz == 0) return;
+    if (!raw) { out[0] = '\0'; return; }
+    if (strncasecmp(raw, "webdavs://", 10) == 0) {
+        snprintf(out, out_sz, "davs://%s", raw + 10);
+    } else if (strncasecmp(raw, "webdav://", 9) == 0) {
+        snprintf(out, out_sz, "dav://%s", raw + 9);
+    } else {
+        snprintf(out, out_sz, "%s", raw);
+    }
+}
+
+static bool bin_exists_in_path(const char *bin) {
+    if (!bin || !bin[0]) return false;
+    if (strchr(bin, '/') != nullptr)
+        return access(bin, X_OK) == 0;
+    const char *path_env = getenv("PATH");
+    if (!path_env) path_env = "/usr/local/bin:/usr/bin:/bin";
+    const char *p = path_env;
+    while (*p) {
+        const char *col = strchr(p, ':');
+        size_t dlen = col ? (size_t)(col - p) : strlen(p);
+        char cand[PATH_MAX];
+        if (dlen > 0 && snprintf(cand, sizeof(cand), "%.*s/%s", (int)dlen, p, bin) < (int)sizeof(cand)) {
+            if (access(cand, X_OK) == 0)
+                return true;
+        }
+        if (!col) break;
+        p = col + 1;
+    }
+    return false;
+}
+
+static void spawn_remote_uri_mount(const char *raw_uri, const char *optional_secret,
+                                   ConnectServerCtx *owner_ctx, FileMgrData *fmd,
+                                   bool navigate_on_mount, bool show_progress) {
+    char norm_uri[1024];
+    normalize_remote_uri(raw_uri, norm_uri, sizeof(norm_uri));
+
+    const char *gio_bin = getenv("DTFILE_GIO_BIN");
+    if (!gio_bin || !gio_bin[0])
+        gio_bin = "gio";
+    const char *prefer_sshfs = getenv("DTFILE_PREFER_SSHFS");
+    bool is_sftp = (strncasecmp(norm_uri, "sftp://", 7) == 0 ||
+                    strncasecmp(norm_uri, "ssh://", 6) == 0);
+
+    if (is_sftp && ((prefer_sshfs && strcmp(prefer_sshfs, "1") == 0) || !bin_exists_in_path(gio_bin))) {
+        const char *sshfs_bin = getenv("DTFILE_SSHFS_BIN");
+        if (!sshfs_bin || !sshfs_bin[0])
+            sshfs_bin = "sshfs";
+        if (bin_exists_in_path(sshfs_bin)) {
+            const char *rest = norm_uri + (strncasecmp(norm_uri, "sftp://", 7) == 0 ? 7 : 6);
+            const char *slash = strchr(rest, '/');
+            char authority[256], rpath[512];
+            size_t alen = slash ? (size_t)(slash - rest) : strlen(rest);
+            if (alen >= sizeof(authority)) alen = sizeof(authority) - 1;
+            memcpy(authority, rest, alen);
+            authority[alen] = '\0';
+            snprintf(rpath, sizeof(rpath), "%s", (slash && slash[0]) ? slash : "/");
+
+            char user_part[128] = "", host_part[128] = "", port_part[16] = "";
+            const char *at = strchr(authority, '@');
+            const char *hp = at ? (at + 1) : authority;
+            if (at) {
+                size_t ulen = (size_t)(at - authority);
+                if (ulen >= sizeof(user_part)) ulen = sizeof(user_part) - 1;
+                memcpy(user_part, authority, ulen);
+                user_part[ulen] = '\0';
+            }
+            const char *colon = strchr(hp, ':');
+            if (colon) {
+                size_t hlen = (size_t)(colon - hp);
+                if (hlen >= sizeof(host_part)) hlen = sizeof(host_part) - 1;
+                memcpy(host_part, hp, hlen);
+                host_part[hlen] = '\0';
+                snprintf(port_part, sizeof(port_part), "%s", colon + 1);
+            } else {
+                snprintf(host_part, sizeof(host_part), "%s", hp);
+            }
+
+            /* Sanitize host for mount directory name */
+            char safe_host[128];
+            size_t so = 0;
+            for (const char *c = host_part; *c && so + 1 < sizeof(safe_host); ++c) {
+                unsigned char uch = (unsigned char)*c;
+                safe_host[so++] = (isalnum(uch) || uch == '.' || uch == '-' || uch == '_') ? *c : '_';
+            }
+            safe_host[so] = '\0';
+            if (!safe_host[0]) snprintf(safe_host, sizeof(safe_host), "remote");
+
+            char uroot[PATH_MAX], mpoint[PATH_MAX], spec[768], opts[192];
+            get_user_mounts_root_dir(uroot, sizeof(uroot));
+            (void)mkdir(uroot, 0700);
+            if (user_part[0])
+                snprintf(mpoint, sizeof(mpoint), "%s/sftp:host=%s,user=%s", uroot, safe_host, user_part);
+            else
+                snprintf(mpoint, sizeof(mpoint), "%s/sftp:host=%s", uroot, safe_host);
+            (void)mkdir(mpoint, 0700);
+
+            if (user_part[0])
+                snprintf(spec, sizeof(spec), "%s@%s:%s", user_part, host_part, rpath);
+            else
+                snprintf(spec, sizeof(spec), "%s:%s", host_part, rpath);
+
+            snprintf(opts, sizeof(opts), "reconnect,ServerAliveInterval=15%s",
+                     (optional_secret && optional_secret[0]) ? ",password_stdin" : "");
+
+            const char *sargv[10];
+            int ai = 0;
+            sargv[ai++] = sshfs_bin;
+            sargv[ai++] = spec;
+            sargv[ai++] = mpoint;
+            sargv[ai++] = "-o";
+            sargv[ai++] = opts;
+            if (port_part[0]) {
+                sargv[ai++] = "-p";
+                sargv[ai++] = port_part;
+            }
+            sargv[ai] = nullptr;
+            spawn_gio_mount_cmd(sargv, optional_secret, owner_ctx, norm_uri,
+                                fmd, navigate_on_mount, show_progress);
+            return;
+        }
+    }
+
+    const char *argv[] = { gio_bin, "mount", norm_uri, nullptr };
+    spawn_gio_mount_cmd(argv, optional_secret, owner_ctx, norm_uri,
+                        fmd, navigate_on_mount, show_progress);
 }
 
 static void conn_srv_connect_cb(Widget w, XtPointer client_data, XtPointer call_data) {
@@ -2338,18 +2570,14 @@ static void conn_srv_connect_cb(Widget w, XtPointer client_data, XtPointer call_
     if (!is_supported_remote_uri(uri)) {
         post_connect_error_dialog(
             ctx->fmd, ctx->shell, uri,
-            "Enter a valid smb://, sftp://, davs://, nfs://, ftp://, or mtp:// server URI.");
+            "Enter a valid smb://, sftp://, davs://, webdavs://, nfs://, ftp://, or mtp:// server URI.");
         XtFree(uri);
         return;
     }
 
-    XmString busy_xm = XmStringCreateLocalized("Connecting to server via GVFS...");
+    XmString busy_xm = XmStringCreateLocalized("Connecting to remote server...");
     XtVaSetValues(ctx->status_lbl, XmNlabelString, busy_xm, nullptr);
     XmStringFree(busy_xm);
-
-    const char *gio_bin = getenv("DTFILE_GIO_BIN");
-    if (!gio_bin || !gio_bin[0])
-        gio_bin = "gio";
 
     char secret_copy[MAX_SECRET_LEN];
     memcpy(secret_copy, ctx->secret, sizeof(secret_copy));
@@ -2359,9 +2587,8 @@ static void conn_srv_connect_cb(Widget w, XtPointer client_data, XtPointer call_
     secure_zero(ctx->secret, sizeof(ctx->secret));
     ctx->secret_len = 0;
 
-    const char *argv[] = { gio_bin, "mount", uri, nullptr };
-    spawn_gio_mount_cmd(argv, secret_copy[0] ? secret_copy : nullptr,
-                        ctx, uri, ctx->fmd, true, true);
+    spawn_remote_uri_mount(uri, secret_copy[0] ? secret_copy : nullptr,
+                           ctx, ctx->fmd, true, true);
     secure_zero(secret_copy, sizeof(secret_copy));
     XtFree(uri);
 }
@@ -2393,10 +2620,7 @@ void ShowConnectServerForFileMgr(FileMgrRec *fmr, const char *initial_scheme) {
     /* Headless automation fast-path when DTFILE_CONNECT_URI_AUTO is set */
     const char *auto_uri = getenv("DTFILE_CONNECT_URI_AUTO");
     if (auto_uri && is_supported_remote_uri(auto_uri)) {
-        const char *gio_bin = getenv("DTFILE_GIO_BIN");
-        if (!gio_bin || !gio_bin[0]) gio_bin = "gio";
-        const char *argv[] = { gio_bin, "mount", auto_uri, nullptr };
-        spawn_gio_mount_cmd(argv, nullptr, nullptr, auto_uri, fmd, true, true);
+        spawn_remote_uri_mount(auto_uri, nullptr, nullptr, fmd, true, true);
         return;
     }
 
@@ -2410,7 +2634,8 @@ void ShowConnectServerForFileMgr(FileMgrRec *fmr, const char *initial_scheme) {
         prefill_uri = initial_scheme;
     } else if (initial_scheme && strcasecmp(initial_scheme, "sftp") == 0) {
         ctx->scheme = "sftp";
-    } else if (initial_scheme && strcasecmp(initial_scheme, "davs") == 0) {
+    } else if (initial_scheme && (strcasecmp(initial_scheme, "davs") == 0 ||
+                                  strcasecmp(initial_scheme, "webdavs") == 0)) {
         ctx->scheme = "davs";
     } else if (initial_scheme && strcasecmp(initial_scheme, "nfs") == 0) {
         ctx->scheme = "nfs";
@@ -2457,7 +2682,7 @@ void ShowConnectServerForFileMgr(FileMgrRec *fmr, const char *initial_scheme) {
     static const struct { const char *label; const char *scheme; } protos[] = {
         { "SMB / Windows Share (smb://)", "smb" },
         { "SSH / SFTP (sftp://)",         "sftp" },
-        { "WebDAV HTTPS (davs://)",       "davs" },
+        { "WebDAV HTTPS (davs://, webdavs://)", "davs" },
         { "NFS Share (nfs://)",           "nfs" },
         { "Custom Server URI",            "custom" },
     };
@@ -2838,17 +3063,27 @@ void DtfileDevicesInit(Widget toplevel_widget) {
         dbus_error_free(&err);
     }
 
-    /* 2. Watch GVFS FUSE mount directory (/run/user/$UID/gvfs or DTFILE_GVFS_ROOT) */
+    /* 2. Watch GVFS FUSE mount directory (/run/user/$UID/gvfs or DTFILE_GVFS_ROOT)
+     *    and user-space FUSE mount directory (~/.dt/mounts or DTFILE_USER_MOUNT_ROOT) */
     char gvfs_root[PATH_MAX];
     get_gvfs_root_dir(gvfs_root, sizeof(gvfs_root));
     if (getenv("DTFILE_GVFS_ROOT") != nullptr)
         mkdir(gvfs_root, 0700);
+
+    char user_root[PATH_MAX];
+    get_user_mounts_root_dir(user_root, sizeof(user_root));
+    mkdir(user_root, 0700);
 
     g_gvfs_inotify_fd = inotify_init1(IN_NONBLOCK | IN_CLOEXEC);
     if (g_gvfs_inotify_fd >= 0) {
         g_gvfs_watch_wd = inotify_add_watch(
             g_gvfs_inotify_fd, gvfs_root,
             IN_CREATE | IN_DELETE | IN_MOVED_TO | IN_MOVED_FROM);
+        if (strcmp(user_root, gvfs_root) != 0) {
+            g_user_mounts_watch_wd = inotify_add_watch(
+                g_gvfs_inotify_fd, user_root,
+                IN_CREATE | IN_DELETE | IN_MOVED_TO | IN_MOVED_FROM);
+        }
         g_gvfs_input = XtAppAddInput(
             XtWidgetToApplicationContext(toplevel_widget),
             g_gvfs_inotify_fd, (XtPointer)XtInputReadMask,
@@ -2887,9 +3122,12 @@ void DtfileDevicesShutdown(void) {
     if (g_gvfs_inotify_fd >= 0) {
         if (g_gvfs_watch_wd >= 0)
             inotify_rm_watch(g_gvfs_inotify_fd, g_gvfs_watch_wd);
+        if (g_user_mounts_watch_wd >= 0)
+            inotify_rm_watch(g_gvfs_inotify_fd, g_user_mounts_watch_wd);
         close(g_gvfs_inotify_fd);
         g_gvfs_inotify_fd = -1;
         g_gvfs_watch_wd = -1;
+        g_user_mounts_watch_wd = -1;
     }
     g_dev_toplevel = nullptr;
 }

@@ -103,6 +103,11 @@ typedef struct
    FILE       * popenId;
    int          childpid;
    XtInputId    alternateInputId;
+   XtIntervalId fsSearchTimer;
+   void       * fsSearchJob;
+   char       * fsSearchRoot;
+   unsigned long fsSearchOffset;
+   Boolean      fsHasContentQuery;
    Boolean      searchInProgress;
    FileMgrRec * fileMgrRec;
 } FindRec;

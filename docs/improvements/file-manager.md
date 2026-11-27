@@ -169,10 +169,13 @@ XLibre)`:
   immediately after marshalling), and right-clicking or using *Connected Mounts &
   Devices...* supports **Unmount** and safe **Eject / Power Off Drive**
   (`Filesystem.Unmount`, `Encrypted.Lock`, `Drive.Eject`, and `Drive.PowerOff`).
-- **Network shares, SSH config remotes & MTP/PTP mobile devices (`GVFS`):**
-  **File → Connect to Server...** mounts `smb://`, `sftp://`, `davs://`, and
-  `nfs://` shares via `gio mount` (`fork`/`execvp`, never `/bin/sh`). Selecting
-  **SSH / SFTP (`sftp://`)** parses `~/.ssh/config` (including `Include`
+- **Network shares (`smb://`, `sftp://`, `davs://`, `webdavs://`, `nfs://`), SSH config remotes, user-space `sshfs` fallback & MTP/PTP mobile devices (`GVFS`):**
+  **File → Connect to Server...** mounts `smb://`, `sftp://`, `davs://`,
+  `webdavs://` (normalized automatically to `davs://`), and `nfs://` shares via
+  `gio mount` (`fork`/`execvp`, never `/bin/sh`), and falls back automatically to
+  user-space `sshfs` under `~/.dt/mounts` (`0700`, with one-click `fusermount3 -u`
+  disconnect) when `gvfsd` / `gio` is unavailable or `DTFILE_PREFER_SSHFS=1` is set.
+  Selecting **SSH / SFTP (`sftp://`)** parses `~/.ssh/config` (including `Include`
   directives and `/etc/ssh/ssh_config`, skipping wildcard patterns) and presents
   a **Configured SSH Remotes (`~/.ssh/config`)** list so known aliases populate
   the host, username, and `sftp://` URI (preserving OpenSSH `HostName`, `Port`,
@@ -236,11 +239,13 @@ appearance when only one tab is open:
   64-entry navigation history with `Alt+Left` / `Button8` and `Alt+Right` /
   `Button9`, ascend to the parent folder with `Alt+Up`, start inline fast-rename
   with `F2`, and toggle dot-files with `Ctrl+H`.
-- **Asynchronous in-window search (`Ctrl+F`):** Press `Ctrl+F` (**File → Search
-  in Window...**) to open the collapsible two-row search bar without leaving the
-  active window. When built with `--with-ck-core-fs`, searches run on
-  `ck-core-fs-lib`'s cancellable `ckfes_*` worker (`ck_fs_search.h`), filtering
-  by filename substring or glob (`*`, `?`, `[...]`), regular-file text content
+- **Asynchronous in-window search (`Ctrl+F`) & classic *File → Find...* (`Find.c`) backed by `ck-core-fs-lib`:**
+  Press `Ctrl+F` (**File → Search in Window...**) to open the collapsible two-row
+  search bar without leaving the active window, or open **File → Find...** for the
+  classic multi-window Find dialog. When built with `--with-ck-core-fs`, both search
+  surfaces run on `ck-core-fs-lib`'s cancellable `ckfes_*` worker (`ck_fs_search.h`)
+  without invoking `/bin/sh`, `find`, or `grep`, filtering
+  by filename substring or glob (`*`, `?`), regular-file text content
   (skipping NUL-containing binary files), optional subfolder recursion and case
   matching, minimum/maximum byte sizes (`K`/`M`/`G` suffixes supported), and
   `YYYY-MM-DD` modified-date bounds. Matches stream live into the results list

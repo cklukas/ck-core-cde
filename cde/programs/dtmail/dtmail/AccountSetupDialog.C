@@ -205,10 +205,17 @@ rebuild_acct_list(void)
     }
 }
 
+static DtMailOAuthProvider g_cur_oauth_provider = DTMAIL_OAUTH_NONE;
+static char g_cur_oauth_auth_url[512] = "";
+static char g_cur_oauth_token_url[512] = "";
+
 static void
 populate_form_from_account(const DtMailAccount *a)
 {
     if (!a) return;
+    g_cur_oauth_provider = a->oauth_provider;
+    snprintf(g_cur_oauth_auth_url, sizeof(g_cur_oauth_auth_url), "%s", a->oauth_auth_url);
+    snprintf(g_cur_oauth_token_url, sizeof(g_cur_oauth_token_url), "%s", a->oauth_token_url);
     char pbuf[16];
     XmTextFieldSetString(g_tf_name, (char *)a->name);
     XmTextFieldSetString(g_tf_email, (char *)a->email);
@@ -257,9 +264,12 @@ read_account_from_form(DtMailAccount *a, char *pass_out, size_t pass_len)
         snprintf(a->oauth_client_id, sizeof(a->oauth_client_id), "%s", s_ocid);
     if (s_sig && s_sig[0])
         snprintf(a->signature, sizeof(a->signature), "%s", s_sig);
-    if (XmToggleButtonGetState(g_rb_auth_oauth))
+    if (XmToggleButtonGetState(g_rb_auth_oauth)) {
         a->auth_mode = DTMAIL_AUTH_OAUTH2;
-    else if (XmToggleButtonGetState(g_rb_auth_local))
+        a->oauth_provider = g_cur_oauth_provider;
+        snprintf(a->oauth_auth_url, sizeof(a->oauth_auth_url), "%s", g_cur_oauth_auth_url);
+        snprintf(a->oauth_token_url, sizeof(a->oauth_token_url), "%s", g_cur_oauth_token_url);
+    } else if (XmToggleButtonGetState(g_rb_auth_local))
         a->auth_mode = DTMAIL_AUTH_SENDMAIL_LOCAL;
     else
         a->auth_mode = DTMAIL_AUTH_PASSWORD;
@@ -547,9 +557,9 @@ dtmail_show_accounts_dialog(Widget parent, DtMailSyncDoneCb on_sync_done, void *
 
         static const struct { const char *lbl; const char *key; } presets[] = {
             { "Gmail", "gmail" }, { "iCloud", "icloud" }, { "Fastmail", "fastmail" },
-            { "M365", "m365" }, { "Custom", "custom" }, { "Local", "local" }
+            { "JMAP", "fastmail_jmap" }, { "M365", "m365" }, { "Custom", "custom" }, { "Local", "local" }
         };
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < 7; i++) {
             XmString ps = XmStringCreateLocalized((char *)presets[i].lbl);
             Widget pb = XtVaCreateManagedWidget("presetBtn", xmPushButtonWidgetClass, preset_rc,
                 XmNlabelString, ps, NULL);

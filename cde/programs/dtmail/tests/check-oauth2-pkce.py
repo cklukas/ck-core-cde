@@ -137,7 +137,27 @@ static void test_loopback_and_token_exchange(const char *token_url) {
     assert(dtmail_oauth2_refresh_token(&acct, tok.refresh_token, &tok2, err, sizeof(err)) == 0);
     assert(strcmp(tok2.access_token, "tok_access_2") == 0);
     assert(tok2.expires_in == 1800);
-    puts("ok    loopback-and-token-exchange");
+
+    /* Fastmail OAuth2 & Fastmail JMAP presets */
+    DtMailAccount fm, fmj;
+    memset(&fm, 0, sizeof(fm));
+    memset(&fmj, 0, sizeof(fmj));
+    dtmail_account_apply_preset(&fm, "fastmail");
+    assert(fm.auth_mode == DTMAIL_AUTH_OAUTH2);
+    assert(fm.oauth_provider == DTMAIL_OAUTH_FASTMAIL);
+    assert(strcmp(fm.oauth_auth_url, "https://api.fastmail.com/oauth/authorize") == 0);
+    assert(strcmp(fm.oauth_token_url, "https://api.fastmail.com/oauth/refresh") == 0);
+    snprintf(fm.oauth_client_id, sizeof(fm.oauth_client_id), "fm-client-1");
+    char fm_url[1024] = "";
+    assert(dtmail_oauth2_build_auth_url(&fm, &pair, port, fm_url, sizeof(fm_url)) == 0);
+    assert(strstr(fm_url, "api.fastmail.com/oauth/authorize") != NULL);
+    assert(strstr(fm_url, "urn%3Aietf%3Aparams%3Ajmap%3Amail") != NULL);
+
+    dtmail_account_apply_preset(&fmj, "fastmail_jmap");
+    assert(strcmp(fmj.imap_host, "https://api.fastmail.com/jmap/session") == 0);
+    assert(fmj.auth_mode == DTMAIL_AUTH_OAUTH2);
+    assert(fmj.oauth_provider == DTMAIL_OAUTH_FASTMAIL);
+    puts("ok    loopback-and-token-exchange-and-fastmail-presets");
 }
 
 static void test_itip_parse_and_save(const char *tmp_home) {

@@ -15,7 +15,10 @@ int dtmail_mbox_append_rfc5322(const char *mbox_path,
                                const char *raw_msg,
                                size_t raw_len);
 
-/* IMAP operations over IMAPS / IMAP+STARTTLS (or plaintext for local tests) */
+/* Returns 1 when account uses RFC 8620/8621 JMAP over HTTP(S) (e.g. Fastmail JMAP) */
+int dtmail_account_is_jmap(const DtMailAccount *acct);
+
+/* IMAP / JMAP operations over IMAPS, IMAP+STARTTLS, JMAP HTTPS (or HTTP/plaintext for local tests) */
 int dtmail_imap_test_connection(const DtMailAccount *acct,
                                 const char *secret,
                                 char *err_buf,

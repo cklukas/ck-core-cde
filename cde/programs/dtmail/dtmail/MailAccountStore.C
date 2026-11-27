@@ -91,15 +91,32 @@ dtmail_account_apply_preset(DtMailAccount *acct, const char *preset)
         acct->smtp_tls = DTMAIL_TLS_STARTTLS;
         acct->auth_mode = DTMAIL_AUTH_PASSWORD;
         acct->oauth_provider = DTMAIL_OAUTH_NONE;
-    } else if (strcasecmp(preset, "fastmail") == 0) {
+    } else if (strcasecmp(preset, "fastmail") == 0 || strcasecmp(preset, "fastmail_oauth") == 0) {
         snprintf(acct->imap_host, sizeof(acct->imap_host), "imap.fastmail.com");
         acct->imap_port = 993;
         acct->imap_tls = DTMAIL_TLS_IMPLICIT;
         snprintf(acct->smtp_host, sizeof(acct->smtp_host), "smtp.fastmail.com");
         acct->smtp_port = 465;
         acct->smtp_tls = DTMAIL_TLS_IMPLICIT;
-        acct->auth_mode = DTMAIL_AUTH_PASSWORD;
-        acct->oauth_provider = DTMAIL_OAUTH_NONE;
+        acct->auth_mode = DTMAIL_AUTH_OAUTH2;
+        acct->oauth_provider = DTMAIL_OAUTH_FASTMAIL;
+        snprintf(acct->oauth_auth_url, sizeof(acct->oauth_auth_url),
+                 "https://api.fastmail.com/oauth/authorize");
+        snprintf(acct->oauth_token_url, sizeof(acct->oauth_token_url),
+                 "https://api.fastmail.com/oauth/refresh");
+    } else if (strcasecmp(preset, "fastmail_jmap") == 0 || strcasecmp(preset, "jmap") == 0) {
+        snprintf(acct->imap_host, sizeof(acct->imap_host), "https://api.fastmail.com/jmap/session");
+        acct->imap_port = 443;
+        acct->imap_tls = DTMAIL_TLS_IMPLICIT;
+        snprintf(acct->smtp_host, sizeof(acct->smtp_host), "https://api.fastmail.com/jmap/session");
+        acct->smtp_port = 443;
+        acct->smtp_tls = DTMAIL_TLS_IMPLICIT;
+        acct->auth_mode = DTMAIL_AUTH_OAUTH2;
+        acct->oauth_provider = DTMAIL_OAUTH_FASTMAIL;
+        snprintf(acct->oauth_auth_url, sizeof(acct->oauth_auth_url),
+                 "https://api.fastmail.com/oauth/authorize");
+        snprintf(acct->oauth_token_url, sizeof(acct->oauth_token_url),
+                 "https://api.fastmail.com/oauth/refresh");
     } else if (strcasecmp(preset, "m365") == 0 || strcasecmp(preset, "outlook") == 0) {
         snprintf(acct->imap_host, sizeof(acct->imap_host), "outlook.office365.com");
         acct->imap_port = 993;

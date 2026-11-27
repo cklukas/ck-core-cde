@@ -283,7 +283,26 @@ Editor::set_message(DtMail::Message * msg,
 			g_last_html_len = (size_t)size;
 		    }
 		}
+		int blocked_remote = 0;
+		char *sandbox_check = dtmail_sanitize_html_sandboxed(
+		    (const char *)contents, (size_t)size, 0, &blocked_remote);
+		free(sandbox_check);
 		rendered_html = dtmail_html_to_readable_text((const char *)contents, (size_t)size);
+		if (rendered_html && blocked_remote > 0 && format != IF_INDENTED) {
+		    char notice[128];
+		    snprintf(notice, sizeof(notice),
+			     "[Sandboxed HTML: %d remote image(s)/tracker(s) blocked]\n\n",
+			     blocked_remote);
+		    size_t nlen = strlen(notice);
+		    size_t rlen = strlen(rendered_html);
+		    char *combined = (char *)malloc(nlen + rlen + 1);
+		    if (combined) {
+			memcpy(combined, notice, nlen);
+			memcpy(combined + nlen, rendered_html, rlen + 1);
+			free(rendered_html);
+			rendered_html = combined;
+		    }
+		}
 		if (rendered_html) {
 		    display_ptr = rendered_html;
 		    display_size = (unsigned long)strlen(rendered_html);

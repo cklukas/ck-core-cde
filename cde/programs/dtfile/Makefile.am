@@ -30,6 +30,7 @@ EXTRA_DIST = tests/check-trash-writer.py tests/check-trash-metadata.py \
              tests/check-storage-size-hardlinks.py tests/check-storage-size-hardlinks.c \
              tests/check-clipboard-undo.py \
              tests/check-dnd-drag-safety.py \
+             tests/check-remote-mounts-and-search.py \
              tests/check-archive-safety.py org.freedesktop.FileManager1.service.cpp
 
 check-local:
@@ -85,6 +86,7 @@ check-local:
 		--work-dir "$(abs_builddir)/process-lifecycle-check"
 if HAVE_CK_CORE_FS
 	CC="$(CC)" PKG_CONFIG="$(PKG_CONFIG)" python3 $(srcdir)/tests/check-sync-controller.py
+	CC="$(CC)" PKG_CONFIG="$(PKG_CONFIG)" python3 $(srcdir)/tests/check-remote-mounts-and-search.py
 endif
 
 BUILT_SOURCES = dtfile.config dtfile_error SyncFeature.h org.freedesktop.FileManager1.service

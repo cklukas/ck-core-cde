@@ -388,11 +388,550 @@ dtmail_html_to_readable_text(const char *html, size_t html_len)
     return out.data;
 }
 
+typedef struct {
+    char  *data;
+    size_t len;
+    size_t cap;
+} RawBuf;
+
+static void
+rb_append(RawBuf *b, const char *s, size_t n)
+{
+    if (!b || !s || n == 0) return;
+    if (b->len + n + 1 > b->cap) {
+        size_t ncap = b->cap ? b->cap * 2 : 2048;
+        while (ncap < b->len + n + 1)
+            ncap *= 2;
+        if (ncap > 32 * 1024 * 1024) return; /* 32 MiB cap */
+        char *nd = (char *)realloc(b->data, ncap);
+        if (!nd) return;
+        b->data = nd;
+        b->cap = ncap;
+    }
+    memcpy(b->data + b->len, s, n);
+    b->len += n;
+    b->data[b->len] = '\0';
+}
+
+static void
+rb_puts(RawBuf *b, const char *s)
+{
+    if (s) rb_append(b, s, strlen(s));
+}
+
+static void
+rb_puts_attr_escaped(RawBuf *b, const char *s, size_t n)
+{
+    for (size_t i = 0; i < n; i++) {
+        unsigned char c = (unsigned char)s[i];
+        if (c == '"') rb_puts(b, "&quot;");
+        else if (c == '\'') rb_puts(b, "&#39;");
+        else if (c == '<') rb_puts(b, "&lt;");
+        else if (c == '>') rb_puts(b, "&gt;");
+        else if (c >= 0x20 || c == '\t' || c == '\n') rb_append(b, (const char *)&c, 1);
+    }
+}
+
+/* Decode HTML character references and strip ASCII control/whitespace bytes
+ * to inspect canonical URI schemes (defeating java&#x09;script: obfuscation). */
+static void
+canonicalize_for_scheme_check(const char *raw, size_t len, char *out, size_t out_len)
+{
+    if (!out || out_len == 0) return;
+    size_t o = 0;
+    size_t i = 0;
+    while (i < len && o + 1 < out_len) {
+        unsigned char c = (unsigned char)raw[i];
+        if (c == '&') {
+            size_t semi = 0;
+            for (size_t k = i + 1; k < len && k < i + 14; k++) {
+                if (raw[k] == ';') { semi = k; break; }
+                if (!isalnum((unsigned char)raw[k]) && raw[k] != '#') break;
+            }
+            if (semi > i + 1) {
+                char ent[16];
+                size_t el = semi - (i + 1);
+                if (el >= sizeof(ent)) el = sizeof(ent) - 1;
+                memcpy(ent, raw + i + 1, el);
+                ent[el] = '\0';
+                unsigned long cp = 0;
+                if (ent[0] == '#') {
+                    cp = (ent[1] == 'x' || ent[1] == 'X')
+                        ? strtoul(ent + 2, NULL, 16)
+                        : strtoul(ent + 1, NULL, 10);
+                } else if (strcasecmp(ent, "colon") == 0) {
+                    cp = ':';
+                } else if (strcasecmp(ent, "tab") == 0 || strcasecmp(ent, "newline") == 0) {
+                    cp = ' ';
+                }
+                i = semi + 1;
+                if (cp > 0x20 && cp < 0x7f)
+                    out[o++] = (char)tolower((int)cp);
+                continue;
+            }
+            /* Also handle numeric character references missing trailing ';' (e.g. &#106avascript:) */
+            if (i + 2 < len && raw[i + 1] == '#') {
+                size_t k = i + 2;
+                int hex = 0;
+                if (k < len && (raw[k] == 'x' || raw[k] == 'X')) { hex = 1; k++; }
+                size_t ds = k;
+                while (k < len && (hex ? isxdigit((unsigned char)raw[k]) : isdigit((unsigned char)raw[k])))
+                    k++;
+                if (k > ds) {
+                    char num[16];
+                    size_t nl = k - ds;
+                    if (nl >= sizeof(num)) nl = sizeof(num) - 1;
+                    memcpy(num, raw + ds, nl);
+                    num[nl] = '\0';
+                    unsigned long cp = strtoul(num, NULL, hex ? 16 : 10);
+                    i = k;
+                    if (cp > 0x20 && cp < 0x7f)
+                        out[o++] = (char)tolower((int)cp);
+                    continue;
+                }
+            }
+        }
+        i++;
+        if (c <= 0x20 || c == 0x7f)
+            continue;
+        out[o++] = (char)tolower(c);
+    }
+    out[o] = '\0';
+}
+
+static int
+is_dropped_subtree_tag(const char *name)
+{
+    static const char *const kDrop[] = {
+        "script", "iframe", "object", "embed", "applet",
+        "svg", "math", "template", "noscript", "head", "title",
+        "style", "textarea", "select", "button", "audio", "video", NULL
+    };
+    for (int i = 0; kDrop[i]; i++) {
+        if (strcmp(name, kDrop[i]) == 0)
+            return 1;
+    }
+    return 0;
+}
+
+static int
+is_allowed_html_tag(const char *name)
+{
+    static const char *const kAllow[] = {
+        "div", "p", "span", "a", "img",
+        "table", "thead", "tbody", "tfoot", "tr", "th", "td", "caption",
+        "h1", "h2", "h3", "h4", "h5", "h6",
+        "ul", "ol", "li", "dl", "dt", "dd",
+        "blockquote", "pre", "code", "kbd", "samp",
+        "b", "strong", "i", "em", "u", "s", "del", "ins", "mark",
+        "br", "hr", "section", "article", "header", "footer", "aside",
+        "center", "font", "small", "sub", "sup", "figure", "figcaption",
+        NULL
+    };
+    for (int i = 0; kAllow[i]; i++) {
+        if (strcmp(name, kAllow[i]) == 0)
+            return 1;
+    }
+    return 0;
+}
+
+static int
+is_void_html_tag(const char *name)
+{
+    return (strcmp(name, "br") == 0 ||
+            strcmp(name, "hr") == 0 ||
+            strcmp(name, "img") == 0);
+}
+
+static int
+is_safe_inline_style(const char *val, size_t len, int *out_had_remote_url)
+{
+    char canon[512];
+    canonicalize_for_scheme_check(val, len, canon, sizeof(canon));
+    if (strstr(canon, "url(") != NULL) {
+        if (out_had_remote_url &&
+            (strstr(canon, "url(http") != NULL ||
+             strstr(canon, "url(\"http") != NULL ||
+             strstr(canon, "url('http") != NULL ||
+             strstr(canon, "url(//") != NULL)) {
+            *out_had_remote_url = 1;
+        }
+        return 0;
+    }
+    if (strstr(canon, "expression(") != NULL ||
+        strstr(canon, "@import") != NULL ||
+        strstr(canon, "javascript:") != NULL ||
+        strstr(canon, "vbscript:") != NULL ||
+        strstr(canon, "behavior:") != NULL ||
+        strstr(canon, "-moz-binding") != NULL) {
+        return 0;
+    }
+    return 1;
+}
+
+char *
+dtmail_sanitize_html_sandboxed(const char *html,
+                               size_t html_len,
+                               int allow_remote_images,
+                               int *out_blocked_remote_count)
+{
+    int blocked_remote = 0;
+    if (out_blocked_remote_count)
+        *out_blocked_remote_count = 0;
+
+    RawBuf body = { NULL, 0, 0 };
+    rb_puts(&body, "");
+    if (!body.data) {
+        body.data = (char *)calloc(1, 1);
+        body.cap = 1;
+    }
+
+    char drop_tag[32] = "";
+    int drop_depth = 0;
+
+    size_t i = 0;
+    while (html && i < html_len) {
+        if (html[i] == '\0') {
+            i++;
+            continue;
+        }
+        if (html[i] != '<') {
+            if (drop_depth == 0) {
+                /* Copy text, escaping stray '>' */
+                if (html[i] == '>')
+                    rb_puts(&body, "&gt;");
+                else
+                    rb_append(&body, html + i, 1);
+            }
+            i++;
+            continue;
+        }
+
+        /* HTML comment <!-- ... --> */
+        if (i + 4 <= html_len && strncmp(html + i, "<!--", 4) == 0) {
+            size_t k = i + 4;
+            while (k + 3 <= html_len) {
+                if (html[k] == '-' && html[k + 1] == '-' && html[k + 2] == '>') {
+                    k += 3;
+                    break;
+                }
+                k++;
+            }
+            i = (k + 3 <= html_len || (k >= 3 && html[k - 1] == '>')) ? k : html_len;
+            continue;
+        }
+
+        /* <!DOCTYPE ...> or CDATA / processing instruction */
+        if (i + 2 <= html_len && (html[i + 1] == '!' || html[i + 1] == '?')) {
+            size_t j = i + 2;
+            while (j < html_len && html[j] != '>')
+                j++;
+            i = (j < html_len) ? (j + 1) : html_len;
+            continue;
+        }
+
+        /* Locate closing '>' respecting attribute quotes */
+        size_t j = i + 1;
+        char q = 0;
+        while (j < html_len) {
+            char c = html[j++];
+            if (q) {
+                if (c == q) q = 0;
+            } else if (c == '"' || c == '\'') {
+                q = c;
+            } else if (c == '>') {
+                break;
+            }
+        }
+        if (j > html_len || html[j - 1] != '>') {
+            /* Unclosed trailing '<...' — escape '<' safely rather than emitting broken tag */
+            if (drop_depth == 0)
+                rb_puts(&body, "&lt;");
+            i++;
+            continue;
+        }
+
+        size_t tstart = i + 1;
+        size_t tend = j - 1;
+        i = j;
+
+        while (tstart < tend && isspace((unsigned char)html[tstart]))
+            tstart++;
+        int is_close = 0;
+        if (tstart < tend && html[tstart] == '/') {
+            is_close = 1;
+            tstart++;
+            while (tstart < tend && isspace((unsigned char)html[tstart]))
+                tstart++;
+        }
+
+        char tname[32];
+        size_t nlen = 0;
+        while (tstart + nlen < tend && nlen + 1 < sizeof(tname) &&
+               isalnum((unsigned char)html[tstart + nlen])) {
+            tname[nlen] = (char)tolower((unsigned char)html[tstart + nlen]);
+            nlen++;
+        }
+        tname[nlen] = '\0';
+        if (nlen == 0)
+            continue;
+
+        if (drop_depth > 0) {
+            if (strcmp(tname, drop_tag) == 0) {
+                if (is_close) {
+                    drop_depth--;
+                    if (drop_depth == 0)
+                        drop_tag[0] = '\0';
+                } else {
+                    drop_depth++;
+                }
+            }
+            continue;
+        }
+
+        if (!is_close && is_dropped_subtree_tag(tname)) {
+            /* Check if self-closing <script ... /> */
+            size_t trim_end = tend;
+            while (trim_end > tstart && isspace((unsigned char)html[trim_end - 1]))
+                trim_end--;
+            if (!(trim_end > tstart && html[trim_end - 1] == '/')) {
+                drop_depth = 1;
+                snprintf(drop_tag, sizeof(drop_tag), "%s", tname);
+            }
+            continue;
+        }
+
+        if (!is_allowed_html_tag(tname))
+            continue;
+
+        if (is_close) {
+            if (!is_void_html_tag(tname)) {
+                rb_puts(&body, "</");
+                rb_puts(&body, tname);
+                rb_puts(&body, ">");
+            }
+            continue;
+        }
+
+        /* Parse attributes on allowed opening tag */
+        size_t ap = tstart + nlen;
+        int img_remote_blocked = 0;
+        char img_alt[128] = "";
+        int has_safe_href = 0;
+
+        RawBuf attr_buf = { NULL, 0, 0 };
+        while (ap < tend) {
+            while (ap < tend && (isspace((unsigned char)html[ap]) || html[ap] == '/'))
+                ap++;
+            if (ap >= tend)
+                break;
+
+            size_t an_start = ap;
+            while (ap < tend && !isspace((unsigned char)html[ap]) &&
+                   html[ap] != '=' && html[ap] != '/') {
+                ap++;
+            }
+            size_t an_len = ap - an_start;
+            if (an_len == 0) {
+                ap++;
+                continue;
+            }
+            char aname[32];
+            size_t al = an_len < sizeof(aname) - 1 ? an_len : sizeof(aname) - 1;
+            for (size_t u = 0; u < al; u++)
+                aname[u] = (char)tolower((unsigned char)html[an_start + u]);
+            aname[al] = '\0';
+
+            while (ap < tend && isspace((unsigned char)html[ap]))
+                ap++;
+
+            const char *aval = "";
+            size_t aval_len = 0;
+            if (ap < tend && html[ap] == '=') {
+                ap++;
+                while (ap < tend && isspace((unsigned char)html[ap]))
+                    ap++;
+                if (ap < tend && (html[ap] == '"' || html[ap] == '\'')) {
+                    char aq = html[ap++];
+                    size_t vs = ap;
+                    while (ap < tend && html[ap] != aq)
+                        ap++;
+                    aval = html + vs;
+                    aval_len = ap - vs;
+                    if (ap < tend && html[ap] == aq)
+                        ap++;
+                } else {
+                    size_t vs = ap;
+                    while (ap < tend && !isspace((unsigned char)html[ap]))
+                        ap++;
+                    aval = html + vs;
+                    aval_len = ap - vs;
+                }
+            }
+
+            /* Never allow any on* event handler */
+            if (aname[0] == 'o' && aname[1] == 'n')
+                continue;
+
+            if (strcmp(aname, "srcset") == 0 || strcmp(aname, "background") == 0) {
+                if (!allow_remote_images && aval_len > 0) {
+                    char cchk[256];
+                    canonicalize_for_scheme_check(aval, aval_len, cchk, sizeof(cchk));
+                    if (strstr(cchk, "http://") || strstr(cchk, "https://") || strncmp(cchk, "//", 2) == 0)
+                        blocked_remote++;
+                }
+                continue;
+            }
+
+            if (strcmp(aname, "href") == 0 && strcmp(tname, "a") == 0) {
+                char cchk[256];
+                canonicalize_for_scheme_check(aval, aval_len, cchk, sizeof(cchk));
+                if (strncmp(cchk, "https://", 8) == 0 ||
+                    strncmp(cchk, "http://", 7) == 0 ||
+                    strncmp(cchk, "mailto:", 7) == 0 ||
+                    cchk[0] == '#') {
+                    rb_puts(&attr_buf, " href=\"");
+                    rb_puts_attr_escaped(&attr_buf, aval, aval_len);
+                    rb_puts(&attr_buf, "\"");
+                    has_safe_href = 1;
+                }
+                continue;
+            }
+
+            if (strcmp(aname, "src") == 0 && strcmp(tname, "img") == 0) {
+                char cchk[256];
+                canonicalize_for_scheme_check(aval, aval_len, cchk, sizeof(cchk));
+                int is_remote = (strncmp(cchk, "https://", 8) == 0 ||
+                                 strncmp(cchk, "http://", 7) == 0 ||
+                                 strncmp(cchk, "//", 2) == 0);
+                int is_safe_inline = (strncmp(cchk, "cid:", 4) == 0 ||
+                                      strncmp(cchk, "data:image/png;", 15) == 0 ||
+                                      strncmp(cchk, "data:image/jpeg;", 16) == 0 ||
+                                      strncmp(cchk, "data:image/gif;", 15) == 0 ||
+                                      strncmp(cchk, "data:image/webp;", 16) == 0);
+                if (is_remote && !allow_remote_images) {
+                    blocked_remote++;
+                    img_remote_blocked = 1;
+                } else if (is_safe_inline || (is_remote && allow_remote_images)) {
+                    rb_puts(&attr_buf, " src=\"");
+                    rb_puts_attr_escaped(&attr_buf, aval, aval_len);
+                    rb_puts(&attr_buf, "\"");
+                }
+                continue;
+            }
+
+            if (strcmp(aname, "style") == 0) {
+                int had_remote = 0;
+                if (is_safe_inline_style(aval, aval_len, &had_remote)) {
+                    rb_puts(&attr_buf, " style=\"");
+                    rb_puts_attr_escaped(&attr_buf, aval, aval_len);
+                    rb_puts(&attr_buf, "\"");
+                } else if (had_remote && !allow_remote_images) {
+                    blocked_remote++;
+                }
+                continue;
+            }
+
+            if (strcmp(aname, "alt") == 0) {
+                size_t cl = aval_len < sizeof(img_alt) - 1 ? aval_len : sizeof(img_alt) - 1;
+                memcpy(img_alt, aval, cl);
+                img_alt[cl] = '\0';
+            }
+
+            static const char *const kSafeAttrs[] = {
+                "alt", "title", "colspan", "rowspan", "align", "valign",
+                "width", "height", "border", "cellpadding", "cellspacing",
+                "bgcolor", "color", "dir", "lang", NULL
+            };
+            int ok_attr = 0;
+            for (int sa = 0; kSafeAttrs[sa]; sa++) {
+                if (strcmp(aname, kSafeAttrs[sa]) == 0) {
+                    ok_attr = 1;
+                    break;
+                }
+            }
+            if (ok_attr) {
+                rb_puts(&attr_buf, " ");
+                rb_puts(&attr_buf, aname);
+                rb_puts(&attr_buf, "=\"");
+                rb_puts_attr_escaped(&attr_buf, aval, aval_len);
+                rb_puts(&attr_buf, "\"");
+            }
+        }
+
+        if (strcmp(tname, "img") == 0 && img_remote_blocked) {
+            rb_puts(&body, "<span class=\"dtmail-blocked-img\">[Remote image blocked");
+            if (img_alt[0]) {
+                rb_puts(&body, ": ");
+                rb_puts_attr_escaped(&body, img_alt, strlen(img_alt));
+            }
+            rb_puts(&body, "]</span>");
+            free(attr_buf.data);
+            continue;
+        }
+
+        rb_puts(&body, "<");
+        rb_puts(&body, tname);
+        if (attr_buf.data && attr_buf.len > 0)
+            rb_append(&body, attr_buf.data, attr_buf.len);
+        if (strcmp(tname, "a") == 0 && has_safe_href)
+            rb_puts(&body, " rel=\"noopener noreferrer\" target=\"_blank\"");
+        rb_puts(&body, ">");
+        free(attr_buf.data);
+    }
+
+    if (out_blocked_remote_count)
+        *out_blocked_remote_count = blocked_remote;
+
+    RawBuf doc = { NULL, 0, 0 };
+    rb_puts(&doc,
+        "<!DOCTYPE html>\n"
+        "<html><head>\n"
+        "<meta charset=\"utf-8\">\n"
+        "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; ");
+    if (allow_remote_images)
+        rb_puts(&doc, "img-src cid: data: https: http:; ");
+    else
+        rb_puts(&doc, "img-src cid: data:; ");
+    rb_puts(&doc,
+        "style-src 'unsafe-inline'; form-action 'none'; base-uri 'none'\">\n"
+        "<title>CK Core Mail — Sandboxed HTML Message</title>\n"
+        "<style>"
+        "body{font-family:sans-serif;line-height:1.45;margin:16px;color:#1b1f23;background:#ffffff;}"
+        ".dtmail-sandbox-banner{background:#fff8dc;border:1px solid #d4b106;padding:8px 12px;"
+        "margin-bottom:14px;font-size:13px;color:#5c4700;}"
+        ".dtmail-blocked-img{display:inline-block;padding:2px 6px;border:1px dashed #888;"
+        "font-size:12px;color:#555;background:#f6f8fa;}"
+        "blockquote{border-left:3px solid #ccc;margin-left:0;padding-left:12px;color:#444;}"
+        "table{border-collapse:collapse;}td,th{padding:4px 8px;}"
+        "</style>\n"
+        "</head><body>\n");
+
+    if (blocked_remote > 0 && !allow_remote_images) {
+        char banner[256];
+        snprintf(banner, sizeof(banner),
+                 "<div class=\"dtmail-sandbox-banner\">Sandboxed HTML view: %d remote image(s)/tracker(s) blocked for privacy.</div>\n",
+                 blocked_remote);
+        rb_puts(&doc, banner);
+    }
+
+    if (body.data && body.len > 0)
+        rb_append(&doc, body.data, body.len);
+    rb_puts(&doc, "\n</body></html>\n");
+    free(body.data);
+    return doc.data;
+}
+
 int
 dtmail_open_html_in_browser(const char *html, size_t html_len)
 {
     if (!html || html_len == 0)
         return -1;
+
+    char *safe_html = dtmail_sanitize_html_sandboxed(html, html_len, 0, NULL);
+    if (!safe_html)
+        return -1;
+    size_t safe_len = strlen(safe_html);
 
     const char *tmpdir = getenv("TMPDIR");
     char dir_buf[1024];
@@ -410,21 +949,25 @@ dtmail_open_html_in_browser(const char *html, size_t html_len)
     char tmppath[1280];
     snprintf(tmppath, sizeof(tmppath), "%s/dtmail-html-XXXXXX.html", tmpdir);
     int fd = mkstemps(tmppath, 5);
-    if (fd < 0)
+    if (fd < 0) {
+        free(safe_html);
         return -1;
+    }
     (void)fchmod(fd, 0600);
 
     size_t written = 0;
-    while (written < html_len) {
-        ssize_t n = write(fd, html + written, html_len - written);
+    while (written < safe_len) {
+        ssize_t n = write(fd, safe_html + written, safe_len - written);
         if (n <= 0) {
             close(fd);
             unlink(tmppath);
+            free(safe_html);
             return -1;
         }
         written += (size_t)n;
     }
     close(fd);
+    free(safe_html);
 
     /* Preferred browser order: /usr/dt/bin/ck-browser -> ck-browser -> $BROWSER -> xdg-open */
     const char *browser = NULL;

@@ -532,13 +532,32 @@ local `/usr/sbin/sendmail` MTA to be usable on a modern desktop:
   remote SMTP mail.
 - Verified under ASan/UBSan by `tests/check-thread-rules.py`.
 
-## OAuth2 PKCE sign-in, Calendar invitations (`dtcm`), and sender autocomplete
+## OAuth2 PKCE sign-in, JMAP transport, Sandboxed HTML, Calendar invitations (`dtcm`), and sender autocomplete
 
-- **Loopback PKCE OAuth2 (`XOAUTH2`)**: `OAuth2Client.C` implements RFC 7636
-  PKCE (`S256`) with an ephemeral `127.0.0.1:0` loopback callback listener,
-  browser sign-in via `ck-browser` (or `$BROWSER` / `xdg-open`), and `libcurl`
-  token exchange/refresh stored in the desktop keyring. Start sign-in from
+- **Loopback PKCE OAuth2 (`XOAUTH2`) & Fastmail / JMAP presets**: `OAuth2Client.C`
+  implements RFC 7636 PKCE (`S256`) with an ephemeral `127.0.0.1:0` loopback
+  callback listener, browser sign-in via `ck-browser` (or `$BROWSER` / `xdg-open`),
+  and `libcurl` token exchange/refresh stored in the desktop keyring, with presets
+  for Gmail, Microsoft 365, Fastmail OAuth2 (`https://api.fastmail.com/oauth/authorize`),
+  and Fastmail JMAP (`https://api.fastmail.com/jmap/session`). Start sign-in from
   **Mailbox → Accounts & Servers... → Sign In (OAuth2)**.
+- **RFC 8620 / RFC 8621 JMAP over HTTPS**: when an account uses a JMAP session
+  endpoint (`https://.../jmap/session` or the **JMAP** preset), `CurlMailEngine.C`
+  discovers `apiUrl`, `downloadUrl`, `uploadUrl`, and `primaryAccounts`
+  automatically, lists folders via `Mailbox/get`, syncs incoming messages
+  incrementally via `Email/query`, `Email/get`, and raw RFC 5322 blob downloads
+  (recording stable `.uids` / `.jmap_ids` mappings and evaluating `~/.dt/dtmail_rules`),
+  updates `$seen` / `$flagged` keywords via `Email/set`, and submits outgoing mail
+  via blob upload, `Identity/get`, `Email/import`, and `EmailSubmission/set`.
+- **CSP-sandboxed HTML viewing & remote tracker blocking**: `dtmail_sanitize_html_sandboxed()`
+  (`HtmlReadable.C`) enforces an explicit tag and attribute allowlist with
+  `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src cid: data:; style-src 'unsafe-inline'; form-action 'none'; base-uri 'none'">`,
+  strips `<script>`, `<iframe>`, `<object>`, `<embed>`, `<svg>`, `<form>`, `<base>`,
+  `<meta http-equiv="refresh">`, `on*` event attributes, CSS `url()`/`expression()`/`@import`,
+  and entity-obfuscated `javascript:`/`vbscript:`/`data:text/html` URIs, and blocks
+  remote `http(s)://` images and tracking pixels by default in both the reading pane
+  and **Open HTML in Browser** (surfacing a notice count whenever remote trackers
+  were blocked).
 - **Meeting invitations (`text/calendar` → `dtcm`)**: `ItipBanner.C` detects
   `BEGIN:VCALENDAR` / `BEGIN:VEVENT` meeting invitations when displaying a
   message, shows an inline Motif RSVP banner above the reading pane with a

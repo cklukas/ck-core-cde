@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
-"""ASan/UBSan loopback mock IMAP + SMTP tests for dtmail CurlMailEngine."""
+"""ASan/UBSan loopback mock IMAP + SMTP + RFC 8620/8621 JMAP tests for dtmail CurlMailEngine."""
 
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import json
 import os
 import socket
 import subprocess
@@ -17,10 +19,11 @@ C_TEST = r"""
 #include "CurlMailEngine.h"
 
 int main(int argc, char **argv) {
-    assert(argc == 4);
+    assert(argc == 5);
     int imap_port = atoi(argv[1]);
     int smtp_port = atoi(argv[2]);
-    const char *dir = argv[3];
+    int jmap_port = atoi(argv[3]);
+    const char *dir = argv[4];
 
     DtMailAccount acct;
     memset(&acct, 0, sizeof(acct));
@@ -78,6 +81,67 @@ int main(int argc, char **argv) {
     assert(dtmail_smtp_send(&acct, "pass123", "alice@example.test",
                             rcpts, 1, raw, strlen(raw), err, sizeof(err)) == 0);
     printf("ok    smtp-send-roundtrip\n");
+
+    /* RFC 8620/8621 JMAP over HTTP(S) with OAuth2 Bearer token */
+    setenv("HOME", dir, 1);
+    DtMailAccount jacct;
+    memset(&jacct, 0, sizeof(jacct));
+    dtmail_account_apply_preset(&jacct, "fastmail_jmap");
+    snprintf(jacct.id, sizeof(jacct.id), "jmap-acct");
+    snprintf(jacct.email, sizeof(jacct.email), "alice@fastmail.test");
+    snprintf(jacct.imap_host, sizeof(jacct.imap_host), "http://127.0.0.1:%d/jmap/session", jmap_port);
+    snprintf(jacct.smtp_host, sizeof(jacct.smtp_host), "http://127.0.0.1:%d/jmap/session", jmap_port);
+    assert(dtmail_account_is_jmap(&jacct) == 1);
+    assert(dtmail_account_is_jmap(&acct) == 0);
+
+    assert(dtmail_imap_test_connection(&jacct, "oauth_bearer_tok_99", err, sizeof(err)) == 0);
+    printf("ok    jmap-session-discovery\n");
+
+    char jfolders[8][128];
+    int jnf = dtmail_imap_list_folders(&jacct, "oauth_bearer_tok_99", jfolders, 8, err, sizeof(err));
+    assert(jnf == 2);
+    assert(strcmp(jfolders[0], "INBOX") == 0);
+    assert(strcmp(jfolders[1], "Sent") == 0);
+    printf("ok    jmap-mailbox-get\n");
+
+    char jmbox[1024];
+    assert(dtmail_account_folder_path(jacct.id, "INBOX", jmbox, sizeof(jmbox)) == 0);
+    int jadded = 0;
+    assert(dtmail_imap_sync_folder(&jacct, "oauth_bearer_tok_99", "INBOX", jmbox, &jadded, err, sizeof(err)) == 0);
+    assert(jadded == 1);
+    int jadded2 = 0;
+    assert(dtmail_imap_sync_folder(&jacct, "oauth_bearer_tok_99", "INBOX", jmbox, &jadded2, err, sizeof(err)) == 0);
+    assert(jadded2 == 0);
+
+    FILE *jfp = fopen(jmbox, "rb");
+    assert(jfp != NULL);
+    size_t jn = fread(buf, 1, sizeof(buf) - 1, jfp);
+    buf[jn] = '\0';
+    fclose(jfp);
+    assert(strstr(buf, "Subject: Hello JMAP") != NULL);
+    printf("ok    jmap-email-query-get-sync\n");
+
+    /* Read mapped UID from jmbox.uids and verify Email/set flag update */
+    char juid_path[1280];
+    snprintf(juid_path, sizeof(juid_path), "%s.uids", jmbox);
+    FILE *ufp = fopen(juid_path, "r");
+    assert(ufp != NULL);
+    unsigned long juid = 0;
+    assert(fscanf(ufp, "%lu", &juid) == 1 && juid > 0);
+    fclose(ufp);
+    assert(dtmail_imap_set_flag(&jacct, "oauth_bearer_tok_99", "INBOX", juid, "\\Flagged", 1, err, sizeof(err)) == 0);
+    printf("ok    jmap-email-set-flag\n");
+
+    const char *jraw =
+        "From: alice@fastmail.test\r\n"
+        "To: bob@example.test\r\n"
+        "Subject: JMAP Outgoing\r\n"
+        "\r\n"
+        "Hello over JMAP Submission!\r\n";
+    assert(dtmail_smtp_send(&jacct, "oauth_bearer_tok_99", "alice@fastmail.test",
+                            rcpts, 1, jraw, strlen(jraw), err, sizeof(err)) == 0);
+    printf("ok    jmap-upload-import-submission\n");
+
     return 0;
 }
 """
@@ -197,6 +261,106 @@ def run_mock_smtp(srv: socket.socket, stop_evt: threading.Event, received: list)
                         conn.sendall(b"235 OK\r\n")
 
 
+def make_jmap_handler(state: dict):
+    class MockJmapHandler(BaseHTTPRequestHandler):
+        def _check_auth(self) -> bool:
+            if self.headers.get("Authorization") != "Bearer oauth_bearer_tok_99":
+                self.send_response(401)
+                self.end_headers()
+                return False
+            return True
+
+        def _send_json(self, obj: dict) -> None:
+            raw = json.dumps(obj).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(raw)))
+            self.end_headers()
+            self.wfile.write(raw)
+
+        def do_GET(self):
+            if not self._check_auth():
+                return
+            port = self.server.server_address[1]
+            if self.path == "/jmap/session":
+                self._send_json({
+                    "apiUrl": f"http://127.0.0.1:{port}/jmap/api",
+                    "downloadUrl": f"http://127.0.0.1:{port}/jmap/download/{{accountId}}/{{blobId}}/{{name}}?type={{type}}",
+                    "uploadUrl": f"http://127.0.0.1:{port}/jmap/upload/{{accountId}}/",
+                    "primaryAccounts": {"urn:ietf:params:jmap:mail": "u-acct-1"},
+                    "accounts": {"u-acct-1": {"name": "alice@fastmail.test"}},
+                })
+            elif self.path.startswith("/jmap/download/u-acct-1/B-msg-1/"):
+                eml = (
+                    b"From: Carol <carol@example.test>\r\n"
+                    b"To: Alice <alice@fastmail.test>\r\n"
+                    b"Subject: Hello JMAP\r\n"
+                    b"\r\n"
+                    b"Body delivered over RFC 8621 JMAP.\r\n"
+                )
+                self.send_response(200)
+                self.send_header("Content-Type", "message/rfc822")
+                self.send_header("Content-Length", str(len(eml)))
+                self.end_headers()
+                self.wfile.write(eml)
+            else:
+                self.send_response(404)
+                self.end_headers()
+
+        def do_POST(self):
+            if not self._check_auth():
+                return
+            ln = int(self.headers.get("Content-Length", "0"))
+            body = self.rfile.read(ln)
+            if self.path.startswith("/jmap/upload/u-acct-1/"):
+                state["uploaded"].append(body)
+                self._send_json({"accountId": "u-acct-1", "blobId": "B-up-99", "size": len(body)})
+                return
+            req = json.loads(body.decode("utf-8"))
+            responses = []
+            for name, args, call_id in req.get("methodCalls", []):
+                if name == "Mailbox/get":
+                    responses.append(["Mailbox/get", {
+                        "accountId": "u-acct-1",
+                        "list": [
+                            {"id": "mb-inbox", "name": "Inbox", "role": "inbox"},
+                            {"id": "mb-sent", "name": "Sent", "role": "sent"},
+                        ],
+                    }, call_id])
+                elif name == "Email/query":
+                    responses.append(["Email/query", {"accountId": "u-acct-1", "ids": ["M-email-77"]}, call_id])
+                elif name == "Email/get":
+                    responses.append(["Email/get", {
+                        "accountId": "u-acct-1",
+                        "list": [{"id": "M-email-77", "blobId": "B-msg-1"}],
+                    }, call_id])
+                elif name == "Email/set":
+                    state["flag_updates"].append(args.get("update", {}))
+                    responses.append(["Email/set", {"accountId": "u-acct-1", "updated": {"M-email-77": None}}, call_id])
+                elif name == "Identity/get":
+                    responses.append(["Identity/get", {
+                        "accountId": "u-acct-1",
+                        "list": [{"id": "id-alice", "email": "alice@fastmail.test"}],
+                    }, call_id])
+                elif name == "Email/import":
+                    responses.append(["Email/import", {
+                        "accountId": "u-acct-1",
+                        "created": {"m0": {"id": "M-sent-99", "blobId": "B-up-99"}},
+                    }, call_id])
+                elif name == "EmailSubmission/set":
+                    state["submissions"].append(args.get("create", {}))
+                    responses.append(["EmailSubmission/set", {
+                        "accountId": "u-acct-1",
+                        "created": {"sub0": {"id": "sub-1"}},
+                    }, call_id])
+            self._send_json({"methodResponses": responses})
+
+        def log_message(self, fmt, *args):
+            pass
+
+    return MockJmapHandler
+
+
 def main() -> int:
     test_dir = os.path.dirname(os.path.abspath(__file__))
     dtmail_root = os.path.dirname(test_dir)
@@ -213,12 +377,18 @@ def main() -> int:
     smtp_srv.listen(4)
     smtp_port = smtp_srv.getsockname()[1]
 
+    jmap_state = {"uploaded": [], "flag_updates": [], "submissions": []}
+    jmap_srv = HTTPServer(("127.0.0.1", 0), make_jmap_handler(jmap_state))
+    jmap_port = jmap_srv.server_address[1]
+
     stop_evt = threading.Event()
     received = []
     t1 = threading.Thread(target=run_mock_imap, args=(imap_srv, stop_evt), daemon=True)
     t2 = threading.Thread(target=run_mock_smtp, args=(smtp_srv, stop_evt, received), daemon=True)
+    t3 = threading.Thread(target=jmap_srv.serve_forever, daemon=True)
     t1.start()
     t2.start()
+    t3.start()
 
     try:
         with tempfile.TemporaryDirectory() as td:
@@ -237,10 +407,14 @@ def main() -> int:
             )
             env = dict(os.environ)
             env["ASAN_OPTIONS"] = "detect_leaks=0"
-            subprocess.run([exe, str(imap_port), str(smtp_port), td], env=env, check=True)
+            subprocess.run([exe, str(imap_port), str(smtp_port), str(jmap_port), td], env=env, check=True)
         assert len(received) == 1 and b"Hello over SMTP!" in received[0]
+        assert len(jmap_state["uploaded"]) == 1 and b"Hello over JMAP Submission!" in jmap_state["uploaded"][0]
+        assert jmap_state["flag_updates"] == [{"M-email-77": {"keywords/$flagged": True}}]
+        assert len(jmap_state["submissions"]) == 1
     finally:
         stop_evt.set()
+        jmap_srv.shutdown()
         imap_srv.close()
         smtp_srv.close()
 
