@@ -139,6 +139,24 @@ def stage_and_build_rpm(args: argparse.Namespace) -> int:
 
     if apps_stage.is_dir():
         shutil.copytree(apps_stage, t_apps, symlinks=True, dirs_exist_ok=True)
+    else:
+        apps_bin_dir = None
+        for cand_bin in (
+            build_root / "apps-src" / "build" / "bin",
+            build_root / "apps-build" / "bin",
+        ):
+            if cand_bin.is_dir():
+                apps_bin_dir = cand_bin
+                break
+        if apps_bin_dir is not None:
+            (t_apps / "usr" / "dt" / "bin").mkdir(parents=True, exist_ok=True)
+            (t_apps / "usr" / "bin").mkdir(parents=True, exist_ok=True)
+            for bin_file in sorted(apps_bin_dir.iterdir()):
+                if bin_file.is_file():
+                    dst_b = t_apps / "usr" / "dt" / "bin" / bin_file.name
+                    shutil.copy2(bin_file, dst_b)
+                    os.chmod(dst_b, 0o755)
+                    (t_apps / "usr" / "bin" / bin_file.name).symlink_to(f"/usr/dt/bin/{bin_file.name}")
 
     # Remove files explicitly listed in %files or owned by ck-core-dtlogin from t_cde list
     explicit_cde = {

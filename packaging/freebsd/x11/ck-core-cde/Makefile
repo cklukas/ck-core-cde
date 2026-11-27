@@ -38,7 +38,7 @@ RUN_DEPENDS=	/usr/dt/lib/libXm.so.9:x11-toolkits/ck-core-motif9 \
 		seatd:sysutils/seatd \
 		Xwayland:x11-servers/xwayland
 
-USES=		autoreconf bison compiler:c11 gettext gmake iconv jpeg \
+USES=		autoreconf bison compiler:c++17-lang gettext gmake iconv jpeg \
 		libtool localbase pkgconfig ssl tcl xorg
 USE_GITHUB=	yes
 GH_ACCOUNT=	cklukas

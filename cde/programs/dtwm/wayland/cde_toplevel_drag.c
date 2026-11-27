@@ -221,8 +221,7 @@ static const struct xdg_toplevel_drag_v1_interface toplevel_drag_impl = {
     .attach = toplevel_drag_handle_attach,
 };
 
-static void toplevel_drag_resource_destroy(struct wl_resource *resource) {
-    DtwmToplevelDrag *td = wl_resource_get_user_data(resource);
+static void destroy_toplevel_drag_data(DtwmToplevelDrag *td) {
     if (!td) return;
     detach_toplevel_listeners(td);
     detach_drag_listeners(td);
@@ -234,6 +233,13 @@ static void toplevel_drag_resource_destroy(struct wl_resource *resource) {
     }
     wl_list_remove(&td->link);
     free(td);
+}
+
+static void toplevel_drag_resource_destroy(struct wl_resource *resource) {
+    DtwmToplevelDrag *td = wl_resource_get_user_data(resource);
+    if (!td) return;
+    wl_resource_set_user_data(resource, nullptr);
+    destroy_toplevel_drag_data(td);
 }
 
 static void manager_handle_destroy(struct wl_client *client, struct wl_resource *resource) {
@@ -352,7 +358,7 @@ void dtwm_toplevel_drag_finish(DtwmServer *server) {
         if (td->resource) {
             wl_resource_set_user_data(td->resource, nullptr);
         }
-        toplevel_drag_resource_destroy(td->resource);
+        destroy_toplevel_drag_data(td);
     }
     if (server->toplevel_drag_global) {
         wl_global_destroy(server->toplevel_drag_global);

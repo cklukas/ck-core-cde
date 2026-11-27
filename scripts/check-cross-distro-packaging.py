@@ -203,10 +203,13 @@ def test_rpm_staging_and_spec(tmp: Path) -> None:
         "common-auth",
         "%systemd_post rpc-cmsd.service",
         "%systemd_post dtlogin.service",
+        "files-motif9.list",
+        "MOTIF_PREFIX=\"$STAGE/motif/usr/dt\"",
     ):
         assert required in spec_txt, f"missing RPM spec directive: {required}"
+    assert "cmake -S ck-core-apps" not in spec_txt, "ck-core-apps uses GNU Make, not CMake"
 
-    # Create synthetic prefix layout if real guest build root is not supplied
+    # Create synthetic prefix layout matching real wp00 guest build root (apps-src/build/bin)
     fake_build = tmp / "fake-build-root"
     (fake_build / "motif-prefix" / "lib").mkdir(parents=True)
     (fake_build / "motif-prefix" / "lib" / "libXm.so.9").write_bytes(b"fake-xm9")
@@ -217,8 +220,10 @@ def test_rpm_staging_and_spec(tmp: Path) -> None:
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
         os.chmod(p, 0o755)
-    (fake_build / "apps-stage" / "usr" / "bin").mkdir(parents=True)
-    (fake_build / "apps-stage" / "usr" / "bin" / "ck-calc").write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+    (fake_build / "apps-src" / "build" / "bin").mkdir(parents=True)
+    p_calc = fake_build / "apps-src" / "build" / "bin" / "ck-calc"
+    p_calc.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+    os.chmod(p_calc, 0o755)
 
     for flavor in ("fedora", "rhel9", "opensuse"):
         out = tmp / f"rpm-{flavor}"
@@ -313,6 +318,8 @@ def test_freebsd_ports_and_pkg_staging(tmp: Path) -> None:
         assert re.search(r"^PORTNAME=\s+\S+", mk, re.M), f"missing PORTNAME in {origin}"
         assert re.search(r"^DISTVERSION=\s+\S+", mk, re.M), f"missing DISTVERSION in {origin}"
         assert ".include <bsd.port.mk>" in mk, f"missing bsd.port.mk in {origin}"
+        if origin == "x11/ck-core-apps":
+            assert "cmake" not in mk, "x11/ck-core-apps uses gmake, not cmake"
     print("PASS: FreeBSD ports, OpenPAM, rc.d syntax & pkg staging checks")
 
 

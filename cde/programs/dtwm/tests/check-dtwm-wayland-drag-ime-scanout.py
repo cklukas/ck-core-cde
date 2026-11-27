@@ -471,7 +471,6 @@ int main(int argc, char **argv) {
                 if (fgets(cmd, sizeof(cmd), cf)) cmd[strcspn(cmd, "\r\n")] = '\0';
                 fclose(cf);
             }
-            unlink(cmd_path);
 
             if (!strcmp(cmd, "start_tearoff_drag") && g_last_btn_serial != 0 && !drag_active) {
                 active_ds = wl_data_device_manager_create_data_source(g_ddm);
@@ -540,8 +539,12 @@ int main(int argc, char **argv) {
                 wl_surface_commit(src.surf);
                 wl_display_roundtrip(g_dpy);
             } else if (!strcmp(cmd, "quit")) {
+                write_state(state_path, &target, &src, &torn, drag_active);
+                unlink(cmd_path);
                 break;
             }
+            write_state(state_path, &target, &src, &torn, drag_active);
+            unlink(cmd_path);
         }
         write_state(state_path, &target, &src, &torn, drag_active);
     }
@@ -779,7 +782,6 @@ int main(int argc, char **argv) {
                 if (fgets(cmd, sizeof(cmd), cf)) cmd[strcspn(cmd, "\r\n")] = '\0';
                 fclose(cf);
             }
-            unlink(cmd_path);
             int cx = 0, cy = 0, cw = 0, ch = 0;
             if (sscanf(cmd, "caret %d %d %d %d", &cx, &cy, &cw, &ch) == 4) {
                 zwp_text_input_v3_enable(ti);
@@ -790,8 +792,12 @@ int main(int argc, char **argv) {
                 wl_surface_commit(pop_surf);
                 wl_display_roundtrip(g_dpy);
             } else if (!strcmp(cmd, "quit")) {
+                save_state(state_path, sub_surf);
+                unlink(cmd_path);
                 break;
             }
+            save_state(state_path, sub_surf);
+            unlink(cmd_path);
         }
         save_state(state_path, sub_surf);
     }
@@ -818,6 +824,16 @@ def wait_until(pred, timeout: float = 8.0, interval: float = 0.04) -> bool:
             return True
         time.sleep(interval)
     return pred()
+
+
+def send_cmd(cmd_path: Path, line: str, timeout: float = 6.0) -> None:
+    if not wait_until(lambda: not cmd_path.exists(), timeout=timeout):
+        raise AssertionError(f"previous command still pending at {cmd_path}")
+    tmp_path = cmd_path.with_suffix(cmd_path.suffix + ".tmp")
+    tmp_path.write_text(line if line.endswith("\n") else (line + "\n"), encoding="utf-8")
+    os.replace(tmp_path, cmd_path)
+    if not wait_until(lambda: not cmd_path.exists(), timeout=timeout):
+        raise AssertionError(f"client did not consume command {line!r} at {cmd_path}")
 
 
 def parse_kv(path: Path, sep: str = "=") -> dict[str, str]:
@@ -1072,7 +1088,7 @@ def main() -> int:
             if not wait_until(lambda: int(parse_kv(d_state).get("BTN_COUNT", "0")) >= 1, timeout=4.0):
                 raise AssertionError(f"DragSourceWin did not receive button press: {parse_kv(d_state)}")
 
-            d_cmd.write_text("start_tearoff_drag\n", encoding="utf-8")
+            send_cmd(d_cmd, "start_tearoff_drag")
             if not wait_until(
                 lambda: parse_kv(d_state).get("TORN_CFG") == "1"
                 and int(get_pres_state().get("toplevel_drags", "0")) >= 1,
@@ -1092,10 +1108,9 @@ def main() -> int:
 
             # Test mid-drag unmap -> auto-detach -> re-attach replacement window
             drags_before_reattach = int(get_pres_state().get("toplevel_drags", "0"))
-            d_cmd.write_text("unmap_reattach\n", encoding="utf-8")
+            send_cmd(d_cmd, "unmap_reattach")
             if not wait_until(
-                lambda: int(get_pres_state().get("toplevel_drags", "0")) > drags_before_reattach
-                and not d_cmd.exists(),
+                lambda: int(get_pres_state().get("toplevel_drags", "0")) > drags_before_reattach,
                 timeout=5.0,
             ):
                 raise AssertionError(f"expected toplevel_drags>{drags_before_reattach} after unmap_reattach, got {get_pres_state()}")
@@ -1121,8 +1136,8 @@ def main() -> int:
                     f"DND drop did not complete on target window: target={parse_kv(t_state)} src={parse_kv(d_state)}"
                 )
 
-            d_cmd.write_text("finish_drag_objs\n", encoding="utf-8")
-            t_cmd.write_text("quit\n", encoding="utf-8")
+            send_cmd(d_cmd, "finish_drag_objs")
+            send_cmd(t_cmd, "quit")
             target_proc.wait(timeout=5.0)
             target_proc = None
             time.sleep(0.08)
@@ -1136,7 +1151,7 @@ def main() -> int:
             pre_fs_box = parse_active_box(ipc_read_props(ipc_path))
             assert pre_fs_box is not None
 
-            d_cmd.write_text("fullscreen_on\n", encoding="utf-8")
+            send_cmd(d_cmd, "fullscreen_on")
             if not wait_until(
                 lambda: parse_kv(d_state).get("FS_CFG") == "1"
                 and int(parse_kv(d_state).get("FS_W", "0")) == gw
@@ -1145,24 +1160,23 @@ def main() -> int:
             ):
                 raise AssertionError(f"fullscreen configure did not match {gw}x{gh}: {parse_kv(d_state)}")
 
-            d_cmd.write_text("commit_frame\n", encoding="utf-8")
+            send_cmd(d_cmd, "commit_frame")
             if not wait_until(lambda: int(get_pres_state().get("scanout_candidates", "0")) >= 1, timeout=5.0):
                 raise AssertionError(f"unoccluded fullscreen view did not hit scanout candidate path: {get_pres_state()}")
 
             # Open an xdg_popup child -> view is now occluded -> scanout_candidates must NOT advance
-            d_cmd.write_text("open_occluding_popup\n", encoding="utf-8")
-            time.sleep(0.12)
+            send_cmd(d_cmd, "open_occluding_popup")
+            time.sleep(0.08)
             cand_before_occluded = int(get_pres_state().get("scanout_candidates", "0"))
-            d_cmd.write_text("commit_frame\n", encoding="utf-8")
-            time.sleep(0.12)
+            send_cmd(d_cmd, "commit_frame")
+            time.sleep(0.08)
             cand_while_occluded = int(get_pres_state().get("scanout_candidates", "0"))
             assert cand_while_occluded == cand_before_occluded, (
                 f"expected scanout suppressed while popup occludes fullscreen view ({cand_before_occluded} -> {cand_while_occluded})"
             )
 
-            d_cmd.write_text("close_occluding_popup\n", encoding="utf-8")
-            time.sleep(0.08)
-            d_cmd.write_text("fullscreen_off\n", encoding="utf-8")
+            send_cmd(d_cmd, "close_occluding_popup")
+            send_cmd(d_cmd, "fullscreen_off")
             if not wait_until(
                 lambda: parse_kv(d_state).get("FS_CFG") == "0"
                 and int(parse_kv(d_state).get("FS_W", "0")) == 320,
@@ -1170,7 +1184,7 @@ def main() -> int:
             ):
                 raise AssertionError(f"unset_fullscreen did not restore 320x220 geometry: {parse_kv(d_state)}")
 
-            d_cmd.write_text("quit\n", encoding="utf-8")
+            send_cmd(d_cmd, "quit")
             drag_proc.wait(timeout=5.0)
             drag_proc = None
 
@@ -1194,7 +1208,7 @@ def main() -> int:
                 raise AssertionError(f"zwp_text_input_v3 did not enter child wl_subsurface: {parse_kv(i_state)}")
 
             # Enable text_input with caret (25, 30, 2, 22) inside subsurface (110, 90)
-            i_cmd.write_text("caret 25 30 2 22\n", encoding="utf-8")
+            send_cmd(i_cmd, "caret 25 30 2 22")
             exp_px = icx + 110 + 25
             exp_py = icy + 90 + 30 + 22 + 2
             if not wait_until(
@@ -1227,11 +1241,11 @@ def main() -> int:
                 )
 
             # Set caret near bottom of monitor so popup flips ABOVE caret (rel_y > 0)
-            i_cmd.write_text(f"caret 25 {gh} 2 22\n", encoding="utf-8")
+            send_cmd(i_cmd, f"caret 25 {gh} 2 22")
             if not wait_until(lambda: int(get_ime_state().get("rel_y", "-1")) > 0, timeout=5.0):
                 raise AssertionError(f"expected bottom-edge flip (rel_y > 0), got {get_ime_state()}")
 
-            i_cmd.write_text("quit\n", encoding="utf-8")
+            send_cmd(i_cmd, "quit")
             ime_proc.wait(timeout=5.0)
             ime_proc = None
             vptr_cmd(vptr_proc, "quit")

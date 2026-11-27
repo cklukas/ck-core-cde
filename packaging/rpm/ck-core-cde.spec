@@ -188,12 +188,14 @@ pushd ck-core-motif-%{motif_ver}
 ./configure --prefix=/usr/dt --enable-wayland --enable-xft --enable-utf8
 %make_build
 make install DESTDIR="$STAGE/motif"
+find "$STAGE/motif/usr/dt" -name '*.la' -delete
 popd
 
 cmake -S ck-core-fs-lib-%{fs_ver} -B build-fs -G Ninja \
   -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/dt
 cmake --build build-fs
 DESTDIR="$STAGE/fs" cmake --install build-fs
+find "$STAGE/fs" -name '*.la' -delete
 
 pushd ck-core-cde-%{cde_ver}/cde
 export PATH="$STAGE/motif/usr/dt/bin:$PATH"
@@ -204,14 +206,26 @@ export LDFLAGS="-L$STAGE/motif/usr/dt/lib -L$STAGE/fs/usr/dt/lib -Wl,-rpath,/usr
 ./configure --prefix=/usr/dt --sysconfdir=/etc
 %make_build
 make install DESTDIR="$STAGE/cde"
+find "$STAGE/cde/usr/dt" -name '*.la' -delete
 popd
 
-cmake -S ck-core-apps-%{apps_ver} -B build-apps -G Ninja \
-  -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr \
-  -DCMAKE_PREFIX_PATH="$STAGE/motif/usr/dt;$STAGE/cde/usr/dt" \
-  -DCMAKE_INSTALL_RPATH="/usr/dt/lib"
-cmake --build build-apps
-DESTDIR="$STAGE/apps" cmake --install build-apps
+pushd ck-core-apps-%{apps_ver}
+export LD_LIBRARY_PATH="$STAGE/motif/usr/dt/lib:$STAGE/cde/usr/dt/lib:${LD_LIBRARY_PATH:-}"
+make %{?_smp_mflags} \
+  MOTIF_PREFIX="$STAGE/motif/usr/dt" \
+  CDE_PREFIX="$STAGE/cde/usr/dt" \
+  CDE_SRC_INC="%{_builddir}/ck-core-cde-%{cde_ver}/cde/include"
+install -d -m 0755 "$STAGE/apps/usr/dt/bin" "$STAGE/apps/usr/bin"
+for b in build/bin/*; do
+  [ -f "$b" ] || continue
+  bn="$(basename "$b")"
+  install -m 0755 "$b" "$STAGE/apps/usr/dt/bin/$bn"
+  patchelf --set-rpath /usr/dt/lib "$STAGE/apps/usr/dt/bin/$bn"
+  ln -sf "/usr/dt/bin/$bn" "$STAGE/apps/usr/bin/$bn"
+done
+make install-toolbar-icons install-midi-assets install-audio-assets install-video-assets \
+  PREFIX=/usr DESTDIR="$STAGE/apps"
+popd
 %endif
 
 %install
@@ -246,6 +260,52 @@ install -D -m 0755 "$DEB_META/Xsession.wayland" %{buildroot}/usr/dt/bin/Xsession
 install -D -m 0644 "$DEB_META/rpc-cmsd.service" %{buildroot}%{_unitdir}/rpc-cmsd.service
 install -D -m 0644 "$DEB_META/dtlogin.service" %{buildroot}%{_unitdir}/dtlogin.service
 sed -i '/ExecStartPre=/d' %{buildroot}%{_unitdir}/dtlogin.service
+
+python3 - "$STAGE" "%{_builddir}" <<'PYEOF'
+import sys
+from pathlib import Path
+
+stage = Path(sys.argv[1])
+bdir = Path(sys.argv[2])
+
+def rels(tree: Path) -> list[str]:
+    out = []
+    if tree.exists():
+        for p in sorted(tree.rglob("*")):
+            if p.is_file() or p.is_symlink():
+                r = "/" + p.relative_to(tree).as_posix()
+                out.append(f'"{r}"' if " " in r else r)
+    return out
+
+explicit = {
+    "/etc/pam.d/dtlogin",
+    "/etc/pam.d/dtlogin-greeter",
+    "/etc/pam.d/dtsession",
+    "/etc/profile.d/ck-core-cde.sh",
+    "/usr/dt/bin/dtlogin",
+    "/usr/dt/bin/dtgreet",
+    "/usr/dt/bin/dtchooser",
+    "/usr/share/xsessions/cde.desktop",
+    "/usr/share/wayland-sessions/cde-wayland.desktop",
+    "/usr/share/xdg-desktop-portal/cde-portals.conf",
+    "/usr/share/xdg-desktop-portal/portals/cde.portal",
+    "/usr/share/dbus-1/services/org.freedesktop.impl.portal.desktop.cde.service",
+}
+
+m_list = rels(stage / "motif")
+m_set = set(m_list)
+f_list = [p for p in rels(stage / "fs") if p not in m_set]
+mf_set = m_set | set(f_list)
+c_raw = rels(stage / "cde") + ["/usr/dt/bin/Xsession.wayland"]
+c_list = [p for p in sorted(dict.fromkeys(c_raw)) if p not in mf_set and p.strip('"') not in explicit]
+c_set = mf_set | set(c_list)
+a_list = [p for p in rels(stage / "apps") if p not in c_set]
+
+(bdir / "files-motif9.list").write_text("\n".join(m_list) + "\n", encoding="utf-8")
+(bdir / "files-fs-lib.list").write_text("\n".join(f_list) + "\n", encoding="utf-8")
+(bdir / "files-cde.list").write_text("\n".join(c_list) + "\n", encoding="utf-8")
+(bdir / "files-apps.list").write_text("\n".join(a_list) + "\n", encoding="utf-8")
+PYEOF
 
 install -D -m 0644 /dev/stdin %{buildroot}/usr/share/dbus-1/services/org.freedesktop.impl.portal.desktop.cde.service <<'EOF'
 [D-BUS Service]

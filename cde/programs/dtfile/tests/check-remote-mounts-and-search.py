@@ -153,9 +153,6 @@ int main(int argc, char **argv)
 
 def main() -> int:
     root = Path(__file__).resolve().parents[1]
-    pkg_cfg = os.environ.get("PKG_CONFIG", "pkg-config")
-    flags = shlex.split(subprocess.check_output(
-        [pkg_cfg, "--cflags", "--libs", "ck-core-fs-lib"], text=True))
 
     # Source contract checks on Find.c and Devices.c
     find_src = (root / "Find.c").read_text(encoding="utf-8")
@@ -165,6 +162,31 @@ def main() -> int:
     assert 'snprintf(out, out_sz, "davs://%s", raw + 10)' in devices_src
     assert "DTFILE_SSHFS_BIN" in devices_src and "get_user_mounts_root_dir" in devices_src
     print("ok    dtfile-source-contracts")
+
+    pkg_cfg = os.environ.get("PKG_CONFIG", "pkg-config")
+    pkg_env = dict(os.environ)
+    extra_pc = [
+        p for p in (
+            "/usr/dt/lib/pkgconfig",
+            "/usr/dt/libdata/pkgconfig",
+            "/var/tmp/ck-wayland-build/wp00/fs-prefix/lib/pkgconfig",
+        )
+        if Path(p).is_dir()
+    ]
+    if extra_pc:
+        cur_pc = pkg_env.get("PKG_CONFIG_PATH", "")
+        pkg_env["PKG_CONFIG_PATH"] = ":".join(extra_pc + ([cur_pc] if cur_pc else []))
+
+    pc_proc = subprocess.run(
+        [pkg_cfg, "--cflags", "--libs", "ck-core-fs-lib"],
+        capture_output=True,
+        text=True,
+        env=pkg_env,
+    )
+    if pc_proc.returncode != 0:
+        print("SKIP: ck-core-fs-lib not found in pkg-config; set PKG_CONFIG_PATH")
+        return 77
+    flags = shlex.split(pc_proc.stdout)
 
     tmp_base = os.environ.get("TMPDIR") or None
     with tempfile.TemporaryDirectory(prefix="dtfile-find-remote-", dir=tmp_base) as td:

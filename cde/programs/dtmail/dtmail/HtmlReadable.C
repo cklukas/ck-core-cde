@@ -6,6 +6,7 @@
  */
 
 #include <ctype.h>
+#include <dlfcn.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,11 +17,27 @@
 
 #include "HtmlReadable.h"
 
-extern "C" {
-int XmWaylandRequestActivationToken(
-    void *display, unsigned long source_window, const char *app_id, char **token_return
-) __attribute__((weak));
-void XtFree(char *ptr) __attribute__((weak));
+static char *
+request_wl_activation_token_dl(const char *app_id)
+{
+    typedef unsigned char (*XmWlReqTokFn)(void *, unsigned long, const char *, char **);
+    XmWlReqTokFn fn = (XmWlReqTokFn)dlsym(RTLD_DEFAULT, "XmWaylandRequestActivationToken");
+    if (!fn)
+        return NULL;
+    char *tok = NULL;
+    (void)fn(NULL, 0UL, app_id, &tok);
+    return tok;
+}
+
+static void
+free_wl_activation_token_dl(char *tok)
+{
+    if (!tok)
+        return;
+    typedef void (*XtFreeFn)(char *);
+    XtFreeFn fn = (XtFreeFn)dlsym(RTLD_DEFAULT, "XtFree");
+    if (fn)
+        fn(tok);
 }
 
 typedef struct {
@@ -981,14 +998,11 @@ dtmail_open_html_in_browser(const char *html, size_t html_len)
             browser = "ck-browser";
     }
 
-    char *wl_tok = NULL;
-    if (XmWaylandRequestActivationToken) {
-        (void)XmWaylandRequestActivationToken(NULL, 0UL, "ck-browser", &wl_tok);
-    }
+    char *wl_tok = request_wl_activation_token_dl("ck-browser");
 
     pid_t pid = fork();
     if (pid < 0) {
-        if (wl_tok && XtFree) XtFree(wl_tok);
+        free_wl_activation_token_dl(wl_tok);
         return -1;
     }
     if (pid == 0) {
@@ -1010,7 +1024,6 @@ dtmail_open_html_in_browser(const char *html, size_t html_len)
         execvp("xdg-open", fb);
         _exit(127);
     }
-    if (wl_tok && XtFree)
-        XtFree(wl_tok);
+    free_wl_activation_token_dl(wl_tok);
     return 0;
 }

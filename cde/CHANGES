@@ -1,4 +1,22 @@
 2026-11-27
+- Harden Wayland scanout occlusion/subsurface/teardown paths, portable `dtmail`
+  Wayland activation lookup, and RPM/FreeBSD `ck-core-apps` build recipes,
+  advancing the CK Core Motif pin to `090ac07dfc49`:
+  - Fix `dtwm_toplevel_drag_finish` in `cde_toplevel_drag.c` so `DtwmToplevelDrag`
+    listeners and heap state are detached and freed before clearing `wl_resource`
+    `user_data`, and harden `dtwm-wayland` direct KMS scanout to check
+    `popup_tree`, Night Light overlays, transient child dialogs, and `layer_top`
+    siblings, support unoccluded single-subsurface fullscreen video (`ck-video`
+    `DMA-BUF`), and retry VSYNC scanout when `tearing_page_flip` fails
+    `wlr_output_test_state`.
+  - Resolve `XmWaylandRequestActivationToken` and `XtFree` via `dlsym(RTLD_DEFAULT, ...)`
+    in `dtmail`'s `HtmlReadable.C` and `OAuth2Client.C` so standalone macOS/BSD
+    unit tests and `fuzz-dtmail-rfc5322` link cleanly without `libXm`/`libXt`.
+  - Switch `ck-core-apps` in `packaging/rpm/ck-core-cde.spec` and
+    `packaging/freebsd/x11/ck-core-apps/Makefile` to its native GNU `Makefile`
+    build, generate `%files` manifests in non-prebuilt RPM builds, stage
+    `apps-src/build/bin` in `scripts/build-rpm.py`, and use C++17/C23 in
+    `packaging/freebsd/x11/ck-core-cde/Makefile`.
 - Add Fedora / RHEL / openSUSE RPM packaging, FreeBSD ports/`pkg` recipes, and
   `seatd` / `drm-kmod` / `evdev` / `LOCAL_PEERCRED` portability across
   `dtwm-wayland`, `dtlogin`, `xdg-desktop-portal-cde`, and `rpc.cmsd`:

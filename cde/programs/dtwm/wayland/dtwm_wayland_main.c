@@ -9235,7 +9235,10 @@ static void handle_output_frame(struct wl_listener *listener, void *data) {
         if (server && !server->session_locked && !server->overview_visible &&
             !server->menu_visible && !server->switcher_visible && !server->osd_visible &&
             !server->drag_icon_tree && !dtwm_ime_has_visible_popup(server) &&
-            !output->color_transform && dtwm_a11y_get_zoom_pct(server) == 100 &&
+            !output->color_transform &&
+            !(output->night_light_buf && output->night_light_buf->node.enabled) &&
+            dtwm_a11y_get_zoom_pct(server) == 100 &&
+            !scene_tree_has_enabled_child(server->popup_tree) &&
             !scene_tree_has_enabled_child(server->layer_overlay_tree)) {
             struct wlr_box obox = {0};
             wlr_output_layout_get_box(server->output_layout, output->wlr_output, &obox);
@@ -9251,25 +9254,73 @@ static void handle_output_frame(struct wl_listener *listener, void *data) {
                     break;
                 }
             }
-            if (fs_view && !fs_view->tonemap_active &&
+            bool layer_top_occluded = false;
+            if (fs_view && fs_view->frame_tree && server->layer_top_tree &&
+                fs_view->frame_tree->node.parent == server->layer_top_tree) {
+                for (struct wl_list *pos = fs_view->frame_tree->node.link.next;
+                     pos != &server->layer_top_tree->children;
+                     pos = pos->next) {
+                    struct wlr_scene_node *sib = wl_container_of(pos, sib, link);
+                    if (sib->enabled) {
+                        layer_top_occluded = true;
+                        break;
+                    }
+                }
+            }
+            if (!layer_top_occluded && fs_view) {
+                DtwmView *chk;
+                wl_list_for_each(chk, &server->views, link) {
+                    if (chk == fs_view) break;
+                    if (!chk->mapped || chk->minimized || !dtwm_view_visible_on_current_ws(chk)) continue;
+                    if (chk->kind == DTWM_VIEW_XDG && chk->xdg_toplevel && fs_view->xdg_toplevel &&
+                        chk->xdg_toplevel->parent == fs_view->xdg_toplevel) {
+                        layer_top_occluded = true;
+                        break;
+                    }
+                }
+            }
+            if (fs_view && !layer_top_occluded && !fs_view->tonemap_active &&
+                !(fs_view->modal_dim_rect && fs_view->modal_dim_rect->node.enabled) &&
                 (fs_view->is_native_dpi || fabs(fs_view->external_client_scale - 1.0) < 0.01) &&
                 !scene_tree_has_enabled_child(fs_view->popup_anchor_tree)) {
                 struct wlr_surface *fs_surf = view_wlr_surface(fs_view);
-                if (fs_surf && fs_surf->buffer &&
-                    wl_list_empty(&fs_surf->current.subsurfaces_below) &&
-                    wl_list_empty(&fs_surf->current.subsurfaces_above) &&
-                    fs_surf->current.transform == output->wlr_output->transform &&
-                    fs_surf->buffer->base.width == output->wlr_output->width &&
-                    fs_surf->buffer->base.height == output->wlr_output->height) {
+                struct wlr_surface *scanout_surf = nullptr;
+                if (fs_surf && wl_list_empty(&fs_surf->current.subsurfaces_below)) {
+                    if (wl_list_empty(&fs_surf->current.subsurfaces_above)) {
+                        scanout_surf = fs_surf;
+                    } else if (wl_list_length(&fs_surf->current.subsurfaces_above) == 1) {
+                        struct wlr_subsurface *only_sub = wl_container_of(
+                            fs_surf->current.subsurfaces_above.next, only_sub, current.link
+                        );
+                        if (only_sub && only_sub->surface && only_sub->surface->mapped &&
+                            only_sub->current.x == 0 && only_sub->current.y == 0 &&
+                            only_sub->surface->current.width == obox.width &&
+                            only_sub->surface->current.height == obox.height &&
+                            wl_list_empty(&only_sub->surface->current.subsurfaces_below) &&
+                            wl_list_empty(&only_sub->surface->current.subsurfaces_above)) {
+                            scanout_surf = only_sub->surface;
+                        }
+                    }
+                }
+                if (scanout_surf && scanout_surf->buffer &&
+                    scanout_surf->current.transform == output->wlr_output->transform &&
+                    scanout_surf->buffer->base.width == output->wlr_output->width &&
+                    scanout_surf->buffer->base.height == output->wlr_output->height) {
                     server->scanout_candidates++;
                     struct wlr_output_state scanout_state;
                     wlr_output_state_init(&scanout_state);
-                    wlr_output_state_set_buffer(&scanout_state, &fs_surf->buffer->base);
-                    if (output_wants_tearing_flip(output)) {
+                    wlr_output_state_set_buffer(&scanout_state, &scanout_surf->buffer->base);
+                    bool want_tear = output_wants_tearing_flip(output);
+                    if (want_tear) {
                         scanout_state.tearing_page_flip = true;
                         server->tearing_flip_attempts++;
                     }
-                    if (wlr_output_test_state(output->wlr_output, &scanout_state) &&
+                    bool test_ok = wlr_output_test_state(output->wlr_output, &scanout_state);
+                    if (!test_ok && want_tear) {
+                        scanout_state.tearing_page_flip = false;
+                        test_ok = wlr_output_test_state(output->wlr_output, &scanout_state);
+                    }
+                    if (test_ok &&
                         wlr_output_commit_state(output->wlr_output, &scanout_state)) {
                         committed = true;
                         server->scanout_commits++;
@@ -9911,6 +9962,18 @@ static void xdg_toplevel_set_parent(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmView *view = wl_container_of(listener, view, set_parent);
     if (!view || !view->server) return;
+    if (view->xdg_toplevel && view->xdg_toplevel->parent && view->frame_tree &&
+        view->server->layer_top_tree) {
+        DtwmView *pv;
+        wl_list_for_each(pv, &view->server->views, link) {
+            if (pv->kind == DTWM_VIEW_XDG && pv->xdg_toplevel == view->xdg_toplevel->parent &&
+                pv->fullscreen) {
+                wlr_scene_node_reparent(&view->frame_tree->node, view->server->layer_top_tree);
+                wlr_scene_node_raise_to_top(&view->frame_tree->node);
+                break;
+            }
+        }
+    }
     if (view->is_modal_dialog || view_check_xdg_dialog_modal(view)) {
         if (view->mapped) {
             center_modal_view_on_parent(view);

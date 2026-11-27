@@ -6,15 +6,9 @@
 
 #include "OAuth2Client.h"
 
-extern "C" {
-int XmWaylandRequestActivationToken(
-    void *display, unsigned long source_window, const char *app_id, char **token_return
-) __attribute__((weak));
-void XtFree(char *ptr) __attribute__((weak));
-}
-
 #include <arpa/inet.h>
 #include <ctype.h>
+#include <dlfcn.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <netinet/in.h>
@@ -25,6 +19,29 @@ void XtFree(char *ptr) __attribute__((weak));
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
+
+static char *
+oauth2_request_wl_token_dl(const char *app_id)
+{
+    typedef unsigned char (*XmWlReqTokFn)(void *, unsigned long, const char *, char **);
+    XmWlReqTokFn fn = (XmWlReqTokFn)dlsym(RTLD_DEFAULT, "XmWaylandRequestActivationToken");
+    if (!fn)
+        return NULL;
+    char *tok = NULL;
+    (void)fn(NULL, 0UL, app_id, &tok);
+    return tok;
+}
+
+static void
+oauth2_free_wl_token_dl(char *tok)
+{
+    if (!tok)
+        return;
+    typedef void (*XtFreeFn)(char *);
+    XtFreeFn fn = (XtFreeFn)dlsym(RTLD_DEFAULT, "XtFree");
+    if (fn)
+        fn(tok);
+}
 
 #ifdef HAVE_LIBCURL
 #include <curl/curl.h>
@@ -535,13 +552,10 @@ int dtmail_oauth2_ensure_access_token(const DtMailAccount *acct,
 int dtmail_oauth2_open_browser(const char *url)
 {
     if (!url || !url[0]) return -1;
-    char *wl_tok = NULL;
-    if (XmWaylandRequestActivationToken) {
-        (void)XmWaylandRequestActivationToken(NULL, 0UL, "ck-browser", &wl_tok);
-    }
+    char *wl_tok = oauth2_request_wl_token_dl("ck-browser");
     pid_t pid = fork();
     if (pid < 0) {
-        if (wl_tok && XtFree) XtFree(wl_tok);
+        oauth2_free_wl_token_dl(wl_tok);
         return -1;
     }
     if (pid == 0) {
@@ -557,7 +571,6 @@ int dtmail_oauth2_open_browser(const char *url)
         execlp("xdg-open", "xdg-open", url, (char *)NULL);
         _exit(127);
     }
-    if (wl_tok && XtFree)
-        XtFree(wl_tok);
+    oauth2_free_wl_token_dl(wl_tok);
     return 0;
 }

@@ -20,13 +20,24 @@ LIB_DEPENDS=	libasound.so:audio/alsa-lib \
 RUN_DEPENDS=	/usr/dt/lib/libXm.so.9:x11-toolkits/ck-core-motif9 \
 		/usr/dt/bin/dtwm-wayland:x11/ck-core-cde
 
-USES=		cmake compiler:c++20-lang desktop-file-utils pkgconfig xorg
+USES=		compiler:c++20-lang desktop-file-utils gmake localbase pkgconfig xorg
 USE_GITHUB=	yes
 GH_ACCOUNT=	cklukas
 GH_PROJECT=	ck-core-apps
-USE_XORG=	x11 xext xft xi xmu xpm xrandr xrender xt
+USE_XORG=	ice sm x11 xext xft xi xinerama xmu xpm xrandr xrender xt
 
-CMAKE_ARGS=	-DCMAKE_PREFIX_PATH="/usr/dt;${LOCALBASE}" \
-		-DCMAKE_INSTALL_RPATH="/usr/dt/lib:${LOCALBASE}/lib"
+MAKE_ARGS=	MOTIF_PREFIX=/usr/dt \
+		CDE_PREFIX=/usr/dt \
+		CDE_SRC_INC=/usr/dt/include
+
+do-install:
+	@${MKDIR} ${STAGEDIR}${PREFIX}/bin
+	for b in ${WRKSRC}/build/bin/*; do \
+		[ -f "$$b" ] || continue; \
+		${INSTALL_PROGRAM} "$$b" ${STAGEDIR}${PREFIX}/bin/; \
+	done
+	${SETENV} ${MAKE_ENV} ${MAKE_CMD} -C ${WRKSRC} \
+		PREFIX=${PREFIX} DESTDIR=${STAGEDIR} \
+		install-toolbar-icons install-midi-assets install-audio-assets install-video-assets
 
 .include <bsd.port.mk>
