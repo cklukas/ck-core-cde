@@ -1,3 +1,33 @@
+2026-11-27
+- Add `xdg-toplevel-drag-v1` live window/tab tear-off, subsurface & live-move
+  `zwp_input_popup_surface_v2` CJK candidate anchoring, unoccluded fullscreen
+  direct KMS scanout, and physical Broadcom V3D bare-metal 3D GPU qualification
+  in `dtwm-wayland`, advancing the CK Core Motif pin to `ec5441ca9f53`:
+  - Expose `xdg_toplevel_drag_manager_v1` (`cde_toplevel_drag.c`) so Firefox,
+    Chromium, GTK4/Qt6 editors, and `ck-browser` can tear off and re-attach live
+    `xdg_toplevel` windows during `wl_data_device.start_drag` operations without
+    occluding `wl_data_device` drop targets underneath or breaking active drag
+    grabs when a torn-off window maps mid-drag, enforcing `invalid_source`,
+    `ongoing_drag`, and `toplevel_attached` protocol errors.
+  - Anchor `zwp_input_popup_surface_v2` IME candidate popups in global scene
+    coordinates across top-level windows, nested `wl_subsurface`s, `xdg_popup`s,
+    and layer-shell surfaces (`dtwm_surface_global_origin_and_scale`), preserve
+    child `wl_subsurface` keyboard and IME focus across CDE titlebar/border
+    drags, and re-anchor candidate popups live during interactive window moves.
+  - Wire `xdg_toplevel` and XWayland fullscreen state (`view_set_fullscreen`)
+    with unoccluded fullscreen direct KMS scanout (`wlr_output_state_set_buffer`
+    + `wlr_output_test_state` in `handle_output_frame`, automatically falling
+    back to scene composition whenever popups, IME candidate windows, menus,
+    color LUT transforms, or overlay nodes are enabled), covered by
+    `check-dtwm-wayland-drag-ime-scanout.py`.
+  - Qualify bare-metal 3D GPU `BT.2020 ST.2084 PQ` / `HLG` FBO tone-mapping
+    shaders (`0` LSB error vs. ITU-R BT.2100 reference) and multi-plane
+    `DRM_FORMAT_NV12` / `DRM_FORMAT_ARGB8888` `DMA-BUF` modifier import +
+    `GL_OES_EGL_image_external` hardware YUV→RGB CSC on physical Broadcom V3D
+    hardware (`/dev/dri/renderD128` on `rpi4`, Mesa `V3D 4.2.14.0`, OpenGL ES
+    `3.1`, 61 formats) via `qualify-baremetal-3d-gpu.c` and
+    `docs/baremetal-3d-gpu-qualification.json`.
+
 2026-11-26
 - Harden `_DT_STYLE_DISPLAY_IPC` / `_DTSTYLE_DISPLAY_IPC` batch handling and
   long ICC profile paths in `dtstyle` and `dtwm-wayland`: read multi-kilobyte

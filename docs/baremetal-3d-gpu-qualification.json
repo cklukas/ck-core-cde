@@ -1,0 +1,31 @@
+{
+  "qualified_at": "2026-11-27T02:10:50Z",
+  "host": "rpi4",
+  "kernel": "6.18.34+rpt-rpi-v8",
+  "arch": "aarch64",
+  "render_node": "/dev/dri/renderD128",
+  "drm_driver": "v3d",
+  "drm_description": "Broadcom V3D graphics",
+  "egl_version": "1.5",
+  "gl_vendor": "Broadcom",
+  "gl_renderer": "V3D 4.2.14.0",
+  "gl_version": "OpenGL ES 3.1 Mesa 26.2.7-1~bpo13+0~rpt1",
+  "is_hardware_3d": true,
+  "hdr10_shaders": {
+    "pq_st2084_fbo_pass": true,
+    "pq_max_abs_lsb_error": 0,
+    "hlg_bt2100_fbo_pass": true,
+    "hlg_max_abs_lsb_error": 0
+  },
+  "dmabuf_modifiers": {
+    "total_formats": 61,
+    "argb8888_modifier_count": 2,
+    "argb8888_gbm_bo_modifier_hex": "0x0000000000000000",
+    "argb8888_import_pass": true,
+    "nv12_modifier_count": 3,
+    "yuv420_modifier_count": 2,
+    "multiplane_format_tested": "DRM_FORMAT_NV12",
+    "multiplane_external_oes_rgb": [0, 255, 1],
+    "multiplane_import_and_csc_pass": true
+  }
+}

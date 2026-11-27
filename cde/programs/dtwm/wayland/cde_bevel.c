@@ -375,7 +375,7 @@ void dtwm_palette_init_default(DtwmPalette *pal) {
 }
 
 void dtwm_view_insets(const DtwmView *view, int *left, int *top, int *right, int *bottom) {
-    if (!view || !view->decorated) {
+    if (!view || !view->decorated || view->fullscreen) {
         *left = *top = *right = *bottom = 0;
         return;
     }
@@ -735,7 +735,7 @@ void dtwm_view_update_frame(DtwmView *view) {
     if (!view || !view->frame_tree) {
         return;
     }
-    if (!view->decorated || view->client_w <= 0 || view->client_h <= 0) {
+    if (!view->decorated || view->fullscreen || view->client_w <= 0 || view->client_h <= 0) {
         if (view->frame_top_buf) wlr_scene_buffer_set_buffer(view->frame_top_buf, nullptr);
         if (view->frame_bottom_buf) wlr_scene_buffer_set_buffer(view->frame_bottom_buf, nullptr);
         if (view->frame_left_buf) wlr_scene_buffer_set_buffer(view->frame_left_buf, nullptr);

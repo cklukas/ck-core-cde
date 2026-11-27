@@ -33,6 +33,8 @@ EXTRA_DIST = tests/check-property-readers.py tests/property-client.c \
              tests/check-dtwm-wayland-color-multidpi.py \
              tests/check-dtwm-wayland-hdr-dtstyle.py \
              tests/check-dtwm-wayland-protocols-v2.py \
+             tests/check-dtwm-wayland-drag-ime-scanout.py \
+             tests/qualify-baremetal-3d-gpu.c \
              tests/check-dtwm-wayland-overview-tiling.py \
              tests/check-dtwm-wayland-panel-dnd.py \
              tests/wayland-test-pointer.c \
@@ -84,6 +86,7 @@ if BUILD_DTWM_WAYLAND
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-color-multidpi.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-hdr-dtstyle.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-protocols-v2.py --compositor ./dtwm-wayland
+	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-drag-ime-scanout.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-overview-tiling.py --compositor ./dtwm-wayland --dtwm ./dtwm
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-panel-dnd.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-exit-session.py --compositor ./dtwm-wayland
@@ -110,13 +113,15 @@ WAYLAND_GEN_HDRS = wayland/xdg-shell-protocol.h \
                    wayland/xdg-toplevel-tag-v1-protocol.h \
                    wayland/color-management-v1-protocol.h \
                    wayland/tearing-control-v1-protocol.h \
-                   wayland/fifo-v1-protocol.h
+                   wayland/fifo-v1-protocol.h \
+                   wayland/xdg-toplevel-drag-v1-protocol.h
 WAYLAND_GEN_SRCS = wayland/xdg-shell-protocol.c \
                    wayland/ext-workspace-v1-protocol.c \
                    wayland/xdg-toplevel-icon-v1-protocol.c \
                    wayland/xdg-system-bell-v1-protocol.c \
                    wayland/xdg-toplevel-tag-v1-protocol.c \
-                   wayland/fifo-v1-protocol.c
+                   wayland/fifo-v1-protocol.c \
+                   wayland/xdg-toplevel-drag-v1-protocol.c
 BUILT_SOURCES += $(WAYLAND_GEN_HDRS) $(WAYLAND_GEN_SRCS)
 CLEANFILES += $(WAYLAND_GEN_HDRS) $(WAYLAND_GEN_SRCS)
 
@@ -200,6 +205,14 @@ wayland/fifo-v1-protocol.c: $(WAYLAND_PROTOCOLS_DATADIR)/staging/fifo/fifo-v1.xm
 	@$(MKDIR_P) wayland
 	$(WAYLAND_SCANNER) private-code $< $@
 
+wayland/xdg-toplevel-drag-v1-protocol.h: $(WAYLAND_PROTOCOLS_DATADIR)/staging/xdg-toplevel-drag/xdg-toplevel-drag-v1.xml
+	@$(MKDIR_P) wayland
+	$(WAYLAND_SCANNER) server-header $< $@
+
+wayland/xdg-toplevel-drag-v1-protocol.c: $(WAYLAND_PROTOCOLS_DATADIR)/staging/xdg-toplevel-drag/xdg-toplevel-drag-v1.xml
+	@$(MKDIR_P) wayland
+	$(WAYLAND_SCANNER) private-code $< $@
+
 dtwm_wayland_SOURCES = wayland/dtwm_wayland.h \
                        wayland/cde_bevel.c \
                        wayland/cde_workspace.c \
@@ -210,6 +223,7 @@ dtwm_wayland_SOURCES = wayland/dtwm_wayland.h \
                        wayland/cde_ime.c \
                        wayland/cde_power_display.c \
                        wayland/cde_accessibility.c \
+                       wayland/cde_toplevel_drag.c \
                        wayland/dtwm_wayland_main.c
 nodist_dtwm_wayland_SOURCES = $(WAYLAND_GEN_HDRS) $(WAYLAND_GEN_SRCS)
 $(dtwm_wayland_OBJECTS): $(WAYLAND_GEN_HDRS)

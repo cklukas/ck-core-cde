@@ -904,6 +904,18 @@ atomically once the compositor session is ready.
   parent interior dimming, and click/focus locking, `wp-tearing-control-v1`
   `ASYNC` page-flip commits, and `wp-fifo-v1` `set_barrier`/`wait_barrier`
   frame-pacing queues and protocol error guards),
+  `check-dtwm-wayland-drag-ime-scanout.py` (`xdg-toplevel-drag-v1` live window
+  and tab tear-off/re-attachment during `wl_data_device` drag-and-drop without
+  self-occlusion of drop targets underneath, `zwp_input_popup_surface_v2`
+  global scene-coordinate CJK candidate popup anchoring on child
+  `wl_subsurface`s with bottom-edge flip and live titlebar-move re-anchoring,
+  and `xdg_toplevel` borderless fullscreen with unoccluded direct KMS scanout
+  `wlr_output_test_state` + popup-occlusion suppression),
+  `qualify-baremetal-3d-gpu.c` (physical Broadcom V3D `/dev/dri/renderD128`
+  bare-metal 3D GPU qualification recorded in
+  `docs/baremetal-3d-gpu-qualification.json`, verifying `BT.2020 ST.2084 PQ`
+  and `HLG` FBO shaders at `0` LSB error and multi-plane `DRM_FORMAT_NV12`
+  `DMA-BUF` modifier import + `GL_OES_EGL_image_external` YUV→RGB CSC),
   `check-dtwm-wayland-hdr-dtstyle.py` (`dtstyle -monitors` per-monitor Color
   Profile picker + `~/.dt/display_ergonomics.conf` persistence + GLES2 shader
   and CPU LUT mixed SDR + HDR10 `BT.2020 PQ` per-surface tone mapping),

@@ -10,6 +10,8 @@
 #define _GNU_SOURCE
 #include "dtwm_wayland.h"
 
+#include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -61,20 +63,30 @@ struct DtwmImeState {
 };
 
 static void update_ime_popup_positions(DtwmImeState *ime) {
-    if (!ime || wl_list_empty(&ime->popups)) return;
+    if (!ime) return;
     DtwmServer *server = ime->server;
+    if (wl_list_empty(&ime->popups)) {
+        return;
+    }
 
     bool visible = (!server->session_locked && ime->active_ti &&
                     ime->active_ti->wlr_ti && ime->active_ti->wlr_ti->current_enabled &&
                     ime->active_ti->wlr_ti->focused_surface != nullptr);
 
     int base_x = 80, base_y = 80;
+    double surf_scale = 1.0;
     struct wlr_box crect = {0, 0, 16, 20};
     if (visible) {
         if (ime->active_ti->wlr_ti->active_features & WLR_TEXT_INPUT_V3_FEATURE_CURSOR_RECTANGLE) {
             crect = ime->active_ti->wlr_ti->current.cursor_rectangle;
         }
-        if (server->focused_view && server->focused_view->mapped) {
+        double gx = 0.0, gy = 0.0, gs = 1.0;
+        if (dtwm_surface_global_origin_and_scale(
+                server, ime->active_ti->wlr_ti->focused_surface, &gx, &gy, &gs)) {
+            base_x = (int)lround(gx);
+            base_y = (int)lround(gy);
+            surf_scale = gs > 0.25 ? gs : 1.0;
+        } else if (server->focused_view && server->focused_view->mapped) {
             int l = 0, t = 0, r = 0, b = 0;
             dtwm_view_insets(server->focused_view, &l, &t, &r, &b);
             base_x = server->focused_view->x + l;
@@ -82,8 +94,19 @@ static void update_ime_popup_positions(DtwmImeState *ime) {
         }
     }
 
+    int caret_x = base_x + (int)lround((double)crect.x * surf_scale);
+    int caret_y = base_y + (int)lround((double)crect.y * surf_scale);
+    int caret_w = crect.width > 0 ? (int)lround((double)crect.width * surf_scale) : 2;
+    int caret_h = crect.height > 0 ? (int)lround((double)crect.height * surf_scale) : 20;
+    if (caret_w < 1) caret_w = 1;
+    if (caret_h < 1) caret_h = 18;
+
     struct wlr_box obox = {0, 0, 1280, 820};
-    dtwm_get_usable_output_box(server, base_x + crect.x, base_y + crect.y, &obox);
+    dtwm_get_usable_output_box(server, caret_x, caret_y, &obox);
+
+    bool any_shown = false;
+    int last_px = 0, last_py = 0, last_pw = 0, last_ph = 0;
+    struct wlr_box last_rel = {0};
 
     DtwmImePopup *pop;
     wl_list_for_each(pop, &ime->popups, link) {
@@ -98,8 +121,8 @@ static void update_ime_popup_positions(DtwmImeState *ime) {
         if (pw <= 0) pw = 180;
         if (ph <= 0) ph = 40;
 
-        int px = base_x + crect.x;
-        int py = base_y + crect.y + (crect.height > 0 ? crect.height : 20) + 2;
+        int px = caret_x;
+        int py = caret_y + caret_h + 2;
 
         /* Clamp inside usable monitor workarea so candidate popups never clip */
         if (px + pw > obox.x + obox.width) {
@@ -107,7 +130,7 @@ static void update_ime_popup_positions(DtwmImeState *ime) {
         }
         if (px < obox.x) px = obox.x;
         if (py + ph > obox.y + obox.height) {
-            py = base_y + crect.y - ph - 2;
+            py = caret_y - ph - 2;
             if (py < obox.y) py = obox.y;
         }
 
@@ -116,12 +139,37 @@ static void update_ime_popup_positions(DtwmImeState *ime) {
         wlr_scene_node_raise_to_top(&pop->scene_tree->node);
 
         struct wlr_box rel_rect = {
-            .x = (base_x + crect.x) - px,
-            .y = (base_y + crect.y) - py,
-            .width = crect.width > 0 ? crect.width : 2,
-            .height = crect.height > 0 ? crect.height : 18,
+            .x = caret_x - px,
+            .y = caret_y - py,
+            .width = caret_w,
+            .height = caret_h,
         };
         wlr_input_popup_surface_v2_send_text_input_rectangle(pop->wlr_popup, &rel_rect);
+        any_shown = true;
+        last_px = px;
+        last_py = py;
+        last_pw = pw;
+        last_ph = ph;
+        last_rel = rel_rect;
+    }
+
+    char ipc_buf[192];
+    int n = snprintf(
+        ipc_buf,
+        sizeof(ipc_buf),
+        "visible=%d;px=%d;py=%d;pw=%d;ph=%d;rel_x=%d;rel_y=%d;rel_w=%d;rel_h=%d",
+        any_shown ? 1 : 0,
+        last_px,
+        last_py,
+        last_pw,
+        last_ph,
+        last_rel.x,
+        last_rel.y,
+        last_rel.width,
+        last_rel.height
+    );
+    if (n > 0) {
+        dtwm_native_ipc_publish_prop(server, "_DT_WAYLAND_IME_POPUP_STATE", ipc_buf, (size_t)n);
     }
 }
 
@@ -499,6 +547,11 @@ void dtwm_ime_set_focus(DtwmServer *server, struct wlr_surface *surface) {
     update_ime_popup_positions(ime);
 }
 
+struct wlr_surface *dtwm_ime_get_focused_surface(const DtwmServer *server) {
+    if (!server || !server->ime) return nullptr;
+    return server->ime->focused_surface;
+}
+
 void dtwm_ime_on_session_lock_changed(DtwmServer *server, bool locked) {
     if (!server || !server->ime) return;
     if (locked) {
@@ -565,4 +618,21 @@ bool dtwm_ime_forward_modifiers(DtwmServer *server, struct wlr_keyboard *wlr_kbd
     }
     wlr_input_method_keyboard_grab_v2_send_modifiers(ime->kb_grab, &wlr_kbd->modifiers);
     return true;
+}
+
+void dtwm_ime_update_popups(DtwmServer *server) {
+    if (!server || !server->ime) return;
+    update_ime_popup_positions(server->ime);
+}
+
+bool dtwm_ime_has_visible_popup(const DtwmServer *server) {
+    if (!server || !server->ime) return false;
+    const DtwmImePopup *pop;
+    wl_list_for_each(pop, &server->ime->popups, link) {
+        if (pop->scene_tree && pop->scene_tree->node.enabled &&
+            pop->wlr_popup && pop->wlr_popup->surface && pop->wlr_popup->surface->mapped) {
+            return true;
+        }
+    }
+    return false;
 }

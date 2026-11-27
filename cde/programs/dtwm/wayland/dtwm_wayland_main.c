@@ -625,12 +625,14 @@ static void publish_presentation_state_ipc(DtwmServer *server) {
             }
         }
     }
-    char buf[256];
+    char buf[512];
     int n = snprintf(
         buf,
         sizeof(buf),
         "xdg_dialog=%d;modal_views=%u;tearing_mgr=%d;tearing_async=%u;tearing_flips=%u;"
-        "fifo_mgr=%d;fifo_barriers=%u;fifo_waits=%u",
+        "fifo_mgr=%d;fifo_barriers=%u;fifo_waits=%u;"
+        "toplevel_drag_mgr=%d;toplevel_drags=%u;"
+        "scanout_candidates=%u;scanout_commits=%u;scanout_fallbacks=%u",
         server->xdg_wm_dialog ? 1 : 0,
         modal_views,
         server->tearing_control_mgr ? 1 : 0,
@@ -638,7 +640,12 @@ static void publish_presentation_state_ipc(DtwmServer *server) {
         server->tearing_flip_attempts,
         server->fifo_mgr_global ? 1 : 0,
         server->fifo_barrier_total,
-        server->fifo_wait_total
+        server->fifo_wait_total,
+        server->toplevel_drag_global ? 1 : 0,
+        server->toplevel_drag_attach_total,
+        server->scanout_candidates,
+        server->scanout_commits,
+        server->scanout_fallbacks
     );
     if (n > 0) {
         dtwm_native_ipc_publish_prop(server, "_DT_WAYLAND_PRESENTATION_STATE", buf, (size_t)n);
@@ -663,6 +670,10 @@ static void publish_presentation_state_ipc(DtwmServer *server) {
             free(rep);
         }
     }
+}
+
+void dtwm_publish_presentation_state(DtwmServer *server) {
+    publish_presentation_state_ipc(server);
 }
 
 static void sync_all_modal_dialogs(DtwmServer *server) {
@@ -1415,12 +1426,35 @@ static void view_size_limits(
     *out_max_h = max_h;
 }
 
+static struct wlr_surface *resolve_view_focus_surface(DtwmView *view, struct wlr_surface *requested) {
+    if (requested) return requested;
+    if (!view) return nullptr;
+    if (view->server) {
+        struct wlr_surface *cur =
+            (view->server->seat && view->server->seat->keyboard_state.focused_surface)
+                ? view->server->seat->keyboard_state.focused_surface
+                : dtwm_ime_get_focused_surface(view->server);
+        if (cur) {
+            struct wlr_surface *root = cur;
+            for (int depth = 0; depth < 16 && root; ++depth) {
+                struct wlr_subsurface *sub = wlr_subsurface_try_from_wlr_surface(root);
+                if (!sub || !sub->parent) break;
+                root = sub->parent;
+            }
+            if (root == view_wlr_surface(view)) {
+                return cur;
+            }
+        }
+    }
+    return view_wlr_surface(view);
+}
+
 static void view_apply_geometry(DtwmView *view, int x, int y, int client_w, int client_h) {
     int min_w = 64, min_h = 48, max_w = 0, max_h = 0;
     view_size_limits(view, &min_w, &min_h, &max_w, &max_h);
     if (client_w < min_w) client_w = min_w;
     if (client_h < min_h) client_h = min_h;
-    if (!view || !view->maximized) {
+    if (!view || (!view->maximized && !view->fullscreen)) {
         if (max_w > 0 && client_w > max_w) client_w = max_w;
         if (max_h > 0 && client_h > max_h) client_h = max_h;
     }
@@ -1443,9 +1477,10 @@ static void view_apply_geometry(DtwmView *view, int x, int y, int client_w, int 
         sync_xwayland_client_pos(view);
     }
     dtwm_view_update_frame(view);
+    dtwm_ime_update_popups(view->server);
     if (view == view->server->focused_view) {
         dtwm_publish_active_window_box(view->server);
-        dtwm_ime_set_focus(view->server, view_wlr_surface(view));
+        dtwm_ime_set_focus(view->server, resolve_view_focus_surface(view, nullptr));
     }
 }
 
@@ -1454,7 +1489,7 @@ static void view_send_xdg_interactive_resize(DtwmView *view, int client_w, int c
     view_size_limits(view, &min_w, &min_h, &max_w, &max_h);
     if (client_w < min_w) client_w = min_w;
     if (client_h < min_h) client_h = min_h;
-    if (!view || !view->maximized) {
+    if (!view || (!view->maximized && !view->fullscreen)) {
         if (max_w > 0 && client_w > max_w) client_w = max_w;
         if (max_h > 0 && client_h > max_h) client_h = max_h;
     }
@@ -1605,7 +1640,7 @@ static void focus_view_ex(
     }
     dtwm_icon_box_deactivate(server);
     if (!surface) {
-        surface = view_wlr_surface(view);
+        surface = resolve_view_focus_surface(view, nullptr);
     }
     if (!surface) {
         return;
@@ -1669,13 +1704,15 @@ static void focus_view_ex(
         raise_transient_children_above(server, view);
     }
     dtwm_view_update_frame(view);
+    dtwm_ime_update_popups(view->server);
     dtwm_icons_refresh_focus_indicators(server);
     dtwm_foreign_toplevel_sync(view);
     dtwm_publish_active_window_box(server);
 
+    struct wlr_surface *focus_surf = resolve_view_focus_surface(view, surface);
     struct wlr_keyboard *kbd = wlr_seat_get_keyboard(server->seat);
-    dtwm_a11y_notify_keyboard_enter(server, surface, kbd);
-    dtwm_ime_set_focus(server, surface);
+    dtwm_a11y_notify_keyboard_enter(server, focus_surf, kbd);
+    dtwm_ime_set_focus(server, focus_surf);
     sync_input_capture_for_focused_view(server, true);
     sync_tablet_pads_for_focused_view(server);
 }
@@ -2435,6 +2472,7 @@ static void view_set_maximized(DtwmView *view, bool maximized) {
             view_apply_geometry(view, view->saved_x, view->saved_y, view->saved_w, view->saved_h);
         } else {
             dtwm_view_update_frame(view);
+    dtwm_ime_update_popups(view->server);
         }
     }
     dtwm_foreign_toplevel_sync(view);
@@ -2547,6 +2585,65 @@ static void view_close(DtwmView *view) {
     } else if (view->kind == DTWM_VIEW_XWAYLAND && view->xwayland_surface) {
         wlr_xwayland_surface_close(view->xwayland_surface);
     }
+}
+
+static void view_set_fullscreen(DtwmView *view, bool fullscreen) {
+    if (!view || view->fullscreen == fullscreen) {
+        return;
+    }
+    DtwmServer *server = view->server;
+    if (fullscreen) {
+        if (!view->has_fs_saved_geom) {
+            view->fs_saved_x = view->x;
+            view->fs_saved_y = view->y;
+            view->fs_saved_w = view->client_w;
+            view->fs_saved_h = view->client_h;
+            view->has_fs_saved_geom = true;
+        }
+        struct wlr_output *target_out =
+            wlr_output_layout_output_at(server->output_layout, view->x + 32, view->y + 32);
+        struct wlr_box obox = {0};
+        wlr_output_layout_get_box(server->output_layout, target_out, &obox);
+        if (obox.width <= 0 || obox.height <= 0) {
+            wlr_output_layout_get_box(server->output_layout, nullptr, &obox);
+        }
+        view->fullscreen = true;
+        if (view->frame_tree && server->layer_top_tree) {
+            wlr_scene_node_reparent(&view->frame_tree->node, server->layer_top_tree);
+            wlr_scene_node_raise_to_top(&view->frame_tree->node);
+        }
+        if (view->kind == DTWM_VIEW_XDG && view->xdg_toplevel) {
+            wlr_xdg_toplevel_set_fullscreen(view->xdg_toplevel, true);
+        } else if (view->kind == DTWM_VIEW_XWAYLAND && view->xwayland_surface) {
+            wlr_xwayland_surface_set_fullscreen(view->xwayland_surface, true);
+        }
+        if (obox.width > 0 && obox.height > 0) {
+            view_apply_geometry(view, obox.x, obox.y, obox.width, obox.height);
+        } else {
+            dtwm_view_update_frame(view);
+        }
+    } else {
+        view->fullscreen = false;
+        if (view->frame_tree && server->workspace_tree) {
+            wlr_scene_node_reparent(&view->frame_tree->node, server->workspace_tree);
+            wlr_scene_node_raise_to_top(&view->frame_tree->node);
+        }
+        if (view->kind == DTWM_VIEW_XDG && view->xdg_toplevel) {
+            wlr_xdg_toplevel_set_fullscreen(view->xdg_toplevel, false);
+        } else if (view->kind == DTWM_VIEW_XWAYLAND && view->xwayland_surface) {
+            wlr_xwayland_surface_set_fullscreen(view->xwayland_surface, false);
+        }
+        if (view->has_fs_saved_geom) {
+            view->has_fs_saved_geom = false;
+            view_apply_geometry(
+                view, view->fs_saved_x, view->fs_saved_y, view->fs_saved_w, view->fs_saved_h
+            );
+        } else {
+            dtwm_view_update_frame(view);
+        }
+    }
+    dtwm_foreign_toplevel_sync(view);
+    schedule_all_outputs_frame(server);
 }
 
 void dtwm_view_set_maximized(DtwmView *view, bool maximized) {
@@ -2684,6 +2781,7 @@ static bool apply_external_view_scale_transition(DtwmView *view, double new_s) {
         wlr_scene_node_set_position(&view->frame_tree->node, view->x, view->y);
     }
     dtwm_view_update_frame(view);
+    dtwm_ime_update_popups(view->server);
     if (view == view->server->focused_view) {
         dtwm_publish_active_window_box(view->server);
     }
@@ -3234,6 +3332,7 @@ static void promote_subpanel_to_tool_window(DtwmView *view) {
     }
     sync_xwayland_client_pos(view);
     dtwm_view_update_frame(view);
+    dtwm_ime_update_popups(view->server);
 
     if (view->kind == DTWM_VIEW_XWAYLAND && view->xwayland_surface && view->server->xcb_conn) {
         xcb_connection_t *conn = view->server->xcb_conn;
@@ -3757,13 +3856,24 @@ static DtwmView *desktop_view_at(
     *out_part = DTWM_PART_NONE;
 
     /* First check scene graph for popups / unmanaged XWayland menus / layer surfaces / client surfaces.
-     * Temporarily hide the cursor-attached drag_icon_tree so it never intercepts hit-testing over drop targets. */
+     * Temporarily hide the cursor-attached drag_icon_tree and any xdg-toplevel-drag-v1 attached window
+     * so they never intercept hit-testing over drop targets underneath. */
     bool restore_drag_icon = false;
     if (server->drag_icon_tree && server->drag_icon_tree->node.enabled) {
         wlr_scene_node_set_enabled(&server->drag_icon_tree->node, false);
         restore_drag_icon = true;
     }
+    DtwmView *drag_attached_view = dtwm_toplevel_drag_attached_view(server);
+    bool restore_drag_view = false;
+    if (drag_attached_view && drag_attached_view->frame_tree &&
+        drag_attached_view->frame_tree->node.enabled) {
+        wlr_scene_node_set_enabled(&drag_attached_view->frame_tree->node, false);
+        restore_drag_view = true;
+    }
     struct wlr_scene_node *node = wlr_scene_node_at(&server->scene->tree.node, lx, ly, sx, sy);
+    if (restore_drag_view && drag_attached_view && drag_attached_view->frame_tree) {
+        wlr_scene_node_set_enabled(&drag_attached_view->frame_tree->node, true);
+    }
     if (restore_drag_icon && server->drag_icon_tree) {
         wlr_scene_node_set_enabled(&server->drag_icon_tree->node, true);
     }
@@ -3869,6 +3979,7 @@ static void process_cursor_move(DtwmServer *server) {
     }
     wlr_scene_node_set_position(&v->frame_tree->node, v->x, v->y);
     sync_xwayland_client_pos(v);
+    dtwm_ime_update_popups(server);
     dtwm_publish_active_window_box(server);
 }
 
@@ -4653,6 +4764,7 @@ static void process_cursor_motion(DtwmServer *server, uint32_t time_msec) {
             &server->drag_icon_tree->node, (int)server->cursor->x, (int)server->cursor->y
         );
     }
+    dtwm_toplevel_drag_on_cursor_motion(server);
     if (server->menu_visible) {
         double dx = server->cursor->x - server->menu_open_x;
         double dy = server->cursor->y - server->menu_open_y;
@@ -4882,6 +4994,58 @@ static DtwmView *surface_global_origin_and_scale(
     if (out_gy) *out_gy = (double)gy + off_y;
     if (out_scale) *out_scale = s;
     return v;
+}
+
+bool dtwm_surface_global_origin_and_scale(
+    const DtwmServer *server,
+    struct wlr_surface *surf,
+    double *out_gx,
+    double *out_gy,
+    double *out_scale
+) {
+    if (!server || !surf) return false;
+    if (surface_global_origin_and_scale(server, surf, out_gx, out_gy, out_scale)) {
+        return true;
+    }
+    /* Walk subsurfaces to enclosing xdg_popup or layer_surface scene tree */
+    double sub_x = 0.0, sub_y = 0.0;
+    struct wlr_surface *cur = surf;
+    for (int depth = 0; depth < 16 && cur; ++depth) {
+        struct wlr_subsurface *sub = wlr_subsurface_try_from_wlr_surface(cur);
+        if (!sub || !sub->parent) break;
+        sub_x += (double)sub->current.x;
+        sub_y += (double)sub->current.y;
+        cur = sub->parent;
+    }
+    struct wlr_xdg_surface *xdg = cur ? wlr_xdg_surface_try_from_wlr_surface(cur) : nullptr;
+    if (xdg && xdg->data) {
+        struct wlr_scene_tree *st = xdg->data;
+        int gx = 0, gy = 0;
+        if (wlr_scene_node_coords(&st->node, &gx, &gy)) {
+            double s = 1.0;
+            if (xdg->role == WLR_XDG_SURFACE_ROLE_POPUP && xdg->popup && xdg->popup->parent) {
+                double pgx = 0.0, pgy = 0.0, ps = 1.0;
+                if (surface_global_origin_and_scale(server, xdg->popup->parent, &pgx, &pgy, &ps)) {
+                    s = ps;
+                }
+            }
+            if (out_gx) *out_gx = (double)gx + sub_x * s;
+            if (out_gy) *out_gy = (double)gy + sub_y * s;
+            if (out_scale) *out_scale = s;
+            return true;
+        }
+    }
+    if (cur && cur->data) {
+        struct wlr_scene_node *sn = cur->data;
+        int gx = 0, gy = 0;
+        if (wlr_scene_node_coords(sn, &gx, &gy)) {
+            if (out_gx) *out_gx = (double)gx + sub_x;
+            if (out_gy) *out_gy = (double)gy + sub_y;
+            if (out_scale) *out_scale = 1.0;
+            return true;
+        }
+    }
+    return false;
 }
 
 bool dtwm_view_has_input_capture(const DtwmView *view) {
@@ -7680,6 +7844,9 @@ static void handle_request_cursor_shape(struct wl_listener *listener, void *data
 static void handle_request_set_selection(struct wl_listener *listener, void *data) {
     DtwmServer *server = wl_container_of(listener, server, request_set_selection);
     struct wlr_seat_request_set_selection_event *ev = data;
+    if (!dtwm_toplevel_drag_check_set_selection(server, ev->source)) {
+        return;
+    }
     wlr_seat_set_selection(server->seat, ev->source, ev->serial);
 }
 
@@ -7745,6 +7912,8 @@ static void handle_start_drag(struct wl_listener *listener, void *data) {
     server->drag_destroy.notify = handle_drag_destroy;
     wl_signal_add(&drag->events.destroy, &server->drag_destroy);
     server->drag_destroy_attached = true;
+    dtwm_toplevel_drag_on_start_drag(server, drag);
+    publish_presentation_state_ipc(server);
 }
 
 static void handle_request_start_drag(struct wl_listener *listener, void *data) {
@@ -8806,6 +8975,21 @@ static bool dtwm_apply_output_color_profile(DtwmOutput *output, const char *spec
     return true;
 }
 
+static bool scene_tree_has_enabled_child(const struct wlr_scene_tree *tree) {
+    if (!tree || !tree->node.enabled) return false;
+    const struct wlr_scene_node *child;
+    wl_list_for_each(child, &tree->children, link) {
+        if (!child->enabled) continue;
+        if (child->type == WLR_SCENE_NODE_TREE) {
+            const struct wlr_scene_tree *sub = wl_container_of(child, sub, node);
+            if (scene_tree_has_enabled_child(sub)) return true;
+        } else {
+            return true;
+        }
+    }
+    return false;
+}
+
 static void handle_output_frame(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmOutput *output = wl_container_of(listener, output, frame);
@@ -8858,7 +9042,59 @@ static void handle_output_frame(struct wl_listener *listener, void *data) {
                 ? &sopts
                 : nullptr;
         bool committed = false;
-        if (output_wants_tearing_flip(output)) {
+
+        /* Unoccluded Fullscreen Direct KMS Scanout fast path */
+        if (server && !server->session_locked && !server->overview_visible &&
+            !server->menu_visible && !server->switcher_visible && !server->osd_visible &&
+            !server->drag_icon_tree && !dtwm_ime_has_visible_popup(server) &&
+            !output->color_transform && dtwm_a11y_get_zoom_pct(server) == 100 &&
+            !scene_tree_has_enabled_child(server->layer_overlay_tree)) {
+            struct wlr_box obox = {0};
+            wlr_output_layout_get_box(server->output_layout, output->wlr_output, &obox);
+            DtwmView *fs_view = nullptr;
+            DtwmView *cand;
+            wl_list_for_each(cand, &server->views, link) {
+                if (!cand->mapped || cand->minimized || !cand->fullscreen) continue;
+                if (!dtwm_view_visible_on_current_ws(cand)) continue;
+                if (cand->x <= obox.x && cand->y <= obox.y &&
+                    cand->x + cand->client_w >= obox.x + obox.width &&
+                    cand->y + cand->client_h >= obox.y + obox.height) {
+                    fs_view = cand;
+                    break;
+                }
+            }
+            if (fs_view && !fs_view->tonemap_active &&
+                (fs_view->is_native_dpi || fabs(fs_view->external_client_scale - 1.0) < 0.01) &&
+                !scene_tree_has_enabled_child(fs_view->popup_anchor_tree)) {
+                struct wlr_surface *fs_surf = view_wlr_surface(fs_view);
+                if (fs_surf && fs_surf->buffer &&
+                    wl_list_empty(&fs_surf->current.subsurfaces_below) &&
+                    wl_list_empty(&fs_surf->current.subsurfaces_above) &&
+                    fs_surf->current.transform == output->wlr_output->transform &&
+                    fs_surf->buffer->base.width == output->wlr_output->width &&
+                    fs_surf->buffer->base.height == output->wlr_output->height) {
+                    server->scanout_candidates++;
+                    struct wlr_output_state scanout_state;
+                    wlr_output_state_init(&scanout_state);
+                    wlr_output_state_set_buffer(&scanout_state, &fs_surf->buffer->base);
+                    if (output_wants_tearing_flip(output)) {
+                        scanout_state.tearing_page_flip = true;
+                        server->tearing_flip_attempts++;
+                    }
+                    if (wlr_output_test_state(output->wlr_output, &scanout_state) &&
+                        wlr_output_commit_state(output->wlr_output, &scanout_state)) {
+                        committed = true;
+                        server->scanout_commits++;
+                    } else {
+                        server->scanout_fallbacks++;
+                    }
+                    wlr_output_state_finish(&scanout_state);
+                    publish_presentation_state_ipc(server);
+                }
+            }
+        }
+
+        if (!committed && output_wants_tearing_flip(output)) {
             struct wlr_output_state out_state;
             wlr_output_state_init(&out_state);
             if (wlr_scene_output_build_state(scene_output, &out_state, sopts_ptr)) {
@@ -9105,6 +9341,7 @@ static void xdg_toplevel_map(struct wl_listener *listener, void *data) {
             wlr_scene_node_set_enabled(&view->frame_tree->node, true);
         }
         dtwm_view_update_frame(view);
+    dtwm_ime_update_popups(view->server);
         if (view->server->session_locked) {
             dtwm_lock_focus_surface(view->server, view->xdg_toplevel->base->surface);
         }
@@ -9171,6 +9408,7 @@ static void xdg_toplevel_map(struct wl_listener *listener, void *data) {
         wlr_scene_node_set_position(&view->frame_tree->node, view->x, view->y);
         wlr_scene_node_set_enabled(&view->frame_tree->node, true);
         dtwm_view_update_frame(view);
+    dtwm_ime_update_popups(view->server);
         focus_view(view->server, view, view->xdg_toplevel->base->surface);
         return;
     }
@@ -9178,6 +9416,10 @@ static void xdg_toplevel_map(struct wl_listener *listener, void *data) {
     view->workspace_mask = 1u << view->server->current_workspace;
     place_initial_view(view);
     try_apply_wayland_session_rule(view);
+    dtwm_toplevel_drag_on_view_mapped(view);
+    if (view->xdg_toplevel->requested.fullscreen) {
+        view_set_fullscreen(view, true);
+    }
     if (view_check_xdg_dialog_modal(view)) {
         if (!view->modal_saved_btns_valid) {
             view->modal_has_min_saved = view->has_min_btn;
@@ -9199,6 +9441,7 @@ static void xdg_toplevel_map(struct wl_listener *listener, void *data) {
         &view->frame_tree->node, !view->minimized && dtwm_view_visible_on_current_ws(view)
     );
     dtwm_view_update_frame(view);
+    dtwm_ime_update_popups(view->server);
     update_view_hdr_tonemap(view);
     sync_all_modal_dialogs(view->server);
     dtwm_icons_on_view_map(view);
@@ -9231,7 +9474,10 @@ static void xdg_toplevel_map(struct wl_listener *listener, void *data) {
         dtwm_notify_panel_busy_stop(view->server);
     }
     if (dtwm_view_visible_on_current_ws(view)) {
-        if (!prevent_steal) {
+        if (view->server->seat && view->server->seat->drag != nullptr) {
+            /* Preserve active Wayland DnD pointer/keyboard grabs when a torn-off
+             * xdg-toplevel-drag-v1 window maps mid-drag; focus transfers on drop. */
+        } else if (!prevent_steal) {
             focus_view(view->server, view, view->xdg_toplevel->base->surface);
         } else if (view->frame_tree && view->server->focused_view->frame_tree) {
             wlr_scene_node_place_below(
@@ -9379,6 +9625,7 @@ static void xdg_toplevel_commit(struct wl_listener *listener, void *data) {
                 wlr_scene_node_set_position(&view->frame_tree->node, view->x, view->y);
             }
             dtwm_view_update_frame(view);
+    dtwm_ime_update_popups(view->server);
             if (view == view->server->focused_view) {
                 dtwm_publish_active_window_box(view->server);
             }
@@ -9418,6 +9665,7 @@ static void xdg_toplevel_set_title(struct wl_listener *listener, void *data) {
     DtwmView *view = wl_container_of(listener, view, set_title);
     if (view->mapped) {
         dtwm_view_update_frame(view);
+    dtwm_ime_update_popups(view->server);
         dtwm_icons_update_view(view);
         dtwm_foreign_toplevel_sync(view);
     }
@@ -9452,6 +9700,15 @@ static void xdg_toplevel_request_maximize(struct wl_listener *listener, void *da
     DtwmView *view = wl_container_of(listener, view, request_maximize);
     if (view->xdg_toplevel->base->initialized) {
         view_set_maximized(view, view->xdg_toplevel->requested.maximized);
+        wlr_xdg_surface_schedule_configure(view->xdg_toplevel->base);
+    }
+}
+
+static void xdg_toplevel_request_fullscreen(struct wl_listener *listener, void *data) {
+    (void)data;
+    DtwmView *view = wl_container_of(listener, view, request_fullscreen);
+    if (view->xdg_toplevel->base->initialized) {
+        view_set_fullscreen(view, view->xdg_toplevel->requested.fullscreen);
         wlr_xdg_surface_schedule_configure(view->xdg_toplevel->base);
     }
 }
@@ -9510,6 +9767,7 @@ static void xdg_toplevel_destroy(struct wl_listener *listener, void *data) {
     wl_list_remove(&view->request_move.link);
     wl_list_remove(&view->request_resize.link);
     wl_list_remove(&view->request_maximize.link);
+    wl_list_remove(&view->request_fullscreen.link);
     wl_list_remove(&view->request_minimize.link);
     wl_list_remove(&view->set_title.link);
     wl_list_remove(&view->set_app_id.link);
@@ -9583,6 +9841,8 @@ static void handle_new_xdg_toplevel(struct wl_listener *listener, void *data) {
     wl_signal_add(&toplevel->events.request_resize, &view->request_resize);
     view->request_maximize.notify = xdg_toplevel_request_maximize;
     wl_signal_add(&toplevel->events.request_maximize, &view->request_maximize);
+    view->request_fullscreen.notify = xdg_toplevel_request_fullscreen;
+    wl_signal_add(&toplevel->events.request_fullscreen, &view->request_fullscreen);
     view->request_minimize.notify = xdg_toplevel_request_minimize;
     wl_signal_add(&toplevel->events.request_minimize, &view->request_minimize);
     view->set_title.notify = xdg_toplevel_set_title;
@@ -10155,6 +10415,7 @@ static void xwayland_map(struct wl_listener *listener, void *data) {
         dtwm_icons_on_view_map(view);
         sync_xwayland_client_pos(view);
         dtwm_view_update_frame(view);
+    dtwm_ime_update_popups(view->server);
         focus_view(view->server, view, xs->surface);
         return;
     }
@@ -10218,6 +10479,10 @@ static void xwayland_map(struct wl_listener *listener, void *data) {
     wlr_scene_node_set_enabled(&view->frame_tree->node, dtwm_view_visible_on_current_ws(view));
     sync_xwayland_client_pos(view);
     dtwm_view_update_frame(view);
+    dtwm_ime_update_popups(view->server);
+    if (!xs->override_redirect && xs->fullscreen) {
+        view_set_fullscreen(view, true);
+    }
     dtwm_foreign_toplevel_sync(view);
     dtwm_notify_panel_busy_stop(view->server);
     if (dtwm_view_visible_on_current_ws(view)) {
@@ -10446,6 +10711,7 @@ static void xwayland_request_configure(struct wl_listener *listener, void *data)
         }
         sync_xwayland_client_pos(view);
         dtwm_view_update_frame(view);
+    dtwm_ime_update_popups(view->server);
         return;
     }
     int l, t, r, b;
@@ -10484,6 +10750,14 @@ static void xwayland_request_maximize(struct wl_listener *listener, void *data) 
     view_set_maximized(view, want);
 }
 
+static void xwayland_request_fullscreen(struct wl_listener *listener, void *data) {
+    (void)data;
+    DtwmView *view = wl_container_of(listener, view, request_fullscreen);
+    if (view->xwayland_surface) {
+        view_set_fullscreen(view, view->xwayland_surface->fullscreen);
+    }
+}
+
 static void xwayland_request_minimize(struct wl_listener *listener, void *data) {
     DtwmView *view = wl_container_of(listener, view, request_minimize);
     struct wlr_xwayland_minimize_event *ev = data;
@@ -10495,6 +10769,7 @@ static void xwayland_set_title(struct wl_listener *listener, void *data) {
     DtwmView *view = wl_container_of(listener, view, set_title);
     if (view->mapped) {
         dtwm_view_update_frame(view);
+    dtwm_ime_update_popups(view->server);
         dtwm_icons_update_view(view);
         dtwm_foreign_toplevel_sync(view);
     }
@@ -10517,6 +10792,7 @@ static void xwayland_set_decorations(struct wl_listener *listener, void *data) {
     if (view->mapped) {
         sync_xwayland_client_pos(view);
         dtwm_view_update_frame(view);
+    dtwm_ime_update_popups(view->server);
     }
 }
 
@@ -10528,6 +10804,7 @@ static void xwayland_set_hints(struct wl_listener *listener, void *data) {
     if (view->mapped) {
         sync_xwayland_client_pos(view);
         dtwm_view_update_frame(view);
+    dtwm_ime_update_popups(view->server);
         dtwm_icons_update_view(view);
     }
 }
@@ -10629,6 +10906,7 @@ static void xwayland_destroy(struct wl_listener *listener, void *data) {
     wl_list_remove(&view->request_activate.link);
     wl_list_remove(&view->request_close.link);
     wl_list_remove(&view->request_maximize.link);
+    wl_list_remove(&view->request_fullscreen.link);
     wl_list_remove(&view->request_minimize.link);
     wl_list_remove(&view->set_title.link);
     wl_list_remove(&view->set_app_id.link);
@@ -10716,6 +10994,8 @@ static void handle_new_xwayland_surface(struct wl_listener *listener, void *data
     wl_signal_add(&xs->events.request_close, &view->request_close);
     view->request_maximize.notify = xwayland_request_maximize;
     wl_signal_add(&xs->events.request_maximize, &view->request_maximize);
+    view->request_fullscreen.notify = xwayland_request_fullscreen;
+    wl_signal_add(&xs->events.request_fullscreen, &view->request_fullscreen);
     view->request_minimize.notify = xwayland_request_minimize;
     wl_signal_add(&xs->events.request_minimize, &view->request_minimize);
     view->set_title.notify = xwayland_set_title;
@@ -13107,6 +13387,7 @@ int main(int argc, char **argv) {
     wl_signal_add(&server.seat->events.request_start_drag, &server.request_start_drag);
     server.start_drag.notify = handle_start_drag;
     wl_signal_add(&server.seat->events.start_drag, &server.start_drag);
+    dtwm_toplevel_drag_init(&server);
 
     if (!server.no_xwayland) {
         server.xwayland = wlr_xwayland_create(server.wl_display, server.compositor, false);
@@ -13267,6 +13548,7 @@ cleanup:
         wl_list_remove(&server.request_cursor_shape.link);
         server.cursor_shape_mgr = nullptr;
     }
+    dtwm_toplevel_drag_finish(&server);
     wl_list_remove(&server.request_set_selection.link);
     wl_list_remove(&server.request_set_primary_selection.link);
     wl_list_remove(&server.request_start_drag.link);

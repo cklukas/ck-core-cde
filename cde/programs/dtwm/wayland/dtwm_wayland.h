@@ -281,7 +281,10 @@ struct DtwmView {
     bool active;
     bool pending_activation;
     bool maximized;
+    bool fullscreen;
     bool minimized;
+    int fs_saved_x, fs_saved_y, fs_saved_w, fs_saved_h;
+    bool has_fs_saved_geom;
     bool is_panel;          /* Genuine CDE Front Panel (DtWM_BEHAVIOR_PANEL) */
     bool is_subpanel;       /* Genuine CDE Subpanel (DtWM_BEHAVIOR_SUBPANEL) */
     bool subpanel_torn_off; /* Subpanel torn off / dragged away into a Tool Window */
@@ -337,6 +340,7 @@ struct DtwmView {
     struct wl_listener request_move;
     struct wl_listener request_resize;
     struct wl_listener request_maximize;
+    struct wl_listener request_fullscreen;
     struct wl_listener request_minimize;
     struct wl_listener request_activate;
     struct wl_listener request_close;
@@ -630,6 +634,12 @@ struct DtwmServer {
     uint32_t fifo_barrier_total;
     uint32_t fifo_wait_total;
     uint32_t tearing_flip_attempts;
+    struct wl_global *toplevel_drag_global;
+    struct wl_list toplevel_drags;
+    uint32_t toplevel_drag_attach_total;
+    uint32_t scanout_candidates;
+    uint32_t scanout_commits;
+    uint32_t scanout_fallbacks;
 
     /* Interactive move / resize / snap / wireframe state */
     DtwmCursorMode cursor_mode;
@@ -961,12 +971,32 @@ void dtwm_ime_finish(DtwmServer *server);
 void dtwm_ime_set_focus(DtwmServer *server, struct wlr_surface *surface);
 void dtwm_ime_set_keyboard(DtwmServer *server, struct wlr_keyboard *wlr_kbd);
 void dtwm_ime_on_session_lock_changed(DtwmServer *server, bool locked);
+void dtwm_ime_update_popups(DtwmServer *server);
+bool dtwm_ime_has_visible_popup(const DtwmServer *server);
+struct wlr_surface *dtwm_ime_get_focused_surface(const DtwmServer *server);
 bool dtwm_ime_forward_key(
     DtwmServer *server,
     struct wlr_keyboard *wlr_kbd,
     const struct wlr_keyboard_key_event *ev
 );
 bool dtwm_ime_forward_modifiers(DtwmServer *server, struct wlr_keyboard *wlr_kbd);
+
+/* cde_toplevel_drag.c */
+void dtwm_toplevel_drag_init(DtwmServer *server);
+void dtwm_toplevel_drag_finish(DtwmServer *server);
+bool dtwm_toplevel_drag_check_set_selection(DtwmServer *server, struct wlr_data_source *source);
+void dtwm_toplevel_drag_on_start_drag(DtwmServer *server, struct wlr_drag *drag);
+void dtwm_toplevel_drag_on_cursor_motion(DtwmServer *server);
+void dtwm_toplevel_drag_on_view_mapped(DtwmView *view);
+DtwmView *dtwm_toplevel_drag_attached_view(const DtwmServer *server);
+
+bool dtwm_surface_global_origin_and_scale(
+    const DtwmServer *server,
+    struct wlr_surface *surf,
+    double *out_gx,
+    double *out_gy,
+    double *out_scale
+);
 
 /* cde_power_display.c */
 void dtwm_kelvin_to_rgb(int temp_k, double *out_r, double *out_g, double *out_b);
@@ -1030,5 +1060,6 @@ bool dtwm_wayland_session_handle_wm_request(DtwmServer *server, const char *cmd)
 void dtwm_overview_set_visible(DtwmServer *server, bool visible);
 void dtwm_overview_toggle(DtwmServer *server);
 void dtwm_overview_refresh(DtwmServer *server);
+void dtwm_publish_presentation_state(DtwmServer *server);
 
 #endif /* DTWM_WAYLAND_H */
