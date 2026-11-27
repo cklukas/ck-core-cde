@@ -282,10 +282,10 @@ DmxPrintJob::execute (void)
         if (home == NULL)
           home = ".";
         size_t room = MAXPATHLEN + 1;
-        size_t keep = (strlen(home) + 5 < room) ? room - strlen(home) - 5 : 0;
+        size_t keep = (strlen(home) + 6 < room) ? room - strlen(home) - 6 : 0;
         if ((size_t) j > keep)
           subject[keep] = '\0';
-        snprintf(filename, room, "%s/%s.ps", home, subject);
+        snprintf(filename, room, "%s/%s.pdf", home, subject);
 
 	_print_setup->setPrintToFileName(filename);
         free(orig_subject);
@@ -468,113 +468,160 @@ ok_cb(DtMailGenDialog *genDialog)
  *	Initializes the mailbox to iterate through the messages.
  *	Calls XmPrintToFile or XpStartJob to initiate printing.
  */
+struct DmxPdfTextAccum {
+    char *data;
+    size_t len;
+    size_t cap;
+};
+
+static void dmxAppendPdfText(XtPointer closure, char *chunk)
+{
+    if (!closure || !chunk) return;
+    DmxPdfTextAccum *acc = (DmxPdfTextAccum *)closure;
+    size_t clen = strlen(chunk);
+    if (clen == 0) return;
+    if (acc->len + clen + 2 > acc->cap) {
+        size_t ncap = acc->cap ? acc->cap * 2 : 4096;
+        while (ncap < acc->len + clen + 2) ncap *= 2;
+        char *nd = (char *)realloc(acc->data, ncap);
+        if (!nd) return;
+        acc->data = nd;
+        acc->cap = ncap;
+    }
+    memcpy(acc->data + acc->len, chunk, clen);
+    acc->len += clen;
+    acc->data[acc->len] = '\0';
+}
+
 void
 DmxPrintJob::doPrint (void)
 {
-#if 0 && defined(PRINTING_SUPPORTED)
-    DtMailEnv		dmxenv;
-    DtMail::Session	*d_session = theRoamApp.session()->session();
-    XPSaveData		dest = XPSpool;
+    if (_print_data == NULL) {
+        this->cancel();
+        return;
+    }
 
-    //
-    // Notify the user that we're printing
-    //
     if (_parent != NULL) {
-        char *buf = new char[1024];
-	char *msg = CATGETS(DT_catd, 21, 1, "Printing %s ...");
-        sprintf(buf, msg, _filename);
+        char buf[1024];
+        char *msg = CATGETS(DT_catd, 21, 1, "Printing %s ...");
+        snprintf(buf, sizeof(buf), msg, _filename ? _filename : "messages");
         _parent->setStatus(buf);
-
-        //
-        // Register the fact that we have a print job running so
-        // dtmail will not terminate in the middle.
-        //
         _parent->registerPendingTask();
-	delete [] buf;
     }
 
-    //
-    // load in the messages
-    //
-    // Moved to DmxPrintJob::execute
-    //
-    //_mailbox = new DmxMailbox(_filename);
-    //_mailbox->loadMessages();
-    //_next_msg = _mailbox->firstMessage();
-
-    if (_next_msg)
-      _spool_msg_info = (DmxMsgInfo *) XtCalloc(
-					_mailbox->numMessages(),
-					sizeof(DmxMsgInfo));
-
-#ifndef PRINT_TO_VIDEO
-    if (_print_data == NULL) return;
-
-    if (_print_data->destination == DtPRINT_TO_FILE)
-      dest = XPGetData;
-
-    theRoamApp.registerActivePrintDisplay(XtDisplay(_pshell));
-    XpStartJob(XtDisplay(_pshell), dest);
-    XFlush(XtDisplay(_pshell));
-
-    if (_print_data->destination == DtPRINT_TO_FILE)
-    {
-        if (FALSE == XmPrintToFile(
-			XtDisplay(_pshell),
-			_print_data->dest_info,
-			(XPFinishProc) &DmxPrintJob::finishedPrintToFile,
-			(XPointer) this))
-        {
-            char        	*fmt = "%s\n%s:  %s";
-	    DtMailGenDialog	*genDialog;
-            char        	*appmessage = NULL;
-            char        	*message = NULL;
-            char        	*sysmessage = strerror(errno);
-            Widget		w = (Widget) this->_parent->baseWidget();
- 
-            XpCancelJob(XtDisplay(_pshell), False);
-            XFlush(XtDisplay(_pshell));
-
-	    genDialog = new DtMailGenDialog("Dialog", w);
-            appmessage = (char *) CATGETS(
-                                DT_catd, 21, 14,
-                                "'Print to File'  was unsuccessful.");
- 
-            if (NULL == sysmessage)
-            {
-                message = XtMalloc(strlen(appmessage) + 1);
-                sprintf(message, "%s", appmessage);
+    DmxPdfTextAccum acc = {NULL, 0, 0};
+    DmxMsg *first_msg = _next_msg;
+    while (_next_msg != NULL) {
+        _next_msg->display(
+            DmxPrintOptions::getPrintedHeaders(),
+            dmxAppendPdfText,
+            (XtPointer)&acc
+        );
+        switch (DmxPrintOptions::getMessageSeparator()) {
+        case DMX_SEPARATOR_BLANK_LINE:
+            dmxAppendPdfText((XtPointer)&acc, (char *)"\n\n");
+            break;
+        case DMX_SEPARATOR_CHARACTER_LINE: {
+            const char *sep = DmxPrintOptions::getSeparatorString();
+            char line_buf[96];
+            memset(line_buf, '-', 72);
+            line_buf[72] = '\0';
+            if (sep && sep[0]) {
+                size_t sl = strlen(sep);
+                for (size_t pos = 0; pos < 72; pos += sl) {
+                    size_t n = (pos + sl <= 72) ? sl : (72 - pos);
+                    memcpy(line_buf + pos, sep, n);
+                }
             }
-            else
-            {
-                message = XtMalloc(
-                                strlen(appmessage) +
-                                strlen(sysmessage) +
-                                strlen(_print_data->dest_info) +
-                                strlen(fmt) + 1);
-                sprintf(
-			message, fmt,
-			appmessage, _print_data->dest_info, sysmessage);
-            }
- 
-            genDialog->setToErrorDialog(
-                            CATGETS(DT_catd, 21, 3, "Mailer"),
-                            message);
-#if 0
-            genDialog->post_and_return(
-                            CATGETS(DT_catd, 21, 4, "OK"),
-                            NULL);
-            delete genDialog;
-#else
-            genDialog->post((void*) genDialog, (DialogCallback) ok_cb);
-#endif
-            XtFree(message);
- 
-            this->cancel();
+            if (sep) free((void *)sep);
+            dmxAppendPdfText((XtPointer)&acc, (char *)"\n");
+            dmxAppendPdfText((XtPointer)&acc, line_buf);
+            dmxAppendPdfText((XtPointer)&acc, (char *)"\n\n");
+            break;
         }
+        case DMX_SEPARATOR_PAGE_BREAK:
+        case DMX_SEPARATOR_NEW_JOB:
+            dmxAppendPdfText((XtPointer)&acc, (char *)"\f");
+            break;
+        case DMX_SEPARATOR_NEW_LINE:
+        default:
+            dmxAppendPdfText((XtPointer)&acc, (char *)"\n");
+            break;
+        }
+        _next_msg = _mailbox ? _mailbox->nextMessage() : NULL;
     }
-#endif
-#endif  /* PRINTING_SUPPORTED */
+
+    DtPrintJobOptions jopts;
+    DtPrintInitJobOptions(&jopts);
+    if (_print_setup && _print_setup->setupWidget()) {
+        DtPrintReadWidgetJobOptions(_print_setup->setupWidget(), &jopts);
+    }
+    if (_print_setup) {
+        jopts.word_wrap = _print_setup->useWordWrap() ? True : False;
+    }
+
+    const char *m_top = DmxPrintOptions::getMarginSpec(DTPRINT_OPTION_MARGIN_TOP);
+    const char *m_right = DmxPrintOptions::getMarginSpec(DTPRINT_OPTION_MARGIN_RIGHT);
+    const char *m_bot = DmxPrintOptions::getMarginSpec(DTPRINT_OPTION_MARGIN_BOTTOM);
+    const char *m_left = DmxPrintOptions::getMarginSpec(DTPRINT_OPTION_MARGIN_LEFT);
+    jopts.margin_top_pt = DtPrintParseMarginPoints(m_top, 54.0);
+    jopts.margin_right_pt = DtPrintParseMarginPoints(m_right, 54.0);
+    jopts.margin_bottom_pt = DtPrintParseMarginPoints(m_bot, 54.0);
+    jopts.margin_left_pt = DtPrintParseMarginPoints(m_left, 54.0);
+    if (m_top) free((void *)m_top);
+    if (m_right) free((void *)m_right);
+    if (m_bot) free((void *)m_bot);
+    if (m_left) free((void *)m_left);
+
+    char *hl = NULL, *hr = NULL, *fl = NULL, *fr = NULL;
+    if (first_msg != NULL) {
+        DmxStringTypeEnum hlt = DmxPrintOptions::getHdrFtrSpec(DTPRINT_OPTION_HEADER_LEFT);
+        DmxStringTypeEnum hrt = DmxPrintOptions::getHdrFtrSpec(DTPRINT_OPTION_HEADER_RIGHT);
+        DmxStringTypeEnum flt = DmxPrintOptions::getHdrFtrSpec(DTPRINT_OPTION_FOOTER_LEFT);
+        DmxStringTypeEnum frt = DmxPrintOptions::getHdrFtrSpec(DTPRINT_OPTION_FOOTER_RIGHT);
+        hl = (hlt == DMX_PAGE_NUMBER_STRING) ? strdup("Page %d of %d") : getPageHeaderString(first_msg, hlt);
+        hr = (hrt == DMX_PAGE_NUMBER_STRING) ? strdup("Page %d of %d") : getPageHeaderString(first_msg, hrt);
+        fl = (flt == DMX_PAGE_NUMBER_STRING) ? strdup("Page %d of %d") : getPageHeaderString(first_msg, flt);
+        fr = (frt == DMX_PAGE_NUMBER_STRING) ? strdup("Page %d of %d") : getPageHeaderString(first_msg, frt);
+    }
+    jopts.header_left = hl;
+    jopts.header_right = hr;
+    jopts.footer_left = fl;
+    jopts.footer_right = fr;
+    jopts.job_title = "DtMail Message";
+
+    const char *tmp_base = getenv("TMPDIR");
+    if (!tmp_base || !tmp_base[0]) tmp_base = "/var/tmp";
+    char tmp_pdf[MAXPATHLEN + 1];
+    snprintf(tmp_pdf, sizeof(tmp_pdf), "%s/dtmail-print-%d.pdf", tmp_base, (int)getpid());
+
+    char err_buf[256] = {0};
+    int pages = 0, job_id = 0;
+    XtEnum rc = DtPrintRenderTextToPdf(
+        acc.data ? acc.data : "", &jopts, tmp_pdf, &pages, err_buf, sizeof(err_buf)
+    );
+    if (rc == DtPRINT_SUCCESS) {
+        rc = DtPrintDeliverPdfJob(_print_data, &jopts, tmp_pdf, &job_id, err_buf, sizeof(err_buf));
+    }
+    unlink(tmp_pdf);
+    free(acc.data);
+    if (hl) free(hl);
+    if (hr) free(hr);
+    if (fl) free(fl);
+    if (fr) free(fr);
+
+    if (rc != DtPRINT_SUCCESS && !_silent && _parent) {
+        DtMailGenDialog *genDialog = new DtMailGenDialog("Dialog", _parent->baseWidget());
+        char msg[512];
+        snprintf(msg, sizeof(msg), "%s\n%s",
+                 CATGETS(DT_catd, 21, 14, "'Print' was unsuccessful."),
+                 err_buf[0] ? err_buf : "");
+        genDialog->setToErrorDialog(CATGETS(DT_catd, 21, 3, "Mailer"), msg);
+        genDialog->post_and_return(CATGETS(DT_catd, 21, 4, "OK"), NULL);
+        delete genDialog;
+    }
+
+    this->cancel();
 }
 
 
@@ -1131,26 +1178,9 @@ DmxPrintJob::pdmSetupCB(
 		XtPointer client_data,
 		XtPointer call_data)
 {
-#if 0 && defined(PRINTING_SUPPORTED)
-    DmxPrintJob *thisJob = (DmxPrintJob *) client_data;
-    DtPrintSetupCallbackStruct *pbs = (DtPrintSetupCallbackStruct *) call_data;
-
-    DtPrintCopySetupData(thisJob->_print_data, pbs->print_data);
-    thisJob->createPrintShell();
-
-    if (thisJob->_pshell)
-    {
-	Widget	shell = print_setup;
-
-	while (! (shell == NULL || XtIsShell(shell)) )
-	  shell = XtParent(shell);
-
-	if (shell)
-          XmPrintPopupPDM(thisJob->_pshell, shell);
-	else
-	  fprintf(stderr, "Internal Error:  Missing XmPrintShell\n");
-    }
-#endif  /* PRINTING_SUPPORTED */
+    (void)client_data;
+    (void)call_data;
+    DtPrintPopupJobSetupDialog(print_setup, print_setup);
 }
 
 /*

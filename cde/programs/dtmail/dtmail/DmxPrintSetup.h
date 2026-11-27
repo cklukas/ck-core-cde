@@ -152,6 +152,7 @@ public:
     DtMailBoolean	getDefaultPrintData(DtPrintSetupData*);
     DtMailBoolean	printSeparately(void);
     DtMailBoolean	useWordWrap(void);
+    Widget		setupWidget(void) const { return _dtprint_setup; }
 };
 
 #endif // _DMX_PRINT_SETUP_H

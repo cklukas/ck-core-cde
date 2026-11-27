@@ -718,7 +718,11 @@ ClosePrintConnection(
     /*
      * close the print display
      */
-    XtCloseDisplay(PSUB_Display(psub));
+    if (PSUB_Display(psub) != (Display*)nullptr &&
+        PSUB_Display(psub) != XtDisplay((Widget)psub))
+    {
+	XtCloseDisplay(PSUB_Display(psub));
+    }
     PSUB_Display(psub) = (Display*)nullptr;
 }
 
@@ -1608,6 +1612,8 @@ EstablishPrinter(
 		/*
 		 * initialize the display for use with Xt
 		 */
+		if (PSUB_Display(psub) != (Display*)nullptr &&
+		    PSUB_Display(psub) != XtDisplay((Widget)psub))
 		{
 		    String *argv = nullptr, *argv_copy;
 		    int argc = 0, i;
@@ -1714,6 +1720,23 @@ static void
 GetPrintAttributes(
 		   DtPrintSetupBoxWidget psub)
 {
+    {
+	DtPrintCupsQueue cq;
+	if (PSUB_PrinterName(psub) && DtPrintFindCupsQueue(PSUB_PrinterName(psub), &cq))
+	{
+	    char desc_line[384];
+	    if (cq.location[0])
+		snprintf(desc_line, sizeof(desc_line), "%s - %s",
+			 cq.make_model, cq.location);
+	    else
+		snprintf(desc_line, sizeof(desc_line), "%s", cq.make_model);
+	    XmString description = XmStringCreateLocalized(desc_line);
+	    UpdateString(PSUB_Description(psub), description, PSUB_StringDirection(psub));
+	    XmStringFree(description);
+	    PSUB_CopyCountSupported(psub) = True;
+	    return;
+	}
+    }
 #if 0 && defined(PRINTING_SUPPORTED)
     char* attr_value;
     XTextProperty text_prop;
@@ -2370,9 +2393,12 @@ PrintSetupBoxCallback(
 	     * Call setup callback
 	     */
 	    cbs.reason = DtPRINT_CR_SETUP;
-	    XtCallCallbackList((Widget)psub,
-			       PSUB_SetupCallback(psub),
-			       (XtPointer)&cbs);
+	    if (XtHasCallbacks((Widget)psub, DtNsetupCallback) == XtCallbackHasSome)
+		XtCallCallbackList((Widget)psub,
+				   PSUB_SetupCallback(psub),
+				   (XtPointer)&cbs);
+	    else
+		DtPrintPopupJobSetupDialog((Widget)psub, (Widget)psub);
 	}
 	break;
     }

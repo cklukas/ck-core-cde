@@ -29,9 +29,14 @@
  */
 
 #include <EUSCompat.h>
+#include <limits.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <strings.h>
+#include <time.h>
+#include <unistd.h>
 #include <ctype.h>
 #include <csa.h>
 #include <Xm/Xm.h>
@@ -59,6 +64,7 @@
 #include "props_pu.h"
 #include "getdate.h"
 #include "datefield.h"
+#include "format.h"
 #include "timeops.h"
 #include "calendar.h"
 #include "print.h"
@@ -926,14 +932,19 @@ create_print_dialog(Calendar *c)
 	  c->print_data = (caddr_t)XtMalloc(sizeof(_DtCmPrintData));
 	  pd = (_DtCmPrintData *) c->print_data;
 
-	  /* Initialize filename to dir+filename from props */
+	  /* Initialize filename to dir+filename from props (default .pdf) */
 	  print_file = get_char_prop((Props *)c->properties,CP_PRINTFILENAME);
-	  if (!print_file)
-	    print_file = "";
+	  if (!print_file || !print_file[0])
+	    print_file = "calendar.pdf";
 	  print_dir = get_char_prop((Props *)c->properties,CP_PRINTDIRNAME);
-	  if (!print_dir)
-	    print_dir = "";
-	  sprintf(fnamebuf, "%s/%s", print_dir, print_file);
+	  if (!print_dir || !print_dir[0])
+	    print_dir = getenv("HOME") ? getenv("HOME") : ".";
+	  snprintf(fnamebuf, sizeof(fnamebuf), "%s/%s", print_dir, print_file);
+	  {
+	    size_t fl = strlen(fnamebuf);
+	    if (fl > 3 && strcasecmp(fnamebuf + fl - 3, ".ps") == 0)
+	      snprintf(fnamebuf + fl - 3, sizeof(fnamebuf) - (fl - 3), ".pdf");
+	  }
 
 	  title = XtNewString(CATGETS(c->DT_catd, 1, 728, "Calendar : Print"));
 	  nargs = 0;
@@ -1335,38 +1346,145 @@ print_cb(Widget w, XtPointer data, XtPointer cbDataP)
 static void
 print_setup_cb(Widget w, XtPointer uData, XtPointer cbData)
 {
-#if 0 && defined(PRINTING_SUPPORTED)
   Calendar *c = (Calendar *)uData;
-  _DtCmPrintData *pd = (_DtCmPrintData *)c->print_data;
-  DtPrintSetupCallbackStruct *cbStruct =
-    (DtPrintSetupCallbackStruct *)cbData;
+  _DtCmPrintData *pd = c ? (_DtCmPrintData *)c->print_data : nullptr;
+  (void)cbData;
+  DtPrintPopupJobSetupDialog(w, (pd && pd->pdb) ? pd->pdb : w);
+}
 
-  clearSetupData(pd);
-  DtPrintCopySetupData(&pd->setupData, cbStruct->print_data);
-  pd->setupDataValid = True;
+static void cm_buf_append(char **buf, size_t *len, size_t *cap, const char *s)
+{
+  if (!s || !s[0]) return;
+  size_t sl = strlen(s);
+  if (*len + sl + 2 > *cap) {
+    size_t ncap = *cap ? *cap * 2 : 4096;
+    while (ncap < *len + sl + 2) ncap *= 2;
+    char *nb = (char *)realloc(*buf, ncap);
+    if (!nb) return;
+    *buf = nb;
+    *cap = ncap;
+  }
+  memcpy(*buf + *len, s, sl);
+  *len += sl;
+  (*buf)[*len] = '\0';
+}
 
-#ifdef GR_DEBUG
-  /* Force debug mode off. */
-  if (inDebugMode(c))
-    XmToggleButtonGadgetSetState(pd->debugToggle, False, False);
-#endif
+static char *build_dtcm_pdf_text(Calendar *c, int report_type, Tick start_date, Tick end_date)
+{
+  Props *p = (Props *)c->properties;
+  OrderingType ot = get_int_prop(p, CP_DATEORDERING);
+  int meoval = get_int_prop(p, CP_PRINTPRIVACY);
+  char *out = nullptr;
+  size_t len = 0, cap = 0;
 
-  createPrintShell(c);
+  static const char * const rnames[] = {
+    "Day View", "Week View", "Month View", "Year View", "Appointment List", "To Do List"
+  };
+  const char *rlabel = (report_type >= 0 && report_type < 6) ? rnames[report_type] : "Calendar Report";
+  char sbuf[128] = {0}, ebuf[128] = {0}, hdr[512];
+  format_date(start_date, ot, sbuf, 1, 0, 0);
+  format_date(end_date, ot, ebuf, 1, 0, 0);
+  snprintf(hdr, sizeof(hdr),
+           "CDE Calendar (%s)\nCalendar: %s\nRange:    %s  --  %s\n"
+           "========================================================================\n\n",
+           rlabel,
+           (c->calname && c->calname[0]) ? c->calname : "Default",
+           sbuf, ebuf);
+  cm_buf_append(&out, &len, &cap, hdr);
 
-  if (XmPrintPopupPDM(pd->printShell, w) != XmPDM_NOTIFY_SUCCESS)
-  {
-    char *errText = XtNewString(CATGETS(c->DT_catd, 1, 1112,
-					pdmErrorText));
-    char *title = XtNewString(CATGETS(c->DT_catd, 1, 1111, setupErrorTitle));
-
-    report_error(c, title, errText);
-
-    XtFree(title);
-    XtFree(errText);
+  if (report_type == PR_YEAR_VIEW) {
+    int sy = year(start_date);
+    int ey = year(end_date);
+    if (ey < sy) ey = sy;
+    for (int yr = sy; yr <= ey; ++yr) {
+      char yline[128];
+      snprintf(yline, sizeof(yline), "Year %d\n----------------------------------------\n", yr);
+      cm_buf_append(&out, &len, &cap, yline);
+      for (int mo = 1; mo <= 12; ++mo) {
+        Tick mt = monthdayyear(mo, 1, yr);
+        int mlen = monthlength(mt);
+        int fdom_wday = fdom(mt);
+        char mhdr[128];
+        snprintf(mhdr, sizeof(mhdr), "\n  %s %d\n  Su Mo Tu We Th Fr Sa\n  ", months[mo], yr);
+        cm_buf_append(&out, &len, &cap, mhdr);
+        for (int sp = 0; sp < fdom_wday; ++sp) cm_buf_append(&out, &len, &cap, "   ");
+        for (int d = 1; d <= mlen; ++d) {
+          char db[16];
+          snprintf(db, sizeof(db), "%2d ", d);
+          cm_buf_append(&out, &len, &cap, db);
+          if (((fdom_wday + d) % 7) == 0 && d < mlen) cm_buf_append(&out, &len, &cap, "\n  ");
+        }
+        cm_buf_append(&out, &len, &cap, "\n");
+      }
+      if (yr < ey) cm_buf_append(&out, &len, &cap, "\f");
+    }
+    return out ? out : strdup("");
   }
 
-  clearSetupData(pd);
-#endif  /* PRINTING_SUPPORTED */
+  CSA_sint32 csa_type = (report_type == PR_TODO_LIST) ? CSA_TYPE_TODO : CSA_TYPE_EVENT;
+  Tick range_lo = lowerbound(start_date);
+  Tick range_hi = nextday(lowerbound(end_date)) - 1;
+  int total_items = 0;
+
+  if (c->cal_handle != 0) {
+    CSA_entry_handle *list = nullptr;
+    CSA_attribute *range_attrs = nullptr;
+    CSA_enum *ops = nullptr;
+    CSA_uint32 a_total = 0;
+    int nattrs = 0;
+    setup_range(&range_attrs, &ops, &nattrs, (time_t)range_lo, (time_t)range_hi,
+                csa_type, 0, B_FALSE, c->general->version);
+    if (csa_list_entries(c->cal_handle, nattrs, range_attrs, ops, &a_total, &list, nullptr) == CSA_SUCCESS &&
+        list != nullptr && a_total > 0) {
+      Dtcm_appointment *appt = allocate_appt_struct(
+          appt_read, c->general->version,
+          CSA_ENTRY_ATTR_CLASSIFICATION_I,
+          CSA_ENTRY_ATTR_TYPE_I,
+          CSA_ENTRY_ATTR_STATUS_I,
+          CSA_ENTRY_ATTR_START_DATE_I,
+          CSA_ENTRY_ATTR_SUMMARY_I,
+          CSA_X_DT_ENTRY_ATTR_SHOWTIME_I,
+          CSA_ENTRY_ATTR_END_DATE_I,
+          nullptr
+      );
+      for (CSA_uint32 i = 0; i < a_total; ++i) {
+        if (query_appt_struct(c->cal_handle, list[i], appt) != CSA_SUCCESS) continue;
+        if ((privacy_set(appt) == CSA_CLASS_PUBLIC && !(meoval & PRINT_PUBLIC)) ||
+            (privacy_set(appt) == CSA_CLASS_CONFIDENTIAL && !(meoval & PRINT_SEMIPRIVATE)) ||
+            (privacy_set(appt) == CSA_CLASS_PRIVATE && !(meoval & PRINT_PRIVATE))) {
+          continue;
+        }
+        Tick st_tick = 0;
+        if (appt->time && appt->time->value && appt->time->value->item.date_time_value) {
+          _csa_iso8601_to_tick(appt->time->value->item.date_time_value, &st_tick);
+        }
+        char dstr[96] = {0}, tstr[64] = {0};
+        if (st_tick > 0) {
+          format_date(st_tick, ot, dstr, 1, 0, 0);
+          struct tm ltm;
+          time_t tt = (time_t)st_tick;
+          if (localtime_r(&tt, &ltm)) {
+            snprintf(tstr, sizeof(tstr), "%02d:%02d", ltm.tm_hour, ltm.tm_min);
+          }
+        }
+        const char *sum = (appt->what && appt->what->value && appt->what->value->item.string_value)
+                              ? appt->what->value->item.string_value
+                              : "(Untitled)";
+        char row[1024];
+        snprintf(row, sizeof(row), "[%s %s]  %s\n", dstr, tstr, sum);
+        cm_buf_append(&out, &len, &cap, row);
+        total_items++;
+      }
+      free_appt_struct(&appt);
+      csa_free(list);
+    }
+    free_range(&range_attrs, &ops, nattrs);
+  }
+
+  if (total_items == 0) {
+    cm_buf_append(&out, &len, &cap, "(No scheduled items in selected date range.)\n");
+  }
+  return out ? out : strdup("");
 }
 
 /*
@@ -1438,31 +1556,34 @@ print_report(Calendar *c)
   if (XtIsManaged(pd->pdb))
     _DtTurnOnHourGlass(XtParent(pd->pdb));
 
-  createPrintShell(c);
-
-  switch(r)
   {
-  case PR_YEAR_VIEW:
-    print_std_year_range(year(start_date), year(end_date));
-    break;
-  default:
-  case PR_MONTH_VIEW:
-    print_month_range(c, start_date, end_date);
-    break;
-  case PR_WEEK_VIEW:
-    print_week_range(c, start_date, end_date);
-    break;
-  case PR_DAY_VIEW:
-    print_day_range(c, start_date, end_date);
-    break;
-  case PR_APPT_LIST:
-    x_print_list_range(c, CSA_TYPE_EVENT, (int) c->view->glance,
-		       start_date, end_date);
-    break;
-  case PR_TODO_LIST:
-    x_print_list_range(c, CSA_TYPE_TODO, (int) VIEW_ALL,
-		       start_date, end_date);
-    break;
+    char *report_txt = build_dtcm_pdf_text(c, r, start_date, end_date);
+    DtPrintJobOptions jopts;
+    DtPrintInitJobOptions(&jopts);
+    DtPrintReadWidgetJobOptions(pd->pdb, &jopts);
+    jopts.header_left = (c->calname && c->calname[0]) ? c->calname : "CDE Calendar";
+    jopts.footer_right = "Page %d of %d";
+    jopts.job_title = "CDE Calendar Printout";
+
+    const char *tmp_base = getenv("TMPDIR");
+    if (!tmp_base || !tmp_base[0]) tmp_base = "/var/tmp";
+    char tmp_pdf[PATH_MAX];
+    snprintf(tmp_pdf, sizeof(tmp_pdf), "%s/dtcm-print-%d.pdf", tmp_base, (int)getpid());
+
+    char err_buf[256] = {0};
+    int pages = 0, job_id = 0;
+    XtEnum rc = DtPrintRenderTextToPdf(report_txt, &jopts, tmp_pdf, &pages, err_buf, sizeof(err_buf));
+    if (rc == DtPRINT_SUCCESS) {
+      rc = DtPrintDeliverPdfJob(&pd->setupData, &jopts, tmp_pdf, &job_id, err_buf, sizeof(err_buf));
+    }
+    unlink(tmp_pdf);
+    free(report_txt);
+
+    if (rc != DtPRINT_SUCCESS) {
+      char *title = XtNewString(CATGETS(c->DT_catd, 1, 736, printErrorTitle));
+      report_error(c, title, err_buf[0] ? err_buf : "Calendar print failed.");
+      XtFree(title);
+    }
   }
 
 #ifdef GR_DEBUG

@@ -39,7 +39,9 @@ $COPYRIGHT$:
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <unistd.h>
+#include <Dt/Print.h>
 #include <Dt/MsgCatP.h>  /* for message cat processing */
 #if defined(sun)
 #include <locale.h>
@@ -162,6 +164,30 @@ printCommand: should pt to a very large (e.g. >5000 char) string
 ========================================================$SKIP$=====*/
 #endif /*DOC*/
 
+static DtPrintPaperSize map_help_paper_size(const char *ps)
+{
+   if (!ps || !ps[0]) return DtPRINT_PAPER_LETTER;
+   if (strcasestr(ps, "legal") != nullptr) return DtPRINT_PAPER_LEGAL;
+   if (strcasestr(ps, "executive") != nullptr) return DtPRINT_PAPER_EXECUTIVE;
+   if (strcasestr(ps, "a4") != nullptr) return DtPRINT_PAPER_A4;
+   if (strcasestr(ps, "b5") != nullptr) return DtPRINT_PAPER_B5;
+   return DtPRINT_PAPER_LETTER;
+}
+
+static char *slurp_text_file(const char *path)
+{
+   FILE *fp = fopen(path, "rb");
+   if (!fp) return nullptr;
+   if (fseek(fp, 0, SEEK_END) != 0) { fclose(fp); return nullptr; }
+   long sz = ftell(fp);
+   rewind(fp);
+   if (sz < 0 || sz > 64L * 1024L * 1024L) { fclose(fp); return nullptr; }
+   char *buf = (char *)calloc((size_t)sz + 1, 1);
+   if (buf && sz > 0) (void)fread(buf, 1, (size_t)sz, fp);
+   fclose(fp);
+   return buf;
+}
+
 int _DtHPrGenFileOrPrint(
    _DtHPrOptions * options,
    char *          userfile,
@@ -169,22 +195,69 @@ int _DtHPrGenFileOrPrint(
 {       /*$CODE$*/
    int    status;
    char * tmpfile;
-   char   cmdFormat[30];
-   
+
    /* put into specified output file?? */
    if (options->outputFile[0] != EOS) 
    { 
-      size_t cur_len = strlen(printCommand);
-      if (cur_len + 1 < MAX_COMMAND_LENGTH)
+      size_t olen = strlen(options->outputFile);
+      Boolean want_pdf = (olen > 4 && strcasecmp(options->outputFile + olen - 4, ".pdf") == 0);
+      if (!want_pdf)
       {
-         printCommand[cur_len++] = ' ';
-         printCommand[cur_len] = EOS;
-         snprintf(printCommand + cur_len, MAX_COMMAND_LENGTH - cur_len,
-                  options->redirectCmdAndArgs,
-                  options->outputFile );     /* file */
+         size_t cur_len = strlen(printCommand);
+         if (cur_len + 1 < MAX_COMMAND_LENGTH)
+         {
+            printCommand[cur_len++] = ' ';
+            printCommand[cur_len] = EOS;
+            snprintf(printCommand + cur_len, MAX_COMMAND_LENGTH - cur_len,
+                     options->redirectCmdAndArgs,
+                     options->outputFile );     /* file */
+         }
+         if(options->debugHelpPrint) printf("%s\n",printCommand);
+         return (system(printCommand));           /* RETURN */
       }
-      if(options->debugHelpPrint) printf("%s\n",printCommand);
-      return (system(printCommand));           /* RETURN */
+
+      /* Render vector Cairo/Pango PDF directly to options->outputFile */
+      tmpfile = _DtHPrCreateTmpFile(TMPFILE_PREFIX,TMPFILE_SUFFIX);
+      if (nullptr == tmpfile) return -1;
+      {
+         size_t cur_len = strlen(printCommand);
+         if (cur_len + 1 < MAX_COMMAND_LENGTH)
+         {
+            printCommand[cur_len++] = ' ';
+            printCommand[cur_len] = EOS;
+            snprintf(printCommand + cur_len, MAX_COMMAND_LENGTH - cur_len,
+                     options->redirectCmdAndArgs, tmpfile);
+         }
+      }
+      status = system(printCommand);
+      if (status != 0)
+      {
+         unlink(tmpfile);
+         free(tmpfile);
+         return status;
+      }
+      char *txt = slurp_text_file(tmpfile);
+      unlink(tmpfile);
+      free(tmpfile);
+
+      DtPrintJobOptions jopts;
+      DtPrintInitJobOptions(&jopts);
+      jopts.paper_size = map_help_paper_size(options->paperSize);
+      if (options->copies && atoi(options->copies) > 0)
+         jopts.copies = atoi(options->copies);
+      jopts.job_title = (options->topicTitle && options->topicTitle[0])
+                            ? options->topicTitle
+                            : ((userfile && userfile[0]) ? userfile : "CDE Help");
+      jopts.header_left = jopts.job_title;
+      jopts.footer_right = "Page %d of %d";
+
+      char err_buf[256] = {0};
+      int pages = 0;
+      XtEnum prc = DtPrintRenderTextToPdf(
+          txt ? txt : "", &jopts, options->outputFile, &pages, err_buf, sizeof(err_buf)
+      );
+      free(txt);
+      return (prc == DtPRINT_SUCCESS) ? 0 : 1;
    }
 
    /* put into private tmp file */
@@ -219,6 +292,43 @@ int _DtHPrGenFileOrPrint(
       unlink(tmpfile);
       free(tmpfile);
       return status;                           /* RETURN */
+   }
+
+   /* Modern vector Cairo/Pango PDF -> direct libcups / IPP submission unless legacy lp requested */
+   const char *legacy_lp = getenv("DTPRINT_LEGACY_LP");
+   if (!legacy_lp || strcmp(legacy_lp, "1") != 0)
+   {
+      char *txt = slurp_text_file(tmpfile);
+      char *pdf_tmp = _DtHPrCreateTmpFile("hp_pdf_", ".pdf");
+      if (txt && pdf_tmp)
+      {
+         DtPrintJobOptions jopts;
+         DtPrintInitJobOptions(&jopts);
+         jopts.paper_size = map_help_paper_size(options->paperSize);
+         if (options->copies && atoi(options->copies) > 0)
+            jopts.copies = atoi(options->copies);
+         jopts.job_title = (options->topicTitle && options->topicTitle[0])
+                               ? options->topicTitle
+                               : ((userfile && userfile[0]) ? userfile : "CDE Help");
+         jopts.header_left = jopts.job_title;
+         jopts.footer_right = "Page %d of %d";
+
+         char err_buf[256] = {0};
+         int pages = 0, job_id = 0;
+         if (DtPrintRenderTextToPdf(txt, &jopts, pdf_tmp, &pages, err_buf, sizeof(err_buf)) == DtPRINT_SUCCESS &&
+             DtPrintSubmitCupsPdfJob(options->printer, pdf_tmp, &jopts, &job_id, err_buf, sizeof(err_buf)) == DtPRINT_SUCCESS)
+         {
+            unlink(pdf_tmp);
+            free(pdf_tmp);
+            free(txt);
+            unlink(tmpfile);
+            free(tmpfile);
+            return 0;
+         }
+         unlink(pdf_tmp);
+      }
+      free(pdf_tmp);
+      free(txt);
    }
 
    /* make sure there is a DISPLAY environment variable */

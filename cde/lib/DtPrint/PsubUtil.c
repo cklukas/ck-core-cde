@@ -41,7 +41,9 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <strings.h>
 #include <Dt/DtNlUtils.h>
+#include <Dt/Print.h>
 
 #include <Dt/PsubUtilI.h>
 
@@ -575,6 +577,12 @@ _DtPrintGetDefaultXPrinterName(
     else if((default_printer = getenv("LPDEST")) != (String)nullptr);
     else if((default_printer = getenv("PRINTER")) != (String)nullptr)
         ;
+    else
+    {
+	char cups_default[128];
+	if (DtPrintDefaultCupsQueueName(cups_default, sizeof(cups_default)))
+	    return XtNewString(cups_default);
+    }
     /*
      * return a copy of the printer name
      */
@@ -634,7 +642,18 @@ _DtPrintGetXpPrinterList(
 	return BuildStringList(xp_printer_list, 0);
     }
     else
+    {
+	DtPrintCupsQueue queues[64];
+	int n = DtPrintDiscoverCupsQueues(queues, 64);
+	if (n > 0)
+	{
+	    String* list = (String*)XtCalloc((Cardinal)(n + 1), sizeof(String));
+	    for (int i = 0; i < n; ++i)
+		list[i] = XtNewString(queues[i].name);
+	    return list;
+	}
 	return (String*)nullptr;
+    }
 }
 
 /*
@@ -1077,6 +1096,17 @@ _DtPrintVerifyXPrinter(
 	 * printer name is missing
 	 */
 	status = DtPRINT_PRINTER_MISSING;
+    }
+    else if (DtPrintFindCupsQueue(printer_name, nullptr) ||
+             strncasecmp(printer_name, "ipp://", 6) == 0 ||
+             strncasecmp(printer_name, "http://", 7) == 0)
+    {
+	/*
+	 * Verified CUPS / IPP Everywhere queue (no legacy Xprint display).
+	 */
+	print_display = (Display*)nullptr;
+	ct_printer_name = (char*)nullptr;
+	status = DtPRINT_SUCCESS;
     }
     else
     {

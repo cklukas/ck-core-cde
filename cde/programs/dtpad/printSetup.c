@@ -849,7 +849,7 @@ _psAttachPrintSetupDialog(PrintSetup *pSetup, Editor *pPad)
 	      filename = pSetup->docName;
 	    else
 	      filename++;
-            snprintf(path, sizeof(path), "%s/%s.ps", dirname, filename);
+            snprintf(path, sizeof(path), "%s/%s.pdf", dirname, filename);
             XtVaSetValues(pSetup->dtprintSetup, DtNfileName, path, nullptr);
         }
     }

@@ -1210,11 +1210,41 @@ void _DtHelpPrintJob(
   int	 pid;
   char   tmpHelpType[4];
 
-   /* Setup the helpprint command and let it go */
-   i = 0;
-   argv[i++] = printExec;
+   const char *env_exec = getenv("DTPRINT_HELPPRINT_BIN");
+   char expanded_pdf[MAXPATHLEN + 1] = {0};
+   Boolean printer_is_pdf_file = False;
 
    if (printer != nullptr && printer[0] != EOS)
+   {
+      size_t plen = strlen(printer);
+      if (strncasecmp(printer, "file://", 7) == 0) {
+         snprintf(expanded_pdf, sizeof(expanded_pdf), "%s", printer + 7);
+         printer_is_pdf_file = True;
+      } else if (strncasecmp(printer, "file:", 5) == 0) {
+         snprintf(expanded_pdf, sizeof(expanded_pdf), "%s", printer + 5);
+         printer_is_pdf_file = True;
+      } else if (plen > 4 && strcasecmp(printer + plen - 4, ".pdf") == 0) {
+         if (printer[0] == '~' && printer[1] == '/') {
+            const char *home = getenv("HOME");
+            snprintf(expanded_pdf, sizeof(expanded_pdf), "%s/%s",
+                     (home && home[0]) ? home : ".", printer + 2);
+         } else {
+            snprintf(expanded_pdf, sizeof(expanded_pdf), "%s", printer);
+         }
+         printer_is_pdf_file = True;
+      }
+   }
+
+   /* Setup the helpprint command and let it go */
+   i = 0;
+   argv[i++] = (env_exec && env_exec[0]) ? (char *)env_exec : printExec;
+
+   if (printer_is_pdf_file && expanded_pdf[0] != EOS)
+   {
+        argv[i++] = "-outputFile";
+        argv[i++] = expanded_pdf;
+   }
+   else if (printer != nullptr && printer[0] != EOS)
    {
         argv[i++] = "-printer";
         argv[i++] = printer;

@@ -50,6 +50,7 @@ nav:
           - docs/improvements/dtsearch.md
           - docs/improvements/session-manager.md
           - docs/improvements/mail.md
+          - docs/improvements/printing.md
           - docs/improvements/trash.md
           - docs/improvements/validation.md
   - title: Development

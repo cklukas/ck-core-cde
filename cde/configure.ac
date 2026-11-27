@@ -802,6 +802,13 @@ AM_CONDITIONAL([BUILD_DTPORTAL], [test "x$build_dtportal" = "xyes"])
 AC_SUBST([DTPORTAL_DEPS_CFLAGS])
 AC_SUBST([DTPORTAL_DEPS_LIBS])
 
+PKG_CHECK_MODULES([DTPRINT_PDF_DEPS], [cairo cairo-pdf pangocairo pango gobject-2.0],
+  [have_dtprint_pdf=yes; AC_DEFINE([HAVE_DTPRINT_PDF], [1], [Define to 1 if Cairo/Pango PDF backend is available])],
+  [DTPRINT_PDF_DEPS_CFLAGS=""; DTPRINT_PDF_DEPS_LIBS=""; have_dtprint_pdf=no])
+AM_CONDITIONAL([HAVE_DTPRINT_PDF], [test "x$have_dtprint_pdf" = "xyes"])
+AC_SUBST([DTPRINT_PDF_DEPS_CFLAGS])
+AC_SUBST([DTPRINT_PDF_DEPS_LIBS])
+
 dnl check MISSING_PROGS - error out here if there's stuff in it.
 
 if test -n "$MISSING_PROGS"; then

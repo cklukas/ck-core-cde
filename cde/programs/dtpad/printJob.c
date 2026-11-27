@@ -71,6 +71,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <time.h>
+#include <unistd.h>
 
 #include <X11/Intrinsic.h>
 #include <X11/Shell.h>
@@ -601,80 +602,131 @@ _pjCreateOutputWidgets(PrintJob *pJob)
  *      Initializes the mailbox to iterate through the messages.
  *      Calls spoolOne to send a print job to the Xp server.
  ************************************************************************/
+static char *
+_pjGetHdrTemplateString(PrintJob *pJob, PrintStringTypeEnum type)
+{
+    if (type == PRINT_PAGE_NUMBER_STRING_TYPE_ENUM) {
+        return XtNewString(GETMESSAGE(14, 10, "Page %d of %d"));
+    }
+    return _pjGetPageHeaderString(pJob, type);
+}
+
 static void
 _pjDoPrint(PrintJob *pJob)
 {
-#if 0 && defined(PRINTING_SUPPORTED)
-
-    static char		buf[1024];
-    static char 	*format;
-    DtPrintSetupData    *psd = nullptr;
-    int			dest = XPSpool;
-
-    /*
-     * Notify the user that we're printing
-     */
-    if (pJob->pPad != nullptr) {
-	pJob->pPad->numPendingTasks++;
-        format = GETMESSAGE(14, 21, "Printing %s ...");
-        sprintf(buf, format, pJob->documentName);
-        SetStatusMessage(pJob->pPad, buf);
-	XtSetSensitive(pJob->pPad->fileStuff.fileWidgets.printBtn, False);
+    if (pJob == nullptr || pJob->printData == nullptr) {
+        PrintJobDestroy(pJob);
+        return;
     }
 
-#ifndef PRINT_TO_VIDEO
-    psd = pJob->printData;
+    DtPrintSetupData *psd = pJob->printData;
+    const char *env_pdf = getenv("DTPAD_PRINT_PDF_OUT");
+    DtPrintSetupData local_psd = *psd;
+    if (env_pdf && env_pdf[0]) {
+        local_psd.destination = DtPRINT_TO_FILE;
+        local_psd.dest_info = (String)env_pdf;
+    }
 
-    if (psd->destination == DtPRINT_TO_FILE)
-      dest = XPGetData;
-
-    _pjRegisterActivePrintDisplay(XtDisplay(pJob->pShell));
-    XpStartJob(XtDisplay(pJob->pShell), dest);
-    XFlush(XtDisplay(pJob->pShell));
-
-    if (psd->destination == DtPRINT_TO_FILE)
-    {
-        if (FALSE == XmPrintToFile(
-				XtDisplay(pJob->pShell),
-				psd->dest_info,
-				_pjFinishedPrintToFile,
-				(XPointer) pJob))
-	{
-            char	*fmt = "%s\n%s:  %s";
-            char	*message;
-            char	*appmessage = nullptr;
-	    char	*sysmessage = strerror(errno);
-
-	    appmessage = (char *) GETMESSAGE(
-			    14, 14,
-			    "'Print to File' was unsuccessful.");
-	    
-	    if (nullptr == sysmessage)
-	    {
-		message = XtMalloc(strlen(appmessage) + 1);
-	        sprintf(message, "%s", appmessage);
-	    }
-	    else
-	    {
-		message = XtMalloc(
-				strlen(appmessage) +
-				strlen(sysmessage) +
-				strlen(psd->dest_info) +
-				strlen(fmt) + 1);
-	        sprintf(message, fmt, appmessage, psd->dest_info, sysmessage);
-	    }
-	    
-	    Warning(pJob->pPad, message, XmDIALOG_WARNING);
-	    XtFree(message);
-            
-            XpCancelJob(XtDisplay(pJob->pShell), False);
-	    PrintJobDestroy(pJob);
+    FILE *fp = (pJob->tempFileName && pJob->tempFileName[0])
+                   ? fopen(pJob->tempFileName, "rb")
+                   : nullptr;
+    char *doc_bytes = nullptr;
+    if (fp) {
+        if (fseek(fp, 0, SEEK_END) == 0) {
+            long sz = ftell(fp);
+            rewind(fp);
+            if (sz >= 0 && sz <= 64L * 1024L * 1024L) {
+                doc_bytes = (char *)calloc((size_t)sz + 1, 1);
+                if (doc_bytes && sz > 0) {
+                    (void)fread(doc_bytes, 1, (size_t)sz, fp);
+                }
+            }
         }
+        fclose(fp);
     }
-#endif
-#endif  /* PRINTING_SUPPORTED */
+    if (!doc_bytes) {
+        doc_bytes = strdup("");
+    }
 
+    DtPrintJobOptions jopts;
+    DtPrintInitJobOptions(&jopts);
+    if (pJob->pSetup && pJob->pSetup->dtprintSetup) {
+        DtPrintReadWidgetJobOptions(pJob->pSetup->dtprintSetup, &jopts);
+    }
+    if (pJob->pSetup) {
+        jopts.word_wrap = PrintSetupUseWordWrap(pJob->pSetup);
+        jopts.margin_top_pt = DtPrintParseMarginPoints(
+            PrintSetupGetMarginSpec(pJob->pSetup, DTPRINT_OPTION_MARGIN_TOP), 54.0);
+        jopts.margin_right_pt = DtPrintParseMarginPoints(
+            PrintSetupGetMarginSpec(pJob->pSetup, DTPRINT_OPTION_MARGIN_RIGHT), 54.0);
+        jopts.margin_bottom_pt = DtPrintParseMarginPoints(
+            PrintSetupGetMarginSpec(pJob->pSetup, DTPRINT_OPTION_MARGIN_BOTTOM), 54.0);
+        jopts.margin_left_pt = DtPrintParseMarginPoints(
+            PrintSetupGetMarginSpec(pJob->pSetup, DTPRINT_OPTION_MARGIN_LEFT), 54.0);
+    }
+    jopts.job_title = (pJob->documentName && pJob->documentName[0])
+                          ? pJob->documentName : "dtpad Document";
 
+    char *hl = pJob->pSetup
+                   ? _pjGetHdrTemplateString(
+                         pJob, PrintSetupGetHdrFtrSpec(pJob->pSetup, DTPRINT_OPTION_HEADER_LEFT))
+                   : nullptr;
+    char *hr = pJob->pSetup
+                   ? _pjGetHdrTemplateString(
+                         pJob, PrintSetupGetHdrFtrSpec(pJob->pSetup, DTPRINT_OPTION_HEADER_RIGHT))
+                   : nullptr;
+    char *fl = pJob->pSetup
+                   ? _pjGetHdrTemplateString(
+                         pJob, PrintSetupGetHdrFtrSpec(pJob->pSetup, DTPRINT_OPTION_FOOTER_LEFT))
+                   : nullptr;
+    char *fr = pJob->pSetup
+                   ? _pjGetHdrTemplateString(
+                         pJob, PrintSetupGetHdrFtrSpec(pJob->pSetup, DTPRINT_OPTION_FOOTER_RIGHT))
+                   : nullptr;
+    jopts.header_left = hl;
+    jopts.header_right = hr;
+    jopts.footer_left = fl;
+    jopts.footer_right = fr;
+
+    const char *tmp_base = getenv("TMPDIR");
+    if (!tmp_base || !tmp_base[0]) tmp_base = "/var/tmp";
+    char tmp_pdf[PATH_MAX];
+    snprintf(tmp_pdf, sizeof(tmp_pdf), "%s/dtpad-print-%d-%ld.pdf",
+             tmp_base, (int)getpid(), (long)time(nullptr));
+
+    char err_buf[256] = {0};
+    int pages = 0;
+    int job_id = 0;
+    XtEnum rc = DtPrintRenderTextToPdf(doc_bytes, &jopts, tmp_pdf, &pages, err_buf, sizeof(err_buf));
+    if (rc == DtPRINT_SUCCESS) {
+        rc = DtPrintDeliverPdfJob(&local_psd, &jopts, tmp_pdf, &job_id, err_buf, sizeof(err_buf));
+    }
+    unlink(tmp_pdf);
+    free(doc_bytes);
+    if (hl) free(hl);
+    if (hr) free(hr);
+    if (fl) free(fl);
+    if (fr) free(fr);
+
+    if (rc != DtPRINT_SUCCESS && !pJob->silent && pJob->pPad) {
+        char msg[512];
+        snprintf(msg, sizeof(msg), "%s\n%s",
+                 GETMESSAGE(14, 14, "'Print' was unsuccessful."),
+                 err_buf[0] ? err_buf : "");
+        Warning(pJob->pPad, msg, XmDIALOG_WARNING);
+    } else if (rc == DtPRINT_SUCCESS && local_psd.destination == DtPRINT_TO_FILE &&
+               !pJob->silent && pJob->pPad) {
+        SetStatusMessage(
+            pJob->pPad,
+            (char *)GETMESSAGE(14, 15, "'Print to File' completed successfully.")
+        );
+    }
+
+    if (pJob->pPad) {
+        /* Balance PrintJobDestroy's numPendingTasks-- */
+        pJob->pPad->numPendingTasks++;
+    }
+    PrintJobDestroy(pJob);
 }
 
 /************************************************************************
@@ -907,29 +959,9 @@ _pjPrintCB (Widget widget, XtPointer client_data, XtPointer call_data)
 static void
 _pjPdmSetupCB(Widget print_setup, XtPointer client_data, XtPointer call_data)
 {
-#if 0 && defined(PRINTING_SUPPORTED)
-    char	*pname = "_pjPdmSetupCB";
-    PrintJob	*pJob = (PrintJob *) client_data;
-    DtPrintSetupCallbackStruct
-		*pbs = (DtPrintSetupCallbackStruct *) call_data;
-
-    DtPrintCopySetupData(pJob->printData, pbs->print_data);
-    _pjCreatePrintShell(pJob);
-
-    /* Pop up the PDM */
-    if (pJob->pShell)
-    {
-	Widget	shell = print_setup;
-
-	while (! (shell == nullptr || XtIsShell(shell)) )
-	  shell = XtParent(shell);
-
-	if (shell)
-          XmPrintPopupPDM(pJob->pShell, shell);
-	else
-	  fprintf(stderr, "Internal Error %s:  Missing XmPrintShell.", pname);
-    }
-#endif  /* PRINTING_SUPPORTED */
+    (void)client_data;
+    (void)call_data;
+    DtPrintPopupJobSetupDialog(print_setup, print_setup);
 }
 
 

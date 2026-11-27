@@ -221,6 +221,40 @@ BuildPrinterLists(
      * clean up previous lists if needed
      */
     FreeSelectPrinterData(dpd);
+    {
+	DtPrintCupsQueue queues[64];
+	int nq = DtPrintDiscoverCupsQueues(queues, 64);
+	if (nq > 0)
+	{
+	    dpd->xp_server_count = 1;
+	    dpd->xp_server_list = (String*)XtCalloc(1, sizeof(String));
+	    dpd->xp_server_list[0] = XtNewString("");
+	    dpd->printer_lists = (DtPrintSelectPrinterList*)
+		XtCalloc(1, sizeof(DtPrintSelectPrinterList));
+	    dpd->printer_counts = (int*)XtCalloc(1, sizeof(int));
+	    dpd->printer_counts[0] = nq;
+	    dpd->printer_lists[0] = (DtPrintSelectPrinterList)
+		XtCalloc((Cardinal)nq, sizeof(DtPrintSelectPrinterRec));
+	    printer_list = dpd->printer_lists[0];
+	    for (j = 0; j < nq; ++j)
+	    {
+		char desc_buf[420];
+		if (queues[j].location[0])
+		    snprintf(desc_buf, sizeof(desc_buf), "%s (%s)",
+			     queues[j].make_model, queues[j].location);
+		else
+		    snprintf(desc_buf, sizeof(desc_buf), "%s",
+			     queues[j].make_model);
+		printer_list[j].printer_name_ct = XtNewString(queues[j].name);
+		printer_list[j].printer_name = XtNewString(queues[j].name);
+		printer_list[j].description = XtNewString(desc_buf);
+	    }
+	    qsort((void*)printer_list, (size_t)nq,
+		  sizeof(DtPrintSelectPrinterRec), CompareSelectPrinterRecs);
+	    *item_count = nq;
+	    return DtPRINT_SUCCESS;
+	}
+    }
     /*
      * get the list of servers
      */
@@ -359,10 +393,13 @@ BuildPrinterSelectionItems(
 	     */
 	    name = (dpd->printer_lists[i])[j].printer_name;
 	    (dpd->printer_lists[i])[j].printer_name = (String)nullptr;
-	    full_name =
-		_DtPrintCreateXPrinterSpecifier(name, server_name,
-						DtPRINT_NET_UNSPECIFIED,
-						-1, -1);
+	    if (server_len == 0)
+		full_name = XtNewString(name);
+	    else
+		full_name =
+		    _DtPrintCreateXPrinterSpecifier(name, server_name,
+						    DtPRINT_NET_UNSPECIFIED,
+						    -1, -1);
 	    XtFree(name);
 	    /*
 	     * check to see if this should be the initially selected printer
@@ -2186,6 +2223,41 @@ _DtPrintSetupBoxXPrinterInfoProc(
 	    XtFree(attr_value);
 	    XtVaSetValues(ctl, XmNlabelString, label, nullptr);
 	    XmStringFree(label);
+	}
+    }
+    /*
+     * Populate CUPS / IPP Everywhere attributes when available
+     */
+    {
+	DtPrintCupsQueue cq;
+	if (print_data && print_data->printer_name &&
+	    DtPrintFindCupsQueue(print_data->printer_name, &cq))
+	{
+	    char desc_line[420];
+	    if (cq.location[0])
+		snprintf(desc_line, sizeof(desc_line), "%s (%s)",
+			 cq.location, cq.device_uri);
+	    else
+		snprintf(desc_line, sizeof(desc_line), "%s", cq.device_uri);
+
+	    ctl = XtNameToWidget(dpd->printer_info_box, "*Description");
+	    if (ctl) {
+		label = XmStringCreateLocalized(desc_line);
+		XtVaSetValues(ctl, XmNlabelString, label, nullptr);
+		XmStringFree(label);
+	    }
+	    ctl = XtNameToWidget(dpd->printer_info_box, "*Format");
+	    if (ctl) {
+		label = XmStringCreateLocalized("application/pdf (Cairo/Pango Vector PDF)");
+		XtVaSetValues(ctl, XmNlabelString, label, nullptr);
+		XmStringFree(label);
+	    }
+	    ctl = XtNameToWidget(dpd->printer_info_box, "*Model");
+	    if (ctl) {
+		label = XmStringCreateLocalized(cq.make_model);
+		XtVaSetValues(ctl, XmNlabelString, label, nullptr);
+		XmStringFree(label);
+	    }
 	}
     }
     /*

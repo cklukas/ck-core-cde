@@ -1,4 +1,19 @@
 2026-11-27
+- Replace retired X11 `Xprint` (`Xp`) and legacy `lp` PostScript stubs in
+  `libDtPrint`, `dtpad`, `dtmail`, `dtcm`, `libDtHelp`, and `dthelpprint` with a
+  Unicode-clean Cairo/Pango vector PDF and direct CUPS / IPP Everywhere pipeline:
+  - Add `PrintPdfCups.c` and `<Dt/Print.h>` APIs (`DtPrintRenderTextToPdf`,
+    `DtPrintRenderCustomPagesToPdf`, `DtPrintDiscoverCupsQueues`,
+    `DtPrintPopupJobSetupDialog`, `DtPrintSubmitCupsPdfJob`,
+    `DtPrintDeliverPdfJob`) providing two-pass PangoCairo pagination, headers
+    and footers with exact page counts, page-range filtering, built-in
+    `Print_to_PDF`, Motif **Setup...** controls for paper size (`Letter`,
+    `Legal`, `Executive`, `A4`, `B5`), duplex (`sides`), page ranges, and
+    copies, and direct `libcups.so.2` / binary RFC 8011 IPP/1.1 job submission.
+  - Wire `DtPrintSetupBox` (`PrintSetupB.c`, `PsubDefProc.c`, `PsubUtil.c`),
+    `dtpad`, `dtmail`, `dtcm` (Day/Week/Month/Year/Appointment/To-Do reports),
+    `libDtHelp`, and `dthelpprint` to generate `.pdf` files and submit IPP jobs
+    directly, covered by `check-dtprint-pdf-cups.py`.
 - Add native Motif `xdg-desktop-portal-cde` (`cde/programs/dtportal`) serving
   `FileChooser`, `AppChooser`, `Wallpaper`, `Inhibit`, `GlobalShortcuts`,
   `Settings`, and `RemoteDesktop` (`Notify*` + `ConnectToEIS` EIS v1 binary wire

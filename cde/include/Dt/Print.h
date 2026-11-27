@@ -229,6 +229,117 @@ extern XtEnum DtPrintResetConnection(
 				     Widget psub,
 				     DtPrintResetConnectionMode m);
 
+/*
+ * Modern Vector Cairo/Pango PDF & Direct CUPS/IPP Pipeline (ABI-compatible additions)
+ */
+typedef enum {
+    DtPRINT_PAPER_LETTER = 0,
+    DtPRINT_PAPER_LEGAL = 1,
+    DtPRINT_PAPER_EXECUTIVE = 2,
+    DtPRINT_PAPER_A4 = 3,
+    DtPRINT_PAPER_B5 = 4
+} DtPrintPaperSize;
+
+typedef enum {
+    DtPRINT_DUPLEX_NONE = 0,
+    DtPRINT_DUPLEX_LONG_EDGE = 1,
+    DtPRINT_DUPLEX_SHORT_EDGE = 2
+} DtPrintDuplexMode;
+
+typedef struct _DtPrintJobOptions {
+    DtPrintPaperSize paper_size;
+    DtPrintDuplexMode duplex;
+    int copies;
+    const char *page_range;     /* NULL/"all" or e.g. "1-3,5" */
+    double margin_top_pt;       /* points (72 pt = 1 in); <= 0 -> 54 pt */
+    double margin_right_pt;
+    double margin_bottom_pt;
+    double margin_left_pt;
+    Boolean word_wrap;
+    const char *font_desc;      /* Pango font description, e.g. "Monospace 10" */
+    const char *header_left;
+    const char *header_right;
+    const char *footer_left;
+    const char *footer_right;
+    const char *job_title;
+} DtPrintJobOptions;
+
+typedef struct _DtPrintCupsQueue {
+    char name[128];
+    char device_uri[256];
+    char make_model[256];
+    char location[128];
+    char state[32];
+    Boolean is_default;
+    Boolean accepting;
+} DtPrintCupsQueue;
+
+typedef void (*DtPrintPageDrawProc)(
+    void *cairo_ctx,
+    double page_w_pt,
+    double page_h_pt,
+    int page_1based,
+    int total_pages,
+    void *user_data
+);
+
+extern void DtPrintInitJobOptions(DtPrintJobOptions *opts);
+extern void DtPrintReadWidgetJobOptions(Widget psub, DtPrintJobOptions *opts);
+extern void DtPrintSetWidgetJobOptions(
+    Widget psub,
+    DtPrintPaperSize paper_size,
+    DtPrintDuplexMode duplex,
+    const char *page_range
+);
+extern void DtPrintPopupJobSetupDialog(Widget parent, Widget psub);
+extern double DtPrintParseMarginPoints(const char *spec, double fallback_pt);
+extern void DtPrintPaperDimensionsPt(DtPrintPaperSize paper, double *out_w_pt, double *out_h_pt);
+extern const char *DtPrintPaperIppMedia(DtPrintPaperSize paper);
+extern const char *DtPrintDuplexIppSides(DtPrintDuplexMode duplex);
+extern Boolean DtPrintPageInRange(const char *range_spec, int page_1based);
+
+extern int DtPrintDiscoverCupsQueues(DtPrintCupsQueue *out_queues, int max_queues);
+extern Boolean DtPrintFindCupsQueue(const char *name, DtPrintCupsQueue *out_queue);
+extern Boolean DtPrintDefaultCupsQueueName(char *out_name, int out_cap);
+
+extern XtEnum DtPrintRenderTextToPdf(
+    const char *utf8_text,
+    const DtPrintJobOptions *opts,
+    const char *output_pdf_path,
+    int *out_pages_written,
+    char *err_buf,
+    int err_cap
+);
+
+extern XtEnum DtPrintRenderCustomPagesToPdf(
+    int total_pages,
+    DtPrintPageDrawProc draw_proc,
+    void *user_data,
+    const DtPrintJobOptions *opts,
+    const char *output_pdf_path,
+    int *out_pages_written,
+    char *err_buf,
+    int err_cap
+);
+
+extern XtEnum DtPrintSubmitCupsPdfJob(
+    const char *printer_name,
+    const char *pdf_path,
+    const DtPrintJobOptions *opts,
+    int *out_job_id,
+    char *err_buf,
+    int err_cap
+);
+
+extern XtEnum DtPrintDeliverPdfJob(
+    const DtPrintSetupData *psd,
+    const DtPrintJobOptions *opts,
+    const char *rendered_pdf_path,
+    int *out_job_id,
+    char *err_buf,
+    int err_cap
+);
+
 #ifdef __cplusplus
 }  /* Close scope of 'extern "C"' declaration which encloses file. */
 #endif
